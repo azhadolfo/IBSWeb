@@ -5330,7 +5330,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (purchaseOrder == null)
                 {
                     TempData["error"] = "Purchase Order not found.";
-                    return RedirectToAction(nameof(ApReport));
+                    return RedirectToAction(nameof(LiquidationReport));
                 }
 
                 string currencyFormatTwoDecimal = "#,##0.00";
@@ -5342,7 +5342,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (receivingReports.Count == 0)
                 {
                     TempData["error"] = "No Receiving Reports found.";
-                    return RedirectToAction(nameof(ApReport));
+                    return RedirectToAction(nameof(LiquidationReport));
                 }
 
                 #region == TOPSHEET ==
@@ -5911,6 +5911,226 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == ANNEX A-3 ==
 
+                #region == ANNEX A-4 ==
+
+                worksheet = package.Workbook.Worksheets.Add("ANNEX A-4");
+
+                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 16].Value = "ANNEX A-4";
+                worksheet.Cells[4, 3].Value = "PO Liquidation Vs " + purchaseOrder.SupplierName + " Billing";
+                worksheet.Cells[5, 3].Value = "Purchases to Supplier";
+                worksheet.Cells[6, 3].Value = "Month:";
+                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[8, 3].Value = "Breakdown of purchases";
+
+                using(var range = worksheet.Cells[11, 3, 11, 10])
+                {
+                    range.Merge = true;
+                    range.Value = "PO & RR LIQUIDATION";
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                using(var range = worksheet.Cells[10, 8, 10, 16])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                row = 12;
+                col = 3;
+
+                arrayOfColumnNames = new[]
+                {
+                    "Lifting Date", "IBS PO #", "FRI RR Number", "FRI DR Number", "Supplier's ATL Number", "Delivered to",
+                    "Product", "DR Volume", "WC Number", "WC Volume"
+                };
+
+                foreach (var columnName in arrayOfColumnNames)
+                {
+                    worksheet.Cells[row, col].Style.Font.Bold = true;
+                    worksheet.Cells[row, col].Value = columnName;
+                    worksheet.Cells[row, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    col++;
+                }
+
+                using (var range = worksheet.Cells[12, (col-2), 12, (col-1)])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+
+                row++;
+                var wcTotal = 0m;
+                int mostNumberOfCoLoads = 0;
+                var listOfCoLoadTotal = new List<decimal>();
+
+                foreach (var rr in receivingReports)
+                {
+                    var rrWithSameWC = (await _unitOfWork.FilprideReceivingReport
+                        .GetAllAsync(wcs => wcs.WithdrawalCertificate == rr.WithdrawalCertificate && wcs.ReceivingReportId != rr.ReceivingReportId, cancellationToken))
+                        .ToList();
+
+                    if (mostNumberOfCoLoads < rrWithSameWC.Count)
+                    {
+                        mostNumberOfCoLoads = rrWithSameWC.Count;
+                    }
+
+                    for (int i = 0; i < rrWithSameWC.Count; i++)
+                    {
+                        if (listOfCoLoadTotal.Count < (i+1))
+                        {
+                            listOfCoLoadTotal.Add(0m);
+                        }
+
+                        if (rrWithSameWC[i].ReceivingReportId == rr.ReceivingReportId)
+                        {
+                            continue;
+                        }
+
+                        listOfCoLoadTotal[i] += rrWithSameWC[i].QuantityReceived;
+                    }
+
+                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
+                    worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
+                    worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
+                    worksheet.Cells[row, 7].Value = rr.AuthorityToLoadNo;
+                    worksheet.Cells[row, 8].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
+                    worksheet.Cells[row, 9].Value = rr.PurchaseOrder!.ProductName;
+                    worksheet.Cells[row, 10].Value = rr.QuantityReceived;
+                    worksheet.Cells[row, 11].Value = rr.WithdrawalCertificate;
+                    worksheet.Cells[row, 12].Value = rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+
+                    wcTotal += rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+                    col = 13;
+                    int ctr = 1;
+
+                    foreach (var coload in rrWithSameWC)
+                    {
+                        if (coload.ReceivingReportId == rr.ReceivingReportId)
+                        {
+                            continue;
+                        }
+
+                        var currentLetter = ((char)('a' + ctr - 1)).ToString().ToUpper();
+
+                        using (var range = worksheet.Cells[11, col, 11, (col + 2)])
+                        {
+                            range.Merge = true;
+                            range.Value = $"CO-LOAD/SHARED WITH ({currentLetter})";
+                            range.Style.Font.Bold = true;
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        }
+
+                        worksheet.Cells[12, col].Value = "IBS PO #";
+                        worksheet.Cells[12, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[12, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[12, (col + 1)].Value = "FRI DR Number";
+                        worksheet.Cells[12, (col + 1)].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[12, (col + 1)].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[12, (col + 2)].Value = "DR Volume";
+                        worksheet.Cells[12, (col + 2)].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[12, (col + 2)].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+
+                        using (var range = worksheet.Cells[12, col, 12, (col + 2)])
+                        {
+                            range.Style.Font.Bold = true;
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        }
+
+
+                        worksheet.Cells[row, col].Value = coload.PurchaseOrder!.PurchaseOrderNo;
+                        worksheet.Cells[row, (col + 1)].Value = coload.DeliveryReceipt!.DeliveryReceiptNo;
+                        worksheet.Cells[row, (col + 2)].Value = coload.QuantityReceived;
+                        worksheet.Cells[row, (col + 2)].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                        ctr++;
+                        col += 3;
+                    }
+
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 9].Value = "Total";
+                worksheet.Cells[row, 10].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 12].Value = wcTotal;
+
+                col = 15;
+
+                foreach (var total in listOfCoLoadTotal)
+                {
+                    worksheet.Cells[row, col].Value = total;
+                    col += 3;
+                }
+
+                col -= 3;
+
+                using (var range = worksheet.Cells[row, 9, row, col])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+                using (var range = worksheet.Cells[row, 8, row, col])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatFourDecimal;
+
+                worksheet.Column(1).Width = 3;
+                worksheet.Column(2).Width = 3;
+                worksheet.Column(3).Width = 13;
+
+                for (int i = 4; i <= col; i++)
+                {
+                    worksheet.Column(i).AutoFit(); // max 18 min 9
+                    if (worksheet.Column(i).Width < 15)
+                    {
+                        worksheet.Column(i).Width = 15;
+                    }
+                    if (worksheet.Column(i).Width > 20)
+                    {
+                        worksheet.Column(i).Width = 20;
+                    }
+                }
+
+                using (var range = worksheet.Cells[10, 11, 10, (col)])
+                {
+                    range.Merge = true;
+                    range.Value = "WC SUMMARY AND MATCHING";
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+
+                #endregion == ANNEX A-4 ==
+
                 #region -- Audit Trail --
 
                 FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate liquidation report excel file", "Liquidation Report", companyClaims);
@@ -5929,7 +6149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to generate liquidation report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                return RedirectToAction(nameof(ApReport));
+                return RedirectToAction(nameof(LiquidationReport));
             }
         }
 
@@ -5945,7 +6165,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     Value = po.PurchaseOrderId.ToString(),
                     Text = po.PurchaseOrderNo
-                }).ToList();
+                })
+                .OrderBy(po => po.Text)
+                .ToList();
 
             return Json(purchaseOrderList);
         }
