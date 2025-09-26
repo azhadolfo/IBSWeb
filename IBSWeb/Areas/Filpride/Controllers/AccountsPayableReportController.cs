@@ -5535,9 +5535,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row += 2;
 
                 worksheet.Cells[row, 3].Value = "Form Check:";
-                worksheet.Cells[row, 4].Value = (purchaseOrder.Price * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
                 worksheet.Cells[row, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 6].Value = ((purchaseOrder.Price + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
 
                 using (var range = worksheet.Cells[row, 4, row, 6])
                 {
@@ -5547,9 +5547,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row += 2;
 
                 worksheet.Cells[row, 3].Value = "Variance";
-                worksheet.Cells[row, 4].Value = (purchaseOrder.Price * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 6].Value = ((purchaseOrder.Price + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 4].Value = 0; //zero for now
+                worksheet.Cells[row, 5].Value = 0; //zero for now
+                worksheet.Cells[row, 6].Value = 0; //zero for now
 
                 using (var range = worksheet.Cells[row, 4, row, 6])
                 {
