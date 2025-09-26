@@ -5816,13 +5816,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Value = rr.PurchaseOrder.SupplierName;
                     worksheet.Cells[row, 11].Value = rr.DeliveryReceipt.HaulerName;
                     worksheet.Cells[row, 12].Value = rr.PurchaseOrder.ProductName;
-                    worksheet.Cells[row, 13].Value = rr.QuantityDelivered;
+                    worksheet.Cells[row, 13].Value = rr.QuantityReceived;
                     worksheet.Cells[row, 14].Value = rr.PurchaseOrder.FinalPrice;
                     worksheet.Cells[row, 15].Value = rr.Amount;
                     worksheet.Cells[row, 16].Value = rr.DeliveryReceipt.Freight;
-                    worksheet.Cells[row, 17].Value = (rr.QuantityDelivered * rr.DeliveryReceipt.Freight);
+                    worksheet.Cells[row, 17].Value = (rr.QuantityReceived * rr.DeliveryReceipt.Freight);
                     worksheet.Cells[row, 18].Value = (rr.PurchaseOrder.FinalPrice + rr.DeliveryReceipt.Freight);
-                    worksheet.Cells[row, 19].Value = (rr.QuantityDelivered * (rr.PurchaseOrder.FinalPrice + rr.DeliveryReceipt.Freight));
+                    worksheet.Cells[row, 19].Value = (rr.QuantityReceived * (rr.PurchaseOrder.FinalPrice + rr.DeliveryReceipt.Freight));
 
                     worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
 
@@ -5840,13 +5840,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[row, 12].Value = "Total";
                 worksheet.Cells[row, 12].Style.Font.Bold = true;
-                worksheet.Cells[row, 13].Value = receivingReports.Sum(rr => rr.QuantityDelivered);
+                worksheet.Cells[row, 13].Value = receivingReports.Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[row, 14].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice;
                 worksheet.Cells[row, 15].Value = receivingReports.Sum(rr => rr.Amount);
                 worksheet.Cells[row, 16].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight;
-                worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.QuantityDelivered * rr.DeliveryReceipt!.Freight);
+                worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.QuantityReceived * rr.DeliveryReceipt!.Freight);
                 worksheet.Cells[row, 18].Value = (receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight);
-                worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => (rr.QuantityDelivered * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight))) ;
+                worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => (rr.QuantityReceived * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight))) ;
 
                 using (var range = worksheet.Cells[row, 13, row, 19])
                 {
