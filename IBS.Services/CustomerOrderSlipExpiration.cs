@@ -61,8 +61,6 @@ namespace IBS.Services
 
                     // Append the previous status and timestamp to the remarks
                     cos.Remarks = $"Previous status: [{previousStatus}] updated to Expired on {today}. {cos.Remarks}";
-
-                    break; //remove this after the demo
                 }
 
                 // Save the changes to the database

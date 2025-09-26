@@ -106,8 +106,6 @@ builder.Services.AddQuartz(q =>
     var firstOfTheMonthKey = JobKey.Create(nameof(FirstOfTheMonthService));
     var cosExpiration = JobKey.Create(nameof(CustomerOrderSlipExpiration));
 
-    ///TODO Register the job for COS Expiration
-
     q.AddJob<LockPlacementService>(options =>
         options.WithIdentity(dailyPlacementLockKey));
 
