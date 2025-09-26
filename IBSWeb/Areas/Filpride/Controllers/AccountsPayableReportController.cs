@@ -5584,7 +5584,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[row, col].Value = rrBySupplier.Sum(rr => (rr.DeliveryReceipt!.Freight * rr.QuantityReceived));
+                    worksheet.Cells[row, col].Value = rrBySupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
                     worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
                 }
