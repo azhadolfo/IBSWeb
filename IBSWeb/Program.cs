@@ -104,14 +104,16 @@ builder.Services.AddQuartz(q =>
     // Register the job
     var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));
     var firstOfTheMonthKey = JobKey.Create(nameof(FirstOfTheMonthService));
-
-    ///TODO Register the job for COS Expiration
+    var cosExpiration = JobKey.Create(nameof(CustomerOrderSlipExpiration));
 
     q.AddJob<LockPlacementService>(options =>
         options.WithIdentity(dailyPlacementLockKey));
 
     q.AddJob<FirstOfTheMonthService>(options =>
         options.WithIdentity(firstOfTheMonthKey));
+
+    q.AddJob<CustomerOrderSlipExpiration>(options =>
+        options.WithIdentity(cosExpiration));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -129,12 +131,20 @@ builder.Services.AddQuartz(q =>
         .WithCronSchedule("0 0 0 * * ?",
             x => x.InTimeZone(
                 TimeZoneInfo
-                .FindSystemTimeZoneById("Asia/Manila"))));
+                    .FindSystemTimeZoneById("Asia/Manila"))));
 
     q.AddTrigger(opts => opts
         .ForJob(firstOfTheMonthKey)
         .WithIdentity("FirstOfTheMonthTrigger")
         .WithCronSchedule("0 0 0 1 * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                    .FindSystemTimeZoneById("Asia/Manila"))));
+
+    q.AddTrigger(opts => opts
+        .ForJob(cosExpiration)
+        .WithIdentity("CosExpirationTrigger")
+        .WithCronSchedule("0 0 0 * * ?",
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila"))));

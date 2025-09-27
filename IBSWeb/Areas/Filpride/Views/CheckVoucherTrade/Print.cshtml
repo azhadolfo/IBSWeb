@@ -109,23 +109,12 @@
                 <td>@Html.DisplayFor(model => model.Header!.Tin)</td>
                 <td>SI # :</td>
                 <td>
-                    @if (ViewBag.SINoArray != null)
+                    @if (ViewBag.SINoArray is string[] siArray && siArray.Any())
                     {
-                        bool isFirst = true;
-                        foreach (var item in ViewBag.SINoArray)
-                        {
-                            if (isFirst)
-                            {
-                                isFirst = false;
-                            }
-                            else
-                            {
-                                <span>,</span>
-                            }
-                            <span>@item</span>
-                        }
+                        @string.Join(", ", siArray.Where(x => !string.IsNullOrWhiteSpace(x)))
                     }
                 </td>
+
             </tr>
             <tr>
                 <td style="padding-left:20px;" class="text-nowrap"></td>
