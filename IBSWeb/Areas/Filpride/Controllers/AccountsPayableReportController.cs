@@ -6185,7 +6185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                var fileName = $"{purchaseOrder.Supplier!.SupplierName}_{purchaseOrder.PurchaseOrderNo}_{viewModel.Period.Value.ToString("MMMM_yyyy")}_Liquidation_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var fileName = $"{purchaseOrder.Supplier!.SupplierName}_{purchaseOrder.PurchaseOrderNo}_{viewModel.Period.Value.ToString("MMMM_yyyy")}.xlsx";
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
