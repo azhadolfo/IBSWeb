@@ -5350,15 +5350,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatTwoDecimal = "#,##0.00";
                 string currencyFormatFourDecimal = "#,##0.0000";
 
-                var start = new DateOnly(viewModel.Period!.Value.Year, viewModel.Period.Value.Month, 1);
-                var end = start.AddMonths(1).AddDays(-1);
-
                 var receivingReports = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
                                 rr.POId == viewModel.PurchaseOrderId &&
                                 rr.WithdrawalCertificate != null &&
-                                rr.Date >= start &&
-                                rr.Date <= end,
+                                rr.Date.Month == viewModel.Period.Value.Month &&
+                                rr.Date.Year == viewModel.Period.Value.Year,
                             cancellationToken))
                     .OrderBy(rr => rr.ReceivingReportNo)
                     .ToList();
