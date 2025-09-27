@@ -5914,9 +5914,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 13].Value = receivingReports.Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[row, 14].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice;
                 worksheet.Cells[row, 15].Value = receivingReports.Sum(rr => rr.Amount);
-                worksheet.Cells[row, 16].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight;
+                worksheet.Cells[row, 16].Value = ((receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount)) / (receivingReports.Sum(rr => rr.QuantityReceived)));
                 worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.QuantityReceived * rr.DeliveryReceipt!.Freight);
-                worksheet.Cells[row, 18].Value = (receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight);
+                worksheet.Cells[row, 18].Value = ((receivingReports.Sum(rr => (rr.QuantityReceived * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight)))) / (receivingReports.Sum(rr => rr.QuantityReceived)));
                 worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => (rr.QuantityReceived * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight))) ;
 
                 using (var range = worksheet.Cells[row, 13, row, 19])
