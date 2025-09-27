@@ -5390,69 +5390,88 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[row, 3].Value = "Time Created";
                 worksheet.Cells[row, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("h:mm:ss tt");
-                worksheet.Cells[row, 7].Value = "1";
-                worksheet.Cells[row, 8].Value = "Filpride PO";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "To:";
                 worksheet.Cells[row, 4].Value = "Operations Accounting";
-                worksheet.Cells[row, 7].Value = "2";
-                worksheet.Cells[row, 8].Value = "PO Liquidation vs UPPI Billing";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "From: ";
                 worksheet.Cells[row, 4].Value = "TNS-Operations";
-                worksheet.Cells[row, 7].Value = "3";
-                worksheet.Cells[row, 8].Value = "PO Summary from the IBS System";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "CC: ";
                 worksheet.Cells[row, 4].Value = "Chief Operation Officer";
-                worksheet.Cells[row, 7].Value = "4";
-                worksheet.Cells[row, 8].Value = "WC Distribution Summary";
 
                 row++;
 
-                worksheet.Cells[row, 7].Value = "5";
-                worksheet.Cells[row, 8].Value = "Filpride Computation-MOOPS Price";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "Date Needed: ";
                 worksheet.Cells[row, 4].Value = "ASAP";
-                worksheet.Cells[row, 7].Value = "6";
-                worksheet.Cells[row, 8].Value = "UPPI Email Confirmation";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "Supplier: ";
                 worksheet.Cells[row, 4].Value = purchaseOrder!.Supplier!.SupplierName;
-                worksheet.Cells[row, 7].Value = "7";
-                worksheet.Cells[row, 8].Value = "UPPI Price Computation";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "IBS PO #: ";
                 worksheet.Cells[row, 4].Value = purchaseOrder!.PurchaseOrderNo;
-                worksheet.Cells[row, 7].Value = "8";
-                worksheet.Cells[row, 8].Value = "Filpride DR";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "PO Date Created: ";
                 worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.CreatedDate.ToString("MMM dd, yyyy");
-                worksheet.Cells[row, 7].Value = "9";
-                worksheet.Cells[row, 8].Value = "Filpride RR";
 
                 row++;
 
                 worksheet.Cells[row, 3].Value = "Product: ";
                 worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Product!.ProductName;
-                worksheet.Cells[row, 7].Value = "10";
-                worksheet.Cells[row, 8].Value = "Supplier Docs (SI, DR, WC)";
+
+                if(purchaseOrder.SupplierId == 19)
+                {
+                    worksheet.Cells[8, 7].Value = "1";
+                    worksheet.Cells[8, 8].Value = "Filpride PO";
+                    worksheet.Cells[9, 7].Value = "2";
+                    worksheet.Cells[9, 8].Value = "PO Liquidation vs UPPI Billing";
+                    worksheet.Cells[10, 7].Value = "3";
+                    worksheet.Cells[10, 8].Value = "PO Summary from the IBS System";
+                    worksheet.Cells[11, 7].Value = "4";
+                    worksheet.Cells[11, 8].Value = "WC Distribution Summary";
+                    worksheet.Cells[12, 7].Value = "5";
+                    worksheet.Cells[12, 8].Value = "Filpride Computation-MOPS Price";
+                    worksheet.Cells[13, 7].Value = "6";
+                    worksheet.Cells[13, 8].Value = "UPPI Email Confirmation";
+                    worksheet.Cells[14, 7].Value = "7";
+                    worksheet.Cells[14, 8].Value = "UPPI Price Computation";
+                    worksheet.Cells[15, 7].Value = "8";
+                    worksheet.Cells[15, 8].Value = "Filpride DR";
+                    worksheet.Cells[16, 7].Value = "9";
+                    worksheet.Cells[16, 8].Value = "Filpride RR";
+                    worksheet.Cells[17, 7].Value = "10";
+                    worksheet.Cells[17, 8].Value = "Supplier Docs (SI, DR, WC)";
+                }
+                else
+                {
+                    worksheet.Cells[8, 7].Value = "1";
+                    worksheet.Cells[8, 8].Value = "Filpride PO";
+                    worksheet.Cells[9, 7].Value = "2";
+                    worksheet.Cells[9, 8].Value = "PO Summary from the IBS System";
+                    worksheet.Cells[10, 7].Value = "3";
+                    worksheet.Cells[10, 8].Value = "WC Distribution Summary";
+                    worksheet.Cells[11, 7].Value = "4";
+                    worksheet.Cells[11, 8].Value = "Filpride DR";
+                    worksheet.Cells[12, 7].Value = "5";
+                    worksheet.Cells[12, 8].Value = "Filpride RR";
+                    worksheet.Cells[13, 7].Value = "6";
+                    worksheet.Cells[13, 8].Value = "Supplier Docs (SI, DR, WC)";
+                }
 
                 row += 2;
 
