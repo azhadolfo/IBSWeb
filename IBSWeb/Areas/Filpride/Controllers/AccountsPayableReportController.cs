@@ -5353,11 +5353,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.Style.Font.Name = "Calibri";
 
                 var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
-
                 var pic = worksheet.Drawings.AddPicture("Landscape", new FileInfo(imgFilprideLogoPath));
                 pic.SetSize(120, 50);
                 pic.SetPosition(2,0,2,0);
 
+                // title area
                 using (var range = worksheet.Cells[3, 3, 3, 9])
                 {
                     range.Merge = true;
@@ -5377,62 +5377,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
 
-                var row = 7;
+                var row = 17;
 
-                worksheet.Cells[row, 3].Value = "Created Date";
-                worksheet.Cells[row, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("MMM dd, yyyy");
-
-                worksheet.Cells[row, 7].Value = "Attachments:";
-                worksheet.Cells[row, 7].Style.Font.Bold = true;
-                worksheet.Cells[row, 7].Style.Font.UnderLine = true;
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Time Created";
-                worksheet.Cells[row, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("h:mm:ss tt");
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "To:";
-                worksheet.Cells[row, 4].Value = "Operations Accounting";
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "From: ";
-                worksheet.Cells[row, 4].Value = "TNS-Operations";
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "CC: ";
-                worksheet.Cells[row, 4].Value = "Chief Operation Officer";
-
-                row++;
-
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Date Needed: ";
-                worksheet.Cells[row, 4].Value = "ASAP";
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Supplier: ";
-                worksheet.Cells[row, 4].Value = purchaseOrder!.Supplier!.SupplierName;
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "IBS PO #: ";
-                worksheet.Cells[row, 4].Value = purchaseOrder!.PurchaseOrderNo;
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "PO Date Created: ";
-                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.CreatedDate.ToString("MMM dd, yyyy");
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Product: ";
-                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Product!.ProductName;
+                worksheet.Cells[7, 3].Value = "Created Date";
+                worksheet.Cells[7, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("MMM dd, yyyy");
+                worksheet.Cells[7, 7].Value = "Attachments:";
+                worksheet.Cells[7, 7].Style.Font.Bold = true;
+                worksheet.Cells[7, 7].Style.Font.UnderLine = true;
+                worksheet.Cells[8, 3].Value = "Time Created";
+                worksheet.Cells[8, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("h:mm:ss tt");
+                worksheet.Cells[9, 3].Value = "To:";
+                worksheet.Cells[9, 4].Value = "Operations Accounting";
+                worksheet.Cells[10, 3].Value = "From: ";
+                worksheet.Cells[10, 4].Value = "TNS-Operations";
+                worksheet.Cells[11, 3].Value = "CC: ";
+                worksheet.Cells[11, 4].Value = "Chief Operation Officer";
+                worksheet.Cells[13, 3].Value = "Date Needed: ";
+                worksheet.Cells[13, 4].Value = "ASAP";
+                worksheet.Cells[14, 3].Value = "Supplier: ";
+                worksheet.Cells[14, 4].Value = purchaseOrder!.Supplier!.SupplierName;
+                worksheet.Cells[15, 3].Value = "IBS PO #: ";
+                worksheet.Cells[15, 4].Value = purchaseOrder!.PurchaseOrderNo;
+                worksheet.Cells[16, 3].Value = "PO Date Created: ";
+                worksheet.Cells[16, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.CreatedDate.ToString("MMM dd, yyyy");
+                worksheet.Cells[17, 3].Value = "Product: ";
+                worksheet.Cells[17, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Product!.ProductName;
 
                 if(purchaseOrder.SupplierId == 19)
                 {
@@ -5473,15 +5442,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[13, 8].Value = "Supplier Docs (SI, DR, WC)";
                 }
 
-                row += 2;
-
-                worksheet.Cells[row, 3].Value = "Payment Terms: ";
-                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Supplier!.SupplierTerms;
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Due Date: ";
-                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.DueDate.ToString("MMM dd, yyyy");
+                worksheet.Cells[19, 3].Value = "Payment Terms: ";
+                worksheet.Cells[19, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Supplier!.SupplierTerms;
+                worksheet.Cells[20, 3].Value = "Due Date: ";
+                worksheet.Cells[20, 4].Value = receivingReports.FirstOrDefault()!.DueDate.ToString("MMM dd, yyyy");
 
                 using (var range = worksheet.Cells[7, 4, 20, 4])
                 {
@@ -5499,80 +5463,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
 
-                row += 2;
+                worksheet.Cells[22, 3].Value = "Subject: ";
+                worksheet.Cells[22, 4].Value = "Requesting to process the payment on or before the due date as stated above.";
+                worksheet.Cells[22, 4].Style.Font.Bold = true;
 
-                worksheet.Cells[row, 3].Value = "Subject: ";
-                worksheet.Cells[row, 4].Value = "Requesting to process the payment on or before the due date as stated above.";
-                worksheet.Cells[row, 4].Style.Font.Bold = true;
-
-                using (var range = worksheet.Cells[row, 4, row, 9])
+                using (var range = worksheet.Cells[22, 4, 22, 9])
                 {
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                row += 3;
+                worksheet.Cells[25, 3].Value = "Summary: ";
+                worksheet.Cells[25, 3].Style.Font.Bold = true;
+                worksheet.Cells[27, 3].Value = "Classifications";
+                worksheet.Cells[27, 4].Value = "AP to Supplier";
+                worksheet.Cells[27, 5].Value = "AP to Hauler";
+                worksheet.Cells[27, 6].Value = "Total AP";
 
-                worksheet.Cells[row, 3].Value = "Summary: ";
-                worksheet.Cells[row, 3].Style.Font.Bold = true;
-
-                row += 2;
-
-                worksheet.Cells[row, 3].Value = "Classifications";
-                worksheet.Cells[row, 4].Value = "AP to Supplier";
-                worksheet.Cells[row, 5].Value = "AP to Hauler";
-                worksheet.Cells[row, 6].Value = "Total AP";
-
-                using (var range = worksheet.Cells[row, 3, row, 6])
+                using (var range = worksheet.Cells[27, 3, 27, 6])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
 
-                row++;
+                worksheet.Cells[28, 3].Value = "Volume Lifted: ";
+                worksheet.Cells[28, 4].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[28, 5].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[28, 6].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[29, 3].Value = "Cost/ltr: ";
+                worksheet.Cells[29, 4].Value = purchaseOrder.FinalPrice;
+                worksheet.Cells[30, 3].Value = "Total Amount";
+                worksheet.Cells[30, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
 
-                worksheet.Cells[row, 3].Value = "Volume Lifted: ";
-                worksheet.Cells[row, 4].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 5].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 6].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Cost/ltr: ";
-                worksheet.Cells[row, 4].Value = purchaseOrder.FinalPrice;
-
-                row++;
-
-                worksheet.Cells[row, 3].Value = "Total Amount";
-                worksheet.Cells[row, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
-
-                using (var range = worksheet.Cells[row, 4, row, 6])
+                using (var range = worksheet.Cells[30, 4, 30, 6])
                 {
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Font.Bold = true;
                 }
 
-                row += 2;
+                row = 32;
 
-                worksheet.Cells[row, 3].Value = "Form Check:";
-                worksheet.Cells[row, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[32, 3].Value = "Form Check:";
+                worksheet.Cells[32, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[32, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[32, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
 
                 using (var range = worksheet.Cells[row, 4, row, 6])
                 {
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                row += 2;
+                worksheet.Cells[34, 3].Value = "Variance";
+                worksheet.Cells[34, 4].Value = 0; //zero for now
+                worksheet.Cells[34, 5].Value = 0; //zero for now
+                worksheet.Cells[34, 6].Value = 0; //zero for now
 
-                worksheet.Cells[row, 3].Value = "Variance";
-                worksheet.Cells[row, 4].Value = 0; //zero for now
-                worksheet.Cells[row, 5].Value = 0; //zero for now
-                worksheet.Cells[row, 6].Value = 0; //zero for now
-
-                using (var range = worksheet.Cells[row, 4, row, 6])
+                using (var range = worksheet.Cells[34, 4, 34, 6])
                 {
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
@@ -5587,8 +5534,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Numberformat.Format = currencyFormatFourDecimal;
                 }
 
-                row += 2;
-
                 var groupedByHauler = receivingReports
                     .GroupBy(rr => rr.DeliveryReceipt!.HaulerName)
                     .OrderBy(rr => rr.Key);
@@ -5598,65 +5543,62 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[row, col].Value = rrBySupplier.Key;
-                    worksheet.Cells[row, col].Style.Font.Bold = true;
-                    worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[36, col].Value = rrBySupplier.Key;
+                    worksheet.Cells[36, col].Style.Font.Bold = true;
+                    worksheet.Cells[36, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     col++;
                 }
 
-                worksheet.Cells[row, col].Value = "Total";
-                worksheet.Cells[row, col].Style.Font.Bold = true;
-                worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[row, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[36, col].Value = "Total";
+                worksheet.Cells[36, col].Style.Font.Bold = true;
+                worksheet.Cells[36, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[36, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                row++;
                 col = 4;
 
-                worksheet.Cells[row, 3].Value = "Volume Lifted: ";
+                worksheet.Cells[37, 3].Value = "Volume Lifted: ";
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[row, col].Value = rrBySupplier.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[37, col].Value = rrBySupplier.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[37, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
                 }
 
-                worksheet.Cells[row, col].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[37, col].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[37, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                row++;
                 col = 4;
 
-                worksheet.Cells[row, 3].Value = "Cost/ltr: ";
+                worksheet.Cells[38, 3].Value = "Cost/ltr: ";
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[row, col].Value = rrBySupplier.FirstOrDefault()!.DeliveryReceipt!.Freight;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[38, col].Value = rrBySupplier.FirstOrDefault()!.DeliveryReceipt!.Freight;
+                    worksheet.Cells[38, col].Style.Numberformat.Format = currencyFormatFourDecimal;
                     col++;
                 }
 
-                row++;
                 col = 4;
 
-                worksheet.Cells[row, 3].Value = "Total Amount: ";
+                worksheet.Cells[39, 3].Value = "Total Amount: ";
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[row, col].Value = rrBySupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[39, col].Value = rrBySupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
 
                     totalFreightAmount += rrBySupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount); // get the total of all freight
                 }
 
-                worksheet.Cells[row, col].Value = totalFreightAmount; // total of freight
-                worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[39, col].Value = totalFreightAmount; // total of freight
+                worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 // use if-else to determine value of freight if multiple or single hauler
                 if (groupedByHauler.ToList().Count() > 1)
                 {
-                    worksheet.Cells[row-1, col].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new cost/ltr of freight
+                    worksheet.Cells[39-1, col].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new cost/ltr of freight
                     worksheet.Cells[29, 5].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new freight if multiple
                     worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived)))); // final price with new freight if multiple hauler
                     worksheet.Cells[30, 5].Value = totalFreightAmount; // new freight amount
@@ -5666,7 +5608,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    worksheet.Cells[row-1, col].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // get detault freight from dr
+                    worksheet.Cells[39-1, col].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // get detault freight from dr
                     worksheet.Cells[29, 5].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // detault freight from dr
                     worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight); // default final price with freight if single hauler
                     worksheet.Cells[30, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived)); // default freight
@@ -5675,7 +5617,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[32, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived)); // default total amount with freight
                 }
 
-                worksheet.Cells[row-1, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[29, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[30, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
@@ -5684,23 +5626,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                 }
 
-                row += 4;
-
-                worksheet.Cells[row, 3].Value = "Prepared by: ";
-                worksheet.Cells[row, 6].Value = "Approved by: ";
-                worksheet.Cells[row, 9].Value = "Received by: ";
-
-                row += 2;
-
-                worksheet.Cells[row, 3].Value = "TNS Staff";
-                worksheet.Cells[row, 3].Style.Font.Bold = true;
-                worksheet.Cells[row, 3].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[row, 6].Value = "Operations Manager: ";
-                worksheet.Cells[row, 6].Style.Font.Bold = true;
-                worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[row, 9].Value = "Accounting Staff: ";
-                worksheet.Cells[row, 9].Style.Font.Bold = true;
-                worksheet.Cells[row, 9].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[43, 3].Value = "Prepared by: ";
+                worksheet.Cells[43, 6].Value = "Approved by: ";
+                worksheet.Cells[43, 9].Value = "Received by: ";
+                worksheet.Cells[45, 3].Value = "TNS Staff";
+                worksheet.Cells[45, 3].Style.Font.Bold = true;
+                worksheet.Cells[45, 3].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[45, 6].Value = "Operations Manager: ";
+                worksheet.Cells[45, 6].Style.Font.Bold = true;
+                worksheet.Cells[45, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[45, 9].Value = "Accounting Staff: ";
+                worksheet.Cells[45, 9].Style.Font.Bold = true;
+                worksheet.Cells[45, 9].Style.Border.Top.Style = ExcelBorderStyle.Thin;
 
                 worksheet.Column(1).Width = 8.5;
                 worksheet.Column(2).Width = 4.5;
