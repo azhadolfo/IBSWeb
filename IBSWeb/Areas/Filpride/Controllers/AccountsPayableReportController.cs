@@ -5878,7 +5878,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = rr.SupplierDrNo;
                     worksheet.Cells[row, 8].Value = rr.SupplierInvoiceNumber;
                     worksheet.Cells[row, 9].Value = rr.WithdrawalCertificate;
-                    worksheet.Cells[row, 10].Value = rr.PurchaseOrder.SupplierName;
+                    worksheet.Cells[row, 10].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
                     worksheet.Cells[row, 11].Value = rr.DeliveryReceipt.HaulerName;
                     worksheet.Cells[row, 12].Value = rr.PurchaseOrder.ProductName;
                     worksheet.Cells[row, 13].Value = rr.QuantityReceived;
