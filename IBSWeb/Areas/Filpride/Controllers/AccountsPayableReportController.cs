@@ -5352,6 +5352,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[1, 1].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells.Style.Font.Name = "Calibri";
 
+                var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                var pic = worksheet.Drawings.AddPicture("Landscape", new FileInfo(imgFilprideLogoPath));
+                pic.SetSize(120, 50);
+                pic.SetPosition(2,0,2,0);
+
                 using (var range = worksheet.Cells[3, 3, 3, 9])
                 {
                     range.Merge = true;
