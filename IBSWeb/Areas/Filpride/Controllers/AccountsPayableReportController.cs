@@ -5700,7 +5700,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Liquidation Vs " + purchaseOrder.SupplierName + " Billing";
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
@@ -5838,8 +5840,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet = package.Workbook.Worksheets.Add("ANNEX A-3");
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
-                worksheet.Cells[3, 19].Value = "ANNEX A-3";
+                worksheet.Cells[3, 16].Value = "ANNEX A-3";
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Summary";
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
@@ -5959,7 +5963,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-4";
-                worksheet.Cells[4, 3].Value = "PO Liquidation Vs " + purchaseOrder.SupplierName + " Billing";
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Value = "Withdrawal Certificate (WC) Distribution Summary";
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
@@ -5978,6 +5984,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using(var range = worksheet.Cells[10, 8, 10, 16])
                 {
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                using(var range = worksheet.Cells[3, 3, 8, 16])
+                {
+                    range.Style.Font.Bold = true;
                 }
 
                 row = 12;
