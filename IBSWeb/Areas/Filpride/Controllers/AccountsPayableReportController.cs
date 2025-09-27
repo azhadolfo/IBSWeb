@@ -4771,7 +4771,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ewtAmountSubtotal += ewt;
 
                                 // write per product: price, gross, ewt, net
-                                var price = grossOfLiftedThisMonth / liftedThisMonth;
+                                var price = liftedThisMonth > 0
+                                    ? grossOfLiftedThisMonth / liftedThisMonth
+                                    : 0m;
                                 var priceNetOfVat = isVatable
                                     ? repoCalculator.ComputeNetOfVat(price)
                                     : price;
