@@ -5513,7 +5513,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[28, 3].Value = "Volume Lifted: ";
                 worksheet.Cells[28, 4].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[28, 5].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[28, 5].Value = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[28, 6].Value = receivingReports.Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[29, 3].Value = "Cost/ltr: ";
                 worksheet.Cells[29, 4].Value = purchaseOrder.FinalPrice;
