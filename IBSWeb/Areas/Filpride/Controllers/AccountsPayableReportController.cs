@@ -5487,9 +5487,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[28, 5].Value = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[28, 6].Value = receivingReports.Sum(rr => rr.QuantityReceived);
                 worksheet.Cells[29, 3].Value = "Cost/ltr: ";
-                worksheet.Cells[29, 4].Value = purchaseOrder.FinalPrice;
+                worksheet.Cells[29, 4].Value = (receivingReports.Sum(rr => rr.Amount) / receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[29, 5].Value =
+                    (receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                        .Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReports
+                        .Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived));
                 worksheet.Cells[30, 3].Value = "Total Amount";
-                worksheet.Cells[30, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[30, 4].Value = (receivingReports.Sum(rr => rr.Amount));
+                worksheet.Cells[30, 5].Value = (receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount));
 
                 using (var range = worksheet.Cells[30, 4, 30, 6])
                 {
@@ -5501,8 +5506,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row = 32;
 
                 worksheet.Cells[32, 3].Value = "Form Check:";
-                worksheet.Cells[32, 4].Value = (purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[32, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[32, 4].Value = (receivingReports.Sum(rr => rr.Amount));
+                worksheet.Cells[30, 5].Value = (receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount));
                 worksheet.Cells[32, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
 
                 using (var range = worksheet.Cells[row, 4, row, 6])
@@ -5546,7 +5551,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[37, col].Value = rrBySupplier.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[37, col].Value = rrBySupplier.Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived);
                     worksheet.Cells[37, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
                 }
@@ -5560,7 +5565,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[38, col].Value = rrBySupplier.FirstOrDefault()!.DeliveryReceipt!.Freight;
+                    worksheet.Cells[38, col].Value =
+                        ((rrBySupplier.Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                            .Sum(rr => rr.DeliveryReceipt!.FreightAmount)) / (rrBySupplier
+                            .Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived)));
                     worksheet.Cells[38, col].Style.Numberformat.Format = currencyFormatFourDecimal;
                     col++;
                 }
@@ -5571,7 +5579,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rrBySupplier in groupedByHauler)
                 {
-                    worksheet.Cells[39, col].Value = rrBySupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[39, col].Value = rrBySupplier.Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.DeliveryReceipt!.FreightAmount);
                     worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
 
@@ -5582,28 +5590,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 // use if-else to determine value of freight if multiple or single hauler
-                if (groupedByHauler.ToList().Count() > 1)
-                {
-                    worksheet.Cells[39-1, col].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new cost/ltr of freight
-                    worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatFourDecimal;
-                    worksheet.Cells[29, 5].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new freight if multiple
-                    worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived)))); // final price with new freight if multiple hauler
-                    worksheet.Cells[30, 5].Value = totalFreightAmount; // new freight amount
-                    worksheet.Cells[30, 6].Value = ((purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived)) + totalFreightAmount ); // new total amount with freight
-                    worksheet.Cells[32, 5].Value = totalFreightAmount; // new freight amount
-                    worksheet.Cells[32, 6].Value = ((purchaseOrder.FinalPrice * receivingReports.Sum(rr => rr.QuantityReceived)) + totalFreightAmount ); // new total amount with freight
-                }
-                else
-                {
-                    worksheet.Cells[39-1, col].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // get detault freight from dr
-                    worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatFourDecimal;
-                    worksheet.Cells[29, 5].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // detault freight from dr
-                    worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight); // default final price with freight if single hauler
-                    worksheet.Cells[30, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived)); // default freight
-                    worksheet.Cells[30, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived)); // default total amount with freight
-                    worksheet.Cells[32, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived)); // default freight
-                    worksheet.Cells[32, 6].Value = ((purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived)); // default total amount with freight
-                }
+                worksheet.Cells[39-1, col].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new cost/ltr of freight
+                worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[29, 6].Value = (receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                    .Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReports
+                    .Where(rr => rr.DeliveryReceipt!.Freight > 0).Sum(rr => rr.QuantityReceived)) + (receivingReports.Sum(rr => rr.Amount) / (receivingReports.Sum(rr => rr.QuantityReceived))); // final price with new freight if multiple hauler
+                worksheet.Cells[30, 6].Value = (receivingReports.Sum(rr => rr.Amount) + (receivingReports.Where( rr => rr.DeliveryReceipt!.Freight>0).Sum(rr => rr.DeliveryReceipt!.FreightAmount))); // new total amount with freight
+
+                worksheet.Cells[32, 4].Value = (receivingReports.Sum(rr => rr.Amount));
+                worksheet.Cells[32, 5].Value = (receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount));
+                worksheet.Cells[32, 6].Value = (receivingReports.Sum(rr => rr.Amount) + (receivingReports.Where( rr => rr.DeliveryReceipt!.Freight>0).Sum(rr => rr.DeliveryReceipt!.FreightAmount))); // new total amount with freight
 
                 worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[29, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
