@@ -5085,6 +5085,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 unliftedThisMonth = !isPoCurrentlyClosed ? unliftedLastMonth - liftedThisMonthRrQty : 0;
                                 grossAmount += liftedThisMonth.Sum(x => x.Amount);
+
+                                if (po.Date.Month == monthYear.Month && po.Date.Year == monthYear.Year)
+                                {
+                                    unliftedLastMonth = 0m;
+                                }
                             }
 
                             var netOfVat = isVatable
