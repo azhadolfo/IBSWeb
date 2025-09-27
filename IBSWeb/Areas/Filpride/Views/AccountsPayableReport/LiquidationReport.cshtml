@@ -31,6 +31,12 @@
                         <option></option>
                     </select>
                 </div>
+
+                <div class="col-sm mb-3">
+                    <label asp-for="Period" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="Period" type="month" class="form-control period" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required/>
+                    <span asp-validation-for="Period" class="text-danger"></span>
+                </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateLiquidationReportExcelFile')"><i class="bi bi-file-text"></i> Generate</button>

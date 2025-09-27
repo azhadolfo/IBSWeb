@@ -1,4 +1,5 @@
 using System.Globalization;
+using Google.Type;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
@@ -20,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using DateTime = System.DateTime;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -5284,7 +5286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #region -- Generate Liquidation Report Excel File --
 
         [HttpPost]
-        public async Task<IActionResult> GenerateLiquidationReportExcelFile(int purchaseOrderId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateLiquidationReportExcelFile(ViewModelBook viewModel, CancellationToken cancellationToken)
         {
             try
             {
@@ -5295,8 +5297,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                if (viewModel.Period == null)
+                {
+                    TempData["error"] = "Period/Month cannot be null.";
+                    return RedirectToAction(nameof(LiquidationReport));
+                }
+
+                if (viewModel.PurchaseOrderId == null)
+                {
+                    TempData["error"] = "Purchase Report cannot be null.";
+                    return RedirectToAction(nameof(LiquidationReport));
+                }
+
                 var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderId == purchaseOrderId, cancellationToken);
+                    .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
 
                 if (purchaseOrder == null)
                 {
@@ -5307,8 +5321,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatTwoDecimal = "#,##0.00";
                 string currencyFormatFourDecimal = "#,##0.0000";
 
+                var start = new DateOnly(viewModel.Period!.Value.Year, viewModel.Period.Value.Month, 1);
+                var end = start.AddMonths(1).AddDays(-1);
+
                 var receivingReports = (await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.POId == purchaseOrderId && rr.WithdrawalCertificate != null, cancellationToken)).ToList();
+                        .GetAllAsync(rr =>
+                                rr.POId == viewModel.PurchaseOrderId &&
+                                rr.WithdrawalCertificate != null &&
+                                rr.Date >= start &&
+                                rr.Date <= end,
+                            cancellationToken))
+                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .ToList();
 
                 if (receivingReports.Count == 0)
                 {
@@ -5699,7 +5723,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rr in receivingReports)
                 {
-                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 3].Value = rr.Date;
                     worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
@@ -5819,7 +5843,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var rr in receivingReports)
                 {
-                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 3].Value = rr.Date;
                     worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
@@ -5990,7 +6014,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         listOfCoLoadTotal[i] += rrWithSameWC[i].QuantityReceived;
                     }
 
-                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 3].Value = rr.Date;
                     worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
