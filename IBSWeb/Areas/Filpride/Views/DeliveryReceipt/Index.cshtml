@@ -313,7 +313,6 @@
 
             // Convert ViewBag.MinDate to JavaScript date string format
             let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
-            console.log('Min Date:', minDate);
 
             Swal.fire({
                 title: "Please confirm the lifting date",

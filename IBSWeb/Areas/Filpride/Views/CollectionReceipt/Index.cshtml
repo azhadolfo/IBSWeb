@@ -57,13 +57,16 @@
             let bankOptions = banks.map(b => `<option value="${b.value}">${b.text}</option>`).join('');
             let bankSelect = `<select id="swal-input2" class="swal2-select w-75">${bankOptions}</select>`;
 
+            // Convert ViewBag.MinDate to JavaScript date string format
+            let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
+
             // Today's date
             let today = new Date().toISOString().split('T')[0];
 
             Swal.fire({
                 title: 'Enter Deposit Info',
                 html:
-                    `<input id="swal-input1" type="date" value="${today}" class="swal2-input w-75">` +
+                    `<input id="swal-input1" type="date" value="${today}" min="${minDate}" class="swal2-input w-75">` +
                     bankSelect,
                 icon: 'warning',
                 showCancelButton: true,
@@ -73,9 +76,16 @@
                 preConfirm: () => {
                     const depositDate = document.getElementById('swal-input1').value;
                     const bankId = document.getElementById('swal-input2').value;
+                    let selectedDate = new Date(depositDate);
+                    let minDateObj = new Date(minDate);
 
                     if (!depositDate || !bankId) {
                         Swal.showValidationMessage('Both Deposit Date and Bank are required');
+                        return false;
+                    }
+
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage(`The selected date cannot be before ${minDateObj.toLocaleDateString()}.`);
                         return false;
                     }
 

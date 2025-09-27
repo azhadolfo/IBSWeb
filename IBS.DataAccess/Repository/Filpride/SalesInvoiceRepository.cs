@@ -30,6 +30,7 @@ namespace IBS.DataAccess.Repository.Filpride
             switch (customerTerms)
             {
                 case "7D":
+                case "7PDC":
                     return transactionDate.AddDays(7);
 
                 case "10D":

@@ -412,6 +412,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                 .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
 
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.ReceivingReport, cancellationToken);
+
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid";

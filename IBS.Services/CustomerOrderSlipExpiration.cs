@@ -39,11 +39,11 @@ namespace IBS.Services
                 var today = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
 
                 var cosList = await _dbContext.FilprideCustomerOrderSlips
-                    .Where(cos => cos.Date.AddDays(3) <= today &&
-                                  cos.CustomerType == nameof(CustomerType.Retail) &&
-                                  cos.Status != nameof(CosStatus.Completed) &&
-                                  cos.Status != nameof(CosStatus.Expired) &&
-                                  cos.Status != nameof(CosStatus.Closed))
+                    .Where(cos => cos.ExpirationDate <= today
+                                  && cos.Status != nameof(CosStatus.Completed)
+                                  && cos.Status != nameof(CosStatus.Expired)
+                                  && cos.Status != nameof(CosStatus.Closed)
+                                  && cos.Status != nameof(CosStatus.Disapproved))
                     .ToListAsync();
 
                 if (cosList.Count == 0)
@@ -61,8 +61,6 @@ namespace IBS.Services
 
                     // Append the previous status and timestamp to the remarks
                     cos.Remarks = $"Previous status: [{previousStatus}] updated to Expired on {today}. {cos.Remarks}";
-
-                    break; //remove this after the demo
                 }
 
                 // Save the changes to the database

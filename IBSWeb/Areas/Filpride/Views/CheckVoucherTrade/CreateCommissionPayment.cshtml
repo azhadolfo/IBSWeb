@@ -92,6 +92,12 @@
                            min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
+                
+                <div class="form-floating mb-3">
+                    <textarea asp-for="SiNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
+                    <label asp-for="SiNo" class="control-label ms-2">Supplier Invoice No</label>
+                    <span asp-validation-for="SiNo" class="text-danger"></span>
+                </div>
 
                 <div class="form-group mb-3">
                     <label asp-for="BankId" class="control-label"></label><span class="required">*</span>
@@ -405,5 +411,44 @@
 
             return isValid;
         }
+
+        $('input[name="CheckNo"]').on('blur', function() {
+            var checkNo = $(this).val();
+            if (checkNo) {
+                $.ajax({
+                    url: '@Url.Action("CheckNoIsExist", "CheckVoucherTrade", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { checkNo: checkNo },
+                    success: function(exists) {
+
+                        const submitButton = $('button[type="submit"]');
+
+                        if (exists) {
+                            alert("Check # already exists. Please enter a different number.");
+                            $('input[name="CheckNo"]').addClass('is-invalid');
+
+                            // Optional: Add error message near the field
+                            if ($('input[name="CheckNo"]').next('.text-danger.check-no-exists').length === 0) {
+                                $('input[name="CheckNo"]').after('<span class="text-danger check-no-exists">Check # already exists</span>');
+                            }
+
+                            // Disable the submit button
+                            submitButton.prop('disabled', true);
+
+                        } else {
+                            // Clear any error styling/messages
+                            $('input[name="CheckNo"]').removeClass('is-invalid');
+                            $('.check-no-exists').remove();
+
+                            submitButton.prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error checking CheckNo: " + error);
+                    }
+                });
+            }
+        });
+        
     </script>
 }

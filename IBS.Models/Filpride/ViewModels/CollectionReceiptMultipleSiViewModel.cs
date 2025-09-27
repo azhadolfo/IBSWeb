@@ -78,6 +78,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<InvoicePayment>? InvoicePayments { get; set; }
 
+        public DateTime MinDate { get; set; }
+
 
     }
 
