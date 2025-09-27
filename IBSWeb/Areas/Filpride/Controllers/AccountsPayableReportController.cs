@@ -5985,8 +5985,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 arrayOfColumnNames = new[]
                 {
-                    "Lifting Date", "IBS PO #", "FRI RR Number", "FRI DR Number", "Supplier's ATL Number", "Delivered to",
-                    "Product", "DR Volume", "WC Number", "WC Volume"
+                    "Lifting Date", "IBS PO #", "FRI RR Number", "FRI DR Number", "FRI ATL Number", "Supplier's ATL Number",
+                    "Delivered to", "Product", "DR Volume", "WC Number", "WC Volume"
                 };
 
                 foreach (var columnName in arrayOfColumnNames)
@@ -6018,6 +6018,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(wcs => wcs.WithdrawalCertificate == rr.WithdrawalCertificate && wcs.ReceivingReportId != rr.ReceivingReportId, cancellationToken))
                         .ToList();
 
+                    var atlEntry = await _dbContext.FilprideAuthorityToLoads
+                        .Where(atl => atl.AuthorityToLoadNo == rr.AuthorityToLoadNo)
+                        .FirstOrDefaultAsync(cancellationToken);
+
                     if (mostNumberOfCoLoads < rrWithSameWC.Count)
                     {
                         mostNumberOfCoLoads = rrWithSameWC.Count;
@@ -6043,14 +6047,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
                     worksheet.Cells[row, 7].Value = rr.AuthorityToLoadNo;
-                    worksheet.Cells[row, 8].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
-                    worksheet.Cells[row, 9].Value = rr.PurchaseOrder!.ProductName;
-                    worksheet.Cells[row, 10].Value = rr.QuantityReceived;
-                    worksheet.Cells[row, 11].Value = rr.WithdrawalCertificate;
-                    worksheet.Cells[row, 12].Value = rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+                    if (atlEntry != null)
+                    {
+                        worksheet.Cells[row, 8].Value = atlEntry!.UppiAtlNo ?? "";
+                    }
+                    worksheet.Cells[row, 9].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
+                    worksheet.Cells[row, 10].Value = rr.PurchaseOrder!.ProductName;
+                    worksheet.Cells[row, 11].Value = rr.QuantityReceived;
+                    worksheet.Cells[row, 12].Value = rr.WithdrawalCertificate;
+                    worksheet.Cells[row, 13].Value = rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     wcTotal += rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
-                    col = 13;
+                    col = 14;
                     int ctr = 1;
 
                     foreach (var coload in rrWithSameWC)
@@ -6106,18 +6118,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         col += 3;
                     }
 
-                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
                     row++;
                 }
 
-                worksheet.Cells[row, 9].Value = "Total";
-                worksheet.Cells[row, 10].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 12].Value = wcTotal;
+                worksheet.Cells[row, 10].Value = "Total";
+                worksheet.Cells[row, 11].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 13].Value = wcTotal;
 
-                col = 15;
+                col = 16;
 
                 foreach (var total in listOfCoLoadTotal)
                 {
@@ -6127,20 +6135,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 col -= 3;
 
-                using (var range = worksheet.Cells[row, 9, row, col])
+                using (var range = worksheet.Cells[row, 10, row, col])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 8, row, col])
+                using (var range = worksheet.Cells[row, 9, row, col])
                 {
                     range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                 }
-
-                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatFourDecimal;
-                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatFourDecimal;
-                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatFourDecimal;
 
                 worksheet.Column(1).Width = 3;
                 worksheet.Column(2).Width = 3;
