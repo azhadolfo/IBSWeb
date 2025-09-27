@@ -5720,7 +5720,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
                 worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
-                worksheet.Cells[4, 3].Value = "PO Liquidation Vs " + purchaseOrder.SupplierName + " Billing";
+                worksheet.Cells[4, 3].Value = "PO Liquidation Vs Supplier's Billing";
                 worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
