@@ -4576,7 +4576,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var groupBySupplier = apReport
                     .OrderBy(po => po.Date)
                     .ThenBy(po => po.PurchaseOrderNo)
-                    .GroupBy(po => po.Supplier)
+                    .GroupBy(po => new
+                    {
+                        po.Supplier
+                    })
+                    .ToList();
+
+                var groupBySupplierAndTerms = apReport
+                    .GroupBy(po => new
+                    {
+                        po.Supplier,
+                        po.Terms
+                    })
+                    .OrderBy(po => po.Key.Supplier!.SupplierName)
+                    .ThenBy(po => po.Key.Terms)
                     .ToList();
 
                 int row = 5;
@@ -4602,7 +4615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
 
-                foreach (var sameSupplierGroup in groupBySupplier)
+                foreach (var sameSupplierGroup in groupBySupplierAndTerms)
                 {
                     var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
                     var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
@@ -4628,7 +4641,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var aGroupByProduct = groupByProduct
                             .FirstOrDefault(g => g.Key?.ProductName == product);
                         worksheet.Cells[row, 4].Value = product;
-                        worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Supplier?.SupplierTerms;
+                        worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Terms;
 
                         // get the necessary values from po, separate it by variable
                         if (aGroupByProduct != null)
@@ -5085,6 +5098,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 unliftedThisMonth = !isPoCurrentlyClosed ? unliftedLastMonth - liftedThisMonthRrQty : 0;
                                 grossAmount += liftedThisMonth.Sum(x => x.Amount);
+
+                                if (po.Date.Month == monthYear.Month && po.Date.Year == monthYear.Year)
+                                {
+                                    unliftedLastMonth = 0m;
+                                }
                             }
 
                             var netOfVat = isVatable
