@@ -5352,6 +5352,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[1, 1].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells.Style.Font.Name = "Calibri";
 
+                // inserting filpride image
                 var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
                 var pic = worksheet.Drawings.AddPicture("Landscape", new FileInfo(imgFilprideLogoPath));
                 pic.SetSize(120, 50);
@@ -5524,16 +5525,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                using (var range = worksheet.Cells[28, 3, 34, 6])
-                {
-                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
-                }
-
-                using (var range = worksheet.Cells[29, 3, 29, 6])
-                {
-                    range.Style.Numberformat.Format = currencyFormatFourDecimal;
-                }
-
                 var groupedByHauler = receivingReports
                     .GroupBy(rr => rr.DeliveryReceipt!.HaulerName)
                     .OrderBy(rr => rr.Key);
@@ -5599,6 +5590,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (groupedByHauler.ToList().Count() > 1)
                 {
                     worksheet.Cells[39-1, col].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new cost/ltr of freight
+                    worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatFourDecimal;
                     worksheet.Cells[29, 5].Value = (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived))); // new freight if multiple
                     worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + (totalFreightAmount / (receivingReports.Sum(rr => rr.QuantityReceived)))); // final price with new freight if multiple hauler
                     worksheet.Cells[30, 5].Value = totalFreightAmount; // new freight amount
@@ -5609,6 +5601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else
                 {
                     worksheet.Cells[39-1, col].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // get detault freight from dr
+                    worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatFourDecimal;
                     worksheet.Cells[29, 5].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight; // detault freight from dr
                     worksheet.Cells[29, 6].Value = (purchaseOrder.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight); // default final price with freight if single hauler
                     worksheet.Cells[30, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived)); // default freight
@@ -5620,6 +5613,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[39-1, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[29, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[30, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                using (var range = worksheet.Cells[28, 4, 34, 6])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                using (var range = worksheet.Cells[29, 4, 29, 6])
+                {
+                    range.Style.Numberformat.Format = currencyFormatFourDecimal;
+                }
+
+                using (var range = worksheet.Cells[38, 4, 38, col])
+                {
+                    range.Style.Numberformat.Format = currencyFormatFourDecimal;
+                }
 
                 using (var range = worksheet.Cells[28, 3, 39, 3])
                 {
