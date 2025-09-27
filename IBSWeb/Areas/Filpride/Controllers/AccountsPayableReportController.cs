@@ -5444,9 +5444,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 worksheet.Cells[19, 3].Value = "Payment Terms: ";
-                worksheet.Cells[19, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Supplier!.SupplierTerms;
+                worksheet.Cells[19, 4].Value = purchaseOrder.Terms;
                 worksheet.Cells[20, 3].Value = "Due Date: ";
-                worksheet.Cells[20, 4].Value = receivingReports.FirstOrDefault()!.DueDate.ToString("MMM dd, yyyy");
+
+                var dueDate = await _unitOfWork.FilpridePurchaseOrder.ComputeDueDateAsync(purchaseOrder.PurchaseOrderId, cancellationToken);
+
+                worksheet.Cells[20, 4].Value = dueDate.ToString("MMM dd, yyyy");
 
                 using (var range = worksheet.Cells[7, 4, 20, 4])
                 {

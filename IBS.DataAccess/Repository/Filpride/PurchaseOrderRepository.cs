@@ -19,6 +19,89 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
+        public async Task<DateOnly> ComputeDueDateAsync(int poId, CancellationToken cancellationToken = default)
+        {
+            var po = await _db
+                .FilpridePurchaseOrders
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
+
+            if (po == null)
+            {
+                throw new ArgumentException("No record found.");
+            }
+
+            var poDate = DateOnly.FromDateTime(po.CreatedDate);
+
+            DateOnly dueDate;
+
+            switch (po.Terms)
+            {
+                case "7D":
+                case "10D":
+                    return poDate.AddDays(7);
+
+                case "15D":
+                    return poDate.AddDays(15);
+
+                case "30D":
+                    return poDate.AddDays(30);
+
+                case "45D":
+                case "45PDC":
+                    return poDate.AddDays(45);
+
+                case "60D":
+                case "60PDC":
+                    return poDate.AddDays(60);
+
+                case "90D":
+                    return poDate.AddDays(90);
+
+                case "M15":
+                    return poDate.AddMonths(1).AddDays(15 - poDate.Day);
+
+                case "M30":
+                    if (poDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        if (dueDate.Day == 31)
+                        {
+                            dueDate = dueDate.AddDays(-1);
+                        }
+                    }
+                    return dueDate;
+
+                case "M29":
+                    if (poDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        switch (dueDate.Day)
+                        {
+                            case 31:
+                                dueDate = dueDate.AddDays(-2);
+                                break;
+                            case 30:
+                                dueDate = dueDate.AddDays(-1);
+                                break;
+                        }
+                    }
+                    return dueDate;
+
+                default:
+                    return poDate;
+            }
+        }
+
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
             if (type == nameof(DocumentType.Documented))
