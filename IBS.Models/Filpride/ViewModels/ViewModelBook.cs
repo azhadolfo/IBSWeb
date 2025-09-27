@@ -45,6 +45,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int? PurchaseOrderId { get; set; }
 
+        public DateOnly? Period { get; set; }
+
         #endregion
 
 
