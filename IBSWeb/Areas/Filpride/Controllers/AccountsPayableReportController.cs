@@ -6050,13 +6050,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Value = rr.PurchaseOrder!.ProductName;
                     worksheet.Cells[row, 11].Value = rr.QuantityReceived;
                     worksheet.Cells[row, 12].Value = rr.WithdrawalCertificate;
-                    worksheet.Cells[row, 13].Value = rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+                    worksheet.Cells[row, 13].Value = (rrWithSameWC.Sum(wcs => wcs.QuantityReceived) + rr.QuantityReceived); // added the current rr's quantity because it is excluded in rrWithSameWC
 
                     worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
                     worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                    wcTotal += rrWithSameWC.Sum(wcs => wcs.QuantityReceived);
+                    wcTotal += (rrWithSameWC.Sum(wcs => wcs.QuantityReceived) + rr.QuantityReceived); // added the current rr's quantity because it is excluded in rrWithSameWC
                     col = 14;
                     int ctr = 1;
 
@@ -6102,7 +6102,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         }
-
 
                         worksheet.Cells[row, col].Value = coload.PurchaseOrder!.PurchaseOrderNo;
                         worksheet.Cells[row, (col + 1)].Value = coload.DeliveryReceipt!.DeliveryReceiptNo;
