@@ -5776,14 +5776,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[row, 7].Value = "Total";
                 worksheet.Cells[row, 8].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 9].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice;
-                worksheet.Cells[row, 10].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice);
+                worksheet.Cells[row, 9].Value = (receivingReports.Sum(rr => rr.Amount)) / (receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 10].Value = (receivingReports.Sum(rr => rr.Amount));
                 worksheet.Cells[row, 11].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 12].Value = receivingReports.FirstOrDefault()!.CostBasedOnSoa;
-                worksheet.Cells[row, 13].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+                worksheet.Cells[row, 12].Value = (receivingReports.Sum(rr => rr.CostBasedOnSoa * rr.QuantityReceived)) / (receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 13].Value = (receivingReports.Sum(rr => rr.QuantityReceived * rr.CostBasedOnSoa));
                 worksheet.Cells[row, 14].Value = 0;
-                worksheet.Cells[row, 15].Value = (receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice - receivingReports.FirstOrDefault()!.CostBasedOnSoa);
-                worksheet.Cells[row, 16].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice) - (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+                worksheet.Cells[row, 15].Value = (((receivingReports.Sum(rr => rr.Amount)) / (receivingReports.Sum(rr => rr.QuantityReceived))) - receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+                worksheet.Cells[row, 16].Value = (receivingReports.Sum(rr => rr.Amount)) - (receivingReports.Sum(rr => rr.QuantityReceived * rr.CostBasedOnSoa));
 
                 using (var range = worksheet.Cells[row, 7, row, 16])
                 {
