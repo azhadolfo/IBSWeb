@@ -5900,12 +5900,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 12].Value = "Total";
                 worksheet.Cells[row, 12].Style.Font.Bold = true;
                 worksheet.Cells[row, 13].Value = receivingReports.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 14].Value = receivingReports.Sum(rr => rr.Amount);
+                worksheet.Cells[row, 14].Value = (receivingReports.Sum(rr => rr.Amount) / receivingReports.Sum(rr => rr.QuantityReceived));
                 worksheet.Cells[row, 15].Value = receivingReports.Sum(rr => rr.Amount);
-                worksheet.Cells[row, 16].Value = ((receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount)) / (receivingReports.Sum(rr => rr.QuantityReceived)));
-                worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.QuantityReceived * rr.DeliveryReceipt!.Freight);
-                worksheet.Cells[row, 18].Value = ((receivingReports.Sum(rr => (rr.QuantityReceived * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight)))) / (receivingReports.Sum(rr => rr.QuantityReceived)));
-                worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => (rr.QuantityReceived * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight))) ;
+                worksheet.Cells[row, 16].Value = (receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                worksheet.Cells[row, 18].Value =((receivingReports.Sum(rr => rr.Amount) / receivingReports.Sum(rr => rr.QuantityReceived)) +
+                                                 (receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReports.Sum(rr => rr.QuantityReceived)));
+                worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => rr.Amount + rr.DeliveryReceipt!.FreightAmount) ;
 
                 using (var range = worksheet.Cells[row, 13, row, 19])
                 {
