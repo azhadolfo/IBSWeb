@@ -63,6 +63,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
+        }
+
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -337,7 +343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountSpecialist = viewModel.AccountSpecialist,
                     Remarks = viewModel.Remarks,
                     Company = companyClaims,
-                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedBy = GetUserFullName(),
                     ProductId = viewModel.ProductId,
                     Status = nameof(CosStatus.ForApprovalOfCNC),
                     OldCosNo = viewModel.OtcCosNo,
@@ -621,7 +627,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    throw new Exception("At least 1 attachment should be uploaded.");
                 }
 
-                viewModel.CurrentUser = _userManager.GetUserName(User);
+                viewModel.CurrentUser = GetUserFullName();
 
                 if (string.IsNullOrEmpty(viewModel.Terms))
                 {
@@ -1036,7 +1042,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                existingRecord.OmApprovedBy = _userManager.GetUserName(User);
+                existingRecord.OmApprovedBy = GetUserFullName();
                 existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.OMReason = reason;
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
@@ -1149,14 +1155,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (existingRecord.Status == nameof(CosStatus.ForApprovalOfCNC))
                 {
-                    existingRecord.CncApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.CncApprovedBy = GetUserFullName();
                     existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.Created);
                     TempData["success"] = "Customer order slip approved by cnc successfully.";
                 }
                 else
                 {
-                    existingRecord.FmApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.FmApprovedBy = GetUserFullName();
                     existingRecord.FmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.ForDR);
                     TempData["success"] = "Customer order slip approved by finance successfully.";
@@ -1199,7 +1205,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                existingRecord.DisapprovedBy = _userManager.GetUserName(User);
+                existingRecord.DisapprovedBy = GetUserFullName();
                 existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(CosStatus.Disapproved);
 
@@ -1640,224 +1646,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(balance);
         }
 
-
-        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
-        [HttpGet]
-        public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
-        {
-            ViewBag.FilterType = await GetCurrentFilterType();
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-            if (existingRecord == null)
-            {
-                return NotFound();
-            }
-
-            var viewModel = new CustomerOrderSlipAppointingHauler
-            {
-                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                DeliveryOption = existingRecord.DeliveryOption!,
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
-            };
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
-
-                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                    if (existingCos == null)
-                    {
-                        return BadRequest();
-                    }
-
-
-                    if (existingCos.PickUpPoint != null)
-                    {
-                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
-                        {
-                            existingCos.Freight = viewModel.Freight;
-                            existingCos.HaulerId = viewModel.HaulerId;
-                        }
-                        else
-                        {
-                            existingCos.Freight = 0;
-                            existingCos.HaulerId = null;
-                        }
-
-                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
-                    }
-                    else
-                    {
-                        existingCos.Freight = viewModel.Freight;
-                        existingCos.HaulerId = viewModel.HaulerId;
-                        existingCos.Status = nameof(CosStatus.HaulerAppointed);
-                    }
-
-                    existingCos.Driver = viewModel.Driver;
-                    existingCos.PlateNo = viewModel.PlateNo;
-
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                    TempData["success"] = "Appointed hauler successfully.";
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to appoint hauler. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    return View(viewModel);
-                }
-            }
-            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
-        }
-
-        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
-        [HttpGet]
-        public async Task<IActionResult> ReAppointHauler(int? id, CancellationToken cancellationToken)
-        {
-            ViewBag.FilterType = await GetCurrentFilterType();
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-            if (existingRecord == null)
-            {
-                return NotFound();
-            }
-
-            var viewModel = new CustomerOrderSlipAppointingHauler
-            {
-                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                DeliveryOption = existingRecord.DeliveryOption!,
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                HaulerId = (int)existingRecord.HaulerId!,
-                Freight = (decimal)existingRecord.Freight!,
-                Driver = existingRecord.Driver!,
-                PlateNo = existingRecord.PlateNo!
-            };
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReAppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
-
-                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                    if (existingCos == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    if (existingCos.PickUpPoint != null)
-                    {
-                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
-                        {
-                            existingCos.Freight = viewModel.Freight;
-                            existingCos.HaulerId = viewModel.HaulerId;
-                        }
-                        else
-                        {
-                            existingCos.Freight = 0;
-                            existingCos.HaulerId = null;
-                        }
-                    }
-                    else
-                    {
-                        existingCos.Freight = viewModel.Freight;
-                        existingCos.HaulerId = viewModel.HaulerId;
-                    }
-
-                    existingCos.Driver = viewModel.Driver;
-                    existingCos.PlateNo = viewModel.PlateNo;
-
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                    TempData["success"] = "Reappointed hauler successfully.";
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to re-appoint hauler. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    return View(viewModel);
-                }
-            }
-
-            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
-        }
-
         [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         public async Task<IActionResult> Close(int? id, CancellationToken cancellationToken)
         {
@@ -1975,7 +1763,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var userName = User.Identity!.Name!;
 
                 await _unitOfWork.FilprideDeliveryReceipt.RecalculateDeliveryReceipts(existingRecord.CustomerOrderSlipId,
-                    existingRecord.DeliveredPrice, userName, cancellationToken);
+                    existingRecord.DeliveredPrice, GetUserFullName(), cancellationToken);
 
                 #region Notification
 

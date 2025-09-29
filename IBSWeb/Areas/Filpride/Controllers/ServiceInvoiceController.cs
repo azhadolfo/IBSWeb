@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -36,6 +37,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -204,7 +211,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     VatType = service.Name != "TRANSACTION FEE" ? customer.VatType : SD.VatType_Exempt,
                     HasEwt = customer.WithHoldingTax && service.Name != "TRANSACTION FEE",
                     HasWvat = customer.WithHoldingVat && service.Name != "TRANSACTION FEE",
-                    CreatedBy = User.Identity!.Name,
+                    CreatedBy = GetUserFullName(),
                     Total = viewModel.Total,
                     Balance = viewModel.Total,
                     Company = companyClaims,
@@ -295,7 +302,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
 
@@ -530,7 +537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -597,7 +604,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
@@ -721,7 +728,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Period = viewModel.Period;
                 existingModel.DueDate = viewModel.DueDate;
                 existingModel.Instructions = viewModel.Instructions;
-                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingModel.Total = viewModel.Total;
                 existingModel.CustomerId = viewModel.CustomerId;

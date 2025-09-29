@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -43,6 +44,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -267,7 +274,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SINo = [viewModel.SiNo ?? string.Empty],
                     SupplierId = viewModel.SupplierId,
                     Particulars = viewModel.Particulars,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Category = "Non-Trade",
                     CvType = nameof(CVType.Invoicing),
                     Company = companyClaims,
@@ -534,7 +541,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierId = null,
                     Particulars = viewModel.Particulars,
                     Total = viewModel.Total,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Category = "Non-Trade",
                     CvType = nameof(CVType.Invoicing),
                     Company = companyClaims,
@@ -735,7 +742,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingModel.Date = viewModel.TransactionDate;
                 existingModel.SupplierId = supplier.SupplierId;
@@ -1067,7 +1074,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
                 }
 
-                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
@@ -1152,7 +1159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -1193,7 +1200,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
 
@@ -1445,7 +1452,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.PONo = [viewModel.PoNo ?? string.Empty];

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -36,6 +37,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -263,7 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion -- checking for unposted DM or CM
 
 
-                model.CreatedBy = _userManager.GetUserName(this.User);
+                model.CreatedBy = GetUserFullName();
                 model.Company = companyClaims;
 
                 if (model.Source == "Sales Invoice")
@@ -350,7 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
                 }
 
-                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
 
@@ -759,7 +766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
@@ -801,7 +808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.CancellationRemarks = cancellationRemarks;
                 model.Status = nameof(Status.Canceled);
@@ -971,7 +978,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         break;
                 }
 
-                existingDm.EditedBy = _userManager.GetUserName(User);
+                existingDm.EditedBy = GetUserFullName();
                 existingDm.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #region --Audit Trail Recording

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -31,6 +32,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _logger = logger;
             _unitOfWork = unitOfWork;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -94,7 +101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     NormalBalance = parentAccount?.NormalBalance ?? "",
                     AccountName = accountName,
                     ParentAccountId = parentId,
-                    CreatedBy = User.Identity?.Name,
+                    CreatedBy = GetUserFullName(),
                     Level = levelToCreate,
                     FinancialStatementType = parentAccount?.FinancialStatementType ?? "",
                 };
@@ -149,7 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 existingAccount.AccountName = accountName;
-                existingAccount.EditedBy = User.Identity!.Name;
+                existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _unitOfWork.SaveAsync(cancellationToken);
 

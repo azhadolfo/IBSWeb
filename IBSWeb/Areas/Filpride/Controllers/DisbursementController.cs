@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -164,6 +165,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             cv.DcpDate = dcpDate;
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update DCP date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
             await _unitOfWork.SaveAsync(cancellationToken);
 
             return Json(new { success = true });
@@ -188,6 +193,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             cv.DcrDate = dcrDate;
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update DCR date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
             await _unitOfWork.SaveAsync(cancellationToken);
 
             return Json(new { success = true });

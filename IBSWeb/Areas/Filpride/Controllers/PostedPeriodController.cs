@@ -28,7 +28,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        // GET: Display the form to select modules and post periods
         public async Task<IActionResult> Index()
         {
             var viewModel = new PostedPeriodViewModel
@@ -40,7 +39,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        // GET: Get modules that haven't been posted for current month/year
         private async Task<List<ModuleSelectItem>> GetAvailableModulesAsync()
         {
             var currentMonth = DateTime.Now.Month;
@@ -61,7 +59,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
         }
 
-        // GET: Get current posted periods
         private async Task<List<PostedPeriod>> GetPostedPeriodsAsync()
         {
             return await _dbContext.PostedPeriods
@@ -71,7 +68,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
         }
 
-        // POST: Post period for selected modules
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PostPeriod(PostPeriodRequest request)
