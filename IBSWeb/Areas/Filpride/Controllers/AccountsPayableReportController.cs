@@ -5706,7 +5706,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
-                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
                 worksheet.Cells[8, 3].Value = "Breakdown of purchases";
 
                 using(var range = worksheet.Cells[10, 8, 10, 10])
@@ -5847,7 +5847,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
-                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
                 worksheet.Cells[8, 3].Value = "Breakdown of purchases";
 
                 using(var range = worksheet.Cells[10, 3, 10, 19])
@@ -5970,7 +5970,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
-                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
                 worksheet.Cells[8, 3].Value = "Breakdown of purchases";
 
                 using(var range = worksheet.Cells[11, 3, 11, 10])
@@ -6195,7 +6195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                var fileName = $"{purchaseOrder.Supplier!.SupplierName}_{purchaseOrder.PurchaseOrderNo}_{viewModel.Period.Value.ToString("MMMM_yyyy")}.xlsx";
+                var fileName = $"{purchaseOrder.Supplier!.SupplierName}_{purchaseOrder.PurchaseOrderNo}_{viewModel.Period!.Value.ToString("MMMM_yyyy")}.xlsx";
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
