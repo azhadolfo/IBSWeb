@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
@@ -42,6 +43,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -404,7 +411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var currentUser = _userManager.GetUserName(User)!;
+                var currentUser = GetUserFullName();
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 Expression<Func<FilprideDeliveryReceipt, bool>>? filter;
                 var dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
@@ -1022,7 +1029,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return BadRequest();
                 }
-                var currentUser = _userManager.GetUserName(User)!;
+                var currentUser = GetUserFullName();
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 Expression<Func<FilprideDeliveryReceipt, bool>>? filter;
                 var dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
@@ -1936,7 +1943,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -2441,7 +2448,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -3180,7 +3187,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(User)!;
+                    var extractedBy = GetUserFullName();
                     var companyClaims = await GetCompanyClaimAsync();
                     if (companyClaims == null)
                     {
@@ -3663,7 +3670,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
@@ -4261,7 +4268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -4775,7 +4782,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User);
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -4945,7 +4952,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SalesInvoice");
-                var extractedBy = _userManager.GetUserName(User);
+                var extractedBy = GetUserFullName();
 
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
