@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -36,6 +37,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _dbContext = dbContext;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -214,7 +221,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Discount = viewModel.Discount,
                     DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(viewModel.Terms, viewModel.TransactionDate),
                     PurchaseOrderId = viewModel.PurchaseOrderId,
-                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = viewModel.Type,
                     ReceivingReportId = viewModel.ReceivingReportId,
@@ -419,7 +426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.CustomerAddress = viewModel.CustomerAddress;
                 existingRecord.CustomerTin = viewModel.CustomerTin;
 
-                existingRecord.EditedBy = _userManager.GetUserName(User);
+                existingRecord.EditedBy = GetUserFullName();
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #region --Audit Trail Recording
@@ -480,7 +487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
 
@@ -549,7 +556,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
@@ -604,7 +611,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.PaymentStatus = nameof(Status.Canceled);
                 model.Status = nameof(Status.Canceled);

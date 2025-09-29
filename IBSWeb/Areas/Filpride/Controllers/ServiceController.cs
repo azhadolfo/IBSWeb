@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -33,6 +34,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -145,7 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 services.UnearnedNo = unearned!.AccountNumber;
                 services.UnearnedTitle = unearned.AccountName;
                 services.Company = companyClaims;
-                services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
+                services.CreatedBy = GetUserFullName();
                 services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
                 await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);
 

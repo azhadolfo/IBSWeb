@@ -42,6 +42,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name
+                   ?? "Unknown User";
+        }
+
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -292,8 +299,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Quantity = viewModel.Quantity,
                     Price = viewModel.Price,
                     Amount = viewModel.Quantity * viewModel.Price,
-                    Remarks = viewModel.Remarks,
-                    CreatedBy = User.Identity!.Name!,
+                    Remarks = StringHelper.FormatRemarksWithSignatories(viewModel.Remarks, GetUserFullName()),
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = viewModel.Type,
                     TriggerDate = viewModel.TriggerDate,
@@ -449,7 +456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
 
-                existingModel.EditedBy = User.Identity!.Name;
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #region --Audit Trail Recording
@@ -520,7 +527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                model.PostedBy = User.Identity!.Name;
+                model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
 
@@ -616,7 +623,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -886,7 +893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return Json(new { success = false, message = TempData["error"] });
                 }
 
-                actualPrices.ApprovedBy = _userManager.GetUserName(User);
+                actualPrices.ApprovedBy = GetUserFullName();
                 actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 actualPrices.IsApproved = true;
 

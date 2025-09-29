@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -37,6 +38,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -213,7 +220,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 //JV Header Entry
                 model.Header.JournalVoucherHeaderNo = generateJvNo;
-                model.Header.CreatedBy = _userManager.GetUserName(this.User);
+                model.Header.CreatedBy = GetUserFullName();
                 model.Header.Company = companyClaims;
 
                 #endregion --Saving the default entries
@@ -360,7 +367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
@@ -462,7 +469,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
@@ -505,7 +512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -691,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.CRNo = viewModel.CRNo;
                 existingHeaderModel.JVReason = viewModel.JVReason;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #endregion --Saving the default entries

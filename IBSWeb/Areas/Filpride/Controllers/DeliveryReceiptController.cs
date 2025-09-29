@@ -56,6 +56,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
+        }
+
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -300,7 +306,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Quantity = viewModel.Volume,
                     TotalAmount = viewModel.Volume * customerOrderSlip.DeliveredPrice,
                     Company = companyClaims,
-                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedBy = GetUserFullName(),
                     ManualDrNo = viewModel.ManualDrNo,
                     Freight = viewModel.Freight,
                     FreightAmount = viewModel.Volume * (viewModel.Freight + viewModel.ECC),
@@ -534,7 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                viewModel.CurrentUser = _userManager.GetUserName(User);
+                viewModel.CurrentUser = GetUserFullName();
 
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
@@ -755,11 +761,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                existingRecord.PostedBy = _userManager.GetUserName(User);
-                existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(DRStatus.PendingDelivery);
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy!, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -917,7 +921,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
-                existingRecord.PostedBy = _userManager.GetUserName(User);
+                existingRecord.PostedBy = GetUserFullName();
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #region Mark the COS delivered
@@ -989,7 +993,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         connectedReceivingReport.ReceivingReportId, User.Identity!.Name!, cancellationToken);
                 }
 
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(DRStatus.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -1043,7 +1047,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
 
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(DRStatus.Voided);
                 model.ManualDrNo += "x";

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -44,6 +45,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -240,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
                 }
 
-                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(CheckVoucherPaymentStatus.Posted);
 
@@ -372,7 +379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.CanceledBy = GetUserFullName();
                 existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                 existingHeaderModel.CancellationRemarks = cancellationRemarks;
@@ -463,7 +470,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 existingHeaderModel.PostedBy = null;
-                existingHeaderModel.VoidedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.VoidedBy = GetUserFullName();
                 existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
 
@@ -785,7 +792,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.SupplierId = viewModel.MultipleSupplierId;
                 existingHeaderModel.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
                 existingHeaderModel.Total = viewModel.Total;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Category = "Non-Trade";
                 existingHeaderModel.CvType = nameof(CVType.Payment);
@@ -1169,7 +1176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierId = viewModel.MultipleSupplierId,
                     Particulars = $"{viewModel.Particulars}. Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}",
                     Total = viewModel.Total,
-                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedBy = GetUserFullName(),
                     Category = "Non-Trade",
                     CvType = nameof(CVType.Payment),
                     Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo)),
@@ -1522,7 +1529,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PONo = [],
                     SINo = [],
                     Total = viewModel.Total,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Category = "Non-Trade",
                     CvType = nameof(CVType.Payment),
                     BankId = viewModel.BankId,
@@ -1734,7 +1741,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.Total = viewModel.Total;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.BankId = viewModel.BankId;
                 existingHeaderModel.Payee = viewModel.Payee;
@@ -1926,7 +1933,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PONo = [],
                     SINo = [],
                     Total = viewModel.Total,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Category = "Non-Trade",
                     CvType = nameof(CVType.Payment),
                     BankId = viewModel.BankId,
@@ -2168,7 +2175,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.Total = viewModel.Total;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.BankId = viewModel.BankId;
                 existingHeaderModel.Payee = viewModel.Payee;

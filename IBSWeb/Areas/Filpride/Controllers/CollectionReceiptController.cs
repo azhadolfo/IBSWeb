@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -46,6 +47,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
             _logger = logger;
             _cloudStorageService = cloudStorageService;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -357,7 +364,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
-                    CreatedBy = User.Identity!.Name,
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = existingSalesInvoice.Type,
                 };
@@ -549,7 +556,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
-                    CreatedBy = User.Identity!.Name,
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     MultipleSIId = viewModel.MultipleSIId,
                     SIMultipleAmount = viewModel.SIMultipleAmount,
@@ -946,7 +953,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
 
-                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // #region --Offsetting function
@@ -1155,7 +1162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
-                    CreatedBy = User.Identity!.Name,
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = existingServiceInvoice.Type
                 };
@@ -1766,7 +1773,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
 
-                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 await _dbContext.FilprideCollectionReceiptDetails
@@ -2117,7 +2124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
 
-                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 await _dbContext.FilprideCollectionReceiptDetails
@@ -2271,7 +2278,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
                 bool isMultipleSi = false;
@@ -2326,7 +2333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
                 var series = model.SINo ?? model.SVNo;
@@ -2427,7 +2434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new NullReferenceException("Collection Receipt Details Not Found.");
                 }
 
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;

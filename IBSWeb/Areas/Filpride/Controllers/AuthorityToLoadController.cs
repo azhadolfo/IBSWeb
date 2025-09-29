@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
@@ -37,6 +38,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
             _dbContext = dbContext;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -202,7 +209,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ValidUntil = viewModel.Date.AddDays(4),
                     UppiAtlNo = viewModel.UPPIAtlNo,
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
-                    CreatedBy = _userManager.GetUserName(User)!,
+                    CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierId = viewModel.SupplierId,
                     Company = companyClaims

@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -45,6 +46,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -314,7 +321,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Payee = viewModel.Payee,
                     CheckDate = viewModel.CheckDate,
                     Total = cashInBank,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     CvType = "Supplier",
                     Address = supplier.SupplierAddress,
@@ -740,7 +747,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Payee = viewModel.Payee;
                 existingHeaderModel.CheckDate = viewModel.CheckDate;
                 existingHeaderModel.Total = cashInBank;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Reference = viewModel.AdvancesCVNo;
                 existingHeaderModel.OldCvNo = viewModel.OldCVNo;
@@ -968,7 +975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
                 }
 
-                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
@@ -1134,7 +1141,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
@@ -1233,7 +1240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.PostedBy = null;
-                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
@@ -2081,7 +2088,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Payee = viewModel.Payee,
                     CheckDate = viewModel.CheckDate,
                     Total = cashInBank,
-                    CreatedBy = _userManager.GetUserName(this.User),
+                    CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = viewModel.Type,
                     CvType = "Commission",
@@ -2328,7 +2335,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckDate = viewModel.CheckDate,
                     CvType = "Hauler",
                     Company = companyClaims,
-                    CreatedBy = User.Identity?.Name,
+                    CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierName = supplier.SupplierName,
                     Address = viewModel.SupplierAddress,
@@ -2728,7 +2735,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Payee = viewModel.Payee;
                 existingHeaderModel.CheckDate = viewModel.CheckDate;
                 existingHeaderModel.Total = cashInBank;
-                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.SupplierName = supplier.SupplierName;
                 existingHeaderModel.Address = viewModel.SupplierAddress;
@@ -2999,7 +3006,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Category = "Trade";
                 existingHeaderModel.Payee = viewModel.Payee;
                 existingHeaderModel.CheckDate = viewModel.CheckDate;
-                existingHeaderModel.EditedBy = User.Identity!.Name;
+                existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.SupplierName = supplier.SupplierName;
                 existingHeaderModel.Address = viewModel.SupplierAddress;
