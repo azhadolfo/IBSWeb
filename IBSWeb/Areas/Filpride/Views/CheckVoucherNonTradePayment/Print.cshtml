@@ -20,6 +20,95 @@
     }
 }
 
+<style>
+    @@media print {
+        @@page {
+            size: A4;
+            margin: 0.5cm;
+        }
+        
+        body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+        
+        /* Prevent page breaks within critical sections */
+        table { page-break-inside: avoid; }
+        tr { page-break-inside: avoid; }
+        .table-responsive { page-break-inside: avoid; }
+        
+        /* Text overflow handling */
+        .text-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.2;
+            max-height: 2.4em;
+        }
+        
+        .text-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.2;
+            max-height: 3.6em;
+        }
+        
+        /* Force word breaks for long strings */
+        .break-word {
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        /* Reduce spacing for compact layout */
+        .compact-section {
+            margin-top: 10px !important;
+        }
+        
+        /* Hide buttons during print */
+        .buttons, .row.pt-2 {
+            display: none !important;
+        }
+        
+        /* Prevent orphaned headings */
+        h2, h3, h4, h5, h6, thead {
+            page-break-after: avoid;
+        }
+        
+        /* Small font for long content */
+        .small-if-long {
+            font-size: 11px;
+        }
+    }
+    
+    /* General styles for screen and print */
+    .text-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.2;
+    }
+    
+    .text-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.2;
+    }
+    
+    .break-word {
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
+
 <br />
 <div class="text-end">
     @if (selectedCompany == "Filpride")
@@ -50,48 +139,36 @@
             VAT Reg. TIN: 776-536-510-00000
         </p>
     }
-    <h3>
-        <span style="display: inline-block;">
-            <b>CHECK VOUCHER</b>
-        </span>
+    <h3 style="margin-top: 20px; margin-bottom: 10px;">
+        <b>CHECK VOUCHER</b>
     </h3>
-    <div class="text-end" style="margin-top:-60px;">
-        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header!.CheckVoucherHeaderNo)</b></h6>
-    </div>
+</div>
+<div class="text-end" style="margin-top: -15px; margin-bottom: 15px;">
+    <h6><b>No. @Html.DisplayFor(model => model.Header!.CheckVoucherHeaderNo)</b></h6>
 </div>
 
-<div class="table-responsive" style="margin-top:50px;">
+<div class="table-responsive compact-section" style="margin-top:10px;">
     <table class="w-100">
         <thead>
             <tr style="border: 1px solid black;">
                 <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
-                <td colspan="2" class="text-end"><b>Date : </b>@Model.Header!.Date.ToString(SD.Date_Format)</td>
+                <td colspan="2" class="text-end"><b>Date : @Model.Header!.Date.ToString(SD.Date_Format)</b></td>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                <td>@Model.Header!.Payee!.ToUpper()</td>
+                <td class="text-clamp-2 break-word">@Model.Header!.Payee!.ToUpper()</td>
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                <td>@Model.Header!.Address.ToUpper()</td>
+                <td class="text-clamp-2 break-word">@Model.Header!.Address.ToUpper()</td>
                 <td style="width:5%;">PO # :</td>
-                <td>
-                    @if (Model.Header.PONo != null)
+                <td class="text-clamp-2 break-word">
+                    @if (Model.Header.PONo != null && Model.Header.PONo.Any())
                     {
-                        @for (int i = 0; i < Model.Header.PONo.Length; i++)
-                        {
-                            if (i != Model.Header.PONo.Length - 1)
-                            {
-                                <span>@Model.Header.PONo[i],</span>
-                            }
-                            else
-                            {
-                                <span>@Model.Header.PONo[i]</span>
-                            }
-                        }
+                        @string.Join(", ", Model.Header.PONo.Where(x => !string.IsNullOrWhiteSpace(x)))
                     }
                 </td>
             </tr>
@@ -99,17 +176,10 @@
                 <td style="padding-left:20px;">TIN # :</td>
                 <td>@Html.DisplayFor(model => model.Header!.Tin)</td>
                 <td>SI # :</td>
-                <td>
-                    @for (int i = 0; i < Model.Header.SINo!.Length; i++)
+                <td class="text-clamp-2 break-word">
+                    @if (Model.Header.SINo != null && Model.Header.SINo.Any())
                     {
-                        if (i != Model.Header.SINo.Length - 1)
-                        {
-                            <span>@Model.Header.SINo[i],</span>
-                        }
-                        else
-                        {
-                            <span>@Model.Header.SINo[i]</span>
-                        }
+                        @string.Join(", ", Model.Header.SINo.Where(x => !string.IsNullOrWhiteSpace(x)))
                     }
                 </td>
             </tr>
@@ -122,7 +192,8 @@
         </tbody>
     </table>
 </div>
-<div class="table-responsive" style="margin-top:20px;">
+
+<div class="table-responsive compact-section" style="margin-top:15px;">
     <table class="w-100">
         <thead>
             <tr style="border: 1px solid black;">
@@ -132,7 +203,7 @@
         <tbody>
             <tr>
                 <td style="width:20%; padding-left:20px;">Payee :</td>
-                <td>@Model.Header!.Payee!.ToUpper()</td>
+                <td class="text-clamp-2 break-word">@Model.Header!.Payee!.ToUpper()</td>
                 <td class="text-end">@Model.Header.Total.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             <tr>
@@ -149,7 +220,7 @@
 
                     // Convert and format cents value
                     int cents = Convert.ToInt32(decimalPart * 100) % 100;
-                    string centsWords = cents.ToWords(); // Use ToWords instead of string formatting
+                    string centsWords = cents.ToWords();
                     centsWords = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(centsWords.ToLower());
 
                     string upperCaseOne = integerWords;
@@ -160,24 +231,19 @@
 
                     if (cents > 0)
                     {
-                        // If there is a decimal part, include "And" before it
                         words = $"{upperCaseOne} Pesos and {upperCaseTwo} Centavos Only";
                     }
                     else
                     {
-                        // If there is no decimal part, exclude "And"
                         words = $"{upperCaseOne} Pesos Only";
                     }
-
-                    // Capitalize first letters
-                    // words = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words.ToLower());
 
                     words = words.Replace(" And", "");
                     words = words.Replace("-", " ");
                 }
                 @if (Model.Header.Total != 0)
                 {
-                    <td>*** @words ***</td>
+                    <td class="break-word">*** @words ***</td>
                 }
                 else
                 {
@@ -187,7 +253,7 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">Particulars :</td>
-                <td><p style="margin: 0; padding: 0; text-align: justify">@Model.Header!.Particulars!.ToUpper()</p></td>
+                <td><p style="margin: 0; padding: 0; text-align: justify" class="text-clamp-3 break-word small-if-long">@Model.Header!.Particulars!.ToUpper()</p></td>
                 <td></td>
             </tr>
             <tr>
@@ -209,7 +275,7 @@
     </table>
 </div>
 
-<div class="table-responsive" style="margin-top:20px;">
+<div class="table-responsive compact-section" style="margin-top:15px;">
     <table class="w-100">
         <thead>
             <tr style="border: 1px solid black;">
@@ -232,14 +298,13 @@
                                  ?? (cv.BankAccount != null ? $"{cv.BankAccount.AccountNo} {cv.BankAccount.AccountName}" : null);
 
                 <tr>
-                    <td style="width:60%; padding-left:20px;">
+                    <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
                         @($"{cv.AccountNo} {cv.AccountName}" + (subAccount != null && cv.Credit != 0  ? $" ({subAccount})" : string.Empty))
                     </td>
                     <td class="text-end" style="width:7%;">@cv.Debit.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end" style="width:7%;">@cv.Credit.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
             }
-
 
             <tr style="border-bottom:double;"></tr>
             <tr>
@@ -251,7 +316,7 @@
     </table>
 </div>
 
-<div class="table-responsive" style="margin-top:20px;">
+<div class="table-responsive compact-section" style="margin-top:15px;">
     <table class="w-100">
         <tbody class="text-center">
             <tr>
@@ -280,26 +345,26 @@
 
 @if (Model.Header.Type == nameof(DocumentType.Documented))
 {
-    <div class="text-center w-100" style="margin-top:20px;">
+    <div class="text-center w-100 compact-section" style="margin-top:10px;">
         <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br/><br/>
         @if (selectedCompany == "Filpride")
         {
-        <p>
-            <span>Acknowledgement Certificate No:</span>
-            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
-            <span>&nbsp;&nbsp;Date Issued:</span>
-            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br/>
-            Series: CV0000000001 - CV9999999999
-            Date and Time Created:&nbsp; @Model.Header.CreatedDate
-        </p>
+            <p style="font-size: 11px;">
+                <span>Acknowledgement Certificate No:</span>
+                <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+                <span>&nbsp;&nbsp;Date Issued:</span>
+                <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br/>
+                Series: CV0000000001 - CV9999999999
+                Date and Time Created:&nbsp; @DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.Header.CreatedDate)
+            </p>
         }
     </div>
     <br />
 
     if (selectedCompany == "Filpride")
     {
-        <div class="text-start w-100 footer" style="margin-top:50px;">
-            <p style="line-height: 1;">
+        <div class="text-start w-100 footer compact-section" style="margin-top:30px;">
+            <p style="line-height: 1; font-size: 11px;">
                 <em>
                     <strong>Software Name :</strong> @CS.AAS
                     <br/>
@@ -307,7 +372,7 @@
                     <br/>
                     <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
-                    <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTime().ToString("MM/dd/yyyy hh:mm tt")
+                    <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>
             </p>
         </div>
@@ -365,7 +430,6 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Properly encode the parameters to prevent any issues with special characters
                     var url = `@Url.Action("Post", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${encodeURIComponent(id)}`;
                     window.location.href = url;
                 }
@@ -411,13 +475,12 @@
                         const afterPrintHandler  = () =>
                         {
                             window.removeEventListener('afterprint', afterPrintHandler);
-                            controllerThenPrint(id); // only redirect here
+                            controllerThenPrint(id);
                         };
                         window.addEventListener('afterprint', afterPrintHandler);
 
-                        // Close Swal before printing to avoid blank overlay
                         Swal.close();
-                        setTimeout(() => { window.print(); }, 200); // small delay to ensure Swal fully closes before print
+                        setTimeout(() => { window.print(); }, 200);
                     }
                 });
             }
@@ -441,7 +504,7 @@
     <script>
         function controllerThenPrint(id) {
             var url = `@Url.Action("Printed", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${id}`;
-            window.location.href = url; // only redirect
+            window.location.href = url;
         }
     </script>
     
