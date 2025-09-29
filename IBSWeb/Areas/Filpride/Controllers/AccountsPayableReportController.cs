@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using Google.Type;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -46,6 +47,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -269,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -419,7 +426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -586,7 +593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -973,7 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -1518,7 +1525,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -2799,7 +2806,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
 
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -4003,7 +4010,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
