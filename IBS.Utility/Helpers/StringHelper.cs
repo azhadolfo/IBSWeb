@@ -6,19 +6,34 @@ namespace IBS.Utility.Helpers
         {
             var baseRemarks = string.IsNullOrWhiteSpace(remarks) ? "" : remarks.TrimEnd();
 
-            // Use provided name or default to position only
+            // Format prepared by section
             var preparedBy = string.IsNullOrWhiteSpace(preparedByName)
-                ? "Trade & Supply"
-                : $"{preparedByName}\nTrade & Supply";
+                ? ""
+                : preparedByName;
 
-            var notedBy = "Operations Manager";
-            var approvedBy = "Chief Operations Officer";
+            var preparedByPosition = "TRADE & SUPPLY";
+            var notedBy = "OPERATIONS MANAGER";
+            var approvedBy = "CHIEF OPERATIONS OFFICER";
 
-            // Using string interpolation with padding for alignment
-            var signatorySection = $@"
+            // Create the signatory section with proper spacing
+            var signatorySection = string.IsNullOrWhiteSpace(preparedBy)
+                ? $@"
+
+
+
+
 
 PREPARED BY:{new string(' ', 18)}NOTED BY:{new string(' ', 20)}APPROVED BY:
-{preparedBy.PadRight(30)}{notedBy.PadRight(29)}{approvedBy}";
+{preparedByPosition.PadRight(30)}{notedBy.PadRight(29)}{approvedBy}"
+                : $@"
+
+
+
+
+
+PREPARED BY:{new string(' ', 18)}NOTED BY:{new string(' ', 20)}APPROVED BY:
+{preparedBy.PadRight(30)}{string.Empty.PadRight(29)}
+{preparedByPosition.PadRight(30)}{notedBy.PadRight(29)}{approvedBy}";
 
             return baseRemarks + signatorySection;
         }
