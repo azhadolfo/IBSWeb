@@ -299,7 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Quantity = viewModel.Quantity,
                     Price = viewModel.Price,
                     Amount = viewModel.Quantity * viewModel.Price,
-                    Remarks = StringHelper.FormatRemarksWithSignatories(viewModel.Remarks, GetUserFullName()),
+                    Remarks = viewModel.Remarks,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = viewModel.Type,
@@ -530,6 +530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
+                model.Remarks = StringHelper.FormatRemarksWithSignatories(model.Remarks, GetUserFullName());
 
                 #region --Audit Trail Recording
 
