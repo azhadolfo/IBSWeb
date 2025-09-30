@@ -242,7 +242,6 @@
     </script>
     <script>
         function markAsDelivered(id) {
-            // Get today's date in yyyy-MM-dd format
             let today = new Date().toISOString().split('T')[0];
 
             // Calculate minimum date (today - 2 days)
@@ -250,14 +249,14 @@
             minDate.setDate(minDate.getDate() - 2);
             let minDateString = minDate.toISOString().split('T')[0];
 
-            // Get the last day of the current month
+            // Get the 3rd day of the following month
             let currentDate = new Date();
-            let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+            let thirdDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 3).toISOString().split('T')[0];
 
             Swal.fire({
                 title: "Please confirm the delivery date",
                 html: `
-    <input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${lastDayOfMonth}" required>
+<input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${thirdDayNextMonth}" required>
 `,
                 focusConfirm: false,
                 allowEscapeKey: false,
@@ -270,34 +269,45 @@
                 preConfirm: () => {
                     let deliveredDate = document.getElementById('deliveredDate').value;
 
-                    // Validate the selected date
                     if (!deliveredDate) {
                         Swal.showValidationMessage('Please select a delivery date.');
-                        return false; // Prevent submission
+                        return false;
                     }
 
-                    // Check if the selected date exceeds the last day of the current month
-                    let selectedDate = new Date(deliveredDate);
-                    let maxDate = new Date(lastDayOfMonth);
+                    // Parse dates properly to avoid timezone issues
+                    let selectedParts = deliveredDate.split('-');
+                    let selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
+
+                    let maxParts = thirdDayNextMonth.split('-');
+                    let maxDate = new Date(maxParts[0], maxParts[1] - 1, maxParts[2]);
+
+                    let minParts = minDateString.split('-');
+                    let minDateObj = new Date(minParts[0], minParts[1] - 1, minParts[2]);
+
+                    // Use setHours to normalize times for accurate comparison
+                    selectedDate.setHours(0, 0, 0, 0);
+                    maxDate.setHours(0, 0, 0, 0);
+
+                    // Use setHours to normalize times for accurate comparison
+                    selectedDate.setHours(0, 0, 0, 0);
+                    maxDate.setHours(0, 0, 0, 0);
+                    minDateObj.setHours(0, 0, 0, 0);
 
                     if (selectedDate > maxDate) {
-                        Swal.showValidationMessage('The selected date cannot exceed the current month.');
-                        return false; // Prevent submission
+                        Swal.showValidationMessage('The selected date cannot exceed the 3rd day of the following month.');
+                        return false;
                     }
 
-                    // Check if the selected date is before the minimum date
-                    let minDateObj = new Date(minDateString);
                     if (selectedDate < minDateObj) {
                         Swal.showValidationMessage('The selected date cannot be more than 2 days in the past.');
-                        return false; // Prevent submission
+                        return false;
                     }
 
-                    return deliveredDate; // Allow submission
+                    return deliveredDate;
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
                     let deliveredDate = result.value;
-                    // Redirect to the delivered action with the id and date as parameters
                     let url = `@Url.Action("Delivered", "DeliveryReceipt", new { area = "Filpride" })/${id}?deliveredDate=${encodeURIComponent(deliveredDate)}`;
                     window.location.href = url;
                 }
@@ -308,8 +318,9 @@
     <script>
         function recordLiftingDate(id, atlNo, supplierAtlNo) {
             let today = new Date().toISOString().split('T')[0];
+            // Get the 3rd day of the following month
             let currentDate = new Date();
-            let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+            let thirdDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 3).toISOString().split('T')[0];
 
             // Convert ViewBag.MinDate to JavaScript date string format
             let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
@@ -317,11 +328,11 @@
             Swal.fire({
                 title: "Please confirm the lifting date",
                 html: `
-    <div style="text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
-        <div><strong>ATL No:</strong> ${atlNo}</div>
-        ${supplierAtlNo !== "null" ? `<div><strong>Supplier ATL No:</strong> ${supplierAtlNo}</div>` : ""}
-    </div>
-    <input type="date" id="liftingDate" class="swal2-input" value="${today}" min="${minDate}" max="${lastDayOfMonth}" required>
+<div style="text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+    <div><strong>ATL No:</strong> ${atlNo}</div>
+    ${supplierAtlNo !== "null" ? `<div><strong>Supplier ATL No:</strong> ${supplierAtlNo}</div>` : ""}
+</div>
+<input type="date" id="liftingDate" class="swal2-input" value="${today}" min="${minDate}" max="${thirdDayNextMonth}" required>
 `,
                 icon: 'warning',
                 showCancelButton: true,
@@ -340,14 +351,24 @@
                         return false;
                     }
 
-                    let selectedDate = new Date(liftingDate);
-                    let maxDate = new Date(lastDayOfMonth);
-                    let minDateObj = new Date(minDate);
+                    // Parse dates properly to avoid timezone issues
+                    let selectedParts = liftingDate.split('-');
+                    let selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
+
+                    let maxParts = thirdDayNextMonth.split('-');
+                    let maxDate = new Date(maxParts[0], maxParts[1] - 1, maxParts[2]);
+
+                    let minParts = minDate.split('-');
+                    let minDateObj = new Date(minParts[0], minParts[1] - 1, minParts[2]);
 
                     if (selectedDate > maxDate) {
-                        Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        Swal.showValidationMessage('The selected date cannot exceed the 3rd day of the following month.');
                         return false;
                     }
+
+                    // Use setHours to normalize times for accurate comparison
+                    selectedDate.setHours(0, 0, 0, 0);
+                    minDateObj.setHours(0, 0, 0, 0);
 
                     if (selectedDate < minDateObj) {
                         Swal.showValidationMessage(`The selected date cannot be before ${minDateObj.toLocaleDateString()}.`);
