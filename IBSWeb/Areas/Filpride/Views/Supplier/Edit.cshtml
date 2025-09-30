@@ -71,13 +71,13 @@
                 <label asp-for="ZipCode" class="control-label">Zip Code<span class="required">*</span></label>
                 <span asp-validation-for="ZipCode" class="text-danger"></span>
             </div>
-            <div class="row mb-3">
-                <div class="form-floating col">
+            <div class="row">
+                <div class="form-floating col-12 col-md-6 mb-3">
                     <input asp-for="SupplierTin" class="form-control formattedTinNumberInput" placeholder="" maxlength="17" />
                     <label asp-for="SupplierTin" class="control-label ms-2">Tin No<span class="required">*</span></label>
                     <span asp-validation-for="SupplierTin" class="text-danger"></span>
                 </div>
-                <div class="form-floating col">
+                <div class="form-floating col-12 col-md-6 mb-3">
                     <input asp-for="Branch" class="form-control" placeholder="" />
                     <label asp-for="Branch" class="control-label ms-2">Branch</label>
                     <span asp-validation-for="Branch" class="text-danger"></span>
