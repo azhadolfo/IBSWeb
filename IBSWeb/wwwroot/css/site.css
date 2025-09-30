@@ -56,6 +56,11 @@ h2 {
     font-size: 11px;
 }
 
+.dropdown-menu {
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+}
+
 @media (min-width: 768px) {
     html {
         font-size: 16px;
@@ -72,6 +77,11 @@ h2 {
 
     .btn{
         font-size: 13px;
+    }
+
+    .dropdown-menu {
+        max-height: none !important;
+        overflow-y: visible !important;
     }
 }
 
