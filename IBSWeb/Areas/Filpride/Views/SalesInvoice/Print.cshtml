@@ -313,13 +313,13 @@
 
 @if (Model.Type == nameof(DocumentType.Documented) && customerType != nameof(CustomerType.Retail))
 {
-    <p style="margin-top:20px;" class="p-italic">
+    <p style="margin-top:20px; font-size: 11px;" class="p-italic">
         This is a system generated invoice, no signature required.
     </p>
 
     if (selectedCompany == "Filpride")
     {
-        <p class="text-center w-100">
+        <p class="text-center w-100" style="font-size: 11px;">
             <span>Acknowledgement Certificate No:</span>
             <span style="display: inline-block; width:150px;">@CS.ACCN</span>
             <span>&nbsp;&nbsp;Date Issued:</span>
