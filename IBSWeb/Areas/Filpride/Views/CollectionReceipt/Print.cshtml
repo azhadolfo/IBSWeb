@@ -169,6 +169,8 @@
     </tbody>
 </table>
 
+<br/>
+
 <table class="table-borderless w-100">
     <tr>
         <td style="width:65%; vertical-align: center;">
@@ -177,6 +179,7 @@
             </b></h3>
         </td>
         <td style="width:35%; vertical-align: top; text-align:right;">
+            <h6><b>No.&nbsp;@Html.DisplayFor(model => model.CollectionReceiptNo)</b></h6>
             <h6>
                 <span><b>
                     Date:
@@ -185,7 +188,6 @@
                     @Model.TransactionDate.ToString(SD.Date_Format)
                 </span>
             </h6>
-            <h6><b>No.&nbsp;@Html.DisplayFor(model => model.CollectionReceiptNo)</b></h6>
         </td>
     </tr>
 </table>
