@@ -33,6 +33,15 @@
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
+<style>
+    @@media print {
+        /* Reduce spacing for compact layout */
+        .compact-section {
+            margin-top: 10px !important;
+        }
+    }
+</style>
+
 <br class="br-top" />
 <table class="w-100">
     <tbody>
@@ -319,14 +328,16 @@
 
     if (selectedCompany == "Filpride")
     {
-        <p class="text-center w-100" style="font-size: 11px;">
-            <span>Acknowledgement Certificate No:</span>
-            <span style="display: inline-block; width:150px;">@CS.ACCN</span>
-            <span>&nbsp;&nbsp;Date Issued:</span>
-            <span style="display: inline-block; width:50px;">@CS.DateIssued</span><br/>
-            Series: SI0000000001 - SI9999999999
-            Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
-        </p>
+        <div class="text-center w-100 compact-section" style="margin-top:10px;">
+            <p class="text-center w-100" style="font-size: 11px;">
+                <span>Acknowledgement Certificate No:</span>
+                <span style="display: inline-block; width:150px;">@CS.ACCN</span>
+                <span>&nbsp;&nbsp;Date Issued:</span>
+                <span style="display: inline-block; width:50px;">@CS.DateIssued</span><br/>
+                Series: SI0000000001 - SI9999999999
+                Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
+            </p>
+        </div>
     }
 
     @if (!Model.IsPrinted)
