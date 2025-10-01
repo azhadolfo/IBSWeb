@@ -74,44 +74,6 @@
         .compact-section {
             margin-top: 10px !important;
         }
-
-        /* Hide buttons during print */
-        .buttons, .row.pt-2 {
-            display: none !important;
-        }
-
-        /* Prevent orphaned headings */
-        h2, h3, h4, h5, h6, thead {
-            page-break-after: avoid;
-        }
-
-        /* Small font for long content */
-        .small-if-long {
-            font-size: 11px;
-        }
-    }
-
-    /* General styles for screen and print */
-    .text-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        line-height: 1.2;
-    }
-
-    .text-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        line-height: 1.2;
-    }
-
-    .break-word {
-        word-wrap: break-word;
-        word-break: break-word;
-        overflow-wrap: break-word;
     }
 </style>
 
