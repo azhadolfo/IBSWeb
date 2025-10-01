@@ -12,7 +12,7 @@ namespace IBS.Models.Filpride.MasterFile
         [StringLength(50)]
         public string Depot { get; set; }
 
-        [StringLength(50)]
+        [StringLength(100)]
         public string CreatedBy { get; set; } = string.Empty;
 
         [Column(TypeName = "timestamp without time zone")]

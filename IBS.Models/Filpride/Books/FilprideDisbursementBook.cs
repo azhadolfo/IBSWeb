@@ -45,7 +45,7 @@ namespace IBS.Models.Filpride.Books
         public decimal Credit { get; set; }
 
         [Display(Name = "Created By")]
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar(100)")]
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]

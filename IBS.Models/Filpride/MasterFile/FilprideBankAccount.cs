@@ -25,7 +25,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string AccountName { get; set; }
 
         [Display(Name = "Created By")]
-        [StringLength(50)]
+        [StringLength(100)]
         public string? CreatedBy { get; set; } = "";
 
         [Display(Name = "Created Date")]

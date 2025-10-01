@@ -55,7 +55,7 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
-        [StringLength(50)]
+        [StringLength(100)]
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
