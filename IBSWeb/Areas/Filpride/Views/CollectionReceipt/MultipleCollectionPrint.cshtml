@@ -26,6 +26,95 @@
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
+<style>
+    @@media print {
+        @@page {
+            size: A4;
+            margin: 0.5cm;
+        }
+
+        body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* Prevent page breaks within critical sections */
+        table { page-break-inside: avoid; }
+        tr { page-break-inside: avoid; }
+        .table-responsive { page-break-inside: avoid; }
+
+        /* Text overflow handling */
+        .text-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.2;
+            max-height: 2.4em;
+        }
+
+        .text-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.2;
+            max-height: 3.6em;
+        }
+
+        /* Force word breaks for long strings */
+        .break-word {
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* Reduce spacing for compact layout */
+        .compact-section {
+            margin-top: 10px !important;
+        }
+
+        /* Hide buttons during print */
+        .buttons, .row.pt-2 {
+            display: none !important;
+        }
+
+        /* Prevent orphaned headings */
+        h2, h3, h4, h5, h6, thead {
+            page-break-after: avoid;
+        }
+
+        /* Small font for long content */
+        .small-if-long {
+            font-size: 11px;
+        }
+    }
+
+    /* General styles for screen and print */
+    .text-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.2;
+    }
+
+    .text-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.2;
+    }
+
+    .break-word {
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
+
 <br class="br-top" />
 <table class="w-100">
     <tbody>
@@ -359,13 +448,15 @@
     </table>
 </div>
 
+<br/>
+
 @if (Model.Type == nameof(DocumentType.Documented) && customerType != nameof(CustomerType.Retail))
 {
-    <div class="text-center w-100" style="margin-top:10px;">
-        <em class="p-4"><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong><br/></em>
+    <div class="text-center w-100 compact-section" style="margin-top:10px;">
+        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br/><br/>
         @if (selectedCompany == "Filpride")
         {
-            <p>
+            <p style="font-size: 11px;">
                 <span>Acknowledgement Certificate No:</span>
                 <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
                 <span>&nbsp;&nbsp;Date Issued:</span>
@@ -375,12 +466,13 @@
             </p>
         }
     </div>
+    
+    <br />
 
     if (selectedCompany == "Filpride")
     {
-        <br/>
-        <div class="text-start footer" style="margin-top:20px;">
-            <p style="line-height: 1;">
+        <div class="text-start w-100 footer compact-section" style="margin-top:30px;">
+            <p style="line-height: 1; font-size: 11px;">
                 <em>
                     <strong>Software Name :</strong> @CS.AAS
                     <br/>
