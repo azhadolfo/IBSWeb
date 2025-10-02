@@ -1013,6 +1013,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerName = originalEntry.CustomerName,
                     EmployeeName = originalEntry.EmployeeName,
                     SupplierName = originalEntry.SupplierName,
+                    ModuleType = originalEntry.ModuleType,
                 };
 
                 reversalEntries.Add(reversalEntry);

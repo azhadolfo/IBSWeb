@@ -51,11 +51,10 @@
             // Fetch banks
             const response = await fetch('@Url.Action("GetBanks", "CollectionReceipt", new { area = "Filpride" })');
             const banks = await response.json();
-            console.log("collectionReceiptId = " + collectionReceiptId);
 
             // Build <option>s
-            let bankOptions = banks.map(b => `<option value="${b.value}">${b.text}</option>`).join('');
-            let bankSelect = `<select id="swal-input2" class="swal2-select w-75">${bankOptions}</select>`;
+            let bankOptions = '<option value="">Select a bank</option>' + banks.map(b => `<option value="${b.value}">${b.text}</option>`).join('');
+            let bankSelect = `<select id="swal-input2" class="swal2-select w-75" style="width: 75%;">${bankOptions}</select>`;
 
             // Convert ViewBag.MinDate to JavaScript date string format
             let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
@@ -73,9 +72,18 @@
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Next',
+                didOpen: () => {
+                    // Initialize Select2 after the modal opens
+                    $('#swal-input2').select2({
+                        dropdownParent: $('.swal2-container'),
+                        width: '75%',
+                        placeholder: 'Select a bank'
+                    });
+                },
                 preConfirm: () => {
                     const depositDate = document.getElementById('swal-input1').value;
-                    const bankId = document.getElementById('swal-input2').value;
+                    const bankId = $('#swal-input2').val(); // Use jQuery to get Select2 value
+
                     let selectedDate = new Date(depositDate);
                     let minDateObj = new Date(minDate);
 
@@ -90,6 +98,12 @@
                     }
 
                     return { depositDate, bankId };
+                },
+                willClose: () => {
+                    // Destroy Select2 when closing to prevent memory leaks
+                    if ($('#swal-input2').data('select2')) {
+                        $('#swal-input2').select2('destroy');
+                    }
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -160,6 +174,83 @@
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
                     var url = `@Url.Action("Cancel", "CollectionReceipt", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        async function redeposit(collectionReceiptId) {
+            // Convert ViewBag.MinDate to JavaScript date string format
+            let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
+
+            // Today's date
+            let today = new Date().toISOString().split('T')[0];
+
+            Swal.fire({
+                title: 'Enter Deposit Date',
+                html:
+                    `<input id="swal-input1" type="date" value="${today}" min="${minDate}" class="swal2-input w-75">`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Next',
+                preConfirm: () => {
+                    const depositDate = document.getElementById('swal-input1').value;
+                    let selectedDate = new Date(depositDate);
+                    let minDateObj = new Date(minDate);
+
+                    if (!depositDate) {
+                        Swal.showValidationMessage('Deposit Date is required');
+                        return false;
+                    }
+
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage(`The selected date cannot be before ${minDateObj.toLocaleDateString()}.`);
+                        return false;
+                    }
+
+                    return depositDate;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let depositDate = result.value;
+
+                    // Now ask for confirmation before redirect
+                    Swal.fire({
+                        title: 'Confirm Redeposit',
+                        html: `
+                    <p><b>Deposit Date:</b> ${depositDate}</p>
+                `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Confirm'
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            window.location.href = `@Url.Action("Redeposit", "CollectionReceipt", new { area = "Filpride" })/${collectionReceiptId}?redepositDate=${encodeURIComponent(depositDate)}`;
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        function returnCheck(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Return", "CollectionReceipt", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -242,9 +333,14 @@
                     {
                         "data": "status",
                         "render": function(data, type, row) {
-                            var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
-                                    row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var statusClass = row.status === "@nameof(CollectionReceiptStatus.Posted)" 
+                            || row.status === "@nameof(CollectionReceiptStatus.Deposited)"
+                            || row.status === "@nameof(CollectionReceiptStatus.Redeposited)"    
+                                ? "bg-info" 
+                                : row.status === "@nameof(CollectionReceiptStatus.Voided)"
+                                    || row.status === "@nameof(CollectionReceiptStatus.Returned)" ? "bg-danger" 
+                                    : row.status === "@nameof(CollectionReceiptStatus.Canceled)" ? "bg-warning" 
+                                        : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
@@ -275,15 +371,18 @@
                                 }
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                             } else {
+                                if ((row.depositedDate === "" || row.depositedDate === null) && row.status === "@nameof(CollectionReceiptStatus.Posted)") {
+                                    dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
+                                }
+                                else if ((row.depositedDate === "" || row.depositedDate === null) && row.status === "@nameof(CollectionReceiptStatus.Returned)") {
+                                    dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="redeposit(${row.collectionReceiptId})">Redeposit</a></li>`;
+                                }
+                                else{
+                                    dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="returnCheck(${row.collectionReceiptId})">Return Check</a></li>`;
+                                }
                                 if (row.multipleSIId != null) {
-                                    if (row.depositedDate === null || row.depositedDate === "") {
-                                        dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
-                                    }
                                     dropdownHtml += `<li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 } else {
-                                    if (row.depositedDate === null || row.depositedDate === "") {
-                                        dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
-                                    }
                                     dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 }
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;

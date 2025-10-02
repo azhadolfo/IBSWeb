@@ -143,7 +143,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.MultipleSI?.Contains(searchValue) == true ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                            s.CreatedBy!.ToLower().Contains(searchValue)
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
@@ -247,6 +248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.BankId = bank.BankAccountId;
                 model.BankAccountName = bank.AccountName;
                 model.BankAccountNumber = bank.AccountNo;
+                model.Status = nameof(CollectionReceiptStatus.Deposited);
 
                 await _unitOfWork.FilprideCollectionReceipt.DepositAsync(model, cancellationToken);
 
@@ -2280,7 +2282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Posted);
+                model.Status = nameof(CollectionReceiptStatus.Posted);
                 bool isMultipleSi = false;
 
                 List<FilprideOffsettings>? offset;
@@ -2335,7 +2337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.PostedBy = null;
                 model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Voided);
+                model.Status = nameof(CollectionReceiptStatus.Voided);
                 var series = model.SINo ?? model.SVNo;
 
                 var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
@@ -2436,7 +2438,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Canceled);
+                model.Status = nameof(CollectionReceiptStatus.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
 
                 #region --Audit Trail Recording
@@ -2957,5 +2959,116 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                      .ToList();
             return Json(crIds);
         }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> Return(int id, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.DepositedDate = null;
+                model.Status = nameof(CollectionReceiptStatus.Returned);
+
+                await _unitOfWork.FilprideCollectionReceipt.ReturnedCheck(model.CollectionReceiptNo!, model.Company, User.Identity!.Name!, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Return checks of collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been returned successfully.";
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to returned checks. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+        }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> Redeposit(int id, DateOnly redepositDate, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.DepositedDate = redepositDate;
+                model.Status = nameof(CollectionReceiptStatus.Redeposited);
+
+                await _unitOfWork.FilprideCollectionReceipt.RedepositAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Redeposit collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been redeposited successfully.";
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to redeposit. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+        }
+
     }
 }
