@@ -220,7 +220,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken));
         }
 
-        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Deposit(int id, int bankId, DateOnly depositDate, CancellationToken cancellationToken)
         {
@@ -2960,7 +2959,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(crIds);
         }
 
-        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Return(int id, CancellationToken cancellationToken)
         {
@@ -3015,7 +3013,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Redeposit(int id, DateOnly redepositDate, CancellationToken cancellationToken)
         {
@@ -3060,6 +3057,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to redeposit. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ApplyClearingDate(int id, DateOnly clearingDate, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.ClearedDate = clearingDate;
+                model.Status = nameof(CollectionReceiptStatus.Cleared);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Apply clearing date for collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt clearing date has been applied successfully.";
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to apply clearing date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
                 if (model.SalesInvoiceId != null || model.MultipleSIId != null)

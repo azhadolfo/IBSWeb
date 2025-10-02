@@ -206,5 +206,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public List<FilprideGeneralLedgerBook>? Details { get; set; }
 
         public ICollection<FilprideCollectionReceiptDetail>? ReceiptDetails { get; set; }
+
+        [Column(TypeName = "date")]
+        public DateOnly? ClearedDate { get; set; }
     }
 }

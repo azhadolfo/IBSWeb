@@ -234,6 +234,83 @@
         }
     </script>
     <script>
+        function returnCheck(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Return", "CollectionReceipt", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        async function applyClearingDate(collectionReceiptId) {
+            // Convert ViewBag.MinDate to JavaScript date string format
+            let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
+
+            // Today's date
+            let today = new Date().toISOString().split('T')[0];
+
+            Swal.fire({
+                title: 'Enter Clearing Date',
+                html:
+                    `<input id="swal-input1" type="date" value="${today}" min="${minDate}" class="swal2-input w-75">`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Next',
+                preConfirm: () => {
+                    const clearingDate = document.getElementById('swal-input1').value;
+                    let selectedDate = new Date(clearingDate);
+                    let minDateObj = new Date(minDate);
+
+                    if (!clearingDate) {
+                        Swal.showValidationMessage('Deposit Date is required');
+                        return false;
+                    }
+
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage(`The selected date cannot be before ${minDateObj.toLocaleDateString()}.`);
+                        return false;
+                    }
+
+                    return clearingDate;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let clearingDate = result.value;
+
+                    // Now ask for confirmation before redirect
+                    Swal.fire({
+                        title: 'Apply Clearing Date',
+                        html: `
+                    <p><b>Cleared Date:</b> ${clearingDate}</p>
+                `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Confirm'
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            window.location.href = `@Url.Action("ApplyClearingDate", "CollectionReceipt", new { area = "Filpride" })/${collectionReceiptId}?clearingDate=${encodeURIComponent(clearingDate)}`;
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
         $(document).ready(function () {
             $('#paginatedTable').DataTable({
                 "processing": true,
@@ -313,11 +390,15 @@
                             var statusClass = row.status === "@nameof(CollectionReceiptStatus.Posted)"
                             || row.status === "@nameof(CollectionReceiptStatus.Deposited)"
                             || row.status === "@nameof(CollectionReceiptStatus.Redeposited)"
-                                ? "bg-info"
-                                : row.status === "@nameof(CollectionReceiptStatus.Voided)"
-                                || row.status === "@nameof(CollectionReceiptStatus.Returned)" ? "bg-danger"
-                                    : row.status === "@nameof(CollectionReceiptStatus.Canceled)" ? "bg-warning"
-                                        : "";
+                                ? "bg-info" 
+                                : row.status === "@nameof(CollectionReceiptStatus.Cleared)"
+                                    ? "bg-success"
+                                    : row.status === "@nameof(CollectionReceiptStatus.Voided)"
+                                    || row.status === "@nameof(CollectionReceiptStatus.Returned)"
+                                        ? "bg-danger"
+                                        : row.status === "@nameof(CollectionReceiptStatus.Canceled)"
+                                            ? "bg-warning"
+                                            : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
@@ -342,15 +423,20 @@
                                         <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                             } else {
-                                if ((row.depositedDate === "" || row.depositedDate === null) && row.status === "@nameof(CollectionReceiptStatus.Posted)") {
+                                const hasDeposit = row.depositedDate && row.depositedDate !== "";
+                                const postedStatus = "@nameof(CollectionReceiptStatus.Posted)";
+                                const returnedStatus = "@nameof(CollectionReceiptStatus.Returned)";
+
+                                if (!hasDeposit && row.status === postedStatus) {
                                     dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
-                                }
-                                else if ((row.depositedDate === "" || row.depositedDate === null) && row.status === "@nameof(CollectionReceiptStatus.Returned)") {
+                                } else if (!hasDeposit && row.status === returnedStatus) {
                                     dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="redeposit(${row.collectionReceiptId})">Redeposit</a></li>`;
-                                }
-                                else{
+                                } else if (hasDeposit && row.status !== returnedStatus) {
+                                    dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="applyClearingDate(${row.collectionReceiptId})">Apply Clearing Date</a></li>`;
+                                } else{
                                     dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="returnCheck(${row.collectionReceiptId})">Return Check</a></li>`;
                                 }
+                                
                                 dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                             }
