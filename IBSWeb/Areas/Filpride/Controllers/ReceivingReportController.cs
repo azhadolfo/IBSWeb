@@ -866,7 +866,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 3].Value = item.SupplierInvoiceNumber;
-                    worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate;
+                    worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate?.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 5].Value = item.TruckOrVessels;
                     worksheet.Cells[row, 6].Value = item.QuantityDelivered;
                     worksheet.Cells[row, 7].Value = item.QuantityReceived;
