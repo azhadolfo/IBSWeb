@@ -5149,7 +5149,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = unliftedLastMonth;
                             worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
                             worksheet.Cells[row, 9].Value = unliftedThisMonth;
-                            var cost = grossAmount / liftedThisMonthRrQty;
+                            var cost = liftedThisMonthRrQty > 0
+                                ? grossAmount / liftedThisMonthRrQty
+                                : 0;
                             worksheet.Cells[row, 10].Value = isVatable
                                 ? repoCalculator.ComputeNetOfVat(cost)
                                 : cost;
