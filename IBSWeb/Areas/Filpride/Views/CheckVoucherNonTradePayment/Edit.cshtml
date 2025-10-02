@@ -323,7 +323,8 @@
 
         $('input[name="CheckNo"]').on('blur', function() {
             var checkNo = $(this).val();
-            var cvId = $('input[name="CVId"]').val();
+            var cvId = $('input[name="CvId"]').val();
+            console.log(cvId);
             if (checkNo) {
                 $.ajax({
                     url: '@Url.Action("CheckNoIsExist", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
