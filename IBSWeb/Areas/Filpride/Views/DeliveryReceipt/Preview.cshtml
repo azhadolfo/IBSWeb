@@ -81,16 +81,16 @@
     <table class="w-100">
         <tbody>
             <tr>
-                <td class="w-50"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip!.Customer?.CustomerName.ToUpper()</td>
-                <td class="w-50 text-end align-text-top"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
+                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip!.Customer?.CustomerName.ToUpper()</td>
+                <td class="w-25 text-end align-text-top"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td class="w-50"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
-                <td class="w-50 text-end align-text-top"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
+                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
+                <td class="w-25 text-end align-text-top"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
             </tr>
             <tr>
                 <td></td>
-                <td class="w-50 text-end align-text-top"><b>Terms:</b> &nbsp;@Model.CustomerOrderSlip.Terms</td>
+                <td class="w-25 text-end align-text-top"><b>Terms:</b> &nbsp;@Model.CustomerOrderSlip.Terms</td>
             </tr>
         </tbody>
     </table>
