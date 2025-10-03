@@ -175,6 +175,19 @@
                                     </div>
                                 </a>
                             </div>
+                            
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "ReceivingReport", new { area = "Filpride", filterType = "RecordSupplierDetails" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-file-earmark-text me-2 text-primary"></i>Record Supplier Details
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.RecordSupplierDetails.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
 
                             @*TODO Uncomment this feature once the mobility company is live*@
                             @* <div class="col-md-4"> *@

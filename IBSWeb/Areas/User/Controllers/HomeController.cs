@@ -47,57 +47,83 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dashboardCounts = new DashboardCountViewModel
             {
-                #region -- Filpride and Mobility Station
+                #region -- Filpride
 
                 SupplierAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
-                            (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
+                            (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created))
+                            && cos.Company == companyClaims)
                         .CountAsync(),
 
                 HaulerAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
-                            (cos.Status == nameof(CosStatus.SupplierAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
+                        (cos.Status == nameof(CosStatus.SupplierAppointed) || cos.Status == nameof(CosStatus.Created))
+                            && cos.Company == companyClaims)
                         .CountAsync(),
 
                 ATLBookingCount = await _dbContext.FilprideCustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForAtlBooking) && cos.Company == companyClaims)
+                        .Where(cos => cos.Status == nameof(CosStatus.ForAtlBooking)
+                                      && cos.Company == companyClaims)
                         .CountAsync(),
 
                 OMApprovalCOSCount = await _dbContext.FilprideCustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM) && cos.Company == companyClaims)
+                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM)
+                                      && cos.Company == companyClaims)
                         .CountAsync(),
 
                 OMApprovalDRCount = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM) && dr.Company == companyClaims)
+                        .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM)
+                                     && dr.Company == companyClaims)
                         .CountAsync(),
 
                 OMApprovalPOCount = await _dbContext.FilpridePurchaseOrders
-                        .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM) && po.Company == companyClaims)
+                        .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM)
+                                     && po.Company == companyClaims)
                         .CountAsync(),
 
                 CNCApprovalCount = await _dbContext.FilprideCustomerOrderSlips
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC) && cos.Company == companyClaims)
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC)
+                                  && cos.Company == companyClaims)
                     .CountAsync(),
 
                 FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims)
+                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM)
+                                      && cos.Company == companyClaims)
                         .CountAsync(),
 
                 DRCount = await _dbContext.FilprideCustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForDR) && cos.Company == companyClaims)
+                        .Where(cos => cos.Status == nameof(CosStatus.ForDR)
+                                      && cos.Company == companyClaims)
                         .CountAsync(),
 
                 InTransitCount = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery) && dr.Company == companyClaims)
+                        .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery)
+                                     && dr.Company == companyClaims)
                         .CountAsync(),
 
                 ForInvoiceCount = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing) && dr.Company == companyClaims)
+                        .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing)
+                                     && dr.Company == companyClaims)
                         .CountAsync(),
 
                 RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => !dr.HasReceivingReport && dr.CanceledBy == null && dr.VoidedBy == null && dr.Company == companyClaims)
+                        .Where(dr => !dr.HasReceivingReport
+                                     && dr.CanceledBy == null
+                                     && dr.VoidedBy == null
+                                     && dr.Company == companyClaims)
                         .CountAsync(),
+
+                RecordSupplierDetails = await _dbContext.FilprideReceivingReports
+                    .Where(rr => (rr.SupplierDrNo == null
+                                  || rr.SupplierInvoiceDate == null
+                                  || rr.SupplierInvoiceNumber == null
+                                  || rr.WithdrawalCertificate == null
+                                  || rr.SupplierDrNo == null
+                                  || rr.CostBasedOnSoa == 0)
+                                 && rr.CanceledBy == null
+                                 && rr.VoidedBy == null
+                                 && rr.Company == companyClaims)
+                    .CountAsync(),
 
                 #endregion
 

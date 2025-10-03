@@ -138,9 +138,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     switch (filterTypeClaim)
                     {
-                        case "RecordLiftingDate":
+                        case "RecordSupplierDetails":
                             receivingReports = receivingReports
-                                .Where(rr => rr.SupplierInvoiceDate == null);
+                                .Where(rr => (rr.SupplierDrNo == null
+                                              || rr.SupplierInvoiceDate == null
+                                              || rr.SupplierInvoiceNumber == null
+                                              || rr.SupplierDrNo == null
+                                              || rr.WithdrawalCertificate == null
+                                              || rr.CostBasedOnSoa == 0)
+                                             && rr.CanceledBy == null
+                                             && rr.VoidedBy == null
+                                             && rr.Company == companyClaims);
                             break;
                             // Add other cases as needed
                     }
@@ -226,6 +234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new ReceivingReportViewModel();
             var companyClaims = await GetCompanyClaimAsync();
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             if (companyClaims == null)
             {
@@ -340,6 +349,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                ViewBag.FilterType = await GetCurrentFilterType();
 
                 if (companyClaims == null)
                 {
@@ -505,6 +515,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var receivingReport = await _unitOfWork.FilprideReceivingReport
                 .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             if (receivingReport == null)
             {
