@@ -18,46 +18,77 @@
 
 }
 
-<br />
-<div class="text-end">
-    @if (selectedCompany == "Filpride")
-    {
-        <img src="~/img/Filpride.jpg" height="" width="130px" />
+<style>
+    @@media print {
+        /* Reduce spacing for compact layout */
+        .compact-section {
+            margin-top: 10px !important;
+        }
     }
-    @if (selectedCompany == "Mobility")
-    {
-        <img src="~/img/usa88-logo.png" height="" width="130px" />
-    }
-</div>
-<div class="text-center">
-    @if (selectedCompany == "Filpride")
-    {
-        <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-        <p style="line-height: 1; margin-top:-7px;">
-            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-            Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-            VAT Reg. TIN: 000-216-589-00000
-        </p>
-    }
-    @if (selectedCompany == "Mobility")
-    {
-        <h2><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
-        <p style="line-height: 1; margin-top:-7px;">
-            Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
-            Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
-            VAT Reg. TIN: 776-536-510-00000
-        </p>
-    }
-</div>
-<h3><span style="display: inline-block; margin-top:50px;"><b>RECEIVING REPORT</b></span></h3>
-<div class="text-end" style="margin-top:-50px;">
-    <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
-</div>
+</style>
 
-<div class="w-100 text-end" style="margin-top:20px; padding-bottom:10px;">
-    <span><b>Date:</b></span>
-    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.Date.ToString(SD.Date_Format)</span><br />
-</div>
+<br class="br-top" />
+<table class="w-100">
+    <tbody>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;">
+            @if (selectedCompany == "Filpride")
+            {
+                <img src="~/img/Filpride.jpg" width="130px"/>
+            }
+            else if (selectedCompany == "Mobility")
+            {
+                <img src="~/img/usa88-logo.png" width="130px"/>
+            }
+        </td>
+    </tr>
+    <tr style="margin: 0 !important;">
+        <td class="text-center" style="padding: 0 !important;">
+            @if (selectedCompany == "Filpride")
+            {
+                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                <p style="margin: 0; padding: 0; line-height: 1;">
+                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                    VAT Reg. TIN: 000-216-589-00000
+                </p>
+            }
+            else if (selectedCompany == "Mobility")
+            {
+                <h2 class="company-name"><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+                <p style="line-height: 1; margin-top:-7px;">
+                    Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+                    Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+                    VAT Reg. TIN: 776-536-510-00000
+                </p>
+            }
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<br/>
+
+<table class="table-borderless w-100">
+    <tr>
+        <td style="width:65%; vertical-align: center;">
+            <h3><b>
+                    RECEIVING REPORT
+                </b></h3>
+        </td>
+        <td style="width:35%; vertical-align: top; text-align:right;">
+            <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
+            <h6>
+                <span><b>
+                    Date:
+                </b></span>
+                <span class="underline d-inline-block text-center">
+                    @Model.Date.ToString(SD.Date_Format)
+                </span>
+            </h6>
+        </td>
+    </tr>
+</table>
 
 <div>
     <table class="table-bordered w-100">
@@ -119,11 +150,11 @@
 
 @if (Model.Type == nameof(DocumentType.Documented))
 {
-    <div class="text-center w-100" style="margin-top:10px;">
-        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br/>
+    <div class="text-center w-100 compact-section" style="margin-top:20px;">
+        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br/><br/>
         @if (selectedCompany == "Filpride")
         {
-            <p>
+            <p style="font-size: 11px;">
                 <span>Acknowledgement Certificate No:</span>
                 <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
                 <span>&nbsp;&nbsp;Date Issued:</span>
@@ -133,11 +164,13 @@
             </p>
         }
     </div>
+    
+    <br />
 
     if (selectedCompany == "Filpride")
     {
-        <div class="text-start w-100">
-            <p style="line-height: 1;">
+        <div class="text-start w-100 footer compact-section" style="margin-top:30px;">
+            <p style="line-height: 1; font-size: 11px;">
                 <em>
                     <strong>Software Name :</strong> @CS.AAS
                     <br/>
