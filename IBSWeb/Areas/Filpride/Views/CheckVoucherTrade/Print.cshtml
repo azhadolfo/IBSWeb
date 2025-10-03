@@ -111,43 +111,63 @@
     }
 </style>
 
-<br />
-<div class="text-end">
-    @if (selectedCompany == "Filpride")
-    {
-        <img src="~/img/Filpride.jpg" height="" width="130px" />
-    }
-    @if (selectedCompany == "Mobility")
-    {
-        <img src="~/img/usa88-logo.png" height="" width="130px" />
-    }
-</div>
-<div class="text-center">
-    @if (selectedCompany == "Filpride")
-    {
-        <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-        <p style="line-height: 1; margin-top:-7px;">
-            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-            Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-            VAT Reg. TIN: 000-216-589-00000
-        </p>
-    }
-    @if (selectedCompany == "Mobility")
-    {
-        <h2><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
-        <p style="line-height: 1; margin-top:-7px;">
-            Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
-            Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
-            VAT Reg. TIN: 776-536-510-00000
-        </p>
-    }
-    <h3 style="margin-top: 20px; margin-bottom: 10px;">
-        <b>DISBURSEMENT VOUCHER</b>
-    </h3>
-</div>
-<div class="text-end" style="margin-top: -15px; margin-bottom: 15px;">
-    <h6><b>No. @Html.DisplayFor(model => model.Header!.CheckVoucherHeaderNo)</b></h6>
-</div>
+<br class="br-top" />
+<table class="w-100 mb-2">
+    <tbody>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;">
+            @if (selectedCompany == "Filpride")
+            {
+                <img src="~/img/Filpride.jpg" width="130px"/>
+            }
+            else if (selectedCompany == "Mobility")
+            {
+                <img src="~/img/usa88-logo.png" width="130px"/>
+            }
+        </td>
+    </tr>
+    <tr style="margin: 0 !important;">
+        <td class="text-center" style="padding: 0 !important;">
+            @if (selectedCompany == "Filpride")
+            {
+                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                <p style="margin: 0; padding: 0; line-height: 1;">
+                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                    VAT Reg. TIN: 000-216-589-00000
+                </p>
+            }
+            else if (selectedCompany == "Mobility")
+            {
+                <h2 class="company-name"><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+                <p style="line-height: 1; margin-top:-7px;">
+                    Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+                    Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+                    VAT Reg. TIN: 776-536-510-00000
+                </p>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td class="text-center" style="padding-top: 10px !important;">
+            <h3 class="module-name">
+                <b>
+                    DISBURSEMENT VOUCHER
+                </b>
+            </h3>
+        </td>
+    </tr>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;">
+            <h6 class="series">
+                <b>
+                    No.&nbsp;@Html.DisplayFor(model => model.Header!.CheckVoucherHeaderNo)
+                </b>
+            </h6>
+        </td>
+    </tr>
+    </tbody>
+</table>
 
 <div class="table-responsive compact-section" style="margin-top:10px;">
     <table class="w-100">
