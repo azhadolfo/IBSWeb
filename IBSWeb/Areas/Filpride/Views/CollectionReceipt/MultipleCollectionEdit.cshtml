@@ -36,7 +36,7 @@
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="CollectionReceiptId" />
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group mb-3">
                         <label class="control-label">Customers<span class="required">*</span></label>
@@ -72,9 +72,9 @@
                     </div>
                 </div>
 
-                <div class="col-8">
-                    <div class="row mb-3 overflow-auto" style="max-height: 400px;">
-                        <table style="border:dotted 1px;">
+                <div class="col-12 col-md-8">
+                    <div class="row mb-3 table-responsive" style="max-height: 400px;">
+                        <table style="border:dotted 1px; min-width: 750px;">
                             <thead class="m-2 sticky-top bg-white">
                                 <tr>
                                     <th colspan="7" class="text-center py-4">Invoice Details</th>
