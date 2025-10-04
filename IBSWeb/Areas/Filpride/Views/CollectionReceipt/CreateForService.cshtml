@@ -76,7 +76,7 @@
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="p-3" style="border:dotted 1px;">
-                <pre>
+                            <pre>
             <b>Invoice Details</b>
 
 Invoice Amount: <span id="amount"></span>
@@ -92,8 +92,10 @@ Balance:        <span id="balance"></span>
                         </div>
                     </div>
                 </div>
-                <table class="table-bordered w-100">
-                    <tbody>
+                
+                <div class="table-responsive">
+                    <table class="table-bordered w-100" style="min-width: 750px;">
+                        <tbody>
                         <tr>
                             <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
                         </tr>
@@ -157,8 +159,9 @@ Balance:        <span id="balance"></span>
                             <td style="padding-left:20px; padding-top: 5px; padding-bottom: 5px;">TOTAL: </td>
                             <td id="checkTotal" style="padding-left:15px; padding-top: 5px; padding-bottom: 5px;"></td>
                         </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="form-group my-3">
                     <label class="form-label fst-italic">If applicable, upload the certificate.</label>
