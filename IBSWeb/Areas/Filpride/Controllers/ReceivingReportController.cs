@@ -138,9 +138,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     switch (filterTypeClaim)
                     {
-                        case "RecordLiftingDate":
+                        case "RecordSupplierDetails":
                             receivingReports = receivingReports
-                                .Where(rr => rr.SupplierInvoiceDate == null);
+                                .Where(rr => (rr.SupplierDrNo == null
+                                              || rr.SupplierInvoiceDate == null
+                                              || rr.SupplierInvoiceNumber == null
+                                              || rr.SupplierDrNo == null
+                                              || rr.WithdrawalCertificate == null
+                                              || rr.CostBasedOnSoa == 0)
+                                             && rr.CanceledBy == null
+                                             && rr.VoidedBy == null
+                                             && rr.Company == companyClaims);
                             break;
                             // Add other cases as needed
                     }
@@ -226,6 +234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new ReceivingReportViewModel();
             var companyClaims = await GetCompanyClaimAsync();
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             if (companyClaims == null)
             {
@@ -340,6 +349,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                ViewBag.FilterType = await GetCurrentFilterType();
 
                 if (companyClaims == null)
                 {
@@ -505,6 +515,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var receivingReport = await _unitOfWork.FilprideReceivingReport
                 .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             if (receivingReport == null)
             {
@@ -866,7 +878,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 3].Value = item.SupplierInvoiceNumber;
-                    worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate;
+                    worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate?.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 5].Value = item.TruckOrVessels;
                     worksheet.Cells[row, 6].Value = item.QuantityDelivered;
                     worksheet.Cells[row, 7].Value = item.QuantityReceived;

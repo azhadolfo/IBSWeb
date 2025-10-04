@@ -38,7 +38,7 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(255)]
         public string Remarks { get; set; }
 
-        [StringLength(20)]
+        [StringLength(100)]
         public string CreatedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]

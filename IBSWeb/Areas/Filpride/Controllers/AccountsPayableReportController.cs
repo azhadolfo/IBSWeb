@@ -2826,6 +2826,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(GrossMarginReport));
                 }
 
+                var drIds = grossMarginReport
+                    .Where(dr => dr.HasReceivingReport)
+                    .Select(dr => dr.DeliveryReceiptId)
+                    .ToList();
+                var receivingReports = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.DeliveryReceiptId.HasValue
+                                       && rr.PostedBy != null
+                                       && drIds.Contains(rr.DeliveryReceiptId.Value), cancellationToken);
+                var rrLookup = receivingReports
+                    .Where(rr => rr.DeliveryReceiptId.HasValue)
+                    .ToDictionary(rr => rr.DeliveryReceiptId!.Value, rr => rr);
+
                 #region -- Initialize "total" Variables for operations --
 
                 var totalVolume = grossMarginReport.Sum(pr => pr.Quantity);
@@ -2920,13 +2932,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var isHaulerVatable = dr.HaulerVatType == SD.VatType_Vatable;
                     var isCustomerVatable = dr.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
+                    var rr = dr.HasReceivingReport && rrLookup.TryGetValue(dr.DeliveryReceiptId, out var receivingReport)
+                        ? receivingReport
+                        : null;
+
                     var volume = dr.Quantity;
                     var cosPricePerLiter = dr.CustomerOrderSlip.DeliveredPrice; // sales per liter
                     var salesAmount = dr.TotalAmount; // sales total
                     var netSales = isCustomerVatable
                         ? repoCalculator.ComputeNetOfVat(salesAmount)
                         : salesAmount;
-                    var costAmount = dr.PurchaseOrder.FinalPrice * volume; // purchase total
+                    var costAmount = rr?.Amount ?? dr.PurchaseOrder.FinalPrice * volume; // purchase total
                     var costPerLiter = costAmount / volume; // purchase per liter
                     var netPurchases = isSupplierVatable
                         ? repoCalculator.ComputeNetOfVat(costAmount)
@@ -2947,19 +2963,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Assign Values to Cells --
 
-                    var rrNo = "";
-
-                    if (dr.HasReceivingReport)
-                    {
-                        rrNo = _unitOfWork.FilprideReceivingReport.GetAsync(x =>
-                            x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken)
-                            .Result?.ReceivingReportNo;
-                    }
-
                     gmReportWorksheet.Cells[row, 1].Value = dr.DeliveredDate;
                     gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
                     gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                    gmReportWorksheet.Cells[row, 4].Value = rrNo;
+                    gmReportWorksheet.Cells[row, 4].Value = rr?.ReceivingReportNo;
                     gmReportWorksheet.Cells[row, 5].Value = dr.DeliveryReceiptNo;
                     gmReportWorksheet.Cells[row, 6].Value = dr.CustomerOrderSlip.CustomerName;
                     gmReportWorksheet.Cells[row, 7].Value = dr.PurchaseOrder.ProductName;
@@ -5142,10 +5149,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = unliftedLastMonth;
                             worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
                             worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                            var cost = liftedThisMonthRrQty > 0
+                                ? grossAmount / liftedThisMonthRrQty
+                                : 0;
                             worksheet.Cells[row, 10].Value = isVatable
-                                ? repoCalculator.ComputeNetOfVat(po.FinalPrice)
-                                : po.FinalPrice;
-                            worksheet.Cells[row, 11].Value = po.FinalPrice;
+                                ? repoCalculator.ComputeNetOfVat(cost)
+                                : cost;
+                            worksheet.Cells[row, 11].Value = cost;
                             worksheet.Cells[row, 12].Value = grossAmount;
                             worksheet.Cells[row, 13].Value = ewt;
                             worksheet.Cells[row, 14].Value = grossAmount - ewt;

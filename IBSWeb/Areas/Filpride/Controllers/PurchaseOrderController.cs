@@ -187,7 +187,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         po.PurchaseOrderId,
                         po.PurchaseOrderNo,
                         po.Date,
-                        po.OldPoNo,
+                        po.Terms,
                         po.SupplierId,
                         po.SupplierName,
                         po.ProductName,
