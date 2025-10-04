@@ -32,57 +32,61 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <div class="position-absolute p-2" style="left:40%; width:25%; border:dotted 1px;">
+        <form id="myForm" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="row mb-2">
+                <div class="col-12 col-md-8">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="CollectionReceiptId" />
+                    <div class="form-group mb-3">
+                        <label class="control-label">Customers</label>
+                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label">SV NO.</label>
+                        <select asp-for="ServiceInvoiceId" id="serviceInvoice" asp-items="@Model.ServiceInvoices" class="form-select js-select2" style="width:100%">
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="ServiceInvoiceId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="TransactionDate" class="control-label">Transaction Date</label>
+                        <input asp-for="TransactionDate"
+                               type="Date"
+                               class="form-control"
+                               min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
+                        <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" required />
+                        <label for="floatingInput" class="control-label">Reference #</label>
+                        <span asp-validation-for="ReferenceNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Remarks" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                        <label for="floatingInput" class="control-label">Remarks</label>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 p-3" style="border:dotted 1px;">
             <pre>
             <b>Invoice Details</b>
+
 Invoice Amount: <span id="amount"></span>
 EWT:            <span id="ewt"></span>
 WVAT:           <span id="wvat"></span>
-=======================================
+==================================
 Less EWT/WVAT:  <span id="total"></span>
-=======================================
+==================================
 Amount Paid:    <span id="amountPaid"></span>
 Balance:        <span id="balance"></span>
            </pre>
-        </div>
-        <form id="myForm" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-            <div class="col-md-4">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <input type="hidden" asp-for="CollectionReceiptId" />
-                <div class="form-group mb-3">
-                    <label class="control-label">Customers</label>
-                    <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
-                        <option></option>
-                    </select>
-                    <span asp-validation-for="CustomerId" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label class="control-label">SV NO.</label>
-                    <select asp-for="ServiceInvoiceId" id="serviceInvoice" asp-items="@Model.ServiceInvoices" class="form-select js-select2" style="width:100%">
-                        <option></option>
-                    </select>
-                    <span asp-validation-for="ServiceInvoiceId" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="TransactionDate" class="control-label">Transaction Date</label>
-                    <input asp-for="TransactionDate"
-                           type="Date"
-                           class="form-control"
-                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
-                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
-                </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" required />
-                    <label for="floatingInput" class="control-label">Reference #</label>
-                    <span asp-validation-for="ReferenceNo" class="text-danger"></span>
-                </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Remarks" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
-                    <label for="floatingInput" class="control-label">Remarks</label>
-                    <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
             </div>
             <table class="table-bordered w-100">
