@@ -4644,13 +4644,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GroupBy(po => po.Product)
                         .OrderBy(po => po.Key?.ProductName)
                         .ToList();
-                    decimal poSubtotal = 0m;
-                    decimal unliftedLastMonthSubtotal = 0m;
-                    decimal liftedThisMonthSubtotal = 0m;
-                    decimal unliftedThisMonthSubtotal = 0m;
-                    decimal grossAmountSubtotal = 0m;
-                    decimal ewtAmountSubtotal = 0m;
-                    decimal tempForGrandTotal = 0m;
+                    var poSubtotal = 0m;
+                    var unliftedLastMonthSubtotal = 0m;
+                    var liftedThisMonthSubtotal = 0m;
+                    var unliftedThisMonthSubtotal = 0m;
+                    var grossAmountSubtotal = 0m;
+                    var ewtAmountSubtotal = 0m;
+                    var tempForGrandTotal = 0m;
 
                     foreach (var product in productList)
                     {
@@ -4666,17 +4666,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             if (aGroupByProduct.Sum(po => po.Quantity) != 0m)
                             {
                                 // original po volume
-                                decimal allPoTotal = 0m;
-                                decimal unliftedLastMonth = 0m;
-                                decimal liftedThisMonth = 0m;
-                                decimal unliftedThisMonth = 0m;
-                                decimal grossOfLiftedThisMonth = 0m;
+                                var allPoTotal = 0m;
+                                var unliftedLastMonth = 0m;
+                                var liftedThisMonth = 0m;
+                                var unliftedThisMonth = 0m;
+                                var grossOfLiftedThisMonth = 0m;
 
                                 foreach (var po in aGroupByProduct)
                                 {
-                                    decimal rrQtyForUnliftedLastMonth = 0m;
-                                    decimal rrQtyForLiftedThisMonth = 0m;
-                                    decimal currentPoQuantity = po.Quantity;
+                                    var rrQtyForUnliftedLastMonth = 0m;
+                                    var rrQtyForLiftedThisMonth = 0m;
+                                    var currentPoQuantity = po.Quantity;
+                                    var isPoCurrentlyClosed = po.IsClosed
+                                                              && po.Date.Month == monthYear.Month
+                                                              && po.Date.Year == monthYear.Year;
                                     allPoTotal += currentPoQuantity;
 
                                     if (po.ReceivingReports!.Count != 0)
@@ -4697,7 +4700,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth;
+                                    unliftedThisMonth += !isPoCurrentlyClosed ? currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth : 0;
                                 }
 
                                 if (allPoTotal != 0m)
