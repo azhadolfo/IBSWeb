@@ -1123,7 +1123,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
             worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product!.ProductName;
             worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-            worksheet.Cells["H19"].Value = $"{receivingReport?.PurchaseOrder?.PurchaseOrderNo} {deliveryReceipt.Remarks}";
+            worksheet.Cells["H19"].Value = $"{deliveryReceipt.PurchaseOrder?.PurchaseOrderNo} {deliveryReceipt.Remarks}";
 
             // === SIMPLE SECURITY PROTECTION ===
 
