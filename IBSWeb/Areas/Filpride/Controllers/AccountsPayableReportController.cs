@@ -1668,7 +1668,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var netFreight = isHaulerVatable && freight != 0m
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(freight)
                             : freight; // freight n vat
-                        var freightAmount = freight * volume; // purchase total net
+                        var freightAmount = pr.DeliveryReceipt!.FreightAmount; // purchase total net
                         var freightAmountNet = netFreight * volume; // purchase total net
                         var vatAmount = isSupplierVatable
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeVatAmount(netPurchases)
@@ -2337,7 +2337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
                                                     : overallPurchasesSum;
                                                 var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                                                var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                                                var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.FreightAmount);
                                                 var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(overallFreightSum)
                                                     : overallFreightSum;
@@ -2460,7 +2460,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
                                                     : biodieselPurchasesSum;
                                                 var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                                                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                                                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.FreightAmount);
                                                 var biodieselNetOfFreightSum = isHaulerVatable && biodieselFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(biodieselFreightSum)
                                                     : biodieselFreightSum;
@@ -2582,7 +2582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
                                                     : econogasPurchasesSum;
                                                 var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                                                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                                                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
                                                 var econogasNetOfFreightSum = isHaulerVatable && econogasFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(econogasFreightSum)
                                                     : econogasFreightSum;
@@ -2704,7 +2704,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
                                                     : envirogasPurchasesSum;
                                                 var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                                                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                                                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
                                                 var envirogasNetOfFreightSum = isHaulerVatable && envirogasFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(envirogasFreightSum)
                                                     : envirogasFreightSum;

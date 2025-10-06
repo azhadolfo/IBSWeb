@@ -586,7 +586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var quantity = record.Quantity;
                                         var freightCharge = record.Freight;
                                         var ecc = record.ECC;
-                                        var totalFreight = quantity * (freightCharge + ecc);
+                                        var totalFreight = record.FreightAmount;
                                         var liftedQuantity = 0m;
 
                                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
@@ -652,7 +652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).ToList();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity) != 0 ? entriesToday.Sum(dr => dr.Quantity) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f);
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity * dr.Freight) != 0 ? entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity * dr.Freight)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity * dr.Freight).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.FreightAmount) != 0 ? entriesToday.Sum(dr => dr.FreightAmount) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.FreightAmount)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity * dr.Freight).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f);
                                     }
                                     else
@@ -1142,7 +1142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var quantity = dr.Quantity;
                     var freightCharge = dr.Freight;
                     var ecc = dr.ECC;
-                    var totalFreightAmount = quantity * (freightCharge + ecc);
+                    var totalFreightAmount = dr.FreightAmount;
                     var liftedQuantity = 0m;
 
                     if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
@@ -1207,7 +1207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Don't add record of other dates if entry is "as of" and "delivered"
                     var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).ToList();
                     worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
-                    worksheet.Cells[currentRow, 16].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
+                    worksheet.Cells[currentRow, 16].Value = entriesToday.Sum(dr => (dr.FreightAmount));
                 }
                 else
                 {
@@ -2532,7 +2532,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in salesReport)
                 {
                     var quantity = dr.Quantity;
-                    var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                    var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.Amount;
                     var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                     var vat = salesNetOfVat * .12m;
@@ -4366,7 +4366,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var isVatable = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable;
                         var isTaxable = si.CustomerOrderSlip?.HasEWT ?? true;
-                        var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                        var freight = si.DeliveryReceipt?.FreightAmount;
                         var grossAmount = si.Amount;
                         var netOfVat = isVatable
                             ? repoCalculator.ComputeNetOfVat(grossAmount)

@@ -85,7 +85,7 @@
             var quantity = dr.Quantity;
             var freightCharge = dr.Freight;
             var ecc = dr.ECC;
-            var totalFreight = quantity * (freightCharge + ecc);
+            var totalFreight = dr.FreightAmount;
         
             <tr class="align-text-bottom text-nowrap">
                 <td class="px-3"> @dr.Date.ToString(SD.Date_Format)</td> 
