@@ -98,7 +98,7 @@
 
             @foreach (var invoice in Model)
             {
-                var freight = invoice.DeliveryReceipt?.Freight * invoice.DeliveryReceipt?.Quantity;
+                var freight = invoice.DeliveryReceipt?.FreightAmount;
                 var grossAmount = invoice.Amount;
                 var vatableAmount = grossAmount / 1.12m;
                 var vatAmount = vatableAmount * .12m;

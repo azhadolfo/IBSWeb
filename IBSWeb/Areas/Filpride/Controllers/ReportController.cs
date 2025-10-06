@@ -2979,7 +2979,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in salesReport)
                 {
                     var quantity = dr.DeliveryReceipt.Quantity;
-                    var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                    var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.DeliveryReceipt!.TotalAmount;
                     var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                     var vat = salesNetOfVat * .12m;
@@ -3471,7 +3471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in salesReport)
                 {
                     var quantity = dr.Quantity;
-                    var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                    var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.Amount;
                     var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                     var vat = salesNetOfVat * .12m;
@@ -5768,7 +5768,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var overallPurchasesSum = list.Sum(s => s.Amount);
                     var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
                     var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.FreightAmount);
                     var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
                     var overallCommissionSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
@@ -5800,7 +5800,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
                     var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
                     var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.FreightAmount);
                     var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
                     var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt.CustomerOrderSlip!.CommissionRate);
                     var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
@@ -5831,7 +5831,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
                     var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
                     var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
                     var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
                     var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
@@ -5862,7 +5862,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
                     var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
                     var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
                     var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
                     var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
@@ -7483,7 +7483,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var si in salesInvoice)
                 {
-                    var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                    var freight = si.DeliveryReceipt?.FreightAmount;
                     var grossAmount = si.Amount;
                     var vatableAmount = grossAmount / 1.12m;
                     var vatAmount = vatableAmount * .12m;
@@ -8066,7 +8066,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var quantity = dr.Quantity;
                             var freightCharge = dr.Freight;
                             var ecc = dr.ECC;
-                            var totalFreightAmount = quantity * (freightCharge + ecc);
+                            var totalFreightAmount = dr.FreightAmount;
 
                             worksheet.Cells[currentRow, 1].Value = dr.Date;
                             worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";

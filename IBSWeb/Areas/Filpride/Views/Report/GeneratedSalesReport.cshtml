@@ -100,7 +100,7 @@
             @foreach (var viewModel in Model)
             {
                 var quantity = viewModel.DeliveryReceipt.Quantity;
-                var freight = (viewModel.DeliveryReceipt?.Freight ?? 0) * quantity;
+                var freight = viewModel.DeliveryReceipt?.FreightAmount ?? 0m;
                 var freightNetOfVat = freight / 1.12m;
                 var salesNetOfVat = viewModel.DeliveryReceipt!.TotalAmount != 0 ? viewModel.DeliveryReceipt.TotalAmount / 1.12m : 0;
                 var vat = salesNetOfVat * .12m;
