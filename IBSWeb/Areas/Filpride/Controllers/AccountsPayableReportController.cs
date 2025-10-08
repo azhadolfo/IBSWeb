@@ -1668,7 +1668,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var netFreight = isHaulerVatable && freight != 0m
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(freight)
                             : freight; // freight n vat
-                        var freightAmount = freight * volume; // purchase total net
+                        var freightAmount = pr.DeliveryReceipt!.FreightAmount; // purchase total net
                         var freightAmountNet = netFreight * volume; // purchase total net
                         var vatAmount = isSupplierVatable
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeVatAmount(netPurchases)
