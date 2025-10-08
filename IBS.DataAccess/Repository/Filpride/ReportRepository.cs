@@ -537,9 +537,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var purchaseOrders = await _db.FilpridePurchaseOrders
                 .Include(po => po.ReceivingReports!
-                    .Where(rr => rr.Status == nameof(Status.Posted)
-                                 && rr.Date.Year == monthYear.Year
-                                 && rr.Date.Month == monthYear.Month))
+                    .Where(rr => rr.Status == nameof(Status.Posted)))
                 .Include(po => po.Product)
                 .Include(po => po.Supplier)
                 .Include(po => po.PickUpPoint)

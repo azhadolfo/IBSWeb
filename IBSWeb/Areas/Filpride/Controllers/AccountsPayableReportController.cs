@@ -4687,6 +4687,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     decimal rrQtyForUnliftedLastMonth = 0m;
                                     decimal rrQtyForLiftedThisMonth = 0m;
                                     decimal currentPoQuantity = po.Quantity;
+                                    var isPoCurrentlyClosed = po.IsClosed
+                                                              && po.Date.Month == monthYear.Month
+                                                              && po.Date.Year == monthYear.Year;
                                     allPoTotal += currentPoQuantity;
 
                                     if (po.ReceivingReports!.Count != 0)
@@ -4707,7 +4710,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth;
+                                    unliftedThisMonth += !isPoCurrentlyClosed ? currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth : 0;
                                 }
 
                                 if (allPoTotal != 0m)
