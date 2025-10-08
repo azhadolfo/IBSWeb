@@ -889,7 +889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
-                return View("PreviewByFinance", model);
+                return View(customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) ? "PreviewByCnc" : "PreviewByFinance", model);
             }
             catch (Exception ex)
             {
@@ -1133,7 +1133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "FinanceManager, CncManager, Admin, HeadApprover")]
+        [Authorize(Roles = "FinanceManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -1187,7 +1187,50 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, FinanceManager, Admin")]
+        [Authorize(Roles = "CncManager, Admin, HeadApprover")]
+        public async Task<IActionResult> ApproveByCnc(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                existingRecord.CncApprovedBy = GetUserFullName();
+                existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Status = nameof(CosStatus.Created);
+                existingRecord.Terms = terms ?? existingRecord.Terms;
+                existingRecord.FinanceInstruction = instructions;
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = "Customer order slip approved by cnc successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to approve customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, Admin")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

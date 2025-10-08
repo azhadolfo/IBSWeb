@@ -3308,6 +3308,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalNetMarginForEnvirogas = 0m;
                 var totalNetMarginPerLiterForEnvirogas = 0m;
 
+                var purchaseAmountsCache = grossMarginReport.ToDictionary(
+                    dr => dr.DeliveryReceiptId,
+                    dr => {
+                        if (dr.HasReceivingReport && rrLookup.TryGetValue(dr.DeliveryReceiptId, out var rr))
+                        {
+                            return rr.Amount;
+                        }
+                        return dr.PurchaseOrder!.FinalPrice * dr.Quantity;
+                    }
+                );
 
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
@@ -3325,7 +3335,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(overallSalesSum)
                         : overallSalesSum;
-                    var overallPurchasesSum = list.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var overallPurchasesSum = list.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var overallNetOfPurchasesSum = isSupplierVatable && overallPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
                         : overallPurchasesSum;
@@ -3363,7 +3373,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var biodieselNetOfSalesSum = isCustomerVatable && biodieselSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(biodieselSalesSum)
                         : biodieselSalesSum;
-                    var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var biodieselPurchasesSum = listForBiodiesel.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var biodieselNetOfPurchasesSum = isSupplierVatable && biodieselPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
                         : biodieselPurchasesSum;
@@ -3400,7 +3410,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var econogasNetOfSalesSum = isCustomerVatable && econogasSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(econogasSalesSum)
                         : econogasSalesSum;
-                    var econogasPurchasesSum = listForEconogas.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var econogasPurchasesSum = listForEconogas.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var econogasNetOfPurchasesSum = isSupplierVatable && econogasPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
                         : econogasPurchasesSum;
@@ -3437,7 +3447,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var envirogasNetOfSalesSum = isCustomerVatable && envirogasSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(envirogasSalesSum)
                         : envirogasSalesSum;
-                    var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var envirogasPurchasesSum = listForEnvirogas.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var envirogasNetOfPurchasesSum = isSupplierVatable && envirogasPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
                         : envirogasPurchasesSum;
