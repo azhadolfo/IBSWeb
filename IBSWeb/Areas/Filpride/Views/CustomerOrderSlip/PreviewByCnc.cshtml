@@ -256,9 +256,9 @@
 
     <div class="row pt-2">
         @{
-            if (User.IsInRole("FinanceManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+            if (User.IsInRole("CncManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
             {
-                if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
+                if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC))
                 {
                     <div class="col-6 col-md-3">
                         <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
@@ -402,7 +402,7 @@
                             confirmButtonText: 'Submit'
                         }).then((instructionResult) => {
                             const instruction = instructionResult.value || null;
-                            var url = '@Html.Raw(Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
+                            var url = '@Html.Raw(Url.Action("ApproveByCnc", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
                             url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
                             url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
                             window.location.href = url;
