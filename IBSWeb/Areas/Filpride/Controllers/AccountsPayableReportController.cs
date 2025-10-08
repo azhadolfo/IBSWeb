@@ -6294,7 +6294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (receivingReportsThisMonth.Count == 0)
                 {
                     TempData["error"] = "No Receiving Reports found.";
-                    return RedirectToAction(nameof(LiquidationReport));
+                    return RedirectToAction(nameof(PurchaseJournalReport));
                 }
 
                 var rrsByProduct = receivingReportsThisMonth.GroupBy(rr => rr.PurchaseOrder!.ProductName).ToList();
@@ -6317,6 +6317,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("PURCHASE JOURNAL REPORT");
 
+                #region == Main Header ==
+
+                // values
                 worksheet.Cells[3, 2].Value = "Company Name:";
                 worksheet.Cells[3, 3].Value = "Filpride Resources, Inc.";
                 worksheet.Cells[4, 2].Value = "Department";
@@ -6325,6 +6328,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[5, 3].Value = "Purchase Journal Report";
                 worksheet.Cells[6, 2].Value = "Period Covered:";
                 worksheet.Cells[6, 3].Value = $"{viewModel.Period.Value.ToString("MMMM yyyy")}";
+                // styling
+                using (var range = worksheet.Cells[3, 2, 6, 3])
+                {
+                    range.Style.Font.Bold = true;
+                }
+
+                #endregion == Main Header ==
+
+                #region == Summary Per Segment ==
 
                 worksheet.Cells[9, 2].Value = "A. Summary Per Segment:";
                 worksheet.Cells[9, 2].Style.Font.Color.SetColor(Color.Red);
@@ -6370,14 +6382,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 int col = 2;
 
-                // values
+                // values of Column Names
                 foreach (var columnName in summaryPerSegmentColumnNames)
                 {
                     worksheet.Cells[12, col].Value = columnName;
                     worksheet.Cells[12, col].Style.WrapText = true;
                     col++;
                 }
-                //styling
+                //styling of Column Names
                 worksheet.Row(12).Height = 30;
                 using (var range = worksheet.Cells[12, 2, 12, col-1])
                 {
@@ -6389,7 +6401,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 int row = 13;
 
-                // entry per row
+                // values per product in All Segment
                 foreach (var product in listOfProducts)
                 {
                     // get rr by product
@@ -6425,7 +6437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int[] fourDecimalColumns = [7, 10, 13, 15];
                     foreach (var column in fourDecimalColumns)
                     {
-                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatFourDecimal;
+                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
                     }
 
                     row++;
@@ -6454,29 +6466,143 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 int[] fourDecimalColumnsGrandTotal = [7, 10, 13, 15];
                 foreach (var column in fourDecimalColumnsGrandTotal)
                 {
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
                 }
                 using (var range = worksheet.Cells[row, 4, row, 17])
                 {
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                    range.Style.Font.Bold = true;
                 }
-
-
-
-                //styling
-                worksheet.Row(12).Height = 30;
-                using (var range = worksheet.Cells[12, 2, 12, col-1])
+                using (var range = worksheet.Cells[row, 3, row, 17])
                 {
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                     range.Style.Font.Bold = true;
                 }
 
+                #region == Per Segment ==
 
+                var groupedBySegment = receivingReportsThisMonth.GroupBy(rr => rr.DeliveryReceipt!.Customer!.CustomerType).ToList();
 
+                foreach(var segment in listOfSegments)
+                {
+                    var rrsBySegment = groupedBySegment.FirstOrDefault(rrs => rrs.Key == segment);
+                    if (rrsBySegment == null)
+                    {
+                        continue;
+                    }
+
+                    row += 2;
+
+                    // segment title
+                    worksheet.Cells[row, 2].Value = segment;
+                    worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
+                    worksheet.Cells[row, 2].Style.Font.Bold = true;
+
+                    row++;
+                    col = 2;
+
+                    // values of Column Names
+                    foreach (var columnName in summaryPerSegmentColumnNames)
+                    {
+                        worksheet.Cells[row, col].Value = columnName;
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
+                    }
+                    // styling of Column Names
+                    worksheet.Row(row).Height = 30;
+                    using (var range = worksheet.Cells[row, 2, row, 17])
+                    {
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        range.Style.Font.Bold = true;
+                    }
+
+                    row++;
+
+                    // grouped by segment then product
+                    var rrsBySegmentThenByProduct = rrsBySegment.GroupBy(rr => rr.PurchaseOrder!.Product!.ProductName);
+
+                    // values per product in All Segment
+                    foreach (var product in listOfProducts)
+                    {
+                        // get rr by product
+                        var groupByProduct = (rrsBySegmentThenByProduct.FirstOrDefault(rr => rr.Key == product))?.ToList();
+                        if (groupByProduct == null)
+                        {
+                            continue;
+                        }
+
+                        // values
+                        worksheet.Cells[row, 2].Value = segment;
+                        worksheet.Cells[row, 3].Value = product;
+                        worksheet.Cells[row, 4].Value = groupByProduct!.Sum(rr => rr.QuantityReceived);
+                        worksheet.Cells[row, 5].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                        worksheet.Cells[row, 6].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                        worksheet.Cells[row, 7].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                        worksheet.Cells[row, 8].Value = groupByProduct!.Sum(rr => rr.PurchaseOrder!.Amount);
+                        worksheet.Cells[row, 9].Value = groupByProduct!.Sum(rr => rr.PurchaseOrder!.Amount);
+                        worksheet.Cells[row, 10].Value = (groupByProduct!.Sum(rr => rr.PurchaseOrder!.Amount) / groupByProduct!.Sum(rr => rr.PurchaseOrder!.QuantityReceived));
+                        worksheet.Cells[row, 11].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                        worksheet.Cells[row, 12].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                        worksheet.Cells[row, 13].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                        worksheet.Cells[row, 14].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        worksheet.Cells[row, 15].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                        worksheet.Cells[row, 16].Value = "GM Amount";
+                        worksheet.Cells[row, 17].Value = "GM/ltr";
+
+                        // formatting
+                        using (var range = worksheet.Cells[row, 4, row, 15])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        int[] fourDecimalColumns = [7, 10, 13, 15];
+                        foreach (var column in fourDecimalColumns)
+                        {
+                            worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                        }
+
+                        row++;
+                    }
+
+                    // sub total values
+                    worksheet.Cells[row, 3].Value = "Sub Total";
+                    worksheet.Cells[row, 4].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[row, 5].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 6].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 7].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                    worksheet.Cells[row, 8].Value = rrsBySegment!.Sum(rr => rr.PurchaseOrder!.Amount);
+                    worksheet.Cells[row, 9].Value = rrsBySegment!.Sum(rr => rr.PurchaseOrder!.Amount);
+                    worksheet.Cells[row, 10].Value = (rrsBySegment!.Sum(rr => rr.PurchaseOrder!.Amount) / rrsBySegment!.Sum(rr => rr.PurchaseOrder!.QuantityReceived));
+                    worksheet.Cells[row, 11].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 12].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 13].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                    worksheet.Cells[row, 14].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    worksheet.Cells[row, 15].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+
+                    // sub total formatting
+                    using (var range = worksheet.Cells[row, 4, row, 15])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    foreach (var column in fourDecimalColumnsGrandTotal)
+                    {
+                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 4, row, 17])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+                    using (var range = worksheet.Cells[row, 3, row, 17])
+                    {
+                        range.Style.Font.Bold = true;
+                    }
+
+                }
+
+                #endregion == Per Segment ==
+
+                #endregion == Summary Per Segment ==
 
                 worksheet.Columns.AutoFit();
                 worksheet.Column(1).Width = 2;
@@ -6518,7 +6644,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to generate liquidation report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                return RedirectToAction(nameof(LiquidationReport));
+                return RedirectToAction(nameof(PurchaseJournalReport));
             }
         }
 
