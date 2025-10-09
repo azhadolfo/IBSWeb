@@ -111,12 +111,12 @@
                     </td>
                     <td>
                         @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                            .Where(a => a.SupplierId == Model.SupplierId)
+                            .Where(a => a.SequenceId == cos.AppointedId)
                             .Select(a => a.PurchaseOrder!.SupplierSalesOrderNo))
                     </td>
                     <td>
                         @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                            .Where(a => a.SupplierId == Model.SupplierId)
+                            .Where(a => a.SequenceId == cos.AppointedId)
                             .Select(x => x.PurchaseOrder!.PurchaseOrderNo))
                     </td>
                     <td>
