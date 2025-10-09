@@ -5380,11 +5380,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatFourDecimal = "#,##0.0000";
 
                 var receivingReports = (await _unitOfWork.FilprideReceivingReport
-                        .GetAllAsync(rr =>
-                                rr.POId == viewModel.PurchaseOrderId &&
-                                rr.WithdrawalCertificate != null &&
-                                rr.Date.Month == viewModel.Period.Value.Month &&
-                                rr.Date.Year == viewModel.Period.Value.Year,
+                        .GetAllAsync(rr => rr.POId == viewModel.PurchaseOrderId
+                                           && rr.WithdrawalCertificate != null
+                                           && rr.Date.Month == viewModel.Period.Value.Month
+                                           && rr.Date.Year == viewModel.Period.Value.Year
+                                           && rr.Status == nameof(Status.Posted),
                             cancellationToken))
                     .OrderBy(rr => rr.ReceivingReportNo)
                     .ToList();
