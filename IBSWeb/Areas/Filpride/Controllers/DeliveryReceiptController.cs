@@ -561,10 +561,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              .FirstOrDefaultAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken)
                          ?? throw new NullReferenceException($"{viewModel.PurchaseOrderId} not found");
 
-                if (viewModel.Volume > po.Quantity - po.QuantityReceived)
+                if (!existingRecord.HasReceivingReport)
                 {
-                    throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
-                                                $"{po.PurchaseOrderNo}. Contact the TNS department.");
+                    if (viewModel.Volume > po.Quantity - po.QuantityReceived)
+                    {
+                        throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
+                                                    $"{po.PurchaseOrderNo}. Contact the TNS department.");
+                    }
                 }
 
                 if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
