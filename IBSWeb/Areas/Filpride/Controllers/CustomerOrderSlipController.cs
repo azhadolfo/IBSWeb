@@ -151,8 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 cos.Status == nameof(CosStatus.Created));
                             break;
                         case "ForATLBooking":
-                            query = query.Where(cos =>
-                                cos.Status == nameof(CosStatus.ForAtlBooking));
+                            query = query.Where(cos => !cos.IsCosAtlFinalized);
                             break;
                         case "ForCNCApproval":
                             query = query.Where(cos =>
@@ -236,7 +235,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
-                        cos.OldPrice
+                        cos.OldPrice,
+                        cos.IsCosAtlFinalized
                     })
                     .ToListAsync(cancellationToken);
 
@@ -1047,7 +1047,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.OMReason = reason;
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
 
-                if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
+                if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0 && existingRecord.IsCosAtlFinalized)
                 {
                     var multiplePo = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(a => a.PurchaseOrder)
@@ -1315,31 +1315,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-            if (existingRecord == null)
+            try
             {
-                return NotFound();
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
+                {
+                    CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                    ProductId = existingRecord.ProductId,
+                    COSVolume = existingRecord.Quantity,
+                    Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                };
+
+                return View(viewModel);
             }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-            if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+            catch (Exception ex)
             {
-                throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch appointed supplier. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
-            {
-                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                ProductId = existingRecord.ProductId,
-                COSVolume = existingRecord.Quantity,
-                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
-            };
-
-            return View(viewModel);
         }
 
         [HttpPost]

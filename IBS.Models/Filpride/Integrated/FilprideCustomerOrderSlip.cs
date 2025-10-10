@@ -300,5 +300,7 @@ namespace IBS.Models.Filpride.Integrated
 
         [StringLength(20)]
         public string? CommissioneeTaxType { get; set; }
+
+        public bool IsCosAtlFinalized { get; set; }
     }
 }
