@@ -6317,6 +6317,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("PURCHASE JOURNAL REPORT");
 
+                for (int i = 1; i <= 17; i++)
+                {
+                    worksheet.Cells[1, i].Value = i.ToString();
+                }
+                worksheet.View.FreezePanes(2, 1);
+
                 #region == Main Header ==
 
                 // values
@@ -6427,7 +6433,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 14].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
                     worksheet.Cells[row, 15].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
                     worksheet.Cells[row, 16].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                    worksheet.Cells[row, 17].Value = (groupByProduct!.Sum(rr => (rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)/ rr.QuantityReceived));
+                    worksheet.Cells[row, 17].Value = ((groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
+                                                      / groupByProduct!.Sum(rr => rr.QuantityReceived));
                     // styling
                     using (var range = worksheet.Cells[row, 4, row, 16])
                     {
@@ -6457,13 +6464,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 14].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
                 worksheet.Cells[row, 15].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.Quantity));
                 worksheet.Cells[row, 16].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                worksheet.Cells[row, 17].Value = (receivingReportsThisMonth!.Sum(rr => (rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)/ rr.QuantityReceived));
+                worksheet.Cells[row, 17].Value = ((receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
+                                                 / receivingReportsThisMonth!.Sum(rr => rr.QuantityReceived));
                 // styling
-                using (var range = worksheet.Cells[row, 4, row, 15])
+                using (var range = worksheet.Cells[row, 4, row, 16])
                 {
                     range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                 }
-                int[] fourDecimalColumnsGrandTotal = [7, 10, 13, 15];
+                int[] fourDecimalColumnsGrandTotal = [7, 10, 13, 15, 17];
                 foreach (var column in fourDecimalColumnsGrandTotal)
                 {
                     worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -6548,7 +6556,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 14].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
                         worksheet.Cells[row, 15].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
                         worksheet.Cells[row, 16].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                        worksheet.Cells[row, 17].Value = (groupByProduct!.Sum(rr => (rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)/ rr.QuantityReceived));
+                        worksheet.Cells[row, 17].Value = ((groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
+                                                          / groupByProduct!.Sum(rr => rr.QuantityReceived));
                         // styling
                         using (var range = worksheet.Cells[row, 4, row, 17])
                         {
@@ -6578,7 +6587,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 14].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
                     worksheet.Cells[row, 15].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
                     worksheet.Cells[row, 16].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                    worksheet.Cells[row, 17].Value = (rrsBySegment!.Sum(rr => (rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)/ rr.QuantityReceived));
+                    worksheet.Cells[row, 17].Value = ((rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
+                                                      / rrsBySegment!.Sum(rr => rr.QuantityReceived));
                     // styling
                     using (var range = worksheet.Cells[row, 4, row, 17])
                     {
