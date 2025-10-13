@@ -7222,7 +7222,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                row += 3;
+                row += 2;
+
+                worksheet.Cells[row, 10].Value = "Grand-total (All Segments)";
+                worksheet.Cells[row, 11].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 12].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                worksheet.Cells[row, 13].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                worksheet.Cells[row, 14].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                worksheet.Cells[row, 15].Value = receivingReportsThisMonth.Sum(rr => rr.Amount);
+                worksheet.Cells[row, 16].Value = receivingReportsThisMonth.Sum(rr => rr.Amount/1.12m);
+                worksheet.Cells[row, 17].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                    receivingReportsThisMonth.Sum(rr => rr.Amount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                worksheet.Cells[row, 18].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                worksheet.Cells[row, 19].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                worksheet.Cells[row, 20].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                worksheet.Cells[row, 21].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                worksheet.Cells[row, 22].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                worksheet.Cells[row, 23].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                worksheet.Cells[row, 24].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+
+                // styling
+                using (var range = worksheet.Cells[row, 11, row, 23])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+                fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                foreach (var column in fourDecimalColumnsGrandTotal)
+                {
+                    worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                }
+                using (var range = worksheet.Cells[row, 11, row, 24])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+                using (var range = worksheet.Cells[row, 10, row, 24])
+                {
+                    range.Style.Font.Bold = true;
+                }
 
                 #endregion == Section C: Breakdown of Purchases Per Segment: ==
 
