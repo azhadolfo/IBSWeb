@@ -6257,7 +6257,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generate Liquidation Report Excel File --
+        #region -- Generate Purchase Journal Report Excel File --
 
         [HttpPost]
         public async Task<IActionResult> GeneratePurchaseJournalReportExcelFile(ViewModelBook viewModel, CancellationToken cancellationToken)
@@ -6385,7 +6385,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // values
                 worksheet.Cells[3, 2].Value = "Company Name:";
                 worksheet.Cells[3, 3].Value = "Filpride Resources, Inc.";
-                worksheet.Cells[4, 2].Value = "Department";
+                worksheet.Cells[4, 2].Value = "Department:";
                 worksheet.Cells[4, 3].Value = "Operations-TNS";
                 worksheet.Cells[5, 2].Value = "Subject:";
                 worksheet.Cells[5, 3].Value = "Purchase Journal Report";
@@ -7303,7 +7303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                var fileName = $"PurchaseJournalReport_{viewModel.Period!.Value.ToString("MMMM_yyyy")}.xlsx";
+                var fileName = $"Purchase_Journal_Report_{viewModel.Period!.Value.ToString("MMMM_yyyy")}.xlsx";
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
