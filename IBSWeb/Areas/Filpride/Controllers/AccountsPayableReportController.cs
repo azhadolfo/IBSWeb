@@ -6285,13 +6285,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var prevMonth = viewModel.Period.Value.AddMonths(-1);
                 var nextMonth = basePeriod.AddMonths(1);
 
-                var listOfSegments = new[]
-                {
-                    "Retail",
-                    "Industrial",
-                    "Government"
-                };
-
                 var listOfProducts = new[]
                 {
                     "BIODIESEL",
@@ -6533,9 +6526,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var groupedBySegment = receivingReportsThisMonth.GroupBy(rr => rr.DeliveryReceipt!.Customer!.CustomerType).ToList();
 
-                foreach(var segment in listOfSegments)
+                foreach(var segment in Enum.GetValues<CustomerType>())
                 {
-                    var rrsBySegment = groupedBySegment.FirstOrDefault(rrs => rrs.Key == segment);
+                    var rrsBySegment = groupedBySegment.FirstOrDefault(rrs => rrs.Key == segment.ToString());
                     if (rrsBySegment == null)
                     {
                         continue;
@@ -7035,13 +7028,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
 
-                foreach (var segment in listOfSegments)
+                foreach (var segment in Enum.GetValues<CustomerType>())
                 {
                     foreach (var product in listOfProducts)
                     {
                         var rrSetBySegmentAndProduct = receivingReportsThisMonth
                             .Where(rr =>
-                                rr.DeliveryReceipt!.Customer!.CustomerType == segment &&
+                                rr.DeliveryReceipt!.Customer!.CustomerType == segment.ToString() &&
                                 rr.PurchaseOrder!.ProductName == product )
                             .OrderBy(rr => rr.Date)
                             .ToList();
@@ -7051,7 +7044,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             row += 2;
 
                             // SEGMENT TITLE
-                            if (segment == "RETAIL")
+                            if (segment.ToString() == "Retail")
                             {
                                 worksheet.Cells[row, 2].Value = $"{segment}/MOBILITY: {product}";
                             }
@@ -7174,51 +7167,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var rrSetBySegment = receivingReportsThisMonth
                         .Where(rr =>
-                            rr.DeliveryReceipt!.Customer!.CustomerType == segment)
+                            rr.DeliveryReceipt!.Customer!.CustomerType == segment.ToString())
                         .OrderBy(rr => rr.Date)
                         .ToList();
 
-                    row += 2;
+                    if (rrSetBySegment.Count != 0)
+                    {
+                        row += 2;
 
-                    worksheet.Cells[row, 10].Value = "Sub-total (All Products)";
-                    worksheet.Cells[row, 11].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 12].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 13].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 14].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 15].Value = rrSetBySegment.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 16].Value = rrSetBySegment.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 17].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrSetBySegment.Sum(rr => rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 18].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 19].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 20].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 21].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 22].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 23].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                    worksheet.Cells[row, 24].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 10].Value = "Sub-total (All Products)";
+                        worksheet.Cells[row, 11].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived);
+                        worksheet.Cells[row, 12].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                        worksheet.Cells[row, 13].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                        worksheet.Cells[row, 14].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 15].Value = rrSetBySegment.Sum(rr => rr.Amount);
+                        worksheet.Cells[row, 16].Value = rrSetBySegment.Sum(rr => rr.Amount/1.12m);
+                        worksheet.Cells[row, 17].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                            rrSetBySegment.Sum(rr => rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 18].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                        worksheet.Cells[row, 19].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                        worksheet.Cells[row, 20].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 21].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        worksheet.Cells[row, 22].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 23].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                        worksheet.Cells[row, 24].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
 
-                    // styling
-                    using (var range = worksheet.Cells[row, 11, row, 23])
-                    {
-                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    }
-                    fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
-                    foreach (var column in fourDecimalColumnsGrandTotal)
-                    {
-                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
-                    }
-                    using (var range = worksheet.Cells[row, 11, row, 24])
-                    {
-                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                    }
-                    using (var range = worksheet.Cells[row, 10, row, 24])
-                    {
-                        range.Style.Font.Bold = true;
+                        // styling
+                        using (var range = worksheet.Cells[row, 11, row, 23])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
+                        foreach (var column in fourDecimalColumnsGrandTotal)
+                        {
+                            worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                        }
+                        using (var range = worksheet.Cells[row, 11, row, 24])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        }
+                        using (var range = worksheet.Cells[row, 10, row, 24])
+                        {
+                            range.Style.Font.Bold = true;
+                        }
                     }
                 }
 
