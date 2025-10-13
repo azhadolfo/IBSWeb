@@ -6378,7 +6378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == Main Header ==
 
-                #region == Summary Per Segment ==
+                #region == Section A: Summary Per Segment ==
 
                 worksheet.Cells[9, 2].Value = "A. Summary Per Segment:";
                 worksheet.Cells[9, 2].Style.Font.Color.SetColor(Color.Red);
@@ -6639,7 +6639,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == Per Segment ==
 
-                #region == Breakdown of Intransit and Other Income ==
+                #endregion == Section A: Summary Per Segment ==
+
+                #region == Section B: Breakdown of Intransit and Other Income ==
 
                 var breakdownColumnNames = new[]
                 {
@@ -7029,9 +7031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                #endregion == Breakdown of Intransit and Other Income ==
-
-                #endregion == Summary Per Segment ==
+                #endregion == Section B: Breakdown of Intransit and Other Income ==
 
                 worksheet.Columns.AutoFit();
                 worksheet.Column(1).Width = 2;
