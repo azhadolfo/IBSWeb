@@ -6606,7 +6606,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
-                        int[] fourDecimalColumns = [7, 10, 13, 17];
+                        int[] fourDecimalColumns = [7, 10, 13, 15, 17];
                         foreach (var column in fourDecimalColumns)
                         {
                             worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
