@@ -6279,8 +6279,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(LiquidationReport));
                 }
 
-                string currencyFormatTwoDecimal = "#,##0.00";
-                string currencyFormatFourDecimal = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00_);(#,##0.00)";
+                string currencyFormatFourDecimal = "#,##0.0000_);(#,##0.0000)";
                 var basePeriod = new DateOnly(viewModel.Period.Value.Year, viewModel.Period.Value.Month, 1);
                 var prevMonth = viewModel.Period.Value.AddMonths(-1);
                 var nextMonth = basePeriod.AddMonths(1);
