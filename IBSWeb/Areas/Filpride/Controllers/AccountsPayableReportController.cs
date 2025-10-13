@@ -6281,6 +6281,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 string currencyFormatTwoDecimal = "#,##0.00";
                 string currencyFormatFourDecimal = "#,##0.0000";
+                var basePeriod = new DateOnly(viewModel.Period.Value.Year, viewModel.Period.Value.Month, 1);
+                var prevMonth = viewModel.Period.Value.AddMonths(-1);
+                var nextMonth = basePeriod.AddMonths(1);
 
                 var receivingReportsThisMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
@@ -6299,14 +6302,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var rrsByProduct = receivingReportsThisMonth.GroupBy(rr => rr.PurchaseOrder!.ProductName).ToList();
 
-                var prevMonth = viewModel.Period.Value.AddMonths(-1);
-
                 var receivingReportsLastMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
                                 rr.Status == "Posted" &&
                                 rr.Date.Month == prevMonth.Month &&
                                 rr.Date.Year == prevMonth.Year,
                             cancellationToken))
+                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .ToList();
+
+                var inTransitPrevToThisMonth = receivingReportsLastMonth
+                    .Where(rr =>
+                        rr.DeliveryReceipt!.DeliveredDate == null
+                        || (rr.DeliveryReceipt!.DeliveredDate.Value.Month == viewModel.Period.Value.Month
+                            && rr.DeliveryReceipt!.DeliveredDate.Value.Year == viewModel.Period.Value.Year))
+                    .OrderBy(rr => rr.DeliveryReceipt!.DeliveredDate)
+                    .ToList();
+
+                var inTransitNowToNextMonth = receivingReportsThisMonth
+                    .Where(rr =>
+                        rr.DeliveryReceipt!.DeliveredDate == null
+                        || rr.DeliveryReceipt!.DeliveredDate >= nextMonth)
                     .OrderBy(rr => rr.ReceivingReportNo)
                     .ToList();
 
@@ -6619,9 +6635,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region == Breakdown of Intransit and Other Income ==
 
-                var basePeriod = new DateOnly(viewModel.Period.Value.Year, viewModel.Period.Value.Month, 1);
-                var nextMonth = basePeriod.AddMonths(1);
-
                 var breakdownColumnNames = new[]
                 {
                     "Lifting Date",
@@ -6652,14 +6665,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Value = "B. Breakdown of Intransit and Other Income:";
                 worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
-
-                var inTransitPrevToThisMonth = receivingReportsLastMonth
-                    .Where(rr =>
-                        rr.DeliveryReceipt!.DeliveredDate == null
-                        || (rr.DeliveryReceipt!.DeliveredDate.Value.Month == viewModel.Period.Value.Month
-                            && rr.DeliveryReceipt!.DeliveredDate.Value.Year == viewModel.Period.Value.Year))
-                    .OrderBy(rr => rr.DeliveryReceipt!.DeliveredDate)
-                    .ToList();
 
                 if (inTransitPrevToThisMonth != null && inTransitPrevToThisMonth.Count != 0)
                 {
@@ -6779,13 +6784,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Style.Font.Bold = true;
                     }
                 }
-
-                var inTransitNowToNextMonth = receivingReportsThisMonth
-                    .Where(rr =>
-                        rr.DeliveryReceipt!.DeliveredDate == null
-                        || rr.DeliveryReceipt!.DeliveredDate >= nextMonth)
-                    .OrderBy(rr => rr.ReceivingReportNo)
-                    .ToList();
 
                 if (inTransitNowToNextMonth != null && inTransitNowToNextMonth.Count != 0)
                 {
