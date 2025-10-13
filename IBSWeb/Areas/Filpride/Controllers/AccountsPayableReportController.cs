@@ -6310,7 +6310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("PURCHASE JOURNAL REPORT");
 
-                for (int i = 1; i <= 17; i++)
+                for (int i = 1; i <= 24; i++)
                 {
                     worksheet.Cells[1, i].Value = i.ToString();
                 }
@@ -6570,18 +6570,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 4].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived);
                     worksheet.Cells[row, 5].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
                     worksheet.Cells[row, 6].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 7].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                    worksheet.Cells[row, 7].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
+                        (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity)) : 0;
                     worksheet.Cells[row, 8].Value = rrsBySegment!.Sum(rr => rr.Amount);
                     worksheet.Cells[row, 9].Value = rrsBySegment!.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 10].Value = (rrsBySegment!.Sum(rr => rr.Amount/1.12m) / rrsBySegment!.Sum(rr => rr.QuantityReceived));
+                    worksheet.Cells[row, 10].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
+                        (rrsBySegment!.Sum(rr => rr.Amount/1.12m) / rrsBySegment!.Sum(rr => rr.QuantityReceived)) : 0;
                     worksheet.Cells[row, 11].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
                     worksheet.Cells[row, 12].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 13].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                    worksheet.Cells[row, 13].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) != 0 ?
+                        rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) : 0;
                     worksheet.Cells[row, 14].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 15].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity));
+                    worksheet.Cells[row, 15].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) != 0 ?
+                        (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity)) : 0;
                     worksheet.Cells[row, 16].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                    worksheet.Cells[row, 17].Value = ((rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
-                                                      / rrsBySegment!.Sum(rr => rr.QuantityReceived));
+                    worksheet.Cells[row, 17].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
+                        ((rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)) / rrsBySegment!.Sum(rr => rr.QuantityReceived)) : 0;
                     // styling
                     using (var range = worksheet.Cells[row, 4, row, 17])
                     {
@@ -6602,7 +6606,300 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
+                row += 3;
+
                 #endregion == Per Segment ==
+
+                #region == Breakdown of Intransit and Other Income ==
+
+                var basePeriod = new DateOnly(viewModel.Period.Value.Year, viewModel.Period.Value.Month, 1);
+                var nextMonth = basePeriod.AddMonths(1);
+
+                var breakdownColumnNames = new[]
+                {
+                    "Lifting Date",
+                    "Delivery Date",
+                    "Segment",
+                    "Supplier Name",
+                    "PO Number",
+                    "RR Number",
+                    "DR Number",
+                    "Client Name",
+                    "Product",
+                    "Quantity Served",
+                    "Sales Amount(Vat Inc)",
+                    "Sales Amount(Vat Ex)",
+                    "Sales/ltr (Vat Ex)",
+                    "Cost Amount (Vat Inc)",
+                    "Cost Amount (Vat Ex)",
+                    "Cost/ltr (Vat Ex)",
+                    "Freight Amount (Vat Inc)",
+                    "Freight Amount (Vat Ex)",
+                    "Freight/ltr (Vat Ex)",
+                    "Commission Amount",
+                    "Commission/ltr",
+                    "GM Amount",
+                    "GM/ltr",
+                };
+
+                worksheet.Cells[row, 2].Value = "B. Breakdown of Intransit and Other Income:";
+                worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
+                worksheet.Cells[row, 2].Style.Font.Bold = true;
+
+                var inTransitPrevToThisMonth = receivingReportsLastMonth
+                    .Where(rr =>
+                        rr.DeliveryReceipt!.DeliveredDate == null
+                        || (rr.DeliveryReceipt!.DeliveredDate.Value.Month == viewModel.Period.Value.Month
+                            && rr.DeliveryReceipt!.DeliveredDate.Value.Year == viewModel.Period.Value.Year))
+                    .OrderBy(rr => rr.DeliveryReceipt!.DeliveredDate)
+                    .ToList();
+
+                if (inTransitPrevToThisMonth != null && inTransitPrevToThisMonth.Count != 0)
+                {
+                    row += 2;
+
+                    // SEGMENT TITLE
+                    worksheet.Cells[row, 2].Value = "I. Purchased/Lifted last month, Sold/Delivered this month:";
+                    worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
+                    worksheet.Cells[row, 2].Style.Font.Bold = true;
+
+                    row++;
+                    col = 2;
+
+                    // SEGMENT COLUMN NAMES
+                    foreach (var columnName in breakdownColumnNames)
+                    {
+                        worksheet.Cells[row, col].Value = columnName;
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
+                    }
+                    // styling
+                    worksheet.Row(row).Height = 30;
+                    using (var range = worksheet.Cells[row, 2, row, 24])
+                    {
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        range.Style.Font.Bold = true;
+                    }
+
+                    row++;
+
+                    foreach(var receivingReport in inTransitPrevToThisMonth)
+                    {
+                        // SUBTOTAL BY SEGMENT
+                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
+                        worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
+                        worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
+                        worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
+                        worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
+                        worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
+                        worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
+                        worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
+                            receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
+                        worksheet.Cells[row, 15].Value = receivingReport.Amount;
+                        worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
+                        worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
+                        worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
+                        worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
+                            receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
+                        worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
+                        worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
+                        worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
+                            ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+
+                        // styling
+                        using (var range = worksheet.Cells[row, 11, row, 23])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                        foreach (var column in fourDecimalColumnsGrandTotal)
+                        {
+                            worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                        }
+
+                        row++;
+                    }
+
+                    row++;
+
+                    worksheet.Cells[row, 10].Value = "Sub-total";
+                    worksheet.Cells[row, 11].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[row, 12].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 13].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                    worksheet.Cells[row, 14].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 15].Value = inTransitPrevToThisMonth.Sum(rr => rr.Amount);
+                    worksheet.Cells[row, 16].Value = inTransitPrevToThisMonth.Sum(rr => rr.Amount/1.12m);
+                    worksheet.Cells[row, 17].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitPrevToThisMonth.Sum(rr => rr.Amount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 18].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 19].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                    worksheet.Cells[row, 20].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 21].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    worksheet.Cells[row, 22].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 23].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                    worksheet.Cells[row, 24].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+
+                    // styling
+                    using (var range = worksheet.Cells[row, 11, row, 23])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    foreach (var column in fourDecimalColumnsGrandTotal)
+                    {
+                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 11, row, 24])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+                    using (var range = worksheet.Cells[row, 10, row, 24])
+                    {
+                        range.Style.Font.Bold = true;
+                    }
+                }
+
+                var inTransitNowToNextMonth = receivingReportsThisMonth
+                    .Where(rr =>
+                        rr.DeliveryReceipt!.DeliveredDate == null
+                        || rr.DeliveryReceipt!.DeliveredDate >= nextMonth)
+                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .ToList();
+
+                if (inTransitNowToNextMonth != null && inTransitNowToNextMonth.Count != 0)
+                {
+                    row += 2;
+
+                    // SEGMENT TITLE
+                    worksheet.Cells[row, 2].Value = "II. Purchased/Lifted this month, Sold/Delivered next month:";
+                    worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
+                    worksheet.Cells[row, 2].Style.Font.Bold = true;
+
+                    row++;
+                    col = 2;
+
+                    // SEGMENT COLUMN NAMES
+                    foreach (var columnName in breakdownColumnNames)
+                    {
+                        worksheet.Cells[row, col].Value = columnName;
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
+                    }
+                    // styling
+                    worksheet.Row(row).Height = 30;
+                    using (var range = worksheet.Cells[row, 2, row, 24])
+                    {
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        range.Style.Font.Bold = true;
+                    }
+
+                    row++;
+
+                    foreach(var receivingReport in inTransitNowToNextMonth)
+                    {
+                        // SUBTOTAL BY SEGMENT
+                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate.ToString();
+                        worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
+                        worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
+                        worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
+                        worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
+                        worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
+                        worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
+                        worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
+                        worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
+                            receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
+                        worksheet.Cells[row, 15].Value = receivingReport.Amount;
+                        worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
+                        worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
+                        worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
+                        worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
+                            receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
+                        worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
+                        worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
+                        worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
+                        worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
+                            ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+
+                        // styling
+                        using (var range = worksheet.Cells[row, 11, row, 23])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                        foreach (var column in fourDecimalColumnsGrandTotal)
+                        {
+                            worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                        }
+
+                        row++;
+                    }
+
+                    row++;
+
+                    worksheet.Cells[row, 10].Value = "Sub-total";
+                    worksheet.Cells[row, 11].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[row, 12].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 13].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                    worksheet.Cells[row, 14].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 15].Value = inTransitNowToNextMonth.Sum(rr => rr.Amount);
+                    worksheet.Cells[row, 16].Value = inTransitNowToNextMonth.Sum(rr => rr.Amount/1.12m);
+                    worksheet.Cells[row, 17].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitNowToNextMonth.Sum(rr => rr.Amount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 18].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 19].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                    worksheet.Cells[row, 20].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 21].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    worksheet.Cells[row, 22].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 23].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                    worksheet.Cells[row, 24].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
+                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+
+                    // styling
+                    using (var range = worksheet.Cells[row, 11, row, 23])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    foreach (var column in fourDecimalColumnsGrandTotal)
+                    {
+                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 11, row, 24])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+                    using (var range = worksheet.Cells[row, 10, row, 24])
+                    {
+                        range.Style.Font.Bold = true;
+                    }
+                }
+
+                #endregion == Breakdown of Intransit and Other Income ==
 
                 #endregion == Summary Per Segment ==
 
