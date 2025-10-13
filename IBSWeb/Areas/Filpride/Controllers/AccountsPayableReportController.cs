@@ -6299,6 +6299,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "ENVIROGAS"
                 };
 
+                var breakdownColumnNames = new[]
+                {
+                    "Lifting Date",
+                    "Delivery Date",
+                    "Segment",
+                    "Supplier Name",
+                    "PO Number",
+                    "RR Number",
+                    "DR Number",
+                    "Client Name",
+                    "Product",
+                    "Quantity Served",
+                    "Sales Amount(Vat Inc)",
+                    "Sales Amount(Vat Ex)",
+                    "Sales/ltr (Vat Ex)",
+                    "Cost Amount (Vat Inc)",
+                    "Cost Amount (Vat Ex)",
+                    "Cost/ltr (Vat Ex)",
+                    "Freight Amount (Vat Inc)",
+                    "Freight Amount (Vat Ex)",
+                    "Freight/ltr (Vat Ex)",
+                    "Commission Amount",
+                    "Commission/ltr",
+                    "GM Amount",
+                    "GM/ltr",
+                };
+
                 var receivingReportsThisMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
                                 rr.Status == "Posted" &&
@@ -6642,33 +6669,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion == Section A: Summary Per Segment ==
 
                 #region == Section B: Breakdown of Intransit and Other Income ==
-
-                var breakdownColumnNames = new[]
-                {
-                    "Lifting Date",
-                    "Delivery Date",
-                    "Segment",
-                    "Supplier Name",
-                    "PO Number",
-                    "RR Number",
-                    "DR Number",
-                    "Client Name",
-                    "Product",
-                    "Quantity Served",
-                    "Sales Amount(Vat Inc)",
-                    "Sales Amount(Vat Ex)",
-                    "Sales/ltr (Vat Ex)",
-                    "Cost Amount (Vat Inc)",
-                    "Cost Amount (Vat Ex)",
-                    "Cost/ltr (Vat Ex)",
-                    "Freight Amount (Vat Inc)",
-                    "Freight Amount (Vat Ex)",
-                    "Freight/ltr (Vat Ex)",
-                    "Commission Amount",
-                    "Commission/ltr",
-                    "GM Amount",
-                    "GM/ltr",
-                };
 
                 worksheet.Cells[row, 2].Value = "B. Breakdown of Intransit and Other Income:";
                 worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
