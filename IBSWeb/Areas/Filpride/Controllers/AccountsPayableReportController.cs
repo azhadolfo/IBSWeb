@@ -6734,7 +6734,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
-                        fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                         foreach (var column in fourDecimalColumnsGrandTotal)
                         {
                             worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -6771,7 +6771,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                     foreach (var column in fourDecimalColumnsGrandTotal)
                     {
                         worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -6853,7 +6853,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
-                        fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                         foreach (var column in fourDecimalColumnsGrandTotal)
                         {
                             worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -6890,7 +6890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                     foreach (var column in fourDecimalColumnsGrandTotal)
                     {
                         worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -6972,7 +6972,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
-                        fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                        fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                         foreach (var column in fourDecimalColumnsGrandTotal)
                         {
                             worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -7009,7 +7009,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                     foreach (var column in fourDecimalColumnsGrandTotal)
                     {
                         worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -7118,7 +7118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
-                                fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                                fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                                 foreach (var column in fourDecimalColumnsGrandTotal)
                                 {
                                     worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -7155,7 +7155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
-                            fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                            fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                             foreach (var column in fourDecimalColumnsGrandTotal)
                             {
                                 worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -7206,7 +7206,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                     foreach (var column in fourDecimalColumnsGrandTotal)
                     {
                         worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
@@ -7250,7 +7250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                 }
-                fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                fourDecimalColumnsGrandTotal = [14, 17, 20, 22, 24];
                 foreach (var column in fourDecimalColumnsGrandTotal)
                 {
                     worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
