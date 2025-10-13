@@ -7179,8 +7179,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Columns.AutoFit();
                 worksheet.Column(1).Width = 2;
-                worksheet.Column(2).Width = 16;
-                worksheet.Column(3).Width = 12;
+                worksheet.Column(2).Width = 17;
+                worksheet.Column(3).Width = 17;
                 worksheet.Column(4).Width = 19;
                 worksheet.Column(5).Width = 29;
                 worksheet.Column(6).Width = 22;
@@ -7195,6 +7195,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Column(15).Width = 15;
                 worksheet.Column(16).Width = 19;
                 worksheet.Column(17).Width = 11;
+                worksheet.Column(18).Width = 14;
+                worksheet.Column(19).Width = 13;
+                worksheet.Column(20).Width = 10;
+                worksheet.Column(21).Width = 11;
+                worksheet.Column(22).Width = 13;
+                worksheet.Column(23).Width = 16;
+                worksheet.Column(24).Width = 9;
                 worksheet.Cells.Style.Font.Name = "Calibri";
 
                 #endregion == Contents ==
