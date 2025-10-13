@@ -6332,7 +6332,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 rr.Date.Month == viewModel.Period.Value.Month &&
                                 rr.Date.Year == viewModel.Period.Value.Year,
                             cancellationToken))
-                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .OrderBy(rr => rr.Date)
                     .ToList();
 
                 if (receivingReportsThisMonth.Count == 0)
@@ -6349,7 +6349,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 rr.Date.Month == prevMonth.Month &&
                                 rr.Date.Year == prevMonth.Year,
                             cancellationToken))
-                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .OrderBy(rr => rr.Date)
                     .ToList();
 
                 var inTransitPrevToThisMonth = receivingReportsLastMonth
@@ -6357,20 +6357,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.DeliveryReceipt!.DeliveredDate == null
                         || (rr.DeliveryReceipt!.DeliveredDate.Value.Month == viewModel.Period.Value.Month
                             && rr.DeliveryReceipt!.DeliveredDate.Value.Year == viewModel.Period.Value.Year))
-                    .OrderBy(rr => rr.DeliveryReceipt!.DeliveredDate)
+                    .OrderBy(rr => rr.Date)
                     .ToList();
 
                 var inTransitNowToNextMonth = receivingReportsThisMonth
                     .Where(rr =>
                         rr.DeliveryReceipt!.DeliveredDate == null
                         || rr.DeliveryReceipt!.DeliveredDate >= nextMonth)
-                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .OrderBy(rr => rr.Date)
                     .ToList();
 
                 var rrWithIOCSupplier = receivingReportsThisMonth
                     .Where(rr =>
                         rr.PurchaseOrder!.SupplierId == 182)
-                    .OrderBy(rr => rr.ReceivingReportNo)
+                    .OrderBy(rr => rr.Date)
                     .ToList();
 
                 #endregion == Initializations ==
@@ -7043,7 +7043,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Where(rr =>
                                 rr.DeliveryReceipt!.Customer!.CustomerType == segment &&
                                 rr.PurchaseOrder!.ProductName == product )
-                            .OrderBy(rr => rr.ReceivingReportNo)
+                            .OrderBy(rr => rr.Date)
                             .ToList();
 
                         if (rrSetBySegmentAndProduct != null && rrSetBySegmentAndProduct.Count != 0)
@@ -7175,7 +7175,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var rrSetBySegment = receivingReportsThisMonth
                         .Where(rr =>
                             rr.DeliveryReceipt!.Customer!.CustomerType == segment)
-                        .OrderBy(rr => rr.ReceivingReportNo)
+                        .OrderBy(rr => rr.Date)
                         .ToList();
 
                     row += 2;
