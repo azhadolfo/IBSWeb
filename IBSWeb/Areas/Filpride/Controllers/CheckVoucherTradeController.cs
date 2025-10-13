@@ -2469,6 +2469,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (query.Any())
             {
                 var drList = deliverReceipt
+                    .OrderBy(x => x.ManualDrNo)
                     .Select(dr =>
                     {
                         var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
@@ -2486,7 +2487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return new
                         {
                             Id = dr.DeliveryReceiptId,
-                            dr.DeliveryReceiptNo,
+                            dr.ManualDrNo,
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
                             NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                         };
@@ -2530,6 +2531,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var drList = deliverReceipt
+                .OrderBy(x => x.ManualDrNo)
                 .Select(dr =>
                 {
                     var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
@@ -2547,7 +2549,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return new
                     {
                         Id = dr.DeliveryReceiptId,
-                        dr.DeliveryReceiptNo,
+                        dr.ManualDrNo,
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };

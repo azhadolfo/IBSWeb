@@ -82,7 +82,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region Purchase Order
 
-        [Required(ErrorMessage = "Customer field is required.")]
+        [Required(ErrorMessage = "PO field is required.")]
         public int PurchaseOrderId { get; set; }
 
         public List<SelectListItem>? PurchaseOrders { get; set; }

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace IBS.Services.Attributes
 {
-    public class CompanyAuthorizeAttribute : AuthorizeAttribute
+    public class CompanyAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
     {
         private readonly string _company;
 
@@ -17,12 +17,9 @@ namespace IBS.Services.Attributes
         {
             var companyClaim = context.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
 
-            if (_company == "Mobility" || companyClaim == "Mobility")
+            if (!string.Equals(companyClaim, _company, StringComparison.OrdinalIgnoreCase))
             {
-                if (!string.Equals(companyClaim, _company, StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Result = new ForbidResult();
-                }
+                context.Result = new ForbidResult();
             }
         }
     }

@@ -242,8 +242,10 @@
                                     break;
                                 case '@CosStatus.ForApprovalOfOM':
                                 case '@CosStatus.ForApprovalOfFM':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    if (row.deliveredQuantity === 0){
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    }
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForDR':
@@ -266,6 +268,10 @@
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     break;
+                            }
+
+                            if (!row.isCosAtlFinalized && row.depot != null){
+                                actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
                             }
                             
                             actions += `</ul></div>`;

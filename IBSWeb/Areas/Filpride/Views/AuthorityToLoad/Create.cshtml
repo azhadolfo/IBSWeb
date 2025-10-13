@@ -111,10 +111,12 @@
                                             </span>
                                         </div>
                                         <div class="col-md-6 volume-wrapper" style="display:none;">
-                                            <input type="number" step="0.01"
+                                            <input type="number" 
+                                                   step="0.01"
                                                    class="form-control form-control-sm cos-volume"
                                                    placeholder="Enter volume (max: ${formatNumber(cos.volume)})"
-                                                   min="0.01" max="${cos.volume}" />
+                                                   min="0.01" 
+                                                   max="${cos.volume}"/>
                                         </div>
                                     </div>`;
                             container.append(html);

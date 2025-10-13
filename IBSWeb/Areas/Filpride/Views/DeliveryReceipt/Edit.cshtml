@@ -34,7 +34,7 @@
                            type="date" 
                            class="form-control border-0 shadow" 
                            placeholder=""
-                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>/>
+                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
@@ -56,7 +56,7 @@
                         }
                         else
                         {
-                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                                 <option value="" selected>Select customer</option>
                             </select>
                         }
@@ -91,7 +91,7 @@
                         }
                         else
                         {
-                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                                 <option value="" selected>Select cos</option>
                             </select>
                         }
@@ -112,7 +112,7 @@
                         }
                         else
                         {
-                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                                 <option value="" selected>Select po</option>
                             </select>
                         }
