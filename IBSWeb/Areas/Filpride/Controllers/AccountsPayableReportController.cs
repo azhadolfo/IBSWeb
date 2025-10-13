@@ -6380,12 +6380,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("PURCHASE JOURNAL REPORT");
 
-                for (int i = 1; i <= 24; i++)
-                {
-                    worksheet.Cells[1, i].Value = i.ToString();
-                }
-                worksheet.View.FreezePanes(2, 1);
-
                 #region == Main Header ==
 
                 // values
