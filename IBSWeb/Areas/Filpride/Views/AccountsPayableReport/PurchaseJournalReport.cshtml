@@ -41,40 +41,4 @@
             form.submit();
         }
     </script>
-    <script>
-        $(document).ready(function () {
-           $("#supplier-list").change(function () {
-               let supplierId =$(this).val();
-               let purchaseOrderList = $("#purchase-order-list");
-               
-               $.ajax({
-                   url: '@Url.Action("GetPurchaseOrderListBySupplier", "AccountsPayableReport", new{ area = "Filpride"})',
-                   type: "GET",
-                   data: { supplierId : supplierId },
-                   success: function (data) {
-                       purchaseOrderList.empty();
-                       
-                       if (Array.isArray(data) && data.length > 0) {
-                           purchaseOrderList.append('<option>');
-                           
-                           $.each(data, function(index, item) {
-                               purchaseOrderList.append($('<option>', {
-                                   value: item.value, 
-                                   text: item.text
-                               }));
-                           });
-                       }
-                       else {
-                           Swal.fire({
-                               title: "Error",
-                               text: "No Purchase Orders found",
-                               icon: "error"
-                           });
-                       }
-                   }
-               })
-               
-           }) ;
-        });
-    </script>
 }
