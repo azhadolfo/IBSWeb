@@ -6695,8 +6695,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach(var receivingReport in inTransitPrevToThisMonth)
                     {
                         // SUBTOTAL BY SEGMENT
-                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
-                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
                         worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
                         worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
@@ -6814,8 +6814,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach(var receivingReport in inTransitNowToNextMonth)
                     {
                         // SUBTOTAL BY SEGMENT
-                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
-                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
                         worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
                         worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
@@ -6933,8 +6933,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach(var receivingReport in rrWithIOCSupplier)
                     {
                         // SUBTOTAL BY SEGMENT
-                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
-                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
+                        worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
                         worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
                         worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
@@ -7079,8 +7079,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             foreach(var receivingReport in rrSetBySegmentAndProduct)
                             {
                                 // SUBTOTAL BY SEGMENT
-                                worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
-                                worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
+                                worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
+                                worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
                                 worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
                                 worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
                                 worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
