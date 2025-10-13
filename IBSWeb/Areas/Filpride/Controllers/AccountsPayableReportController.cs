@@ -6820,7 +6820,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         // SUBTOTAL BY SEGMENT
                         worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MMMM/dd/yyyy");
-                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate.ToString();
+                        worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MMMM/dd/yyyy");
                         worksheet.Cells[row, 4].Value = receivingReport.DeliveryReceipt.Customer!.CustomerType;
                         worksheet.Cells[row, 5].Value = receivingReport.PurchaseOrder!.Supplier!.SupplierName;
                         worksheet.Cells[row, 6].Value = receivingReport.PurchaseOrder!.PurchaseOrderNo;
