@@ -151,8 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 cos.Status == nameof(CosStatus.Created));
                             break;
                         case "ForATLBooking":
-                            query = query.Where(cos =>
-                                cos.Status == nameof(CosStatus.ForAtlBooking));
+                            query = query.Where(cos => !cos.IsCosAtlFinalized);
                             break;
                         case "ForCNCApproval":
                             query = query.Where(cos =>
@@ -236,7 +235,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
-                        cos.OldPrice
+                        cos.OldPrice,
+                        cos.IsCosAtlFinalized
                     })
                     .ToListAsync(cancellationToken);
 
@@ -889,7 +889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
-                return View("PreviewByFinance", model);
+                return View(customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) ? "PreviewByCnc" : "PreviewByFinance", model);
             }
             catch (Exception ex)
             {
@@ -1047,7 +1047,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.OMReason = reason;
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
 
-                if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
+                if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0 && existingRecord.IsCosAtlFinalized)
                 {
                     var multiplePo = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(a => a.PurchaseOrder)
@@ -1133,7 +1133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "FinanceManager, CncManager, Admin, HeadApprover")]
+        [Authorize(Roles = "FinanceManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -1187,7 +1187,50 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, FinanceManager, Admin")]
+        [Authorize(Roles = "CncManager, Admin, HeadApprover")]
+        public async Task<IActionResult> ApproveByCnc(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                existingRecord.CncApprovedBy = GetUserFullName();
+                existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Status = nameof(CosStatus.Created);
+                existingRecord.Terms = terms ?? existingRecord.Terms;
+                existingRecord.FinanceInstruction = instructions;
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = "Customer order slip approved by cnc successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to approve customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, Admin")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -1272,31 +1315,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-            if (existingRecord == null)
+            try
             {
-                return NotFound();
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
+                {
+                    CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                    ProductId = existingRecord.ProductId,
+                    COSVolume = existingRecord.Quantity,
+                    Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                };
+
+                return View(viewModel);
             }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-            if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+            catch (Exception ex)
             {
-                throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch appointed supplier. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
-            {
-                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                ProductId = existingRecord.ProductId,
-                COSVolume = existingRecord.Quantity,
-                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
-            };
-
-            return View(viewModel);
         }
 
         [HttpPost]

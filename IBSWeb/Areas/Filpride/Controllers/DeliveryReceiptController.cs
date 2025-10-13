@@ -295,6 +295,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var po = await _dbContext.FilpridePurchaseOrders
+                             .Include(x => x.ActualPrices)
+                             .FirstOrDefaultAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken)
+                         ?? throw new NullReferenceException($"{viewModel.PurchaseOrderId} not found");
+
+                if (viewModel.Volume > po.Quantity - po.QuantityReceived)
+                {
+                    throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
+                                                $"{po.PurchaseOrderNo}. Contact the TNS department.");
+                }
+
                 FilprideDeliveryReceipt model = new()
                 {
                     DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
@@ -348,11 +359,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(a => a.Position == SD.Position_OperationManager)
                         .Select(u => u.Id)
                         .ToListAsync(cancellationToken);
-
-                    var po = await _dbContext.FilpridePurchaseOrders
-                                 .Include(x => x.ActualPrices)
-                                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == model.PurchaseOrderId, cancellationToken)
-                             ?? throw new NullReferenceException($"{model.PurchaseOrderId} not found");
 
                     var grossMargin = ComputeGrossMargin(customerOrderSlip, po);
 
@@ -550,6 +556,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var po = await _dbContext.FilpridePurchaseOrders
+                             .Include(x => x.ActualPrices)
+                             .FirstOrDefaultAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken)
+                         ?? throw new NullReferenceException($"{viewModel.PurchaseOrderId} not found");
+
+                if (!existingRecord.HasReceivingReport)
+                {
+                    if (viewModel.Volume > po.Quantity - po.QuantityReceived)
+                    {
+                        throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
+                                                    $"{po.PurchaseOrderNo}. Contact the TNS department.");
+                    }
+                }
+
                 if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
                 {
                     var hauler = await _unitOfWork.FilprideSupplier
@@ -559,11 +579,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(a => a.Position == SD.Position_OperationManager)
                         .Select(u => u.Id)
                         .ToListAsync(cancellationToken);
-
-                    var po = await _dbContext.FilpridePurchaseOrders
-                                 .Include(x => x.ActualPrices)
-                                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken)
-                             ?? throw new NullReferenceException($"{existingRecord.PurchaseOrderId} not found");
 
                     var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, po, (viewModel.Freight + viewModel.ECC));
 
@@ -1123,7 +1138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
             worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product!.ProductName;
             worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-            worksheet.Cells["H19"].Value = $"{receivingReport?.PurchaseOrder?.PurchaseOrderNo} {deliveryReceipt.Remarks}";
+            worksheet.Cells["H19"].Value = $"{deliveryReceipt.PurchaseOrder?.PurchaseOrderNo} {deliveryReceipt.Remarks}";
 
             // === SIMPLE SECURITY PROTECTION ===
 

@@ -248,8 +248,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
                     {
-                        appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
+                        appointedSupplier.CustomerOrderSlip!.IsCosAtlFinalized = true;
                     }
+
+                    appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
@@ -338,7 +340,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(a => a.CustomerOrderSlip)
                 .Include(a => a.PurchaseOrder)
                 .Where(a => a.SupplierId == supplierId
-                            && a.CustomerOrderSlip!.Status == nameof(CosStatus.ForAtlBooking)
+                            && !a.CustomerOrderSlip!.IsCosAtlFinalized
                             && a.CustomerOrderSlip!.PickUpPointId == loadPortId
                             && a.UnreservedQuantity > 0)
                 .Select(g => new

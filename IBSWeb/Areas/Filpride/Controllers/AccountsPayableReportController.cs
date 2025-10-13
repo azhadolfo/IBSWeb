@@ -2338,7 +2338,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
                                                     : overallPurchasesSum;
                                                 var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                                                var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                                                var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                                                 var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(overallFreightSum)
                                                     : overallFreightSum;
@@ -2461,7 +2461,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
                                                     : biodieselPurchasesSum;
                                                 var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                                                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                                                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                                                 var biodieselNetOfFreightSum = isHaulerVatable && biodieselFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(biodieselFreightSum)
                                                     : biodieselFreightSum;
@@ -2583,7 +2583,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
                                                     : econogasPurchasesSum;
                                                 var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                                                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                                                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                                                 var econogasNetOfFreightSum = isHaulerVatable && econogasFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(econogasFreightSum)
                                                     : econogasFreightSum;
@@ -2705,7 +2705,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
                                                     : envirogasPurchasesSum;
                                                 var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                                                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                                                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                                                 var envirogasNetOfFreightSum = isHaulerVatable && envirogasFreightSum != 0m
                                                     ? repoCalculator.ComputeNetOfVat(envirogasFreightSum)
                                                     : envirogasFreightSum;
@@ -3309,6 +3309,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalNetMarginForEnvirogas = 0m;
                 var totalNetMarginPerLiterForEnvirogas = 0m;
 
+                var purchaseAmountsCache = grossMarginReport.ToDictionary(
+                    dr => dr.DeliveryReceiptId,
+                    dr => {
+                        if (dr.HasReceivingReport && rrLookup.TryGetValue(dr.DeliveryReceiptId, out var rr))
+                        {
+                            return rr.Amount;
+                        }
+                        return dr.PurchaseOrder!.FinalPrice * dr.Quantity;
+                    }
+                );
 
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
@@ -3326,7 +3336,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(overallSalesSum)
                         : overallSalesSum;
-                    var overallPurchasesSum = list.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var overallPurchasesSum = list.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var overallNetOfPurchasesSum = isSupplierVatable && overallPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
                         : overallPurchasesSum;
@@ -3364,7 +3374,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var biodieselNetOfSalesSum = isCustomerVatable && biodieselSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(biodieselSalesSum)
                         : biodieselSalesSum;
-                    var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var biodieselPurchasesSum = listForBiodiesel.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var biodieselNetOfPurchasesSum = isSupplierVatable && biodieselPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
                         : biodieselPurchasesSum;
@@ -3401,7 +3411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var econogasNetOfSalesSum = isCustomerVatable && econogasSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(econogasSalesSum)
                         : econogasSalesSum;
-                    var econogasPurchasesSum = listForEconogas.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var econogasPurchasesSum = listForEconogas.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var econogasNetOfPurchasesSum = isSupplierVatable && econogasPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
                         : econogasPurchasesSum;
@@ -3438,7 +3448,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var envirogasNetOfSalesSum = isCustomerVatable && envirogasSalesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(envirogasSalesSum)
                         : envirogasSalesSum;
-                    var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.PurchaseOrder!.FinalPrice * s.Quantity);
+                    var envirogasPurchasesSum = listForEnvirogas.Sum(s => purchaseAmountsCache[s.DeliveryReceiptId]);
                     var envirogasNetOfPurchasesSum = isSupplierVatable && envirogasPurchasesSum != 0m
                         ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
                         : envirogasPurchasesSum;
@@ -4645,13 +4655,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GroupBy(po => po.Product)
                         .OrderBy(po => po.Key?.ProductName)
                         .ToList();
-                    var poSubtotal = 0m;
-                    var unliftedLastMonthSubtotal = 0m;
-                    var liftedThisMonthSubtotal = 0m;
-                    var unliftedThisMonthSubtotal = 0m;
-                    var grossAmountSubtotal = 0m;
-                    var ewtAmountSubtotal = 0m;
-                    var tempForGrandTotal = 0m;
+                    decimal poSubtotal = 0m;
+                    decimal unliftedLastMonthSubtotal = 0m;
+                    decimal liftedThisMonthSubtotal = 0m;
+                    decimal unliftedThisMonthSubtotal = 0m;
+                    decimal grossAmountSubtotal = 0m;
+                    decimal ewtAmountSubtotal = 0m;
+                    decimal tempForGrandTotal = 0m;
 
                     foreach (var product in productList)
                     {
@@ -4667,20 +4677,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             if (aGroupByProduct.Sum(po => po.Quantity) != 0m)
                             {
                                 // original po volume
-                                var allPoTotal = 0m;
-                                var unliftedLastMonth = 0m;
-                                var liftedThisMonth = 0m;
-                                var unliftedThisMonth = 0m;
-                                var grossOfLiftedThisMonth = 0m;
+                                decimal allPoTotal = 0m;
+                                decimal unliftedLastMonth = 0m;
+                                decimal liftedThisMonth = 0m;
+                                decimal unliftedThisMonth = 0m;
+                                decimal grossOfLiftedThisMonth = 0m;
 
                                 foreach (var po in aGroupByProduct)
                                 {
-                                    var rrQtyForUnliftedLastMonth = 0m;
-                                    var rrQtyForLiftedThisMonth = 0m;
-                                    var currentPoQuantity = po.Quantity;
-                                    var isPoCurrentlyClosed = po.IsClosed
-                                                              && po.Date.Month == monthYear.Month
-                                                              && po.Date.Year == monthYear.Year;
+                                    decimal rrQtyForUnliftedLastMonth = 0m;
+                                    decimal rrQtyForLiftedThisMonth = 0m;
+                                    decimal currentPoQuantity = po.Quantity;
                                     allPoTotal += currentPoQuantity;
 
                                     if (po.ReceivingReports!.Count != 0)
@@ -4701,7 +4708,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += !isPoCurrentlyClosed ? currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth : 0;
+                                    unliftedThisMonth += currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth;
                                 }
 
                                 if (allPoTotal != 0m)
@@ -5374,11 +5381,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatFourDecimal = "#,##0.0000";
 
                 var receivingReports = (await _unitOfWork.FilprideReceivingReport
-                        .GetAllAsync(rr =>
-                                rr.POId == viewModel.PurchaseOrderId &&
-                                rr.WithdrawalCertificate != null &&
-                                rr.Date.Month == viewModel.Period.Value.Month &&
-                                rr.Date.Year == viewModel.Period.Value.Year,
+                        .GetAllAsync(rr => rr.POId == viewModel.PurchaseOrderId
+                                           && rr.WithdrawalCertificate != null
+                                           && rr.Date.Month == viewModel.Period.Value.Month
+                                           && rr.Date.Year == viewModel.Period.Value.Year
+                                           && rr.Status == nameof(Status.Posted),
                             cancellationToken))
                     .OrderBy(rr => rr.ReceivingReportNo)
                     .ToList();
