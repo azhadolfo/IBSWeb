@@ -6285,6 +6285,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var prevMonth = viewModel.Period.Value.AddMonths(-1);
                 var nextMonth = basePeriod.AddMonths(1);
 
+                var listOfSegments = new[]
+                {
+                    "Retail",
+                    "Industrial",
+                    "Government"
+                };
+
+                var listOfProducts = new[]
+                {
+                    "BIODIESEL",
+                    "ECONOGAS",
+                    "ENVIROGAS"
+                };
+
                 var receivingReportsThisMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
                                 rr.Status == "Posted" &&
@@ -6392,20 +6406,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "Commission/ltr",
                     "GM Amount",
                     "GM/ltr",
-                };
-
-                var listOfSegments = new[]
-                {
-                    "Retail",
-                    "Industrial",
-                    "Government"
-                };
-
-                var listOfProducts = new[]
-                {
-                    "BIODIESEL",
-                    "ECONOGAS",
-                    "ENVIROGAS"
                 };
 
                 int col = 2;
