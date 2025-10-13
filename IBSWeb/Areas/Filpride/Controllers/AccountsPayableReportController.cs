@@ -7122,7 +7122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             row++;
 
-                            worksheet.Cells[row, 10].Value = "Sub-total";
+                            worksheet.Cells[row, 10].Value = $"Sub-total ({product})";
                             worksheet.Cells[row, 11].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived);
                             worksheet.Cells[row, 12].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
                             worksheet.Cells[row, 13].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
@@ -7163,6 +7163,55 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 range.Style.Font.Bold = true;
                             }
                         }
+                    }
+
+                    var rrSetBySegment = receivingReportsThisMonth
+                        .Where(rr =>
+                            rr.DeliveryReceipt!.Customer!.CustomerType == segment)
+                        .OrderBy(rr => rr.ReceivingReportNo)
+                        .ToList();
+
+                    row += 2;
+
+                    worksheet.Cells[row, 10].Value = "Sub-total (All Products)";
+                    worksheet.Cells[row, 11].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[row, 12].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 13].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                    worksheet.Cells[row, 14].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 15].Value = rrSetBySegment.Sum(rr => rr.Amount);
+                    worksheet.Cells[row, 16].Value = rrSetBySegment.Sum(rr => rr.Amount/1.12m);
+                    worksheet.Cells[row, 17].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrSetBySegment.Sum(rr => rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 18].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 19].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                    worksheet.Cells[row, 20].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 21].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    worksheet.Cells[row, 22].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 23].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                    worksheet.Cells[row, 24].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+
+                    // styling
+                    using (var range = worksheet.Cells[row, 11, row, 23])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    fourDecimalColumnsGrandTotal = [14, 17, 20, 21, 22, 24];
+                    foreach (var column in fourDecimalColumnsGrandTotal)
+                    {
+                        worksheet.Cells[row, column].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 11, row, 24])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+                    using (var range = worksheet.Cells[row, 10, row, 24])
+                    {
+                        range.Style.Font.Bold = true;
                     }
                 }
 
