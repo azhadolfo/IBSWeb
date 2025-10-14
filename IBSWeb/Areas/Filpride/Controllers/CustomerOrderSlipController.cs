@@ -236,7 +236,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
-                        cos.OldPrice
+                        cos.OldPrice,
+                        cos.DeliveryOption
                     })
                     .ToListAsync(cancellationToken);
 

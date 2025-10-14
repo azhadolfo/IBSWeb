@@ -22,7 +22,7 @@
                     <thead class="bg-light">
                     <tr>
                         <th class="text-start">COS#</th>
-                        <th class="text-start">OTC COS#</th>
+                        <th class="text-start">Delivery Option</th>
                         <th class="text-start">PO#</th>
                         <th class="text-start">Depot</th>
                         <th class="text-start">@Html.DisplayNameFor(m => m.Date)</th>
@@ -93,8 +93,8 @@
                         "name": "CustomerOrderSlipNo",
                     },
                     { 
-                        "data": "oldCosNo",
-                        "name": "OldCosNo",
+                        "data": "deliveryOption",
+                        "name": "deliveryOption",
                     },
                     {
                         "data": "purchaseOrderId",
