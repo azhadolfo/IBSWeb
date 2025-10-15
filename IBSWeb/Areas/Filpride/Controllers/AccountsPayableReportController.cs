@@ -6354,7 +6354,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .OrderBy(rr => rr.Date)
                     .ToList();
 
-                var rrWithIOCSupplier = receivingReportsThisMonth
+                var rrWithIOCForAccountOfMMSI = receivingReportsThisMonth
                     .Where(rr =>
                         rr.PurchaseOrder!.SupplierId == 182)
                     .OrderBy(rr => rr.Date)
@@ -6893,7 +6893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                if (rrWithIOCSupplier != null && rrWithIOCSupplier.Count != 0)
+                if (rrWithIOCForAccountOfMMSI != null && rrWithIOCForAccountOfMMSI.Count != 0)
                 {
                     row += 2;
 
@@ -6924,7 +6924,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     row++;
 
-                    foreach(var receivingReport in rrWithIOCSupplier)
+                    foreach(var receivingReport in rrWithIOCForAccountOfMMSI)
                     {
                         // SUBTOTAL BY SEGMENT
                         worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
@@ -6971,25 +6971,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
 
                     worksheet.Cells[row, 10].Value = "Sub-total";
-                    worksheet.Cells[row, 11].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 12].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 13].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 14].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 15].Value = rrWithIOCSupplier.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 16].Value = rrWithIOCSupplier.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 17].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCSupplier.Sum(rr => rr.Amount) / rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 18].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 19].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 20].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 21].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 22].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 23].Value = rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                    worksheet.Cells[row, 24].Value = rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCSupplier.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrWithIOCSupplier.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 11].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived);
+                    worksheet.Cells[row, 12].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    worksheet.Cells[row, 13].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
+                    worksheet.Cells[row, 14].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 15].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount);
+                    worksheet.Cells[row, 16].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount/1.12m);
+                    worksheet.Cells[row, 17].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 18].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    worksheet.Cells[row, 19].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
+                    worksheet.Cells[row, 20].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 21].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    worksheet.Cells[row, 22].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 23].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
+                    worksheet.Cells[row, 24].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
+                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
 
                     // styling
                     using (var range = worksheet.Cells[row, 11, row, 23])
