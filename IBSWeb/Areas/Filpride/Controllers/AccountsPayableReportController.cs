@@ -6285,13 +6285,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var prevMonth = viewModel.Period.Value.AddMonths(-1);
                 var nextMonth = basePeriod.AddMonths(1);
 
-                var listOfProducts = new[]
-                {
-                    "BIODIESEL",
-                    "ECONOGAS",
-                    "ENVIROGAS"
-                };
-
                 var breakdownColumnNames = new[]
                 {
                     "Lifting Date",
@@ -6335,6 +6328,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var rrsByProduct = receivingReportsThisMonth.GroupBy(rr => rr.PurchaseOrder!.ProductName).ToList();
+                var listOfProducts = rrsByProduct.Select(rr => rr.Key).ToList();
 
                 var receivingReportsLastMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
