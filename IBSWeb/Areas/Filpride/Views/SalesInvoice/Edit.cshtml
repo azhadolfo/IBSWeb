@@ -101,8 +101,7 @@
                             <input type="date"
                                    asp-for="TransactionDate"
                                    class="form-control" 
-                                   data-existing-id="@Model.SalesInvoiceId"
-                                   min="@Model.MinDate.ToString("yyyy-MM-dd")"/>/>
+                                   data-existing-id="@Model.SalesInvoiceId"/>
                             <span asp-validation-for="TransactionDate" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
