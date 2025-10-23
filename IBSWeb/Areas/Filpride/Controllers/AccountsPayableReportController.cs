@@ -6333,8 +6333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var receivingReportsLastMonth = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(rr =>
                                 rr.Status == "Posted" &&
-                                rr.Date.Month == prevMonth.Month &&
-                                rr.Date.Year == prevMonth.Year,
+                                rr.Date < basePeriod,
                             cancellationToken))
                     .OrderBy(rr => rr.Date)
                     .ToList();
