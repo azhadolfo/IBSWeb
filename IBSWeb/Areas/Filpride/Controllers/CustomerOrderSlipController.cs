@@ -236,7 +236,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
                         cos.OldPrice,
-                        cos.IsCosAtlFinalized
+                        cos.IsCosAtlFinalized,
+                        cos.DeliveryOption
                     })
                     .ToListAsync(cancellationToken);
 
