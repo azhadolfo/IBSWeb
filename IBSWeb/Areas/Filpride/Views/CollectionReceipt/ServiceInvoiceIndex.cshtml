@@ -362,20 +362,20 @@
                         }
                     },
                     {
-                        "data": "collectionReceiptId",
+                        "data": "invoices",
+                        "orderable": false,
                         "render": function (data, type, row) {
-                            if (row.salesInvoiceId != null) {
-                                return row.siNo;
-                            } else if (row.multipleSIId != null && Array.isArray(row.multipleSIId)) {
-                                return row.multipleSI.map(function (si) {
-                                    return si;
-                                }).join(", "); // Concatenate multiple siNo values with a comma
-                            } else {
-                                return row.svNo;
+                            if (row.invoices.length === 1){
+                                return `<span>${row.invoices[0]}</span>`;
                             }
+
+                            return `<span data-bs-toggle="tooltip" title="${row.invoices.join(', ')}">
+                                        ${row.invoices.length} Invoices
+                                    </span>`;
+
                         }
                     },
-                    { "data": "customer.customerName" },
+                    { "data": "customerName" },
                     {
                         "data": "total",
                         "render": function (data, type, row) {
