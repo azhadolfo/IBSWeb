@@ -388,7 +388,7 @@
                 }
             });
 
-            calculateGrandTotalRRAmount();
+            calculateGrandTotalInvoiceAmount();
         });
 
         function appendSIListRow(siNo, siText) {
@@ -398,7 +398,9 @@
                         <input type='hidden' value='${siNo}' />
                         <input class="text-center" type='text' value='${siText}' style='border:none' readonly />
                     </td>
-                    <td class="text-center"><input type='text' name='SIMultipleAmount' class='text-center inputAmount money paymentAmount_${siNo}'/></td>
+                    <td class="text-center">
+                        <input type='text' name='SIMultipleAmount' class='text-center inputAmount money paymentAmount_${siNo}'/>
+                    </td>
                 </tr>`);
         }
 
@@ -443,7 +445,10 @@
                     $(`#balance_${siNo}`).text(formatNumber(balance));
                     $(`.paymentAmount_${siNo}`).val(formatNumber(balance)).attr("data-max", balance);
 
-                    calculateGrandTotalRRAmount();
+                    calculateGrandTotalInvoiceAmount();
+
+                    updateTotal2();
+                    
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching balance:', error);
@@ -451,7 +456,7 @@
             });
         }
 
-        function calculateGrandTotalRRAmount() {
+        function calculateGrandTotalInvoiceAmount() {
             let grandTotalRRAmount = 0,
                 grandTotalNetAmount = 0,
                 grandTotalVatAmount = 0,
@@ -557,15 +562,10 @@
         }
         
         $(document).on("input", "input[name='SIMultipleAmount']", updateTotal2);
-        $(document).on("change", "select[name='MultipleSIId']", function () {
-            setTimeout(() => {
-                updateTotal2();
-            }, 200);
-        });
 
         function updateTotal2() {
             totalBalance = 0;
-
+            
             $("input[name='SIMultipleAmount']").each(function () {
                 let val = $(this).val().replace(/,/g, '');
                 let num = parseFloat(val) || 0;
