@@ -382,8 +382,8 @@ namespace IBS.Services
                     {
                         var currentYear = DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy");
                         var files = fileList.Where(f =>
-                                (f.FileName.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
-                                f.FileName.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture)) &&
+                                (f.FileName.Contains("FMS_FUEL_DELIVERY", StringComparison.CurrentCulture) ||
+                                f.FileName.Contains("FMS_LUBE_DELIVERY", StringComparison.CurrentCulture)) &&
                                 Path.GetFileNameWithoutExtension(f.FileName).EndsWith(DateTimeHelper.GetCurrentPhilippineTime().ToString(currentYear)));
 
                         if (!files.Any())
