@@ -154,6 +154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Take(parameters.Length)
                     .Select(c => new
                     {
+                        c.CollectionReceiptId,
                         c.CollectionReceiptNo,
                         c.TransactionDate,
                         Invoices = c.ReceiptDetails!
