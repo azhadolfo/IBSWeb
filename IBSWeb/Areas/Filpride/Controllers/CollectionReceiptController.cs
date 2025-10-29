@@ -112,8 +112,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
-                    .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+                var collectionReceipts = await _dbContext.FilprideCollectionReceipts
+                    .Include(c => c.ReceiptDetails)
+                    .Include(c => c.Customer)
+                    .Where(c => c.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
 
                 switch (invoiceType)
                 {
@@ -138,15 +141,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(s =>
                             s.CollectionReceiptNo!.ToLower().Contains(searchValue) ||
                             s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
-                            s.SINo?.ToLower().Contains(searchValue) == true ||
-                            s.SVNo?.ToLower().Contains(searchValue) == true ||
-                            s.MultipleSI?.Contains(searchValue) == true ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.ReceiptDetails!.Any(d =>
+                                d.InvoiceNo.ToLower().Contains(searchValue)) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.CreatedBy!.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
+
+                var pagedData = collectionReceipts
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .Select(c => new
+                    {
+                        c.CollectionReceiptNo,
+                        c.TransactionDate,
+                        Invoices = c.ReceiptDetails!
+                            .Select(a => a.InvoiceNo)
+                            .ToList(),
+                        c.Customer!.CustomerName,
+                        c.Total,
+                        c.CreatedBy,
+                        c.Status,
+                        c.VoidedBy,
+                        c.PostedBy,
+                        c.CanceledBy,
+                        c.MultipleSIId,
+                        c.DepositedDate,
+
+                    })
+                    .ToList();
 
                 // Sorting
                 if (parameters.Order?.Count > 0)
@@ -155,18 +179,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                    collectionReceipts = collectionReceipts
+                    pagedData = pagedData
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
 
-                var totalRecords = collectionReceipts.Count();
-
-                var pagedData = collectionReceipts
-                    .Skip(parameters.Start)
-                    .Take(parameters.Length)
-                    .ToList();
+                var totalRecords = pagedData.Count();
 
                 return Json(new
                 {
