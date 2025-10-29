@@ -66,6 +66,7 @@
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
+                                <th>OTC DR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -249,6 +250,7 @@
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
+                                            <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end" readonly style="display: none"></td>
