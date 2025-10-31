@@ -497,7 +497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-            viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
             viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
 
             return View(viewModel);
@@ -517,7 +517,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
@@ -607,7 +607,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
@@ -648,7 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 existingModel.Suppliers =
-                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 existingModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
 
                 CheckVoucherNonTradeInvoicingViewModel viewModel = new()
@@ -1373,7 +1373,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var coa = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
                 var suppliers =
-                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
                 var details = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
@@ -1432,7 +1432,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
@@ -1567,7 +1567,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
