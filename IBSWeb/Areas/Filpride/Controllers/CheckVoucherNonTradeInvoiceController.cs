@@ -497,7 +497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-            viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
             viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
 
             return View(viewModel);
@@ -648,7 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 existingModel.Suppliers =
-                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 existingModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
 
                 CheckVoucherNonTradeInvoicingViewModel viewModel = new()
