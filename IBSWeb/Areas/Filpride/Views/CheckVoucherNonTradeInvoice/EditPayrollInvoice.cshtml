@@ -161,10 +161,15 @@
                         <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
+                    <div class="row">
+                        <div class="col-12" id="categoryContainer">
+
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="modalClose" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="calculateButton" onclick="saveAccountingEntry()">Create</button>
             </div>
         </div>
@@ -177,7 +182,7 @@
     }
     <script>
         $(document).ready(function () {
-            $('#AccountNo').select2({
+            $('#AccountNo, #Category').select2({
                 dropdownParent: $('#AddAccEntry'),
                 placeholder: "Select an option...",
                 allowClear: true,
@@ -194,12 +199,139 @@
     <script>
             var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
             var i = @i;
+
+            function seeIfNeedCategory (event){
+                console.log("seeIfNeedCategory");
+                var accountNumber = $("#AccountNo").val();
+                var debit = parseNumber($("#debit").val());
+                var credit = parseNumber($("#credit").val());
+                let selectionGroup = $("#selectionGroup");
+
+                var newRow = `
+                            <div class="form-group pt-4" id="categoryGroup">
+                                <label class="control-label">Select Category</label>
+                                <select id="Category" name="Category" class="form-select" style="width: 100%">
+                                </select>
+                                <span class="text-danger"></span>
+                            </div>`;
+
+                var $categoryGroup = $("#categoryGroup"); // find if it exists already
+
+                if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200")
+                    && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
+                    if ($categoryGroup.length === 0) {
+                        $("#categoryContainer").append(newRow);
+
+                        $("#Category").append($('<option>', {
+                            value: "employee",
+                            text: "Employee"
+                        }));
+
+                        $("#Category").trigger("change");
+
+                        $('#Category').select2({
+                            dropdownParent: $('#AddAccEntry'),
+                            placeholder: "Select an option...",
+                            allowClear: true,
+                            width: 'resolve',
+                            theme: 'classic'
+                        });
+                    }
+                }
+                else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
+                    if ($categoryGroup.length === 0) {
+                        $("#categoryContainer").append(newRow);
+
+                        $("#Category").append($('<option>', {
+                            value: "employee",
+                            text: "Employee"
+                        }));
+                        $("#Category").append($('<option>', {
+                            value: "supplier",
+                            text: "Supplier"
+                        }));
+
+                        $("#Category").trigger("change");
+
+                        $('#Category').select2({
+                            dropdownParent: $('#AddAccEntry'),
+                            placeholder: "Select an option...",
+                            allowClear: true,
+                            width: 'resolve',
+                            theme: 'classic'
+                        });
+                    }
+                }
+                else{
+                    if ($categoryGroup.length !== 0) {
+                        $categoryGroup.remove();
+                    }
+                    if (selectionGroup.length !== 0) {
+                        selectionGroup.remove();
+                    }
+                }
+            }
+
+            function updateSelectionChoices (event){
+                let chosenCategory = $("#Category").val();
+                let selectionGroup = $("#selectionGroup");
+                let multipleSupplierSelect = $("#MultipleSupplierId");
+                let newRow = ``;
+
+                // if already exists, remove the existing
+                if (selectionGroup.length !== 0) {
+                    selectionGroup.remove();
+                }
+
+                // fetch the list depending on chosen category
+                $.ajax({
+                    url: '@Url.Action("GetSelectListByCategory", "CheckVoucherNonTradeInvoice")',
+                    type: "GET",
+                    data: { chosenCategory: chosenCategory },
+                    success: function (data) {
+                        console.log(data);
+                        if (Array.isArray(data) && data.length > 0) {
+
+                            // append the new empty selectlist
+                            newRow += `
+                            <div class="form-group pt-4" id="selectionGroup">
+                                <label class="control-label">Select ${chosenCategory.charAt(0).toUpperCase() + chosenCategory.slice(1)}</label>
+                                <select name='MultipleSupplierId' id="MultipleSupplierId" class='form-select js-select2 w-100'></select>
+                                <span class="text-danger"></span>
+                            </div>`;
+
+                            $("#categoryContainer").append(newRow);
+
+                            $('#MultipleSupplierId').select2({
+                                dropdownParent: $('#AddAccEntry'),
+                                placeholder: "Select an option...",
+                                allowClear: true,
+                                width: 'resolve',
+                                theme: 'classic'
+                            });
+
+                            $("#MultipleSupplierId").append('<option>');
+
+                            $.each(data, function (index, item) {
+                                $("#MultipleSupplierId").append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
+                        }
+                    }
+                });
+            }
+
             function saveAccountingEntry(event) {
                 // Get the values from the modal inputs
                 var accountNumber = $("#AccountNo").val();
                 var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
                 var debit = parseNumber($("#debit").val());
                 var credit = parseNumber($("#credit").val());
+                var multipleSupplierCode = safeVal("#MultipleSupplierId");
+                var multipleSupplierCodeName = safeText("#MultipleSupplierId option:selected");
+                var category = safeVal("#Category");
 
                 if (debit === 0 && credit === 0) {
                     event.preventDefault();
@@ -228,12 +360,9 @@
                                                 <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
                                                 <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
                                                 <td>
-                                                    ${credit !== 0
-                                                    ? `<select name='${multiplerSupplierId}' class='${classDropdownSelect}'>
-                                                                                        ${suppliers.map(s => `<option value="${s.Value}">${s.Text}</option>`).join('')}
-                                                                                    </select>`
-                                                    : `<input name='${multiplerSupplierId}' type='hidden' value='0' />`}
-                                                </td>
+                                                    <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
+                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/></td>
+                                                    <input name='Category' type='hidden' value='${category}'/></td>
                                                 <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                             </tr>`;
 
@@ -265,6 +394,16 @@
                 updateTotalDebitAndCredit();
             }
 
+            function safeVal(selector) {
+                var element = $(selector);
+                return element.length ? (element.val() || "") : "";
+            }
+
+            function safeText(selector) {
+                var element = $(selector);
+                return element.length ? (element.text() || "") : "";
+            }
+
             function updateTotalDebitAndCredit() {
                 var totalDebit = 0;
                 var totalCredit = 0;
@@ -289,6 +428,12 @@
                 $(".totalCredit").text(formatNumber(totalCredit));
                 $("#debit").val("0.000");
                 $("#credit").val("0.000");
+                if ($("#selectionGroup").length !== 0) {
+                    $("#selectionGroup").remove();
+                }
+                if ($("#categoryGroup").length !== 0) {
+                    $("#categoryGroup").remove();
+                }
                 
                 validateDebitAndCredit();
             }
@@ -299,6 +444,24 @@
                 $(button).closest("tr").remove();
                 updateTotalDebitAndCredit();
             }
+    </script>
+    <script>
+        $("#debit, #credit").on("input change", seeIfNeedCategory);
+        $(document).on("change", "#Category", updateSelectionChoices);
+        $(document).on("click", "#modalClose", function (){
+            $("#AccountNo").val("");
+            $("#Category").val("");
+            $("#MultipleSupplierId").val("");
+            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
+            $("#debit").val("0.000");
+            $("#credit").val("0.000");
+            if ($("#selectionGroup").length !== 0) {
+                $("#selectionGroup").remove();
+            }
+            if ($("#categoryGroup").length !== 0) {
+                $("#categoryGroup").remove();
+            }
+        });
     </script>
     <script>
         $("#AccountNo").change(function () {
@@ -358,20 +521,31 @@
         function validateDebitAndCredit(event) {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
 
             if (totalDebit !== totalCredit) {
-                alert("Debit and Credit totals must be equal.");
-                event.preventDefault(); // Prevent form submission
-                return false;
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 && totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot both be zero.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
             }
 
-            if (totalDebit === 0 && totalCredit === 0) {
-                alert("Debit and Credit cannot both be zero.");
-                event.preventDefault(); // Prevent form submission
-                return false;
-            }
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
 
-            return true; // Allow form submission
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            return isValid;
         }
     </script>
     <script>
