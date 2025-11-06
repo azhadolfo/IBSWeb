@@ -317,6 +317,12 @@
                     : Model.Header?.CvType == "Commission"
                         ? 10m
                         : 1m;
+
+                var accountTitle = percent == 1 
+                    ? "201030210 Expanded Withholding Tax 1%" 
+                    : percent == 2 
+                        ? "201030220 Expanded Withholding Tax 2%" 
+                        : "201030240 Expanded Withholding Tax 10%";
             }
 
             @foreach (var cv in Model.Details!.OrderBy(x => x.CheckVoucherDetailId))
@@ -372,7 +378,7 @@
                 {
                     <tr>
                         <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
-                            201030210 Expanded Withholding Tax @percent%
+                            @accountTitle
                         </td>
                         <td class="text-end" style="width:7%;">0.00</td>
                         <td class="text-end" style="width:7%;">@ewt.ToString(SD.Two_Decimal_Format)</td>
