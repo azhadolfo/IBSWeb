@@ -194,7 +194,6 @@
                             <div class="form-group pt-4" id="categoryGroup">
                                 <label class="control-label">Select Category</label>
                                 <select id="Category" name="Category" class="form-select" style="width: 100%">
-                                    <option value="supplier">Supplier</option>
                                 </select>
                                 <span class="text-danger"></span>
                             </div>`;
@@ -210,6 +209,8 @@
                         value: "employee",
                         text: "Employee"
                     }));
+
+                    $("#Category").trigger("change");
 
                     $('#Category').select2({
                         dropdownParent: $('#AddAccEntry'),
@@ -232,6 +233,8 @@
                         value: "supplier",
                         text: "Supplier"
                     }));
+
+                    $("#Category").trigger("change");
 
                     $('#Category').select2({
                         dropdownParent: $('#AddAccEntry'),
@@ -394,6 +397,12 @@
             $(".totalCredit").text(formatNumber(totalCredit));
             $("#debit").val("0.000");
             $("#credit").val("0.000");
+            if ($("#selectionGroup").length !== 0) {
+                $("#selectionGroup").remove();
+            }
+            if ($("#categoryGroup").length !== 0) {
+                $("#categoryGroup").remove();
+            }
             
             validateDebitAndCredit();
         }
