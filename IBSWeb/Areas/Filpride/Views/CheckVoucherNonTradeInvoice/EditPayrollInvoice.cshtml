@@ -93,9 +93,9 @@
                                     @if (Model.Credit[i] != 0)
                                     {
                                         <td>
-                                            <select asp-for="MultipleSupplierId![i]" asp-items="@Model.Suppliers" class="form-select w-100 js-select-custom" id="SupplierSelect_@i">
-                                                <option></option>
-                                            </select>
+                                            <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
+                                            <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/>
+                                            <input name='Category' type='hidden' value='${category}'/>
                                         </td>
                                     }
                                     else
@@ -361,7 +361,7 @@
                                                 <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
                                                 <td>
                                                     <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
-                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/></td>
+                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/>
                                                     <input name='Category' type='hidden' value='${category}'/></td>
                                                 <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                             </tr>`;
