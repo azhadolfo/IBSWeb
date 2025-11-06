@@ -125,8 +125,6 @@
             <div class="modal-body">
                 <form>
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                    <!-- Account No -->
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
                         <select id="AccountNo" asp-items="@Model.ChartOfAccounts" class="form-select" style="width: 100%">
@@ -134,22 +132,16 @@
                         </select>
                         <span class="text-danger"></span>
                     </div>
-
-                    <!-- Debit -->
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
                         <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
-
-                    <!-- Credit -->
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
                         <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
-                    
-                    <!-- Category -->
                     <div class="row">
                         <div class="col-12" id="categoryContainer">
                             
