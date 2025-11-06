@@ -184,6 +184,7 @@
         var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
 
         function seeIfNeedCategory (event){
+            console.log("seeIfNeedCategory");
             var accountNumber = $("#AccountNo").val();
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
@@ -194,59 +195,57 @@
                                 <label class="control-label">Select Category</label>
                                 <select id="Category" name="Category" class="form-select" style="width: 100%">
                                     <option value="supplier">Supplier</option>
-                                    <option value="employee">Employee</option>
                                 </select>
                                 <span class="text-danger"></span>
                             </div>`;
 
             var $categoryGroup = $("#categoryGroup"); // find if it exists already
+            
+            if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200") 
+                && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
+                if ($categoryGroup.length === 0) {
+                    $("#categoryContainer").append(newRow);
 
-            if (credit !== 0 || debit !== 0){
-                if (credit !== 0) {
-                    if (accountNumber !== "101020500") {
-                        if ($categoryGroup.length === 0) {
-                            $("#categoryContainer").append(newRow);
+                    $("#Category").append($('<option>', {
+                        value: "employee",
+                        text: "Employee"
+                    }));
 
-                            $('#Category').select2({
-                                dropdownParent: $('#AddAccEntry'),
-                                placeholder: "Select an option...",
-                                allowClear: true,
-                                width: 'resolve',
-                                theme: 'classic'
-                            });
-                        }
-                    }
-                    else {
-                        $categoryGroup.remove(); // remove if condition no longer true
-                        if (selectionGroup.length !== 0) {
-                            selectionGroup.remove();
-                        }
-                    }
+                    $('#Category').select2({
+                        dropdownParent: $('#AddAccEntry'),
+                        placeholder: "Select an option...",
+                        allowClear: true,
+                        width: 'resolve',
+                        theme: 'classic'
+                    });
                 }
-                else {
-                    if (accountNumber === "101020500" || accountNumber === "202010200") {
-                        if ($categoryGroup.length === 0) {
-                            $("#categoryContainer").append(newRow);
+            }
+            else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
+                if ($categoryGroup.length === 0) {
+                    $("#categoryContainer").append(newRow);
 
-                            $('#Category').select2({
-                                dropdownParent: $('#AddAccEntry'),
-                                placeholder: "Select an option...",
-                                allowClear: true,
-                                width: 'resolve',
-                                theme: 'classic'
-                            });
-                        }
-                    }
-                    else {
-                        $categoryGroup.remove(); // remove if condition no longer true
-                        if (selectionGroup.length !== 0) {
-                            selectionGroup.remove();
-                        }
-                    }
+                    $("#Category").append($('<option>', {
+                        value: "employee",
+                        text: "Employee"
+                    }));
+                    $("#Category").append($('<option>', {
+                        value: "supplier",
+                        text: "Supplier"
+                    }));
+
+                    $('#Category').select2({
+                        dropdownParent: $('#AddAccEntry'),
+                        placeholder: "Select an option...",
+                        allowClear: true,
+                        width: 'resolve',
+                        theme: 'classic'
+                    });
                 }
             }
             else{
-                $categoryGroup.remove(); // remove if condition no longer true
+                if ($categoryGroup.length !== 0) {
+                    $categoryGroup.remove();
+                }
                 if (selectionGroup.length !== 0) {
                     selectionGroup.remove();
                 }
@@ -411,7 +410,6 @@
         $("#debit, #credit").on("input change", seeIfNeedCategory);
         $(document).on("change", "#Category", updateSelectionChoices);
         $(document).on("click", "#modalClose", function (){
-            console.log("try close");
             $("#AccountNo").val("");
             $("#Category").val("");
             $("#MultipleSupplierId").val("");
