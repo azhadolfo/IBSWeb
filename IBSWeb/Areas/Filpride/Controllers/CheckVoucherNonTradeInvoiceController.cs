@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
                                   && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
-                                  && (cvd.SupplierId != null && cvd.CheckVoucherHeader.SupplierId == null
+                                  && ((cvd.SupplierId != null) && cvd.CheckVoucherHeader.SupplierId == null
                                       || cvd.CheckVoucherHeader.SupplierId != null
                                       && cvd.AccountName == "AP-Non Trade Payable"))
                     .Include(cvd => cvd.Supplier)
@@ -571,7 +571,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             Amount = viewModel.Credit[i],
-                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
+                            SupplierId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "supplier") ? viewModel.MultipleSupplierId[i] : null,
+                            EmployeeId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "employee") ? viewModel.MultipleSupplierId[i] : null,
                             IsUserSelected = true
                         });
                     }
