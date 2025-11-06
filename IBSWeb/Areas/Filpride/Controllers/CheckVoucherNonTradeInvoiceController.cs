@@ -15,6 +15,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1768,6 +1769,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 accountName = supplier.SupplierName,
                 accountNumber = supplier.SupplierCode
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSelectListByCategory(string chosenCategory, CancellationToken cancellationToken)
+        {
+            var selectList = new List<SelectListItem>();
+
+            switch (chosenCategory)
+            {
+                case "supplier":
+                    selectList = (await _unitOfWork.FilprideSupplier.GetAllAsync(null, cancellationToken))
+                        .Select(s => new SelectListItem
+                        {
+                            Value = s.SupplierId.ToString(), // or SupplierId depending on your model
+                            Text = s.SupplierCode + " " + s.SupplierName // or whatever property represents the name
+                        })
+                        .ToList();
+                    break;
+                case "employee":
+                    selectList = (await _unitOfWork.FilprideEmployee.GetAllAsync(null, cancellationToken))
+                        .Select(s => new SelectListItem
+                        {
+                            Value = s.EmployeeId.ToString(),
+                            Text = $"{s.EmployeeNumber} {s.FirstName} {s.LastName}"
+                        })
+                        .ToList();
+                    break;
+            }
+
+            return Json(selectList);
         }
     }
 }

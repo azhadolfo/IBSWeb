@@ -125,6 +125,8 @@
             <div class="modal-body">
                 <form>
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <!-- Account No -->
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
                         <select id="AccountNo" asp-items="@Model.ChartOfAccounts" class="form-select" style="width: 100%">
@@ -132,20 +134,31 @@
                         </select>
                         <span class="text-danger"></span>
                     </div>
+
+                    <!-- Debit -->
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
                         <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
+
+                    <!-- Credit -->
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
                         <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
+                    
+                    <!-- Category -->
+                    <div class="row">
+                        <div class="col-12" id="categoryContainer">
+                            
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="modalClose" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="calculateButton" onclick="saveAccountingEntry()">Create</button>
             </div>
         </div>
@@ -158,7 +171,7 @@
     }
     <script>
         $(document).ready(function () {
-            $('#AccountNo').select2({
+            $('#AccountNo, #Category').select2({
                 dropdownParent: $('#AddAccEntry'),
                 placeholder: "Select an option...",
                 allowClear: true,
@@ -170,6 +183,126 @@
     <script>
         var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
 
+        function seeIfNeedCategory (event){
+            var accountNumber = $("#AccountNo").val();
+            var debit = parseNumber($("#debit").val());
+            var credit = parseNumber($("#credit").val());
+            let selectionGroup = $("#selectionGroup");
+            
+            var newRow = `
+                            <div class="form-group pt-4" id="categoryGroup">
+                                <label class="control-label">Select Category</label>
+                                <select id="Category" name="Category" class="form-select" style="width: 100%">
+                                    <option value="supplier">Supplier</option>
+                                    <option value="employee">Employee</option>
+                                </select>
+                                <span class="text-danger"></span>
+                            </div>`;
+
+            var $categoryGroup = $("#categoryGroup"); // find if it exists already
+
+            if (credit !== 0 || debit !== 0){
+                if (credit !== 0) {
+                    if (accountNumber !== "101020500") {
+                        if ($categoryGroup.length === 0) {
+                            $("#categoryContainer").append(newRow);
+
+                            $('#Category').select2({
+                                dropdownParent: $('#AddAccEntry'),
+                                placeholder: "Select an option...",
+                                allowClear: true,
+                                width: 'resolve',
+                                theme: 'classic'
+                            });
+                        }
+                    }
+                    else {
+                        $categoryGroup.remove(); // remove if condition no longer true
+                        if (selectionGroup.length !== 0) {
+                            selectionGroup.remove();
+                        }
+                    }
+                }
+                else {
+                    if (accountNumber === "101020500" || accountNumber === "202010200") {
+                        if ($categoryGroup.length === 0) {
+                            $("#categoryContainer").append(newRow);
+
+                            $('#Category').select2({
+                                dropdownParent: $('#AddAccEntry'),
+                                placeholder: "Select an option...",
+                                allowClear: true,
+                                width: 'resolve',
+                                theme: 'classic'
+                            });
+                        }
+                    }
+                    else {
+                        $categoryGroup.remove(); // remove if condition no longer true
+                        if (selectionGroup.length !== 0) {
+                            selectionGroup.remove();
+                        }
+                    }
+                }
+            }
+            else{
+                $categoryGroup.remove(); // remove if condition no longer true
+                if (selectionGroup.length !== 0) {
+                    selectionGroup.remove();
+                }
+            }
+        }
+
+        function updateSelectionChoices (event){
+            let chosenCategory = $("#Category").val();
+            let selectionGroup = $("#selectionGroup");
+            let multipleSupplierSelect = $("#MultipleSupplierId");
+            let newRow = ``;
+            
+            // if already exists, remove the existing
+            if (selectionGroup.length !== 0) {
+                selectionGroup.remove();
+            }
+
+            // fetch the list depending on chosen category
+            $.ajax({
+                url: '@Url.Action("GetSelectListByCategory", "CheckVoucherNonTradeInvoice")',
+                type: "GET",
+                data: { chosenCategory: chosenCategory },
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        
+                        // append the new empty selectlist
+                        newRow += `
+                            <div class="form-group pt-4" id="selectionGroup">
+                                <label class="control-label">Select ${chosenCategory.charAt(0).toUpperCase() + chosenCategory.slice(1)}</label>
+                                <select name='MultipleSupplierId' id="MultipleSupplierId" class='form-select js-select2 w-100'></select>
+                                <span class="text-danger"></span>
+                            </div>`;
+                        
+                        $("#categoryContainer").append(newRow);
+
+                        $('#MultipleSupplierId').select2({
+                            dropdownParent: $('#AddAccEntry'),
+                            placeholder: "Select an option...",
+                            allowClear: true,
+                            width: 'resolve',
+                            theme: 'classic'
+                        });
+
+                        $("#MultipleSupplierId").append('<option>');
+
+                        $.each(data, function (index, item) {
+                            $("#MultipleSupplierId").append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    }
+                }
+            });
+        }
+        
         function saveAccountingEntry(event) {
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
@@ -273,6 +406,25 @@
             updateTotalDebitAndCredit();
         }
     
+    </script>
+    <script>
+        $("#debit, #credit").on("input change", seeIfNeedCategory);
+        $(document).on("change", "#Category", updateSelectionChoices);
+        $(document).on("click", "#modalClose", function (){
+            console.log("try close");
+            $("#AccountNo").val("");
+            $("#Category").val("");
+            $("#MultipleSupplierId").val("");
+            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
+            $("#debit").val("0.000");
+            $("#credit").val("0.000");
+            if ($("#selectionGroup").length !== 0) {
+                $("#selectionGroup").remove();
+            }
+            if ($("#categoryGroup").length !== 0) {
+                $("#categoryGroup").remove();
+            }
+        });
     </script>
     <script>
         $("#AccountNo").change(function () {
