@@ -327,21 +327,34 @@
 
             @foreach (var cv in Model.Details!.OrderBy(x => x.CheckVoucherDetailId))
             {
+                var isVatable = cv.Supplier?.VatType == SD.VatType_Vatable;
+                var isTaxable = cv.Supplier?.TaxType == SD.TaxType_WithTax;
+                
                 // Net of tax (input)
                 var netAmount = Model.Header!.Total;
+                var baseAmount = 0m;
 
                 // Base computation (reversible correct formula)
-                var baseAmount = cv.Supplier?.VatType == SD.VatType_Vatable
-                    ? Math.Round(netAmount / (1.12m - (percent / 100m)), 4)
-                    : Math.Round(netAmount / (1m - (percent / 100m)), 4);
+                if (isTaxable)
+                {
+                    baseAmount = isVatable
+                        ? Math.Round(netAmount / (1.12m - (percent / 100m)), 4)
+                        : Math.Round(netAmount / (1m - (percent / 100m)), 4);
+                }
+                else
+                {
+                    baseAmount = isVatable
+                        ? Math.Round(netAmount / 1.12m, 4)
+                        : Math.Round(netAmount / 1m, 4);
+                }
 
-                var inputVat = cv.Supplier?.VatType == SD.VatType_Vatable
+                var inputVat = isVatable
                     ? Math.Round(baseAmount * 0.12m, 4)
                     : 0m;
 
                 var grossAmount = baseAmount + inputVat;
 
-                var ewt = cv.Supplier?.TaxType == SD.TaxType_WithTax
+                var ewt = isTaxable
                     ? Math.Round(baseAmount * (percent / 100m), 4)
                     : 0m;
 
