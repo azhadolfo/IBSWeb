@@ -36,7 +36,7 @@ namespace IBS.Utility.Constants
         #region Tax Type
 
         public const string TaxType_WithTax = "Withholding Tax";
-        public const string TaxType_WithVax = "Withholding Vat";
+        public const string TaxType_WithVat = "Withholding Vat";
         public const string TaxType_Exempt = "Exempt";
 
         #endregion Tax Type
