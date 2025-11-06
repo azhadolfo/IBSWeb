@@ -329,29 +329,94 @@
                 <th class="text-end">CREDIT</th>
             </tr>
 
-            @foreach (var cv in Model.Details!.OrderBy(model => model.CheckVoucherDetailId))
+        
+            @{
+                var gross = 0m;
+                var percent = Model.Header.CvType == "Hauler"
+                    ? 2m
+                    : Model.Header?.CvType == "Commission"
+                        ? 10m
+                        : 1m;
+            }
+
+            @foreach (var cv in Model.Details!.OrderBy(x => x.CheckVoucherDetailId))
             {
+                // Net of tax (input)
+                var netAmount = Model.Header!.Total;
+
+                // Base computation (reversible correct formula)
+                var baseAmount = cv.Supplier?.VatType == SD.VatType_Vatable
+                    ? Math.Round(netAmount / (1.12m - (percent / 100m)), 4)
+                    : Math.Round(netAmount / (1m - (percent / 100m)), 4);
+
+                var inputVat = cv.Supplier?.VatType == SD.VatType_Vatable
+                    ? Math.Round(baseAmount * 0.12m, 4)
+                    : 0m;
+
+                var grossAmount = baseAmount + inputVat;
+
+                var ewt = cv.Supplier?.TaxType == SD.TaxType_WithTax
+                    ? Math.Round(baseAmount * (percent / 100m), 4)
+                    : 0m;
+
+                var netOfEwt = grossAmount - ewt;
+
                 var subAccount = cv.Supplier?.SupplierName
                                  ?? cv.Customer?.CustomerName
                                  ?? cv.Company?.CompanyName
                                  ?? (cv.Employee != null ? $"{cv.Employee.FirstName} {cv.Employee.LastName}" : null)
                                  ?? (cv.BankAccount != null ? $"{cv.BankAccount.AccountNo} {cv.BankAccount.AccountName}" : null);
 
+                gross = grossAmount;
+
                 <tr>
                     <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
                         @($"{cv.AccountNo} {cv.AccountName}" + (subAccount != null && cv.Credit != 0 ? $" ({subAccount})" : string.Empty))
                     </td>
-                    <td class="text-end" style="width:7%;">@cv.Debit.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end" style="width:7%;">@cv.Credit.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end" style="width:7%;">@baseAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end" style="width:7%;">0.00</td>
                 </tr>
+
+                if (inputVat != 0)
+                {
+                    <tr>
+                        <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
+                            101060200 Vat - Input
+                        </td>
+                        <td class="text-end" style="width:7%;">@inputVat.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end" style="width:7%;">0.00</td>
+                    </tr>
+                }
+
+                if (ewt != 0)
+                {
+                    <tr>
+                        <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
+                            201030210 Expanded Withholding Tax @percent%
+                        </td>
+                        <td class="text-end" style="width:7%;">0.00</td>
+                        <td class="text-end" style="width:7%;">@ewt.ToString(SD.Two_Decimal_Format)</td>
+                    </tr>
+                }
+
+                <tr>
+                    <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
+                        101010100 Cash in Bank
+                    </td>
+                    <td class="text-end" style="width:7%;">0.00</td>
+                    <td class="text-end" style="width:7%;">@netOfEwt.ToString(SD.Two_Decimal_Format)</td>
+                </tr>
+
+                break;
             }
 
             <tr style="border-bottom:double;"></tr>
             <tr>
                 <td></td>
-                <td class="text-end">@Model.Details!.Sum(d => d.Debit).ToString(SD.Two_Decimal_Format)</td>
-                <td class="text-end">@Model.Details!.Sum(d => d.Credit).ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@gross.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@gross.ToString(SD.Two_Decimal_Format)</td>
             </tr>
+
         </tbody>
     </table>
 </div>
@@ -367,7 +432,7 @@
             <tr>
                 <td style="width:33%;">
                     <br />
-                    <span class="underline" style="display: inline-block; width:60%;">@Model.Header.CreatedBy?.ToUpper()</span> <br />
+                    <span class="underline" style="display: inline-block; width:60%;">@Model.Header?.CreatedBy?.ToUpper()</span> <br />
                 </td>
                 <td style="width:33%;">
                     <br />
@@ -383,7 +448,7 @@
 </div>
 <br />
 
-@if (Model.Header.Type == nameof(DocumentType.Documented))
+@if (Model.Header?.Type == nameof(DocumentType.Documented))
 {
     <div class="text-center w-100 compact-section" style="margin-top:10px;">
         <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br/><br/>
@@ -434,10 +499,10 @@
 
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.Header?.PostedBy == null)
         {
             <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.CheckVoucherHeaderId)">Post</a>
+                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header?.CheckVoucherHeaderId)">Post</a>
             </div>
         }
         else
