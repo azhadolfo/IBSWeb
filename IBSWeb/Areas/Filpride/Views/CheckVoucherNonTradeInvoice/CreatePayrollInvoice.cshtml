@@ -272,6 +272,7 @@
                 type: "GET",
                 data: { chosenCategory: chosenCategory },
                 success: function (data) {
+                    console.log(data);
                     if (Array.isArray(data) && data.length > 0) {
                         
                         // append the new empty selectlist
@@ -311,6 +312,9 @@
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
+            var multipleSupplierCode = $("#MultipleSupplierId").val();
+            var multipleSupplierCodeName = $("#MultipleSupplierId option:selected").text();
+            var category = $("#Category").val();
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -337,12 +341,9 @@
                                     <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
                                     <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
                                     <td>
-                                        ${credit !== 0
-                ? `<select name='MultipleSupplierId' class='form-select js-select2 w-100'>
-                                                ${suppliers.map(s => `<option value="${s.Value}">${s.Text}</option>`).join('')}
-                                            </select>`
-                : `<input name='MultipleSupplierId' type='hidden' value='0' class='w-100' />`}
-                                    </td>
+                                        <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
+                                        <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/></td>
+                                        <input name='Category' type='hidden' value='${category}'/></td>
                                     <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                 </tr>`;
 
