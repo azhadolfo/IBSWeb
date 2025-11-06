@@ -134,7 +134,7 @@
                 <label class="control-label">Percent</label>
                 <select asp-for="WithholdingTaxPercent" class="form-select js-select2 withHoldingTaxPercent" style="width: 100%">
                     <option value="" selected disabled>%</option>
-                    <option value="0.0000">0%</option>
+                    <option value="0.0050">.5%</option>
                     <option value="0.0100">1%</option>
                     <option value="0.0200">2%</option>
                     <option value="0.0500">5%</option>
@@ -189,7 +189,7 @@
                     <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
                 </label>
             </div>
-            <div class="form-check pb-2">
+            <div class="form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
                 </label>
@@ -220,13 +220,12 @@
         function toggleExemptionFields(selectElement) {
             const exemptionFields = document.getElementById("exemptionFields");
             const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
-            var inlineRadio2 = document.getElementById('inlineRadio2');
-
+            
             if (selectElement.value === "Exempt") {
                 exemptionFields.style.display = "block";
                 withHoldingTaxPercent.style.display = "none";
                 $(".withHoldingTaxPercent").val(null).trigger('change');
-            } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked === true) {
+            } else if (selectElement.value === "Withholding Tax") {
                 withHoldingTaxPercent.style.display = "block";
                 exemptionFields.style.display = "none";
             } else {
@@ -282,6 +281,7 @@
                     tradeList.style.display = 'block';
                     resetCommonFields();
                     radios[id === 'tradeList' ? 0 : (id === 'commissioneeList' ? 2 : 3)].checked = true;
+                    withHoldingTaxPercent.style.display = 'block';
                     break;
                 case 'nonTradeList':
                     nonTradeList.style.display = 'block';
