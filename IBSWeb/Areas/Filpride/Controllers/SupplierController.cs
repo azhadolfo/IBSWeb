@@ -94,7 +94,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     })
                     .ToListAsync(cancellationToken),
                 WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => coa.AccountNumber!.Contains("2010302"))
+                    .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
+                    .OrderBy(coa => coa.AccountNumber)
                     .Select(s => new SelectListItem
                     {
                         Value = s.AccountNumber + " " + s.AccountName,
@@ -110,6 +111,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
+            model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+            model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
@@ -253,16 +273,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             supplier.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber + " " + s.AccountName,
+                    Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
-
             supplier.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
+                .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
@@ -276,6 +297,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
+            model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+            model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -515,7 +555,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 17].Value = item.TradeName;
                 worksheet.Cells[row, 18].Value = item.DefaultExpenseNumber;
                 worksheet.Cells[row, 19].Value = item.WithholdingTaxPercent;
-                worksheet.Cells[row, 20].Value = item.WithholdingTaxtitle;
+                worksheet.Cells[row, 20].Value = item.WithholdingTaxTitle;
                 worksheet.Cells[row, 21].Value = item.SupplierId;
 
                 row++;

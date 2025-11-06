@@ -93,7 +93,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [StringLength(100)]
         [Display(Name = "Withholding Tax Title")]
-        public string? WithholdingTaxtitle { get; set; }
+        public string? WithholdingTaxTitle { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? WithholdingTaxList { get; set; }

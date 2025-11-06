@@ -136,13 +136,20 @@
                 <label class="control-label">Percent</label>
                 <select asp-for="WithholdingTaxPercent" class="form-select js-select2 withHoldingTaxPercent" style="width: 100%">
                     <option value="" selected disabled>%</option>
-                    <option value="0.0000">0%</option>
+                    <option value="0.0050">.5%</option>
                     <option value="0.0100">1%</option>
                     <option value="0.0200">2%</option>
                     <option value="0.0500">5%</option>
                     <option value="0.1000">10%</option>
                 </select>
                 <span asp-validation-for="WithholdingTaxPercent" class="text-danger withHoldingTaxPercent"></span>
+            </div>
+            <div class="form-group mb-3" id="WithholdingTaxTitle" style="display: none;">
+                <label class="control-label">Withholding Tax Title</label>
+                <select asp-for="WithholdingTaxTitle" asp-items="@Model.WithholdingTaxList" class="form-select js-select2" style="width: 100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="WithholdingTaxTitle" class="text-danger"></span>
             </div>
             <div id="exemptionFields" style="display:none;">
                 <div class="form-floating mb-3">
@@ -232,7 +239,6 @@
             } else if (inlineRadio2.checked) {
                 document.getElementById('tradeList').style.display = 'none';
                 document.getElementById('nonTradeList').style.display = 'block';
-                document.getElementById('WithholdingTaxPercent').style.display = 'block';
             }
             
             var taxType = document.getElementById('TaxType');
@@ -246,14 +252,16 @@
         function toggleExemptionFields(selectElement) {
             const exemptionFields = document.getElementById("exemptionFields");
             const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
-            var inlineRadio2 = document.getElementById('inlineRadio2');
+            const withHoldingTaxTitle = document.getElementById("WithholdingTaxTitle");
 
             if (selectElement.value === "Exempt") {
                 exemptionFields.style.display = "block";
                 withHoldingTaxPercent.style.display = "none";
+                withHoldingTaxTitle.style.display = "none";
                 $(".withHoldingTaxPercent").val(null).trigger('change');
-            } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked === true) {
+            } else if (selectElement.value === "Withholding Tax") {
                 withHoldingTaxPercent.style.display = "block";
+                withHoldingTaxTitle.style.display = "block";
                 exemptionFields.style.display = "none";
             } else {
                 exemptionFields.style.display = "none";
@@ -275,16 +283,17 @@
                 document.getElementById('inlineRadio4')
             ];
             const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+            const withHoldingTaxTitle = document.getElementById("WithholdingTaxTitle");
 
             const resetCommonFields = () => {
                 $("#DefaultExpenseNumber").val(null).trigger('change');
-                $(".withHoldingTaxPercent").val(null).trigger('change');
             };
 
             // Hide trade and non-trade lists by default
             tradeList.style.display = 'none';
             nonTradeList.style.display = 'none';
             withHoldingTaxPercent.style.display = 'none';
+            withHoldingTaxTitle.style.display = 'none';
             radios.forEach(radio => radio.checked = false);
 
             switch (id) {
@@ -294,12 +303,15 @@
                     tradeList.style.display = 'block';
                     resetCommonFields();
                     radios[id === 'tradeList' ? 0 : (id === 'commissioneeList' ? 2 : 3)].checked = true;
+                    withHoldingTaxPercent.style.display = 'block';
+                    withHoldingTaxTitle.style.display = 'block';
                     break;
                 case 'nonTradeList':
                     nonTradeList.style.display = 'block';
                     radios[1].checked = true;
                     $("#TradeName").val("");
                     withHoldingTaxPercent.style.display = 'block';
+                    withHoldingTaxTitle.style.display = 'block';
                     $("#TaxType").val(null).trigger('change');
                     break;
             }

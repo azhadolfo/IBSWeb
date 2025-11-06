@@ -1330,7 +1330,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TaxPercent = supplier.WithholdingTaxPercent,
                 supplier.VatType,
                 DefaultExpense = supplier.DefaultExpenseNumber,
-                WithholdingTax = supplier.WithholdingTaxtitle
+                WithholdingTax = supplier.WithholdingTaxTitle
             });
         }
 
