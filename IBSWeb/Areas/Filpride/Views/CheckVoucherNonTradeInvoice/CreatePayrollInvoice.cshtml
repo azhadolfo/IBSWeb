@@ -312,9 +312,9 @@
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
-            var multipleSupplierCode = $("#MultipleSupplierId").val();
-            var multipleSupplierCodeName = $("#MultipleSupplierId option:selected").text();
-            var category = $("#Category").val();
+            var multipleSupplierCode = safeVal("#MultipleSupplierId");
+            var multipleSupplierCodeName = safeText("#MultipleSupplierId option:selected");
+            var category = safeVal("#Category");
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -372,6 +372,16 @@
             $("#Credit").val("0.000");
 
             updateTotalDebitAndCredit();
+        }
+
+        function safeVal(selector) {
+            var element = $(selector);
+            return element.length ? (element.val() || "") : "";
+        }
+
+        function safeText(selector) {
+            var element = $(selector);
+            return element.length ? (element.text() || "") : "";
         }
 
         function updateTotalDebitAndCredit() {
