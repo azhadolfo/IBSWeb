@@ -1250,7 +1250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                foreach (var details in modelDetails)
+                foreach (var details in modelDetails.Where(x => !x.IsDisplayEntry))
                 {
                     var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
                     ledgers.Add(
