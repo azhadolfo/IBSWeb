@@ -90,17 +90,21 @@
                                     <td><input type="text" name="AccountTitle" value="@Model.AccountTitle[i]" class="w-100" style="border:none" readonly/></td>
                                     <td><input type="text" name="Debit" value="@Model.Debit[i]" class="w-100" style="border:none" readonly/></td>
                                     <td><input type="text" name="Credit" value="@Model.Credit[i]" class="w-100" style="border:none" readonly/></td>
-                                    @if (Model.Credit[i] != 0)
+                                    @if (Model.SupplierNames![i] != "")
                                     {
                                         <td>
-                                            <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
-                                            <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/>
-                                            <input name='Category' type='hidden' value='${category}'/>
+                                            <input value="@Model.SupplierNames![i]" style='border:none' class='w-100' readonly />
+                                            <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId"/>
+                                            <input name='Category' type='hidden' value="@Model.Category![i]"/>
                                         </td>
                                     }
                                     else
                                     {
-                                        <td><input asp-for="MultipleSupplierId![i]" type="hidden" value="0"/></td>
+                                        <td>
+                                            <input value="" style='border:none' class='w-100' readonly />
+                                            <input asp-for="MultipleSupplierId![i]" type="hidden" value="0"/>
+                                            <input name='Category' type='hidden' value="@Model.Category![i]"/>
+                                        </td>
                                     }
                                     <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                 </tr>

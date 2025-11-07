@@ -60,6 +60,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string?[]? Category { get; set; }
 
+        public string?[]? SupplierNames { get; set; }
+
         public List<int> CheckVoucherDetailsIds { get; set; } = [];
 
         public Dictionary<int, string> AccountNumberDictionary { get; set; } = new Dictionary<int, string>();
