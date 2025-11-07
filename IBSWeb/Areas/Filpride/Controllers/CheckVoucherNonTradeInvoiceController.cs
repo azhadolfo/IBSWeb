@@ -96,42 +96,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                       || cvd.CheckVoucherHeader.SupplierId != null
                                       && cvd.AccountName == "AP-Non Trade Payable"))
                     .Include(cvd => cvd.Supplier)
+                    .Include(cvd => cvd.Employee)
                     .Include(cvd => cvd.CheckVoucherHeader)
                     .ThenInclude(cvh => cvh!.Supplier)
+                    .Include(cvd => cvd.CheckVoucherHeader)
+                    .ThenInclude(cvh => cvh!.Employee)
                     .ToListAsync(cancellationToken);
-
-                // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
-                {
-                    var searchValue = parameters.Search.Value.ToLower();
-
-                    checkVoucherDetails = checkVoucherDetails
-                    .Where(s =>
-                        s.TransactionNo.ToLower().Contains(searchValue) ||
-                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
-                        s.Amount.ToString().Contains(searchValue) ||
-                        s.AmountPaid.ToString().Contains(searchValue) ||
-                        s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
-                        s.CheckVoucherHeader?.CreatedDate.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Status.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.AmountPaid.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
-                        )
-                    .ToList();
-                }
 
                 var projectedQuery = checkVoucherDetails
                     .Select(x => new
                     {
                         x.TransactionNo,
                         x.CheckVoucherHeader!.Date,
-                        SupplierName = x.Supplier != null
-                            ? x.Supplier.SupplierName
-                            : x.CheckVoucherHeader!.Supplier!.SupplierName,
-                        x.Supplier?.SupplierId,
-                        x.CheckVoucherHeader!.Supplier,
+
+                        SupplierName = x.SupplierId != null
+                            ? (x.Supplier != null
+                                ? x.Supplier.SupplierName
+                                : x.CheckVoucherHeader!.Supplier!.SupplierName)
+                            : (x.Employee != null
+                                ? $"{x.Employee.FirstName} {x.Employee.LastName}"
+                                : $"{x.CheckVoucherHeader!.Employee!.FirstName} {x.CheckVoucherHeader!.Employee!.LastName}"),
+
+                        SupplierId = x.SupplierId,
+                        EmployeeId = x.EmployeeId,
                         Amount = x.Amount > 0
                             ? x.Amount
                             : x.CheckVoucherHeader!.InvoiceAmount,
@@ -146,6 +133,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.CheckVoucherHeaderId
                     })
                     .ToList();
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    projectedQuery = projectedQuery
+                    .Where(s =>
+                        s.TransactionNo.ToLower().Contains(searchValue) ||
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.SupplierName.ToLower().Contains(searchValue) ||
+                        s.Amount.ToString().Contains(searchValue) ||
+                        s.AmountPaid.ToString().Contains(searchValue) ||
+                        (s.Amount - s.AmountPaid).ToString().Contains(searchValue) ||
+                        s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
+                        s.Status.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+                }
 
                 // Sorting
                 if (parameters.Order?.Count > 0)
