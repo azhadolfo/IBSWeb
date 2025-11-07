@@ -155,5 +155,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string TaxType { get; set; } = string.Empty;
 
         public ICollection<FilprideReceivingReport>? ReceivingReports { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal TaxPercentage { get; set; }
     }
 }

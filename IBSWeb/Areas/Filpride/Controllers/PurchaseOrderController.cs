@@ -309,7 +309,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     VatType = supplier.VatType,
                     TaxType = supplier.TaxType,
                     OldPoNo = viewModel.OldPoNo,
-                    FinalPrice = viewModel.Price
+                    FinalPrice = viewModel.Price,
+                    TaxPercentage = supplier.WithholdingTaxPercent ?? 0m,
                 };
 
                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
@@ -449,6 +450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.ProductName = product.ProductName;
                 existingModel.VatType = supplier.VatType;
                 existingModel.TaxType = supplier.TaxType;
+                existingModel.TaxPercentage = supplier.WithholdingTaxPercent ?? 0m;
 
                 if (!_dbContext.ChangeTracker.HasChanges())
                 {
