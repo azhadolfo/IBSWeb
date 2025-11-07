@@ -304,7 +304,7 @@
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
-            var multipleSupplierId = safeVal("#MultipleSupplierId");
+            var multipleSupplierId = safeVal("#MultipleSupplierId") !== "" ? safeVal("#MultipleSupplierId") : 0;
             var multipleSupplierCodeName = safeText("#MultipleSupplierId option:selected");
             var category = safeVal("#Category");
 
@@ -419,7 +419,7 @@
     
     </script>
     <script>
-        $("#debit, #credit").on("input change", seeIfNeedCategory);
+        $("#debit, #credit").on("input change focus blur click keyup keydown", seeIfNeedCategory);
         $(document).on("change", "#Category", updateSelectionChoices);
         $(document).on("click", "#modalClose", function (){
             $("#AccountNo").val("");

@@ -94,7 +94,7 @@
                                     {
                                         <td>
                                             <input value="@Model.SupplierNames![i]" style='border:none' class='w-100' readonly />
-                                            <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId"/>
+                                            <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId[i]"/>
                                             <input name='Category' type='hidden' value="@Model.Category![i]"/>
                                         </td>
                                     }
@@ -102,8 +102,8 @@
                                     {
                                         <td>
                                             <input value="" style='border:none' class='w-100' readonly />
-                                            <input asp-for="MultipleSupplierId![i]" type="hidden" value="0"/>
-                                            <input name='Category' type='hidden' value="@Model.Category![i]"/>
+                                            <input name='MultipleSupplierId' type="hidden" value="0"/>
+                                            <input name='Category' type='hidden' value=""/>
                                         </td>
                                     }
                                     <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
@@ -333,7 +333,7 @@
                 var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
                 var debit = parseNumber($("#debit").val());
                 var credit = parseNumber($("#credit").val());
-                var multipleSupplierCode = safeVal("#MultipleSupplierId");
+                var multipleSupplierId = safeVal("#MultipleSupplierId") !== "" ? safeVal("#MultipleSupplierId") : 0;
                 var multipleSupplierCodeName = safeText("#MultipleSupplierId option:selected");
                 var category = safeVal("#Category");
 
@@ -365,7 +365,7 @@
                                                 <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
                                                 <td>
                                                     <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
-                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierCode}'/>
+                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/>
                                                     <input name='Category' type='hidden' value='${category}'/></td>
                                                 <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                             </tr>`;
@@ -450,7 +450,7 @@
             }
     </script>
     <script>
-        $("#debit, #credit").on("input change", seeIfNeedCategory);
+        $("#debit, #credit").on("input change focus blur click keyup keydown", seeIfNeedCategory);
         $(document).on("change", "#Category", updateSelectionChoices);
         $(document).on("click", "#modalClose", function (){
             $("#AccountNo").val("");

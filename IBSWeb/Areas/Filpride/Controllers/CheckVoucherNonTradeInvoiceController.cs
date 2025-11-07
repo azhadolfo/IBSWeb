@@ -1394,7 +1394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .OrderBy(s => s.CheckVoucherDetailId)
                     .Select(s => new
                     {
-                        PayeeId = s.SupplierId ?? s.EmployeeId,
+                        PayeeId = (int?)(s.SupplierId ?? s.EmployeeId ?? 0),
                         PayeeType = s.SupplierId != null
                             ? "supplier"
                             : s.EmployeeId != null
@@ -1487,53 +1487,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.Total = viewModel.Total;
+                existingHeaderModel.InvoiceAmount = viewModel.Total;
 
                 #endregion -- Saving the default entries --
 
-                #region -- Get Supplier --
-
-                var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                if (supplier == null)
-                {
-                    return NotFound();
-                }
-
-                #endregion -- Get Supplier --
-
-                #region -- Automatic entry --
-
-                if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                {
-                    existingHeaderModel.StartDate = viewModel.StartDate;
-                    existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                    existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                    // Identify the account with a number that starts with '10201'
-                    decimal? amount = null;
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
-                        {
-                            continue;
-                        }
-
-                        if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                        {
-                            amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                        }
-                    }
-
-                    if (amount.HasValue)
-                    {
-                        existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
-                    }
-                }
-
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                #endregion -- Automatic entry --
+                // #region -- Get Supplier --
+                //
+                // var supplier = await _unitOfWork.FilprideSupplier
+                //     .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                //
+                // if (supplier == null)
+                // {
+                //     return NotFound();
+                // }
+                //
+                // #endregion -- Get Supplier --
+                //
+                // #region -- Automatic entry --
+                //
+                // if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
+                // {
+                //     existingHeaderModel.StartDate = viewModel.StartDate;
+                //     existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
+                //     existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
+                //
+                //     // Identify the account with a number that starts with '10201'
+                //     decimal? amount = null;
+                //     for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                //     {
+                //         if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
+                //         {
+                //             continue;
+                //         }
+                //
+                //         if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
+                //         {
+                //             amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
+                //         }
+                //     }
+                //
+                //     if (amount.HasValue)
+                //     {
+                //         existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
+                //     }
+                // }
+                //
+                // await _unitOfWork.SaveAsync(cancellationToken);
+                //
+                // #endregion -- Automatic entry --
 
                 #region -- cv invoiving details entry --
 
@@ -1559,7 +1560,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             Amount = viewModel.Credit[i],
-                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
+                            SupplierId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "supplier") ? viewModel.MultipleSupplierId[i] : null,
+                            EmployeeId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "employee") ? viewModel.MultipleSupplierId[i] : null,
                         });
                     }
                 }
