@@ -1173,7 +1173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel file for deliver receipt#{deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel file for delivery receipt# {deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook);
 
             #endregion --Audit Trail Recording
