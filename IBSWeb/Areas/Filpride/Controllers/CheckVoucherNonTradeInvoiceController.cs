@@ -1386,13 +1386,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var details = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                     .Include(s => s.Supplier)
+                    .Include(s => s.Employee)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                var getSupplierId = await _dbContext.FilprideCheckVoucherDetails
+                var payees = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                     .OrderBy(s => s.CheckVoucherDetailId)
-                    .Select(s => s.SupplierId)
-                    .ToArrayAsync(cancellationToken);
+                    .Select(s => new
+                    {
+                        PayeeId = s.SupplierId ?? s.EmployeeId,
+                        PayeeType = s.SupplierId != null
+                            ? "supplier"
+                            : s.EmployeeId != null
+                                ? "employee"
+                                : "none",
+                        PayeeName = s.SupplierId != null
+                            ? $"{s.Supplier!.SupplierCode} {s.Supplier.SupplierName}"
+                            : s.EmployeeId != null
+                            ? $"{s.Employee!.EmployeeNumber} {s.Employee.FirstName} {s.Employee.LastName}"
+                            : ""
+                    })
+                    .ToListAsync(cancellationToken);
+
+                var getSupplierId = payees.Select(p => p.PayeeId).ToArray();
+                var getPayeeType = payees.Select(p => p.PayeeType).ToArray();
+                var getPayeeName = payees.Select(p => p.PayeeName).ToArray();
 
                 CheckVoucherNonTradeInvoicingViewModel model = new()
                 {
@@ -1412,7 +1430,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PoNo = existingHeaderModel.PONo?.First(),
                     SiNo = existingHeaderModel.SINo?.First(),
                     Type = existingHeaderModel.Type,
-                    MinDate = minDate
+                    MinDate = minDate,
+                    Category = getPayeeType,
+                    SupplierNames = getPayeeName
                 };
 
                 return View(model);
