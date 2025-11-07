@@ -196,5 +196,15 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Tin { get; set; }
 
         public ICollection<FilprideCheckVoucherDetail>? Details { get; set; }
+
+        [StringLength(20)]
+        public string VatType { get; set; }
+
+        [StringLength(20)]
+        public string TaxType { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal TaxPercent { get; set; }
     }
 }
