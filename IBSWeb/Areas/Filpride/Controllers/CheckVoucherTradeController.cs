@@ -547,7 +547,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && rr.AmountPaid == 0 && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
+                                                         && rr.AmountPaid == 0
+                                                         && poNumber.Contains(rr.PONo)
+                                                         && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -579,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : rr.Amount;
 
                     var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
                         : 0.0000m;
 
                     var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
@@ -2888,7 +2891,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : dr.CommissionAmount;
 
                         var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.10m)
+                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
                             : 0m;
 
                         var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
@@ -2951,7 +2954,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : dr.FreightAmount;
 
                     var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
                         : 0.0000m;
 
                     var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
