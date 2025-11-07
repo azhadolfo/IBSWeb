@@ -251,6 +251,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
                 Type = deliveryReceipt.PurchaseOrder.Type,
+                TaxPercentage = deliveryReceipt.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m
             };
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
@@ -345,7 +346,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 ? ComputeVatAmount(netOfVatAmount)
                 : 0m;
             var ewtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax
-                ? ComputeEwtAmount(netOfVatAmount, model.PurchaseOrder.TaxPercentage)
+                ? ComputeEwtAmount(netOfVatAmount, model.TaxPercentage)
                 : 0m;
 
             var supplierTaxTitle = model.PurchaseOrder.Supplier!.WithholdingTaxTitle?.Split(" ", 2);

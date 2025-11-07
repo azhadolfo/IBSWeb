@@ -116,5 +116,8 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CostBasedOnSoa { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal TaxPercentage { get; set; }
     }
 }
