@@ -4647,6 +4647,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
                     var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
+                    var ewtPercentage = sameSupplierGroup.First().Supplier!.WithholdingTaxPercent ?? 0m;
                     row += 2;
                     worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
                     worksheet.Cells[row, 2].Style.Font.Bold = true;
@@ -4722,7 +4723,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     ? repoCalculator.ComputeNetOfVat(grossOfLiftedThisMonth)
                                     : grossOfLiftedThisMonth;
                                 var ewt = isTaxable
-                                    ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                    ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
                                     : 0m;
 
                                 // WRITE ORIGINAL PO VOLUME
@@ -5105,6 +5106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             // computing the cells variables
                             var poTotal = po.Quantity;
                             var grossAmount = 0m;
+                            var ewtPercentage = 0m;
                             var unliftedLastMonth = 0m;
                             var liftedThisMonthRrQty = 0m;
                             var unliftedThisMonth = poTotal;
@@ -5133,13 +5135,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     unliftedLastMonth = 0m;
                                 }
+
+                                ewtPercentage = po.ReceivingReports!.Average(r => r.TaxPercentage);
                             }
 
                             var netOfVat = isVatable
                                 ? repoCalculator.ComputeNetOfVat(grossAmount)
                                 : grossAmount;
+
                             var ewt = isTaxable
-                                ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
                                 : 0m;
 
                             // incrementing subtotals
