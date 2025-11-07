@@ -56,7 +56,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money inputAmount" value="" placeholder="0.0000"/>
+                    <input asp-for="Total" id="totalAmount" class="form-control money inputAmount" value="" placeholder="0.0000"/>
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -419,8 +419,9 @@
     
     </script>
     <script>
-        $("#debit, #credit").on("input change focus blur click keyup keydown", seeIfNeedCategory);
+        $("#debit, #credit, #AccountNo").on("input change focus blur click keyup keydown", seeIfNeedCategory);
         $(document).on("change", "#Category", updateSelectionChoices);
+        $(document).on("input change", "#totalAmount", validateDebitAndCredit);
         $(document).on("click", "#modalClose", function (){
             $("#AccountNo").val("");
             $("#Category").val("");
@@ -494,6 +495,7 @@
         function validateDebitAndCredit() {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var totalValue = parseFloat($("#totalAmount").val()) || 0;
             var errorMessage = "";
             var isValid = true;
 
@@ -509,6 +511,9 @@
                 isValid = false;
             } else if (totalDebit === 0 || totalCredit === 0) {
                 errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
+            } else if (totalValue !== totalDebit || totalValue !== totalCredit) {
+                errorMessage = "Total Amount should be equal to Total Debit and Credit.";
                 isValid = false;
             }
 
