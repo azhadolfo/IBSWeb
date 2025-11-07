@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251107042624_MovedTheTaxPercentageToReceivingReportTable")]
+    partial class MovedTheTaxPercentageToReceivingReportTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -472,10 +475,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("ewt_percent");
 
-                    b.Property<bool>("IsDisplayEntry")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_display_entry");
-
                     b.Property<bool>("IsUserSelected")
                         .HasColumnType("boolean")
                         .HasColumnName("is_user_selected");
@@ -746,16 +745,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("supporting_file_saved_url");
 
-                    b.Property<decimal>("TaxPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("tax_percent");
-
-                    b.Property<string>("TaxType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("tax_type");
-
                     b.Property<string>("Tin")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -770,12 +759,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(13)
                         .HasColumnType("character varying(13)")
                         .HasColumnName("type");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
