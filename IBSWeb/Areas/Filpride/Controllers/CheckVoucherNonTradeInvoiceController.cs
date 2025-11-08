@@ -1000,7 +1000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Print(int? id, int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int? id, int? supplierId, int? employeeId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -1029,11 +1029,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var getSupplier = await _unitOfWork.FilprideSupplier
                 .GetAsync(s => s.SupplierId == supplierId, cancellationToken);
 
+            var getEmployee = await _unitOfWork.FilprideEmployee
+                .GetAsync(s => s.EmployeeId == employeeId, cancellationToken);
+
             var viewModel = new CheckVoucherVM
             {
                 Header = header,
                 Details = details,
-                Supplier = getSupplier
+                Supplier = getSupplier,
+                Employee = getEmployee
             };
 
             #region --Audit Trail Recording
@@ -1056,7 +1060,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, int? supplierId, int? employeeId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
@@ -1140,7 +1144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Posted.";
-                return RedirectToAction(nameof(Print), new { id, supplierId });
+                return RedirectToAction(nameof(Print), new { id, supplierId, employeeId });
             }
             catch (Exception ex)
             {

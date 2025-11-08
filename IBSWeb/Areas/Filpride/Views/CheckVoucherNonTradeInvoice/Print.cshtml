@@ -12,6 +12,7 @@
 @{
     ViewData["Title"] = "Check Voucher Non-Trade Invoice - Preview";
     var supplier = Model.Supplier ?? Model.Header!.Supplier!;
+    var employee = Model.Employee;
         
     var selectedCompany = string.Empty;
 
@@ -179,12 +180,16 @@
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                <td class="text-clamp-2 break-word">@supplier.SupplierName</td>
+                <td class="text-clamp-2 break-word">
+                    @(supplier != null ? supplier.SupplierName : (employee != null ? $"{employee.FirstName} {employee.LastName}" : "N/A"))
+                </td>
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                <td class="text-clamp-2 break-word">@supplier.SupplierAddress</td>
+                <td class="text-clamp-2 break-word">
+                    @(supplier != null ? supplier.SupplierAddress : (employee != null ? $"{employee.Address}" : "N/A"))
+                </td>
                 <td style="width:5%;">PO # :</td>
                 <td class="text-clamp-2 break-word">
                     @if (Model.Header.PONo != null && Model.Header.PONo.Any())
@@ -195,7 +200,7 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">TIN # :</td>
-                <td>@supplier.SupplierTin</td>
+                <td>@(supplier != null ? supplier.SupplierTin : (employee != null ? $"{employee.TinNo}" : "N/A"))</td>
                 <td>SI # :</td>
                 <td class="text-clamp-2 break-word">
                     @if (Model.Header.SINo != null && Model.Header.SINo.Any())
@@ -228,9 +233,13 @@
                 {
                     <td class="text-clamp-2 break-word">@Model.Header!.Payee!.ToUpper()</td>
                 }
-                else
+                else if (Model.Supplier != null)
                 {
                     <td class="text-clamp-2 break-word">@Model.Supplier!.SupplierName.ToUpper()</td>
+                }
+                else
+                {
+                    <td class="text-clamp-2 break-word">@Model.Employee!.FirstName.ToUpper() @Model.Employee!.LastName.ToUpper()</td>
                 }
                 @if (Model.Header.Total != 0)
                 {
@@ -334,7 +343,7 @@
 
                 <tr>
                     <td style="width:60%; padding-left:20px;" class="break-word small-if-long">
-                        @($"{cv.AccountNo} {cv.AccountName}" + (subAccount != null && cv.Debit != 0 ? $" ({subAccount})" : string.Empty))
+                        @($"{cv.AccountNo} {cv.AccountName}" + (subAccount != null ? $" ({subAccount})" : string.Empty))
                     </td>
                     <td class="text-end" style="width:7%;">@cv.Debit.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end" style="width:7%;">@cv.Credit.ToString(SD.Two_Decimal_Format)</td>
@@ -438,7 +447,7 @@
         else
         {
             <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplier.SupplierId)" class="btn btn-primary form-control buttons">Print</a>
+                <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplier?.SupplierId, @employee?.EmployeeId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
@@ -464,7 +473,7 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Post", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@supplier.SupplierId)}`;
+                    var url = `@Url.Action("Post", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@(supplier?.SupplierId ?? 0))}&employeeId=${encodeURIComponent(@(employee?.EmployeeId ?? 0))}`;
                     window.location.href = url;
                 }
             })
