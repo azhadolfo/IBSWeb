@@ -9,5 +9,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<FilprideCheckVoucherDetail>? Details { get; set; }
 
         public FilprideSupplier? Supplier { get; set; }
+
+        public FilprideEmployee? Employee { get; set; }
     }
 }
