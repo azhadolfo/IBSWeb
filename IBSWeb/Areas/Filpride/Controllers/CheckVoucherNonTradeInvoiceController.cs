@@ -553,7 +553,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvType = nameof(CVType.Invoicing),
                     Company = companyClaims,
                     Type = viewModel.Type,
-                    InvoiceAmount = viewModel.Total
+                    InvoiceAmount = viewModel.Total,
+                    TaxType = string.Empty,
+                    VatType = string.Empty
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);

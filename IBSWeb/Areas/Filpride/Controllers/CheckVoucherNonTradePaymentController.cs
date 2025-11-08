@@ -1192,7 +1192,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     OldCvNo = viewModel.OldCVNo,
                     SupplierName = supplier.SupplierName,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    TaxType = string.Empty,
+                    VatType = string.Empty,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);

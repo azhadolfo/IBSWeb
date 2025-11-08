@@ -227,8 +227,8 @@
                         $("#categoryContainer").append(newRow);
 
                         $("#Category").append($('<option>', {
-                            value: "employee",
-                            text: "Employee"
+                            value: "supplier",
+                            text: "Supplier"
                         }));
 
                         $("#Category").trigger("change");
@@ -245,11 +245,7 @@
                 else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
                     if ($categoryGroup.length === 0) {
                         $("#categoryContainer").append(newRow);
-
-                        $("#Category").append($('<option>', {
-                            value: "employee",
-                            text: "Employee"
-                        }));
+                        
                         $("#Category").append($('<option>', {
                             value: "supplier",
                             text: "Supplier"
