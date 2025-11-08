@@ -95,7 +95,6 @@
                                         <td>
                                             <input value="@Model.SupplierNames![i]" style='border:none' class='w-100' readonly />
                                             <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId[i]"/>
-                                            <input name='Category' type='hidden' value="@Model.Category![i]"/>
                                         </td>
                                     }
                                     else
@@ -362,7 +361,6 @@
                                                 <td>
                                                     <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
                                                     <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/>
-                                                    <input name='Category' type='hidden' value='${category}'/></td>
                                                 <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                             </tr>`;
 

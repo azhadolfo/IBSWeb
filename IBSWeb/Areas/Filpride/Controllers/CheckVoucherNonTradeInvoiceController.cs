@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
                                   && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
-                                  && ((cvd.SupplierId != null || cvd.EmployeeId != null) && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit != 0
+                                  && ((cvd.SupplierId != null) && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit != 0
                                       || cvd.CheckVoucherHeader.SupplierId != null
                                       && cvd.AccountName == "AP-Non Trade Payable"))
                     .Include(cvd => cvd.Supplier)
@@ -108,17 +108,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.TransactionNo,
                         x.CheckVoucherHeader!.Date,
-
-                        SupplierName = x.SupplierId != null
-                            ? (x.Supplier != null
+                        SupplierName = x.Supplier != null
                                 ? x.Supplier.SupplierName
-                                : x.CheckVoucherHeader!.Supplier!.SupplierName)
-                            : (x.Employee != null
-                                ? $"{x.Employee.FirstName} {x.Employee.LastName}"
-                                : $"{x.CheckVoucherHeader!.Employee!.FirstName} {x.CheckVoucherHeader!.Employee!.LastName}"),
-
+                                : x.CheckVoucherHeader!.Supplier!.SupplierName,
                         SupplierId = x.SupplierId,
-                        EmployeeId = x.EmployeeId,
                         Amount = x.Amount > 0
                             ? x.Amount
                             : x.CheckVoucherHeader!.InvoiceAmount,
@@ -579,8 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             Amount = viewModel.Credit[i],
-                            SupplierId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "supplier") ? viewModel.MultipleSupplierId[i] : null,
-                            EmployeeId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "employee") ? viewModel.MultipleSupplierId[i] : null,
+                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
                             IsUserSelected = true
                         });
                     }
@@ -1062,7 +1054,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> Post(int id, int? supplierId, int? employeeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
@@ -1146,7 +1138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Posted.";
-                return RedirectToAction(nameof(Print), new { id, supplierId, employeeId });
+                return RedirectToAction(nameof(Print), new { id, supplierId });
             }
             catch (Exception ex)
             {
@@ -1401,11 +1393,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(s => new
                     {
                         PayeeId = (int?)(s.SupplierId ?? s.EmployeeId ?? 0),
-                        PayeeType = s.SupplierId != null
-                            ? "supplier"
-                            : s.EmployeeId != null
-                                ? "employee"
-                                : "none",
                         PayeeName = s.SupplierId != null
                             ? $"{s.Supplier!.SupplierCode} {s.Supplier.SupplierName}"
                             : s.EmployeeId != null
@@ -1415,7 +1402,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 var getSupplierId = payees.Select(p => p.PayeeId).ToArray();
-                var getPayeeType = payees.Select(p => p.PayeeType).ToArray();
                 var getPayeeName = payees.Select(p => p.PayeeName).ToArray();
 
                 CheckVoucherNonTradeInvoicingViewModel model = new()
@@ -1437,7 +1423,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SiNo = existingHeaderModel.SINo?.First(),
                     Type = existingHeaderModel.Type,
                     MinDate = minDate,
-                    Category = getPayeeType,
                     SupplierNames = getPayeeName
                 };
 
@@ -1566,8 +1551,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             Amount = viewModel.Credit[i],
-                            SupplierId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "supplier") ? viewModel.MultipleSupplierId[i] : null,
-                            EmployeeId = (viewModel.MultipleSupplierId![i] != 0 && viewModel.Category![i] == "employee") ? viewModel.MultipleSupplierId[i] : null,
+                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
                         });
                     }
                 }
