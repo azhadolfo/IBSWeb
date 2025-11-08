@@ -328,8 +328,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Tin = supplier.SupplierTin,
                     OldCvNo = viewModel.OldCVNo,
                     VatType = supplier.VatType,
-                    TaxType = supplier.TaxType,
-                    TaxPercent = supplier.WithholdingTaxPercent ?? 0m
+                    TaxType = supplier.TaxType
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -360,7 +359,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
-                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+                #endregion --CV Details Entry
+
+                #region -- Partial payment of RR's
+
+                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
+                    if (getReceivingReport != null)
+                    {
+                        getReceivingReport.AmountPaid += item.Amount;
+                        cvh.TaxPercent = getReceivingReport.TaxPercentage;
+
+                        cvTradePaymentModel.Add(
+                        new FilprideCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = cvh.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                    }
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
+
+                #endregion -- Partial payment of RR's
+
+                #region -- Additional journal entry in details
+
+                var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
+                    .FirstOrDefaultAsync(x => x. AccountName
+                        .Contains($"Expanded Withholding Tax {cvh.TaxPercent * 100:N0}%"), cancellationToken);
 
                 foreach (var cv in cvDetails.OrderBy(x => x.CheckVoucherDetailId))
                 {
@@ -430,8 +461,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cvDetails.Add(
                         new FilprideCheckVoucherDetail
                         {
-                            AccountNo = parts[0],
-                            AccountName = parts[1],
+                            AccountNo = getWithholdingTaxTitle!.AccountNumber ?? string.Empty,
+                            AccountName = getWithholdingTaxTitle.AccountName,
                             Debit = 0.00m,
                             Credit = ewt,
                             TransactionNo = cvh.CheckVoucherHeaderNo,
@@ -457,32 +488,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
-                #endregion --CV Details Entry
-
-                #region -- Partial payment of RR's
-
-                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
-                foreach (var item in viewModel.RRs)
-                {
-                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
-                    if (getReceivingReport != null)
-                    {
-                        getReceivingReport.AmountPaid += item.Amount;
-
-                        cvTradePaymentModel.Add(
-                        new FilprideCVTradePayment
-                        {
-                            DocumentId = getReceivingReport.ReceivingReportId,
-                            DocumentType = "RR",
-                            CheckVoucherId = cvh.CheckVoucherHeaderId,
-                            AmountPaid = item.Amount
-                        });
-                    }
-                }
-
-                await _dbContext.AddRangeAsync(cvTradePaymentModel);
-
-                #endregion -- Partial payment of RR's
+                #endregion
 
                 #region -- Uploading file --
 
@@ -806,8 +812,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     });
                 }
 
-                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
-
                 #endregion --CV Details Entry
 
                 #region --Saving the default entries
@@ -856,13 +860,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.OldCvNo = viewModel.OldCVNo;
                 existingHeaderModel.VatType = supplier.VatType;
                 existingHeaderModel.TaxType = supplier.TaxType;
-                existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
 
+                #region -- Partial payment of RR's
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "RR")
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    var receivingReport = await _unitOfWork.FilprideReceivingReport
+                        .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
+
+                    if (receivingReport == null)
+                    {
+                        return NotFound();
+                    }
+
+                    receivingReport.AmountPaid -= item.AmountPaid;
+                }
+
+                _dbContext.RemoveRange(getCheckVoucherTradePayment);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport
+                        .GetAsync(rr => rr.ReceivingReportId == item.Id, cancellationToken);
+
+                    if (getReceivingReport == null)
+                    {
+                        return NotFound();
+                    }
+
+                    getReceivingReport.AmountPaid += item.Amount;
+                    existingHeaderModel.TaxPercent = getReceivingReport.TaxPercentage;
+
+                    cvTradePaymentModel.Add(
+                        new FilprideCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #endregion -- Partial payment of RR's
+
                 #region -- Additional details entry
 
-                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+                var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
+                    .FirstOrDefaultAsync(x => x. AccountName
+                        .Contains($"Expanded Withholding Tax {existingHeaderModel.TaxPercent * 100:N0}%"), cancellationToken);
 
                 foreach (var cv in details.OrderBy(x => x.CheckVoucherDetailId))
                 {
@@ -934,8 +990,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             details.Add(
                             new FilprideCheckVoucherDetail
                             {
-                                AccountNo = parts[0],
-                                AccountName = parts[1],
+                                AccountNo = getWithholdingTaxTitle!.AccountNumber ?? string.Empty,
+                                AccountName = getWithholdingTaxTitle.AccountName,
                                 Debit = 0.00m,
                                 Credit = ewt,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
@@ -967,56 +1023,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
 
                 #endregion
-
-                #region -- Partial payment of RR's
-
-                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                    .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "RR")
-                    .ToListAsync(cancellationToken);
-
-                foreach (var item in getCheckVoucherTradePayment)
-                {
-                    var receivingReport = await _unitOfWork.FilprideReceivingReport
-                        .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
-
-                    if (receivingReport == null)
-                    {
-                        return NotFound();
-                    }
-
-                    receivingReport.AmountPaid -= item.AmountPaid;
-                }
-
-                _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
-                foreach (var item in viewModel.RRs)
-                {
-                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport
-                        .GetAsync(rr => rr.ReceivingReportId == item.Id, cancellationToken);
-
-                    if (getReceivingReport == null)
-                    {
-                        return NotFound();
-                    }
-
-                    getReceivingReport.AmountPaid += item.Amount;
-
-                    cvTradePaymentModel.Add(
-                        new FilprideCVTradePayment
-                        {
-                            DocumentId = getReceivingReport.ReceivingReportId,
-                            DocumentType = "RR",
-                            CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
-                            AmountPaid = item.Amount
-                        });
-                }
-
-                await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                #endregion -- Partial payment of RR's
 
                 #region -- Uploading file --
 
