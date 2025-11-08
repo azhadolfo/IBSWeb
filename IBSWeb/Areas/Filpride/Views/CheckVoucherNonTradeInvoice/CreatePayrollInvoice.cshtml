@@ -176,7 +176,6 @@
         var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
 
         function seeIfNeedCategory (event){
-            console.log("seeIfNeedCategory");
             var accountNumber = $("#AccountNo").val();
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
@@ -198,8 +197,8 @@
                     $("#categoryContainer").append(newRow);
 
                     $("#Category").append($('<option>', {
-                        value: "employee",
-                        text: "Employee"
+                        value: "supplier",
+                        text: "Supplier"
                     }));
 
                     $("#Category").trigger("change");
@@ -216,11 +215,7 @@
             else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
                 if ($categoryGroup.length === 0) {
                     $("#categoryContainer").append(newRow);
-
-                    $("#Category").append($('<option>', {
-                        value: "employee",
-                        text: "Employee"
-                    }));
+                    
                     $("#Category").append($('<option>', {
                         value: "supplier",
                         text: "Supplier"
@@ -264,7 +259,6 @@
                 type: "GET",
                 data: { chosenCategory: chosenCategory },
                 success: function (data) {
-                    console.log(data);
                     if (Array.isArray(data) && data.length > 0) {
                         
                         // append the new empty selectlist
@@ -419,25 +413,6 @@
     
     </script>
     <script>
-        $("#debit, #credit, #AccountNo").on("input change focus blur click keyup keydown", seeIfNeedCategory);
-        $(document).on("change", "#Category", updateSelectionChoices);
-        $(document).on("input change", "#totalAmount", validateDebitAndCredit);
-        $(document).on("click", "#modalClose", function (){
-            $("#AccountNo").val("");
-            $("#Category").val("");
-            $("#MultipleSupplierId").val("");
-            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
-            $("#debit").val("0.0000");
-            $("#credit").val("0.0000");
-            if ($("#selectionGroup").length !== 0) {
-                $("#selectionGroup").remove();
-            }
-            if ($("#categoryGroup").length !== 0) {
-                $("#categoryGroup").remove();
-            }
-        });
-    </script>
-    <script>
         $("#AccountNo").change(function () {
             var accountNumber = $(this).val();
             if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
@@ -525,6 +500,25 @@
 
             return isValid;
         }
+    </script>
+    <script>
+        $("#debit, #credit, #AccountNo").on("input change focus blur click keyup keydown", seeIfNeedCategory);
+        $(document).on("change", "#Category", updateSelectionChoices);
+        $(document).on("input change", "#totalAmount", validateDebitAndCredit);
+        $(document).on("click", "#modalClose", function (){
+            $("#AccountNo").val("");
+            $("#Category").val("");
+            $("#MultipleSupplierId").val("");
+            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
+            $("#debit").val("0.0000");
+            $("#credit").val("0.0000");
+            if ($("#selectionGroup").length !== 0) {
+                $("#selectionGroup").remove();
+            }
+            if ($("#categoryGroup").length !== 0) {
+                $("#categoryGroup").remove();
+            }
+        });
     </script>
 }
 
