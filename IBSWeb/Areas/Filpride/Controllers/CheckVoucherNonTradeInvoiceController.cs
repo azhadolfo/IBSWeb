@@ -108,17 +108,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.TransactionNo,
                         x.CheckVoucherHeader!.Date,
-
-                        SupplierName = x.SupplierId != null
-                            ? (x.Supplier != null
-                                ? x.Supplier.SupplierName
-                                : x.CheckVoucherHeader!.Supplier!.SupplierName)
-                            : (x.Employee != null
-                                ? $"{x.Employee.FirstName} {x.Employee.LastName}"
-                                : $"{x.CheckVoucherHeader!.Employee!.FirstName} {x.CheckVoucherHeader!.Employee!.LastName}"),
-
-                        SupplierId = x.SupplierId,
-                        EmployeeId = x.EmployeeId,
+                        SupplierName = x.Supplier != null
+                            ? x.Supplier.SupplierName
+                            : x.CheckVoucherHeader!.Supplier!.SupplierName,
+                        x.Supplier?.SupplierId,
                         Amount = x.Amount > 0
                             ? x.Amount
                             : x.CheckVoucherHeader!.InvoiceAmount,
