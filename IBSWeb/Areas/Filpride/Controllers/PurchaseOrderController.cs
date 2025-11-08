@@ -309,7 +309,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     VatType = supplier.VatType,
                     TaxType = supplier.TaxType,
                     OldPoNo = viewModel.OldPoNo,
-                    FinalPrice = viewModel.Price
+                    FinalPrice = viewModel.Price,
                 };
 
                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);

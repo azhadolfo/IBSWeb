@@ -248,8 +248,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300") ?? throw new ArgumentException("Account title '201010300' not found.");
                 var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200") ?? throw new ArgumentException("Account title '201010200' not found.");
-                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
                 var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
                 var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
 
@@ -393,6 +391,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
                 {
+                    var haulerTaxTitle = deliveryReceipt.Hauler!.WithholdingTaxTitle?.Split(" ", 2);
+                    var ewtAccountNo = haulerTaxTitle?.FirstOrDefault()
+                                       ?? throw new ArgumentException("Supplier withholding tax title is invalid.");
+                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo)
+                                   ?? throw new ArgumentException($"Account title '{ewtAccountNo}' not found.");
+
                     if (deliveryReceipt.Freight > 0)
                     {
                         var freightGrossAmount = deliveryReceipt.Freight * deliveryReceipt.Quantity;
@@ -486,7 +490,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         ? ComputeNetOfVat(totalFreightGrossAmount)
                         : totalFreightGrossAmount;
                     var totalFreightEwtAmount = deliveryReceipt.HaulerTaxType == SD.TaxType_WithTax
-                        ? ComputeEwtAmount(totalFreightNetOfVat, 0.02m)
+                        ? ComputeEwtAmount(totalFreightNetOfVat, deliveryReceipt.Hauler!.WithholdingTaxPercent ?? 0m)
                         : 0m;
                     var totalFreightNetOfEwt = totalFreightEwtAmount > 0
                         ? ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount)
@@ -516,9 +520,9 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                        AccountId = ewtTwoPercent.AccountId,
-                        AccountNo = ewtTwoPercent.AccountNumber,
-                        AccountTitle = ewtTwoPercent.AccountName,
+                        AccountId = ewtTitle.AccountId,
+                        AccountNo = ewtTitle.AccountNumber,
+                        AccountTitle = ewtTitle.AccountName,
                         Debit = 0,
                         Credit = totalFreightEwtAmount,
                         Company = deliveryReceipt.Company,
@@ -530,9 +534,16 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (deliveryReceipt.CommissionRate > 0)
                 {
+                    var commissioneeTaxTitle = deliveryReceipt.Commissionee!.WithholdingTaxTitle?.Split(" ", 2);
+                    var ewtAccountNo = commissioneeTaxTitle?.FirstOrDefault()
+                                       ?? throw new ArgumentException("Supplier withholding tax title is invalid.");
+                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo)
+                                   ?? throw new ArgumentException($"Account title '{ewtAccountNo}' not found.");
+
                     var commissionGrossAmount = deliveryReceipt.CommissionAmount;
-                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax ?
-                        ComputeEwtAmount(commissionGrossAmount, 0.10m) : 0;
+                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax
+                        ? ComputeEwtAmount(commissionGrossAmount, deliveryReceipt.Commissionee!.WithholdingTaxPercent ?? 0m)
+                        : 0;
                     var commissionNetOfEwt = commissionEwtAmount > 0 ?
                         ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount) : commissionGrossAmount;
 
@@ -577,9 +588,9 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
-                            AccountId = ewtTenPercent.AccountId,
-                            AccountNo = ewtTenPercent.AccountNumber,
-                            AccountTitle = ewtTenPercent.AccountName,
+                            AccountId = ewtTitle.AccountId,
+                            AccountNo = ewtTitle.AccountNumber,
+                            AccountTitle = ewtTitle.AccountName,
                             Debit = 0,
                             Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,

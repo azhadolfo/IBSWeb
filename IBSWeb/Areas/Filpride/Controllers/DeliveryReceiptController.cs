@@ -1173,7 +1173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel file for deliver receipt#{deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel file for delivery receipt# {deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook);
 
             #endregion --Audit Trail Recording
@@ -1217,7 +1217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var receivingReportNo = await _unitOfWork.FilprideReceivingReport
-                    .AutoGenerateReceivingReport(model, liftingDate, User.Identity!.Name!, cancellationToken);
+                    .AutoGenerateReceivingReport(model, liftingDate, GetUserFullName(), cancellationToken);
 
                 #region --Audit Trail Recording
 

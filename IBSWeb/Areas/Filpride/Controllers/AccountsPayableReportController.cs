@@ -4647,6 +4647,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
                     var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
+                    var ewtPercentage = sameSupplierGroup.First().Supplier!.WithholdingTaxPercent ?? 0m;
                     row += 2;
                     worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
                     worksheet.Cells[row, 2].Style.Font.Bold = true;
@@ -4722,7 +4723,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     ? repoCalculator.ComputeNetOfVat(grossOfLiftedThisMonth)
                                     : grossOfLiftedThisMonth;
                                 var ewt = isTaxable
-                                    ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                    ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
                                     : 0m;
 
                                 // WRITE ORIGINAL PO VOLUME
@@ -5105,6 +5106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             // computing the cells variables
                             var poTotal = po.Quantity;
                             var grossAmount = 0m;
+                            var ewtPercentage = 0m;
                             var unliftedLastMonth = 0m;
                             var liftedThisMonthRrQty = 0m;
                             var unliftedThisMonth = poTotal;
@@ -5133,13 +5135,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     unliftedLastMonth = 0m;
                                 }
+
+                                ewtPercentage = po.ReceivingReports!.Average(r => r.TaxPercentage);
                             }
 
                             var netOfVat = isVatable
                                 ? repoCalculator.ComputeNetOfVat(grossAmount)
                                 : grossAmount;
+
                             var ewt = isTaxable
-                                ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
                                 : 0m;
 
                             // incrementing subtotals
@@ -6326,7 +6331,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(PurchaseJournalReport));
                 }
 
-                var rrsByProduct = receivingReportsThisMonth.GroupBy(rr => rr.PurchaseOrder!.ProductName).ToList();
+                var rrsByProduct = receivingReportsThisMonth.OrderBy(rr => rr.PurchaseOrder!.ProductName)
+                    .GroupBy(rr => rr.PurchaseOrder!.ProductName)
+                    .ToList();
                 var listOfProducts = rrsByProduct.Select(rr => rr.Key).ToList();
 
                 var receivingReportsLastMonth = (await _unitOfWork.FilprideReceivingReport
@@ -6434,6 +6441,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int row = 13;
+                var totalQuantityServed = 0m;
+                var totalSalesAmount = 0m;
+                var totalSalesAmountVatEx = 0m;
+                var totalCostAmount = 0m;
+                var totalCostAmountVatEx = 0m;
+                var totalFreightAmount = 0m;
+                var totalFreightAmountEx = 0m;
+                var totalCommissionAmount = 0m;
+                var totalGmAmount = 0m;
 
                 // ALL SEGMENT CONTENTS
                 foreach (var product in listOfProducts)
@@ -6445,24 +6461,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         continue;
                     }
 
+                    var quantityServed = groupByProduct.Sum(rr => rr.QuantityReceived);
+                    var salesAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                    var salesAmountVatEx = salesAmount / 1.12m;
+                    var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                    var costAmount = groupByProduct.Sum(rr => rr.Amount);
+                    var costAmountVatEx = costAmount / 1.12m;
+                    var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                    var freightAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    var freightAmountEx = freightAmount / 1.12m;
+                    var freightPerLiterEx = freightAmountEx / quantityServed;
+                    var commissionAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    var commissionPerLiter = commissionAmount / quantityServed;
+                    var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                    var gmPerLiter = gmAmount / quantityServed;
+
+
                     // CONTENTS ENCODING
                     worksheet.Cells[row, 2].Value = "All Segment:";
                     worksheet.Cells[row, 3].Value = product;
-                    worksheet.Cells[row, 4].Value = groupByProduct!.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 5].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 6].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 7].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                    worksheet.Cells[row, 8].Value = groupByProduct!.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 9].Value = groupByProduct!.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 10].Value = (groupByProduct!.Sum(rr => rr.Amount/1.12m) / groupByProduct!.Sum(rr => rr.QuantityReceived));
-                    worksheet.Cells[row, 11].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 12].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 13].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                    worksheet.Cells[row, 14].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 15].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                    worksheet.Cells[row, 16].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                    worksheet.Cells[row, 17].Value = ((groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
-                                                      / groupByProduct!.Sum(rr => rr.QuantityReceived));
+                    worksheet.Cells[row, 4].Value = quantityServed;
+                    worksheet.Cells[row, 5].Value = salesAmount;
+                    worksheet.Cells[row, 6].Value = salesAmountVatEx;
+                    worksheet.Cells[row, 7].Value = salesPerLiterVatEx;
+                    worksheet.Cells[row, 8].Value = costAmount;
+                    worksheet.Cells[row, 9].Value = costAmountVatEx;
+                    worksheet.Cells[row, 10].Value = costPerLiterVatEx;
+                    worksheet.Cells[row, 11].Value = freightAmount;
+                    worksheet.Cells[row, 12].Value = freightAmountEx;
+                    worksheet.Cells[row, 13].Value = freightPerLiterEx;
+                    worksheet.Cells[row, 14].Value = commissionAmount;
+                    worksheet.Cells[row, 15].Value = commissionPerLiter;
+                    worksheet.Cells[row, 16].Value = gmAmount;
+                    worksheet.Cells[row, 17].Value = gmPerLiter;
                     // styling
                     using (var range = worksheet.Cells[row, 4, row, 16])
                     {
@@ -6475,25 +6506,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     row++;
+                    totalQuantityServed += quantityServed;
+                    totalSalesAmount += salesAmount;
+                    totalSalesAmountVatEx += salesAmountVatEx;
+                    totalCostAmount += costAmount;
+                    totalCostAmountVatEx += costAmountVatEx;
+                    totalFreightAmount += freightAmount;
+                    totalFreightAmountEx += freightAmountEx;
+                    totalCommissionAmount += commissionAmount;
+                    totalGmAmount += gmAmount;
                 }
 
                 // ALL SEGMENT GRAND TOTAL
                 worksheet.Cells[row, 3].Value = "Grand Total";
-                worksheet.Cells[row, 4].Value = receivingReportsThisMonth!.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 5].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                worksheet.Cells[row, 6].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                worksheet.Cells[row, 7].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                worksheet.Cells[row, 8].Value = receivingReportsThisMonth!.Sum(rr => rr.Amount);
-                worksheet.Cells[row, 9].Value = receivingReportsThisMonth!.Sum(rr => rr.Amount/1.12m);
-                worksheet.Cells[row, 10].Value = (receivingReportsThisMonth!.Sum(rr => rr.Amount/1.12m) / receivingReportsThisMonth!.Sum(rr => rr.QuantityReceived));
-                worksheet.Cells[row, 11].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                worksheet.Cells[row, 12].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                worksheet.Cells[row, 13].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                worksheet.Cells[row, 14].Value = receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                worksheet.Cells[row, 15].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                worksheet.Cells[row, 16].Value = (receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                worksheet.Cells[row, 17].Value = ((receivingReportsThisMonth!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
-                                                 / receivingReportsThisMonth!.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 4].Value = totalQuantityServed;
+                worksheet.Cells[row, 5].Value = totalSalesAmount;
+                worksheet.Cells[row, 6].Value = totalSalesAmountVatEx;
+                worksheet.Cells[row, 7].Value = totalSalesAmountVatEx / totalQuantityServed;
+                worksheet.Cells[row, 8].Value = totalCostAmount;
+                worksheet.Cells[row, 9].Value = totalCostAmountVatEx;
+                worksheet.Cells[row, 10].Value = totalCostAmountVatEx / totalQuantityServed;
+                worksheet.Cells[row, 11].Value = totalFreightAmount;
+                worksheet.Cells[row, 12].Value = totalFreightAmountEx;
+                worksheet.Cells[row, 13].Value = totalFreightAmountEx / totalQuantityServed;
+                worksheet.Cells[row, 14].Value = totalCommissionAmount;
+                worksheet.Cells[row, 15].Value = totalCommissionAmount / totalQuantityServed;
+                worksheet.Cells[row, 16].Value = totalGmAmount;
+                worksheet.Cells[row, 17].Value = totalGmAmount / totalQuantityServed;
                 // styling
                 using (var range = worksheet.Cells[row, 4, row, 16])
                 {
@@ -6527,6 +6566,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     row += 2;
+                    totalQuantityServed = 0m;
+                    totalSalesAmount = 0m;
+                    totalSalesAmountVatEx = 0m;
+                    totalCostAmount = 0m;
+                    totalCostAmountVatEx = 0m;
+                    totalFreightAmount = 0m;
+                    totalFreightAmountEx = 0m;
+                    totalCommissionAmount = 0m;
+                    totalGmAmount = 0m;
 
                     // SEGMENT TITLE
                     worksheet.Cells[row, 2].Value = segment;
@@ -6568,24 +6616,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             continue;
                         }
 
+                        var quantityServed = groupByProduct.Sum(rr => rr.QuantityReceived);
+                        var salesAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                        var salesAmountVatEx = salesAmount / 1.12m;
+                        var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                        var costAmount = groupByProduct.Sum(rr => rr.Amount);
+                        var costAmountVatEx = costAmount / 1.12m;
+                        var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                        var freightAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                        var freightAmountEx = freightAmount / 1.12m;
+                        var freightPerLiterEx = freightAmountEx / quantityServed;
+                        var commissionAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        var commissionPerLiter = commissionAmount / quantityServed;
+                        var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                        var gmPerLiter = gmAmount / quantityServed;
+
                         // ENCODE, THIS SET IS BY PRODUCT
                         worksheet.Cells[row, 2].Value = segment;
                         worksheet.Cells[row, 3].Value = product;
-                        worksheet.Cells[row, 4].Value = groupByProduct!.Sum(rr => rr.QuantityReceived);
-                        worksheet.Cells[row, 5].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                        worksheet.Cells[row, 6].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                        worksheet.Cells[row, 7].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                        worksheet.Cells[row, 8].Value = groupByProduct!.Sum(rr => rr.Amount);
-                        worksheet.Cells[row, 9].Value = groupByProduct!.Sum(rr => rr.Amount/1.12m);
-                        worksheet.Cells[row, 10].Value = (groupByProduct!.Sum(rr => rr.Amount/1.12m) / groupByProduct!.Sum(rr => rr.QuantityReceived));
-                        worksheet.Cells[row, 11].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                        worksheet.Cells[row, 12].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                        worksheet.Cells[row, 13].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                        worksheet.Cells[row, 14].Value = groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                        worksheet.Cells[row, 15].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / groupByProduct!.Sum(rr => rr.DeliveryReceipt!.Quantity));
-                        worksheet.Cells[row, 16].Value = (groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                        worksheet.Cells[row, 17].Value = ((groupByProduct!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount))
-                                                          / groupByProduct!.Sum(rr => rr.QuantityReceived));
+                        worksheet.Cells[row, 4].Value = quantityServed;
+                        worksheet.Cells[row, 5].Value = salesAmount;
+                        worksheet.Cells[row, 6].Value = salesAmountVatEx;
+                        worksheet.Cells[row, 7].Value = salesPerLiterVatEx;
+                        worksheet.Cells[row, 8].Value = costAmount;
+                        worksheet.Cells[row, 9].Value = costAmountVatEx;
+                        worksheet.Cells[row, 10].Value = costPerLiterVatEx;
+                        worksheet.Cells[row, 11].Value = freightAmount;
+                        worksheet.Cells[row, 12].Value = freightAmountEx;
+                        worksheet.Cells[row, 13].Value = freightPerLiterEx;
+                        worksheet.Cells[row, 14].Value = commissionAmount;
+                        worksheet.Cells[row, 15].Value = commissionPerLiter;
+                        worksheet.Cells[row, 16].Value = gmAmount;
+                        worksheet.Cells[row, 17].Value = gmPerLiter;
                         // styling
                         using (var range = worksheet.Cells[row, 4, row, 17])
                         {
@@ -6598,29 +6660,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         row++;
+                        totalQuantityServed += quantityServed;
+                        totalSalesAmount += salesAmount;
+                        totalSalesAmountVatEx += salesAmountVatEx;
+                        totalCostAmount += costAmount;
+                        totalCostAmountVatEx += costAmountVatEx;
+                        totalFreightAmount += freightAmount;
+                        totalFreightAmountEx += freightAmountEx;
+                        totalCommissionAmount += commissionAmount;
+                        totalGmAmount += gmAmount;
                     }
 
                     // SUBTOTAL BY SEGMENT
                     worksheet.Cells[row, 3].Value = "Sub Total";
-                    worksheet.Cells[row, 4].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 5].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 6].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 7].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
-                        (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity)) : 0;
-                    worksheet.Cells[row, 8].Value = rrsBySegment!.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 9].Value = rrsBySegment!.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 10].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
-                        (rrsBySegment!.Sum(rr => rr.Amount/1.12m) / rrsBySegment!.Sum(rr => rr.QuantityReceived)) : 0;
-                    worksheet.Cells[row, 11].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 12].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 13].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) != 0 ?
-                        rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) : 0;
-                    worksheet.Cells[row, 14].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 15].Value = rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity) != 0 ?
-                        (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.Quantity)) : 0;
-                    worksheet.Cells[row, 16].Value = (rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount));
-                    worksheet.Cells[row, 17].Value = rrsBySegment!.Sum(rr => rr.QuantityReceived) != 0 ?
-                        ((rrsBySegment!.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount - rr.DeliveryReceipt!.FreightAmount - rr.DeliveryReceipt!.CommissionAmount)) / rrsBySegment!.Sum(rr => rr.QuantityReceived)) : 0;
+                    worksheet.Cells[row, 4].Value = totalQuantityServed;
+                    worksheet.Cells[row, 5].Value = totalSalesAmount;
+                    worksheet.Cells[row, 6].Value = totalSalesAmountVatEx;
+                    worksheet.Cells[row, 7].Value = totalSalesAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 8].Value = totalCostAmount;
+                    worksheet.Cells[row, 9].Value = totalCostAmountVatEx;
+                    worksheet.Cells[row, 10].Value = totalCostAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 11].Value = totalFreightAmount;
+                    worksheet.Cells[row, 12].Value = totalFreightAmountEx;
+                    worksheet.Cells[row, 13].Value = totalFreightAmountEx / totalQuantityServed;
+                    worksheet.Cells[row, 14].Value = totalCommissionAmount;
+                    worksheet.Cells[row, 15].Value = totalCommissionAmount / totalQuantityServed;
+                    worksheet.Cells[row, 16].Value = totalGmAmount;
+                    worksheet.Cells[row, 17].Value = totalGmAmount / totalQuantityServed;
                     // styling
                     using (var range = worksheet.Cells[row, 4, row, 17])
                     {
@@ -6653,7 +6719,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
 
-                if (inTransitPrevToThisMonth != null && inTransitPrevToThisMonth.Count != 0)
+                if (inTransitPrevToThisMonth.Count != 0)
                 {
                     row += 2;
 
@@ -6683,9 +6749,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     row++;
+                    totalQuantityServed = 0m;
+                    totalSalesAmount = 0m;
+                    totalSalesAmountVatEx = 0m;
+                    totalCostAmount = 0m;
+                    totalCostAmountVatEx = 0m;
+                    totalFreightAmount = 0m;
+                    totalFreightAmountEx = 0m;
+                    totalCommissionAmount = 0m;
+                    totalGmAmount = 0m;
 
                     foreach(var receivingReport in inTransitPrevToThisMonth)
                     {
+                        var quantityServed = receivingReport.QuantityReceived;
+                        var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
+                        var salesAmountVatEx = salesAmount / 1.12m;
+                        var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                        var costAmount = receivingReport.Amount;
+                        var costAmountVatEx = costAmount / 1.12m;
+                        var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                        var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
+                        var freightAmountEx = freightAmount / 1.12m;
+                        var freightPerLiterEx = freightAmountEx / quantityServed;
+                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionPerLiter = commissionAmount / quantityServed;
+                        var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                        var gmPerLiter = gmAmount / quantityServed;
+
                         // SUBTOTAL BY SEGMENT
                         worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
@@ -6696,23 +6786,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
                         worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
-                        worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
-                        worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
-                        worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 15].Value = receivingReport.Amount;
-                        worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
-                        worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
-                        worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
-                        worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
-                        worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
-                        worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
-                            ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+                        worksheet.Cells[row, 11].Value = quantityServed;
+                        worksheet.Cells[row, 12].Value = salesAmount;
+                        worksheet.Cells[row, 13].Value = salesAmountVatEx;
+                        worksheet.Cells[row, 14].Value = salesPerLiterVatEx;
+                        worksheet.Cells[row, 15].Value = costAmount;
+                        worksheet.Cells[row, 16].Value = costAmountVatEx;
+                        worksheet.Cells[row, 17].Value = commissionPerLiter;
+                        worksheet.Cells[row, 18].Value = freightAmount;
+                        worksheet.Cells[row, 19].Value = freightAmountEx;
+                        worksheet.Cells[row, 20].Value = freightPerLiterEx;
+                        worksheet.Cells[row, 21].Value = commissionAmount;
+                        worksheet.Cells[row, 22].Value = commissionPerLiter;
+                        worksheet.Cells[row, 23].Value = gmAmount;
+                        worksheet.Cells[row, 24].Value = gmPerLiter;
 
                         // styling
                         using (var range = worksheet.Cells[row, 11, row, 23])
@@ -6726,30 +6813,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         row++;
+                        totalQuantityServed += quantityServed;
+                        totalSalesAmount += salesAmount;
+                        totalSalesAmountVatEx += salesAmountVatEx;
+                        totalCostAmount += costAmount;
+                        totalCostAmountVatEx += costAmountVatEx;
+                        totalFreightAmount += freightAmount;
+                        totalFreightAmountEx += freightAmountEx;
+                        totalCommissionAmount += commissionAmount;
+                        totalGmAmount += gmAmount;
                     }
 
                     row++;
 
                     worksheet.Cells[row, 10].Value = "Sub-total";
-                    worksheet.Cells[row, 11].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 12].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 13].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 14].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 15].Value = inTransitPrevToThisMonth.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 16].Value = inTransitPrevToThisMonth.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 17].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitPrevToThisMonth.Sum(rr => rr.Amount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 18].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 19].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 20].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 21].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 22].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 23].Value = inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                    worksheet.Cells[row, 24].Value = inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitPrevToThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / inTransitPrevToThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 11].Value = totalQuantityServed;
+                    worksheet.Cells[row, 12].Value = totalSalesAmount;
+                    worksheet.Cells[row, 13].Value = totalSalesAmountVatEx;
+                    worksheet.Cells[row, 14].Value = totalSalesAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 15].Value = totalCostAmount;
+                    worksheet.Cells[row, 16].Value = totalCostAmountVatEx;
+                    worksheet.Cells[row, 17].Value = totalCostAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 18].Value = totalFreightAmount;
+                    worksheet.Cells[row, 19].Value = totalFreightAmountEx;
+                    worksheet.Cells[row, 20].Value = totalFreightAmountEx / totalQuantityServed;
+                    worksheet.Cells[row, 21].Value = totalCommissionAmount;
+                    worksheet.Cells[row, 22].Value = totalCommissionAmount / totalQuantityServed;
+                    worksheet.Cells[row, 23].Value = totalGmAmount;
+                    worksheet.Cells[row, 24].Value = totalGmAmount / totalQuantityServed;
 
                     // styling
                     using (var range = worksheet.Cells[row, 11, row, 23])
@@ -6772,7 +6863,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                if (inTransitNowToNextMonth != null && inTransitNowToNextMonth.Count != 0)
+                if (inTransitNowToNextMonth.Count != 0)
                 {
                     row += 2;
 
@@ -6802,9 +6893,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     row++;
+                    totalQuantityServed = 0m;
+                    totalSalesAmount = 0m;
+                    totalSalesAmountVatEx = 0m;
+                    totalCostAmount = 0m;
+                    totalCostAmountVatEx = 0m;
+                    totalFreightAmount = 0m;
+                    totalFreightAmountEx = 0m;
+                    totalCommissionAmount = 0m;
+                    totalGmAmount = 0m;
 
                     foreach(var receivingReport in inTransitNowToNextMonth)
                     {
+                        var quantityServed = receivingReport.QuantityReceived;
+                        var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
+                        var salesAmountVatEx = salesAmount / 1.12m;
+                        var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                        var costAmount = receivingReport.Amount;
+                        var costAmountVatEx = costAmount / 1.12m;
+                        var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                        var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
+                        var freightAmountEx = freightAmount / 1.12m;
+                        var freightPerLiterEx = freightAmountEx / quantityServed;
+                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionPerLiter = commissionAmount / quantityServed;
+                        var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                        var gmPerLiter = gmAmount / quantityServed;
+
                         // SUBTOTAL BY SEGMENT
                         worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
@@ -6815,23 +6930,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
                         worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
-                        worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
-                        worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
-                        worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 15].Value = receivingReport.Amount;
-                        worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
-                        worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
-                        worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
-                        worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
-                        worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
-                        worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
-                            ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+                        worksheet.Cells[row, 11].Value = quantityServed;
+                        worksheet.Cells[row, 12].Value = salesAmount;
+                        worksheet.Cells[row, 13].Value = salesAmountVatEx;
+                        worksheet.Cells[row, 14].Value = salesPerLiterVatEx;
+                        worksheet.Cells[row, 15].Value = costAmount;
+                        worksheet.Cells[row, 16].Value = costAmountVatEx;
+                        worksheet.Cells[row, 17].Value = commissionPerLiter;
+                        worksheet.Cells[row, 18].Value = freightAmount;
+                        worksheet.Cells[row, 19].Value = freightAmountEx;
+                        worksheet.Cells[row, 20].Value = freightPerLiterEx;
+                        worksheet.Cells[row, 21].Value = commissionAmount;
+                        worksheet.Cells[row, 22].Value = commissionPerLiter;
+                        worksheet.Cells[row, 23].Value = gmAmount;
+                        worksheet.Cells[row, 24].Value = gmPerLiter;
 
                         // styling
                         using (var range = worksheet.Cells[row, 11, row, 23])
@@ -6845,30 +6957,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         row++;
+                        totalQuantityServed += quantityServed;
+                        totalSalesAmount += salesAmount;
+                        totalSalesAmountVatEx += salesAmountVatEx;
+                        totalCostAmount += costAmount;
+                        totalCostAmountVatEx += costAmountVatEx;
+                        totalFreightAmount += freightAmount;
+                        totalFreightAmountEx += freightAmountEx;
+                        totalCommissionAmount += commissionAmount;
+                        totalGmAmount += gmAmount;
                     }
 
                     row++;
 
                     worksheet.Cells[row, 10].Value = "Sub-total";
-                    worksheet.Cells[row, 11].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 12].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 13].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 14].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 15].Value = inTransitNowToNextMonth.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 16].Value = inTransitNowToNextMonth.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 17].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitNowToNextMonth.Sum(rr => rr.Amount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 18].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 19].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 20].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 21].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 22].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 23].Value = inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                    worksheet.Cells[row, 24].Value = inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                        inTransitNowToNextMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / inTransitNowToNextMonth.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 11].Value = totalQuantityServed;
+                    worksheet.Cells[row, 12].Value = totalSalesAmount;
+                    worksheet.Cells[row, 13].Value = totalSalesAmountVatEx;
+                    worksheet.Cells[row, 14].Value = totalSalesAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 15].Value = totalCostAmount;
+                    worksheet.Cells[row, 16].Value = totalCostAmountVatEx;
+                    worksheet.Cells[row, 17].Value = totalCostAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 18].Value = totalFreightAmount;
+                    worksheet.Cells[row, 19].Value = totalFreightAmountEx;
+                    worksheet.Cells[row, 20].Value = totalFreightAmountEx / totalQuantityServed;
+                    worksheet.Cells[row, 21].Value = totalCommissionAmount;
+                    worksheet.Cells[row, 22].Value = totalCommissionAmount / totalQuantityServed;
+                    worksheet.Cells[row, 23].Value = totalGmAmount;
+                    worksheet.Cells[row, 24].Value = totalGmAmount / totalQuantityServed;
 
                     // styling
                     using (var range = worksheet.Cells[row, 11, row, 23])
@@ -6891,7 +7007,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                if (rrWithIOCForAccountOfMMSI != null && rrWithIOCForAccountOfMMSI.Count != 0)
+                if (rrWithIOCForAccountOfMMSI.Count != 0)
                 {
                     row += 2;
 
@@ -6921,9 +7037,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     row++;
+                    totalQuantityServed = 0m;
+                    totalSalesAmount = 0m;
+                    totalSalesAmountVatEx = 0m;
+                    totalCostAmount = 0m;
+                    totalCostAmountVatEx = 0m;
+                    totalFreightAmount = 0m;
+                    totalFreightAmountEx = 0m;
+                    totalCommissionAmount = 0m;
+                    totalGmAmount = 0m;
 
                     foreach(var receivingReport in rrWithIOCForAccountOfMMSI)
                     {
+                        var quantityServed = receivingReport.QuantityReceived;
+                        var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
+                        var salesAmountVatEx = salesAmount / 1.12m;
+                        var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                        var costAmount = receivingReport.Amount;
+                        var costAmountVatEx = costAmount / 1.12m;
+                        var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                        var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
+                        var freightAmountEx = freightAmount / 1.12m;
+                        var freightPerLiterEx = freightAmountEx / quantityServed;
+                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionPerLiter = commissionAmount / quantityServed;
+                        var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                        var gmPerLiter = gmAmount / quantityServed;
+
                         // SUBTOTAL BY SEGMENT
                         worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
                         worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
@@ -6934,23 +7074,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
                         worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
-                        worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
-                        worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
-                        worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 15].Value = receivingReport.Amount;
-                        worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
-                        worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
-                        worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
-                        worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
-                            receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
-                        worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
-                        worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
-                        worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
-                        worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
-                            ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+                        worksheet.Cells[row, 11].Value = quantityServed;
+                        worksheet.Cells[row, 12].Value = salesAmount;
+                        worksheet.Cells[row, 13].Value = salesAmountVatEx;
+                        worksheet.Cells[row, 14].Value = salesPerLiterVatEx;
+                        worksheet.Cells[row, 15].Value = costAmount;
+                        worksheet.Cells[row, 16].Value = costAmountVatEx;
+                        worksheet.Cells[row, 17].Value = commissionPerLiter;
+                        worksheet.Cells[row, 18].Value = freightAmount;
+                        worksheet.Cells[row, 19].Value = freightAmountEx;
+                        worksheet.Cells[row, 20].Value = freightPerLiterEx;
+                        worksheet.Cells[row, 21].Value = commissionAmount;
+                        worksheet.Cells[row, 22].Value = commissionPerLiter;
+                        worksheet.Cells[row, 23].Value = gmAmount;
+                        worksheet.Cells[row, 24].Value = gmPerLiter;
 
                         // styling
                         using (var range = worksheet.Cells[row, 11, row, 23])
@@ -6964,30 +7101,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         row++;
+                        totalQuantityServed += quantityServed;
+                        totalSalesAmount += salesAmount;
+                        totalSalesAmountVatEx += salesAmountVatEx;
+                        totalCostAmount += costAmount;
+                        totalCostAmountVatEx += costAmountVatEx;
+                        totalFreightAmount += freightAmount;
+                        totalFreightAmountEx += freightAmountEx;
+                        totalCommissionAmount += commissionAmount;
+                        totalGmAmount += gmAmount;
                     }
 
                     row++;
 
                     worksheet.Cells[row, 10].Value = "Sub-total";
-                    worksheet.Cells[row, 11].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived);
-                    worksheet.Cells[row, 12].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    worksheet.Cells[row, 13].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                    worksheet.Cells[row, 14].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 15].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount);
-                    worksheet.Cells[row, 16].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount/1.12m);
-                    worksheet.Cells[row, 17].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.Amount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 18].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    worksheet.Cells[row, 19].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                    worksheet.Cells[row, 20].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 21].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                    worksheet.Cells[row, 22].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
-                    worksheet.Cells[row, 23].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                    worksheet.Cells[row, 24].Value = rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) != 0 ?
-                        rrWithIOCForAccountOfMMSI.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrWithIOCForAccountOfMMSI.Sum(rr => rr.QuantityReceived) : 0;
+                    worksheet.Cells[row, 11].Value = totalQuantityServed;
+                    worksheet.Cells[row, 12].Value = totalSalesAmount;
+                    worksheet.Cells[row, 13].Value = totalSalesAmountVatEx;
+                    worksheet.Cells[row, 14].Value = totalSalesAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 15].Value = totalCostAmount;
+                    worksheet.Cells[row, 16].Value = totalCostAmountVatEx;
+                    worksheet.Cells[row, 17].Value = totalCostAmountVatEx / totalQuantityServed;
+                    worksheet.Cells[row, 18].Value = totalFreightAmount;
+                    worksheet.Cells[row, 19].Value = totalFreightAmountEx;
+                    worksheet.Cells[row, 20].Value = totalFreightAmountEx / totalQuantityServed;
+                    worksheet.Cells[row, 21].Value = totalCommissionAmount;
+                    worksheet.Cells[row, 22].Value = totalCommissionAmount / totalQuantityServed;
+                    worksheet.Cells[row, 23].Value = totalGmAmount;
+                    worksheet.Cells[row, 24].Value = totalGmAmount / totalQuantityServed;
 
                     // styling
                     using (var range = worksheet.Cells[row, 11, row, 23])
@@ -7020,6 +7161,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
 
+                var grandTotalQuantityServed = 0m;
+                var grandTotalSalesAmount = 0m;
+                var grandTotalSalesAmountVatEx = 0m;
+                var grandTotalCostAmount = 0m;
+                var grandTotalCostAmountVatEx = 0m;
+                var grandTotalFreightAmount = 0m;
+                var grandTotalFreightAmountEx = 0m;
+                var grandTotalCommissionAmount = 0m;
+                var grandTotalGmAmount = 0m;
+
                 foreach (var segment in Enum.GetValues<CustomerType>())
                 {
                     foreach (var product in listOfProducts)
@@ -7031,7 +7182,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .OrderBy(rr => rr.Date)
                             .ToList();
 
-                        if (rrSetBySegmentAndProduct != null && rrSetBySegmentAndProduct.Count != 0)
+                        if (rrSetBySegmentAndProduct.Count != 0)
                         {
                             row += 2;
 
@@ -7067,9 +7218,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
 
                             row++;
+                            totalQuantityServed = 0m;
+                            totalSalesAmount = 0m;
+                            totalSalesAmountVatEx = 0m;
+                            totalCostAmount = 0m;
+                            totalCostAmountVatEx = 0m;
+                            totalFreightAmount = 0m;
+                            totalFreightAmountEx = 0m;
+                            totalCommissionAmount = 0m;
+                            totalGmAmount = 0m;
 
                             foreach(var receivingReport in rrSetBySegmentAndProduct)
                             {
+                                var quantityServed = receivingReport.QuantityReceived;
+                                var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
+                                var salesAmountVatEx = salesAmount / 1.12m;
+                                var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                                var costAmount = receivingReport.Amount;
+                                var costAmountVatEx = costAmount / 1.12m;
+                                var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                                var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
+                                var freightAmountEx = freightAmount / 1.12m;
+                                var freightPerLiterEx = freightAmountEx / quantityServed;
+                                var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                                var commissionPerLiter = commissionAmount / quantityServed;
+                                var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                                var gmPerLiter = gmAmount / quantityServed;
+
                                 // SUBTOTAL BY SEGMENT
                                 worksheet.Cells[row, 2].Value = receivingReport.Date.ToString("MM/dd/yyyy");
                                 worksheet.Cells[row, 3].Value = receivingReport.DeliveryReceipt!.DeliveredDate?.ToString("MM/dd/yyyy");
@@ -7080,23 +7255,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                                 worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
                                 worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
-                                worksheet.Cells[row, 11].Value = receivingReport.QuantityReceived;
-                                worksheet.Cells[row, 12].Value = receivingReport.DeliveryReceipt.TotalAmount;
-                                worksheet.Cells[row, 13].Value = receivingReport.DeliveryReceipt.TotalAmount/1.12m;
-                                worksheet.Cells[row, 14].Value = receivingReport.QuantityReceived != 0 ?
-                                    receivingReport.DeliveryReceipt.TotalAmount / receivingReport.QuantityReceived : 0;
-                                worksheet.Cells[row, 15].Value = receivingReport.Amount;
-                                worksheet.Cells[row, 16].Value = receivingReport.Amount/1.12m;
-                                worksheet.Cells[row, 17].Value = receivingReport.Amount/receivingReport.QuantityReceived;
-                                worksheet.Cells[row, 18].Value = receivingReport.DeliveryReceipt.FreightAmount;
-                                worksheet.Cells[row, 19].Value = receivingReport.DeliveryReceipt.FreightAmount/1.12m;
-                                worksheet.Cells[row, 20].Value = receivingReport.QuantityReceived != 0 ?
-                                    receivingReport.DeliveryReceipt.FreightAmount / receivingReport.QuantityReceived : 0;
-                                worksheet.Cells[row, 21].Value = receivingReport.DeliveryReceipt.CommissionAmount;
-                                worksheet.Cells[row, 22].Value = receivingReport.DeliveryReceipt.CommissionAmount/receivingReport.QuantityReceived;
-                                worksheet.Cells[row, 23].Value = receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount;
-                                worksheet.Cells[row, 24].Value = receivingReport.QuantityReceived != 0 ?
-                                    ((receivingReport.DeliveryReceipt.TotalAmount - receivingReport.Amount) / receivingReport.QuantityReceived) : 0;
+                                worksheet.Cells[row, 11].Value = quantityServed;
+                                worksheet.Cells[row, 12].Value = salesAmount;
+                                worksheet.Cells[row, 13].Value = salesAmountVatEx;
+                                worksheet.Cells[row, 14].Value = salesPerLiterVatEx;
+                                worksheet.Cells[row, 15].Value = costAmount;
+                                worksheet.Cells[row, 16].Value = costAmountVatEx;
+                                worksheet.Cells[row, 17].Value = commissionPerLiter;
+                                worksheet.Cells[row, 18].Value = freightAmount;
+                                worksheet.Cells[row, 19].Value = freightAmountEx;
+                                worksheet.Cells[row, 20].Value = freightPerLiterEx;
+                                worksheet.Cells[row, 21].Value = commissionAmount;
+                                worksheet.Cells[row, 22].Value = commissionPerLiter;
+                                worksheet.Cells[row, 23].Value = gmAmount;
+                                worksheet.Cells[row, 24].Value = gmPerLiter;
 
                                 // styling
                                 using (var range = worksheet.Cells[row, 11, row, 23])
@@ -7110,30 +7282,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
 
                                 row++;
+                                totalQuantityServed += quantityServed;
+                                totalSalesAmount += salesAmount;
+                                totalSalesAmountVatEx += salesAmountVatEx;
+                                totalCostAmount += costAmount;
+                                totalCostAmountVatEx += costAmountVatEx;
+                                totalFreightAmount += freightAmount;
+                                totalFreightAmountEx += freightAmountEx;
+                                totalCommissionAmount += commissionAmount;
+                                totalGmAmount += gmAmount;
                             }
 
                             row++;
 
                             worksheet.Cells[row, 10].Value = $"Sub-total ({product})";
-                            worksheet.Cells[row, 11].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived);
-                            worksheet.Cells[row, 12].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                            worksheet.Cells[row, 13].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                            worksheet.Cells[row, 14].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) != 0 ?
-                                rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) : 0;
-                            worksheet.Cells[row, 15].Value = rrSetBySegmentAndProduct.Sum(rr => rr.Amount);
-                            worksheet.Cells[row, 16].Value = rrSetBySegmentAndProduct.Sum(rr => rr.Amount/1.12m);
-                            worksheet.Cells[row, 17].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) != 0 ?
-                                rrSetBySegmentAndProduct.Sum(rr => rr.Amount) / rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) : 0;
-                            worksheet.Cells[row, 18].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                            worksheet.Cells[row, 19].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                            worksheet.Cells[row, 20].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) != 0 ?
-                                rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) : 0;
-                            worksheet.Cells[row, 21].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                            worksheet.Cells[row, 22].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) != 0 ?
-                                rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) : 0;
-                            worksheet.Cells[row, 23].Value = rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                            worksheet.Cells[row, 24].Value = rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) != 0 ?
-                                rrSetBySegmentAndProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrSetBySegmentAndProduct.Sum(rr => rr.QuantityReceived) : 0;
+                            worksheet.Cells[row, 11].Value = totalQuantityServed;
+                            worksheet.Cells[row, 12].Value = totalSalesAmount;
+                            worksheet.Cells[row, 13].Value = totalSalesAmountVatEx;
+                            worksheet.Cells[row, 14].Value = totalSalesAmountVatEx / totalQuantityServed;
+                            worksheet.Cells[row, 15].Value = totalCostAmount;
+                            worksheet.Cells[row, 16].Value = totalCostAmountVatEx;
+                            worksheet.Cells[row, 17].Value = totalCostAmountVatEx / totalQuantityServed;
+                            worksheet.Cells[row, 18].Value = totalFreightAmount;
+                            worksheet.Cells[row, 19].Value = totalFreightAmountEx;
+                            worksheet.Cells[row, 20].Value = totalFreightAmountEx / totalQuantityServed;
+                            worksheet.Cells[row, 21].Value = totalCommissionAmount;
+                            worksheet.Cells[row, 22].Value = totalCommissionAmount / totalQuantityServed;
+                            worksheet.Cells[row, 23].Value = totalGmAmount;
+                            worksheet.Cells[row, 24].Value = totalGmAmount / totalQuantityServed;
 
                             // styling
                             using (var range = worksheet.Cells[row, 11, row, 23])
@@ -7166,27 +7342,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (rrSetBySegment.Count != 0)
                     {
                         row += 2;
+                        var quantityServed = rrSetBySegment.Sum(rr => rr.QuantityReceived);
+                        var salesAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
+                        var salesAmountVatEx = salesAmount / 1.12m;
+                        var salesPerLiterVatEx = salesAmountVatEx / quantityServed;
+                        var costAmount = rrSetBySegment.Sum(rr => rr.Amount);
+                        var costAmountVatEx = costAmount / 1.12m;
+                        var costPerLiterVatEx = costAmountVatEx / quantityServed;
+                        var freightAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                        var freightAmountEx = freightAmount / 1.12m;
+                        var freightPerLiterEx = freightAmountEx / quantityServed;
+                        var commissionAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        var commissionPerLiter = commissionAmount / quantityServed;
+                        var gmAmount = salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount;
+                        var gmPerLiter = gmAmount / quantityServed;
 
                         worksheet.Cells[row, 10].Value = "Sub-total (All Products)";
-                        worksheet.Cells[row, 11].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived);
-                        worksheet.Cells[row, 12].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                        worksheet.Cells[row, 13].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                        worksheet.Cells[row, 14].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                        worksheet.Cells[row, 15].Value = rrSetBySegment.Sum(rr => rr.Amount);
-                        worksheet.Cells[row, 16].Value = rrSetBySegment.Sum(rr => rr.Amount/1.12m);
-                        worksheet.Cells[row, 17].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                            rrSetBySegment.Sum(rr => rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                        worksheet.Cells[row, 18].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                        worksheet.Cells[row, 19].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                        worksheet.Cells[row, 20].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                        worksheet.Cells[row, 21].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                        worksheet.Cells[row, 22].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
-                        worksheet.Cells[row, 23].Value = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                        worksheet.Cells[row, 24].Value = rrSetBySegment.Sum(rr => rr.QuantityReceived) != 0 ?
-                            rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / rrSetBySegment.Sum(rr => rr.QuantityReceived) : 0;
+                        worksheet.Cells[row, 11].Value = quantityServed;
+                        worksheet.Cells[row, 12].Value = salesAmount;
+                        worksheet.Cells[row, 13].Value = salesAmountVatEx;
+                        worksheet.Cells[row, 14].Value = salesPerLiterVatEx;
+                        worksheet.Cells[row, 15].Value = costAmount;
+                        worksheet.Cells[row, 16].Value = costAmountVatEx;
+                        worksheet.Cells[row, 17].Value = commissionPerLiter;
+                        worksheet.Cells[row, 18].Value = freightAmount;
+                        worksheet.Cells[row, 19].Value = freightAmountEx;
+                        worksheet.Cells[row, 20].Value = freightPerLiterEx;
+                        worksheet.Cells[row, 21].Value = commissionAmount;
+                        worksheet.Cells[row, 22].Value = commissionPerLiter;
+                        worksheet.Cells[row, 23].Value = gmAmount;
+                        worksheet.Cells[row, 24].Value = gmPerLiter;
 
                         // styling
                         using (var range = worksheet.Cells[row, 11, row, 23])
@@ -7207,31 +7392,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             range.Style.Font.Bold = true;
                         }
+
+                        grandTotalQuantityServed += quantityServed;
+                        grandTotalSalesAmount += salesAmount;
+                        grandTotalSalesAmountVatEx += salesAmountVatEx;
+                        grandTotalCostAmount += costAmount;
+                        grandTotalCostAmountVatEx += costAmountVatEx;
+                        grandTotalFreightAmount += freightAmount;
+                        grandTotalFreightAmountEx += freightAmountEx;
+                        grandTotalCommissionAmount += commissionAmount;
+                        grandTotalGmAmount += gmAmount;
                     }
                 }
 
                 row += 2;
 
                 worksheet.Cells[row, 10].Value = "Grand-total (All Segments)";
-                worksheet.Cells[row, 11].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived);
-                worksheet.Cells[row, 12].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                worksheet.Cells[row, 13].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount/1.12m);
-                worksheet.Cells[row, 14].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                worksheet.Cells[row, 15].Value = receivingReportsThisMonth.Sum(rr => rr.Amount);
-                worksheet.Cells[row, 16].Value = receivingReportsThisMonth.Sum(rr => rr.Amount/1.12m);
-                worksheet.Cells[row, 17].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                    receivingReportsThisMonth.Sum(rr => rr.Amount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                worksheet.Cells[row, 18].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                worksheet.Cells[row, 19].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount/1.12m);
-                worksheet.Cells[row, 20].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.FreightAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                worksheet.Cells[row, 21].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
-                worksheet.Cells[row, 22].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.CommissionAmount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
-                worksheet.Cells[row, 23].Value = receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount);
-                worksheet.Cells[row, 24].Value = receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) != 0 ?
-                    receivingReportsThisMonth.Sum(rr => rr.DeliveryReceipt!.TotalAmount - rr.Amount) / receivingReportsThisMonth.Sum(rr => rr.QuantityReceived) : 0;
+                worksheet.Cells[row, 11].Value = grandTotalQuantityServed;
+                worksheet.Cells[row, 12].Value = grandTotalSalesAmount;
+                worksheet.Cells[row, 13].Value = grandTotalSalesAmountVatEx;
+                worksheet.Cells[row, 14].Value = grandTotalSalesAmountVatEx / grandTotalQuantityServed;
+                worksheet.Cells[row, 15].Value = grandTotalCostAmount;
+                worksheet.Cells[row, 16].Value = grandTotalCostAmountVatEx;
+                worksheet.Cells[row, 17].Value = grandTotalCostAmountVatEx / grandTotalQuantityServed;
+                worksheet.Cells[row, 18].Value = grandTotalFreightAmount;
+                worksheet.Cells[row, 19].Value = grandTotalFreightAmountEx;
+                worksheet.Cells[row, 20].Value = grandTotalFreightAmountEx / grandTotalQuantityServed;
+                worksheet.Cells[row, 21].Value = grandTotalCommissionAmount;
+                worksheet.Cells[row, 22].Value = grandTotalCommissionAmount / grandTotalQuantityServed;
+                worksheet.Cells[row, 23].Value = grandTotalGmAmount;
+                worksheet.Cells[row, 24].Value = grandTotalGmAmount / grandTotalQuantityServed;
 
                 // styling
                 using (var range = worksheet.Cells[row, 11, row, 23])

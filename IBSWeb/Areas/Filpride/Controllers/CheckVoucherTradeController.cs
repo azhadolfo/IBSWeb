@@ -326,7 +326,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvType = "Supplier",
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
-                    OldCvNo = viewModel.OldCVNo
+                    OldCvNo = viewModel.OldCVNo,
+                    VatType = supplier.VatType,
+                    TaxType = supplier.TaxType,
+                    TaxPercent = supplier.WithholdingTaxPercent ?? 0m
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -350,11 +353,108 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                                 SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 2 ? viewModel.BankId : null,
+                                BankId = i == 1 ? viewModel.BankId : null,
                             });
                     }
                 }
 
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in cvDetails.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = cvh.VatType == SD.VatType_Vatable;
+                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = cvh.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = cv.AccountNo,
+                        AccountName = cv.AccountName,
+                        Debit = baseAmount,
+                        Credit = 0.00m,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        SupplierId = viewModel.SupplierId,
+                        IsDisplayEntry = true
+                    });
+
+                    if (inputVat != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101060200",
+                            AccountName = "Vat - Input",
+                            Debit = inputVat,
+                            Credit = 0.00m,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    if (ewt != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = parts[0],
+                            AccountName = parts[1],
+                            Debit = 0.00m,
+                            Credit = ewt,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = "101010100",
+                        AccountName = "Cash in Bank",
+                        Debit = 0.00m,
+                        Credit = netOfEwt,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        BankId = viewModel.BankId,
+                        IsDisplayEntry = true
+                    });
+
+                    break;
+                }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
                 #endregion --CV Details Entry
@@ -447,7 +547,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && rr.AmountPaid == 0 && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
+                                                         && rr.AmountPaid == 0
+                                                         && poNumber.Contains(rr.PONo)
+                                                         && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -479,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : rr.Amount;
 
                     var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
                         : 0.0000m;
 
                     var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
@@ -699,7 +802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                         CheckVoucherHeaderId = viewModel.CVId,
                         SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 2 ? viewModel.BankId : null,
+                        BankId = i == 1 ? viewModel.BankId : null,
                     });
                 }
 
@@ -751,8 +854,119 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Reference = viewModel.AdvancesCVNo;
                 existingHeaderModel.OldCvNo = viewModel.OldCVNo;
+                existingHeaderModel.VatType = supplier.VatType;
+                existingHeaderModel.TaxType = supplier.TaxType;
+                existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
+
+                #region -- Additional details entry
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in details.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
+                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = existingHeaderModel.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    {
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = cv.AccountNo,
+                            AccountName = cv.AccountName,
+                            Debit = baseAmount,
+                            Credit = 0.00m,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            SupplierId = viewModel.SupplierId,
+                            IsDisplayEntry = true
+                        });
+
+                        if (inputVat != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = "101060200",
+                                AccountName = "Vat - Input",
+                                Debit = inputVat,
+                                Credit = 0.00m,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        if (ewt != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = parts[0],
+                                AccountName = parts[1],
+                                Debit = 0.00m,
+                                Credit = ewt,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101010100",
+                            AccountName = "Cash in Bank",
+                            Debit = 0.00m,
+                            Credit = netOfEwt,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            BankId = viewModel.BankId,
+                            IsDisplayEntry = true
+                        });
+                    }
+                    else
+                    {
+                        throw new Exception("Check voucher header no. not found!");
+                    }
+
+                    break;
+                }
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion
 
                 #region -- Partial payment of RR's
 
@@ -1039,7 +1253,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                foreach (var details in modelDetails)
+                foreach (var details in modelDetails.Where(x => !x.IsDisplayEntry))
                 {
                     var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
                     ledgers.Add(
@@ -2098,6 +2312,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BankAccountName = bank.AccountName,
                     BankAccountNumber = bank.AccountNo,
                     OldCvNo = viewModel.OldCVNo,
+                    VatType = supplier.VatType,
+                    TaxType = supplier.TaxType,
+                    TaxPercent = supplier.WithholdingTaxPercent ?? 0m
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2121,11 +2338,108 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                                 SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 2 ? viewModel.BankId : null,
+                                BankId = i == 1 ? viewModel.BankId : null,
                             });
                     }
                 }
 
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in cvDetails.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = cvh.VatType == SD.VatType_Vatable;
+                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = cvh.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = cv.AccountNo,
+                        AccountName = cv.AccountName,
+                        Debit = baseAmount,
+                        Credit = 0.00m,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        SupplierId = viewModel.SupplierId,
+                        IsDisplayEntry = true
+                    });
+
+                    if (inputVat != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101060200",
+                            AccountName = "Vat - Input",
+                            Debit = inputVat,
+                            Credit = 0.00m,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    if (ewt != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = parts[0],
+                            AccountName = parts[1],
+                            Debit = 0.00m,
+                            Credit = ewt,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = "101010100",
+                        AccountName = "Cash in Bank",
+                        Debit = 0.00m,
+                        Credit = netOfEwt,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        BankId = viewModel.BankId,
+                        IsDisplayEntry = true
+                    });
+
+                    break;
+                }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
                 #endregion --CV Details Entry
@@ -2345,6 +2659,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BankAccountNumber = bank.AccountNo,
                     OldCvNo = viewModel.OldCVNo,
                     SINo = [viewModel.SiNo ?? string.Empty],
+                    VatType = supplier.VatType,
+                    TaxType = supplier.TaxType,
+                    TaxPercent = supplier.WithholdingTaxPercent ?? 0m
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2368,11 +2685,108 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                                 SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 2 ? viewModel.BankId : null,
+                                BankId = i == 1 ? viewModel.BankId : null,
                             });
                     }
                 }
 
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in cvDetails.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = cvh.VatType == SD.VatType_Vatable;
+                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = cvh.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = cv.AccountNo,
+                        AccountName = cv.AccountName,
+                        Debit = baseAmount,
+                        Credit = 0.00m,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        SupplierId = viewModel.SupplierId,
+                        IsDisplayEntry = true
+                    });
+
+                    if (inputVat != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101060200",
+                            AccountName = "Vat - Input",
+                            Debit = inputVat,
+                            Credit = 0.00m,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    if (ewt != 0)
+                    {
+                        cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = parts[0],
+                            AccountName = parts[1],
+                            Debit = 0.00m,
+                            Credit = ewt,
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            IsDisplayEntry = true
+                        });
+                    }
+
+                    cvDetails.Add(
+                    new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = "101010100",
+                        AccountName = "Cash in Bank",
+                        Debit = 0.00m,
+                        Credit = netOfEwt,
+                        TransactionNo = cvh.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                        BankId = viewModel.BankId,
+                        IsDisplayEntry = true
+                    });
+
+                    break;
+                }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
                 #endregion --CV Details Entry
@@ -2477,7 +2891,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : dr.CommissionAmount;
 
                         var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.10m)
+                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
                             : 0m;
 
                         var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
@@ -2540,7 +2954,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : dr.FreightAmount;
 
                     var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
                         : 0.0000m;
 
                     var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
@@ -2695,7 +3109,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                         CheckVoucherHeaderId = viewModel.CvId,
                         SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 2 ? viewModel.BankId : null,
+                        BankId = i == 1 ? viewModel.BankId : null,
                     });
                 }
 
@@ -2746,8 +3160,119 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.BankAccountName = bank.AccountName;
                 existingHeaderModel.BankAccountNumber = bank.AccountNo;
                 existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
+                existingHeaderModel.VatType = supplier.VatType;
+                existingHeaderModel.TaxType = supplier.TaxType;
+                existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
+
+                #region -- Additional details entry
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in details.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
+                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = existingHeaderModel.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    {
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = cv.AccountNo,
+                            AccountName = cv.AccountName,
+                            Debit = baseAmount,
+                            Credit = 0.00m,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            SupplierId = viewModel.SupplierId,
+                            IsDisplayEntry = true
+                        });
+
+                        if (inputVat != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = "101060200",
+                                AccountName = "Vat - Input",
+                                Debit = inputVat,
+                                Credit = 0.00m,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        if (ewt != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = parts[0],
+                                AccountName = parts[1],
+                                Debit = 0.00m,
+                                Credit = ewt,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101010100",
+                            AccountName = "Cash in Bank",
+                            Debit = 0.00m,
+                            Credit = netOfEwt,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            BankId = viewModel.BankId,
+                            IsDisplayEntry = true
+                        });
+                    }
+                    else
+                    {
+                        throw new Exception("Check voucher header no. not found!");
+                    }
+
+                    break;
+                }
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion
 
                 #region -- Partial payment
 
@@ -2966,7 +3491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                         CheckVoucherHeaderId = viewModel.CvId,
                         SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 2 ? viewModel.BankId : null,
+                        BankId = i == 1 ? viewModel.BankId : null,
                     });
                 }
 
@@ -3017,8 +3542,119 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.BankAccountName = bank.AccountName;
                 existingHeaderModel.BankAccountNumber = bank.AccountNo;
                 existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
+                existingHeaderModel.VatType = supplier.VatType;
+                existingHeaderModel.TaxType = supplier.TaxType;
+                existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
+
+                #region -- Additional details entry
+
+                var parts = (supplier.WithholdingTaxTitle ?? string.Empty).Split(' ', 2);
+
+                foreach (var cv in details.OrderBy(x => x.CheckVoucherDetailId))
+                {
+                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
+                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
+
+                    // Net of tax (input)
+                    var netAmount = existingHeaderModel.Total;
+                    var baseAmount = 0m;
+
+                    // Base computation (reversible correct formula)
+                    if (isTaxable)
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
+                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
+                    }
+                    else
+                    {
+                        baseAmount = isVatable
+                            ? Math.Round(netAmount / 1.12m, 4)
+                            : Math.Round(netAmount / 1m, 4);
+                    }
+
+                    var inputVat = isVatable
+                        ? Math.Round(baseAmount * 0.12m, 4)
+                        : 0m;
+
+                    var grossAmount = baseAmount + inputVat;
+
+                    var ewt = isTaxable
+                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
+                        : 0m;
+
+                    var netOfEwt = grossAmount - ewt;
+
+                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    {
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = cv.AccountNo,
+                            AccountName = cv.AccountName,
+                            Debit = baseAmount,
+                            Credit = 0.00m,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            SupplierId = viewModel.SupplierId,
+                            IsDisplayEntry = true
+                        });
+
+                        if (inputVat != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = "101060200",
+                                AccountName = "Vat - Input",
+                                Debit = inputVat,
+                                Credit = 0.00m,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        if (ewt != 0)
+                        {
+                            details.Add(
+                            new FilprideCheckVoucherDetail
+                            {
+                                AccountNo = parts[0],
+                                AccountName = parts[1],
+                                Debit = 0.00m,
+                                Credit = ewt,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                                IsDisplayEntry = true
+                            });
+                        }
+
+                        details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = "101010100",
+                            AccountName = "Cash in Bank",
+                            Debit = 0.00m,
+                            Credit = netOfEwt,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            BankId = viewModel.BankId,
+                            IsDisplayEntry = true
+                        });
+                    }
+                    else
+                    {
+                        throw new Exception("Check voucher header no. not found!");
+                    }
+
+                    break;
+                }
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion
 
                 #region -- Partial payment
 
