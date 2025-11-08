@@ -1809,18 +1809,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSelectListByCategory(string chosenCategory, CancellationToken cancellationToken)
         {
-            var selectList = new List<SelectListItem>();
+            List<SelectListItem>? selectList = new List<SelectListItem>();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             switch (chosenCategory)
             {
                 case "supplier":
-                    selectList = (await _unitOfWork.FilprideSupplier.GetAllAsync(null, cancellationToken))
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.SupplierId.ToString(), // or SupplierId depending on your model
-                            Text = s.SupplierCode + " " + s.SupplierName // or whatever property represents the name
-                        })
-                        .ToList();
+                    selectList = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     break;
                 case "employee":
                     selectList = (await _unitOfWork.FilprideEmployee.GetAllAsync(null, cancellationToken))
