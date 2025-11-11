@@ -216,13 +216,8 @@
                             <span class="text-danger"></span>
                         </div>`;
 
-            if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200")
+            if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200" || accountNumber === "101020500")
                 && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
-                if (selectionGroup.length === 0) {
-                    showSupplierSelectList();
-                }
-            }
-            else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
                 if (selectionGroup.length === 0) {
                     showSupplierSelectList();
                 }
