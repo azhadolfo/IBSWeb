@@ -1351,7 +1351,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              !cvd.CheckVoucherHeader.IsPaid) ||
                             (cvd.SupplierId != null &&
                              cvd.SupplierId == supplierId &&
-                             cvd.Credit > cvd.AmountPaid)
+                             cvd.Credit > cvd.AmountPaid &&
+                             cvd.AccountName != "AR-Non Trade Receivable")
                         ));
 
                 if (paymentId != null)

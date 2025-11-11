@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
                                   && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
-                                  && ((cvd.SupplierId != null) && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit != 0
+                                  && ((cvd.SupplierId != null) && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit != 0 && cvd.AccountName != "AR-Non Trade Receivable"
                                       || cvd.CheckVoucherHeader.SupplierId != null
                                       && cvd.AccountName == "AP-Non Trade Payable"))
                     .Include(cvd => cvd.Supplier)
@@ -529,6 +529,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region -- Saving the default entries --
 
+                decimal apNonTradeTotal = 0m;
+
+                for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
+                {
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
+                    {
+                        apNonTradeTotal += viewModel.Credit[i];
+                    }
+                }
+
                 FilprideCheckVoucherHeader checkVoucherHeader = new()
                 {
                     CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
@@ -546,7 +556,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvType = nameof(CVType.Invoicing),
                     Company = companyClaims,
                     Type = viewModel.Type,
-                    InvoiceAmount = viewModel.Total,
+                    InvoiceAmount = apNonTradeTotal,
                     TaxType = string.Empty,
                     VatType = string.Empty
                 };
@@ -1471,6 +1481,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                decimal apNonTradeTotal = 0m;
+
+                for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
+                {
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
+                    {
+                        apNonTradeTotal += viewModel.Credit[i];
+                    }
+                }
+
                 existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Date = viewModel.TransactionDate;
@@ -1478,7 +1498,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.Total = viewModel.Total;
-                existingHeaderModel.InvoiceAmount = viewModel.Total;
+                existingHeaderModel.InvoiceAmount = apNonTradeTotal;
 
                 #endregion -- Saving the default entries --
 
