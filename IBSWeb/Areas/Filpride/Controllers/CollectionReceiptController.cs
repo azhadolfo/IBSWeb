@@ -187,7 +187,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
-                var totalRecords = pagedData.Count();
+                var totalRecords = collectionReceipts.Count;
 
                 return Json(new
                 {
