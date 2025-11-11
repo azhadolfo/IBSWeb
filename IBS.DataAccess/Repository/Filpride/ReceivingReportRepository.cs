@@ -379,10 +379,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200")
                                 ?? throw new ArgumentException("Account title '101060200' not found.");
-            var ewtAccountNo = supplierTaxTitle?.FirstOrDefault()
-                               ?? throw new ArgumentException("Supplier withholding tax title is invalid.");
-            var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo)
-                           ?? throw new ArgumentException($"Account title '{ewtAccountNo}' not found.");
+            var ewtAccountNo = supplierTaxTitle?.FirstOrDefault();
+            var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
             var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100")
                                ?? throw new ArgumentException("Account title '202010100' not found.");
             var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo)
@@ -448,7 +446,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = model.Date,
                     Reference = model.ReceivingReportNo!,
                     Description = "Receipt of Goods",
-                    AccountId = ewtTitle.AccountId,
+                    AccountId = ewtTitle!.AccountId,
                     AccountNo = ewtTitle.AccountNumber,
                     AccountTitle = ewtTitle.AccountName,
                     Debit = 0,

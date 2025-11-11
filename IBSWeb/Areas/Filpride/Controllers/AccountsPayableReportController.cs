@@ -1675,7 +1675,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeVatAmount(netPurchases)
                             : 0m; // vat total
                         var whtAmount = isSupplierTaxable
-                            ? _unitOfWork.FilpridePurchaseOrder.ComputeEwtAmount(netPurchases, 0.01m)
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeEwtAmount(netPurchases, pr.TaxPercentage)
                             : 0m; // wht total
                         var costPerLiter = costAmount / volume; // sale price per liter
                         var commission = ((pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m) * volume);
@@ -4278,8 +4278,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var netOfVat = isSupplierVatable
                                         ? repoCalculator.ComputeNetOfVat(gross)
                                         : gross;
+                                    var ewtPercentage = monthYearChoice.Average(r => r.TaxPercentage);
                                     var ewt = isSupplierTaxable
-                                        ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                        ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
                                         : 0m;
                                     var net = gross - ewt;
 
