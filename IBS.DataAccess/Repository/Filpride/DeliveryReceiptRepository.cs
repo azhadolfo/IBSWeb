@@ -392,10 +392,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
                 {
                     var haulerTaxTitle = deliveryReceipt.Hauler!.WithholdingTaxTitle?.Split(" ", 2);
-                    var ewtAccountNo = haulerTaxTitle?.FirstOrDefault()
-                                       ?? throw new ArgumentException("Supplier withholding tax title is invalid.");
-                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo)
-                                   ?? throw new ArgumentException($"Account title '{ewtAccountNo}' not found.");
+                    var ewtAccountNo = haulerTaxTitle?.FirstOrDefault();
+                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
 
                     if (deliveryReceipt.Freight > 0)
                     {
@@ -515,30 +513,31 @@ namespace IBS.DataAccess.Repository.Filpride
                         ModuleType = nameof(ModuleType.Sales)
                     });
 
-                    ledgers.Add(new FilprideGeneralLedgerBook
+                    if (totalFreightEwtAmount > 0)
                     {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                        AccountId = ewtTitle.AccountId,
-                        AccountNo = ewtTitle.AccountNumber,
-                        AccountTitle = ewtTitle.AccountName,
-                        Debit = 0,
-                        Credit = totalFreightEwtAmount,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        ModuleType = nameof(ModuleType.Sales)
-                    });
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                            AccountId = ewtTitle!.AccountId,
+                            AccountNo = ewtTitle.AccountNumber,
+                            AccountTitle = ewtTitle.AccountName,
+                            Debit = 0,
+                            Credit = totalFreightEwtAmount,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
+                        });
+                    }
                 }
 
                 if (deliveryReceipt.CommissionRate > 0)
                 {
                     var commissioneeTaxTitle = deliveryReceipt.Commissionee!.WithholdingTaxTitle?.Split(" ", 2);
-                    var ewtAccountNo = commissioneeTaxTitle?.FirstOrDefault()
-                                       ?? throw new ArgumentException("Supplier withholding tax title is invalid.");
-                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo)
-                                   ?? throw new ArgumentException($"Account title '{ewtAccountNo}' not found.");
+                    var ewtAccountNo = commissioneeTaxTitle?.FirstOrDefault();
+                    var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
 
                     var commissionGrossAmount = deliveryReceipt.CommissionAmount;
                     var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax
@@ -588,7 +587,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
-                            AccountId = ewtTitle.AccountId,
+                            AccountId = ewtTitle!.AccountId,
                             AccountNo = ewtTitle.AccountNumber,
                             AccountTitle = ewtTitle.AccountName,
                             Debit = 0,
