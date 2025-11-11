@@ -40,6 +40,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 case "15PDC":
                     return transactionDate.AddDays(15);
 
+                case "20D":
+                    return transactionDate.AddDays(20);
+
+                case "21D":
+                    return transactionDate.AddDays(21);
+
                 case "30D":
                 case "30PDC":
                     return transactionDate.AddDays(30);

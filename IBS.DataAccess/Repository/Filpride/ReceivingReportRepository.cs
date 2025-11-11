@@ -36,13 +36,24 @@ namespace IBS.DataAccess.Repository.Filpride
             switch (po.Terms)
             {
                 case "7D":
-                case "10D":
+                case "7PDC":
                     return rrDate.AddDays(7);
 
+                case "10D":
+                    return rrDate.AddDays(10);
+
                 case "15D":
+                case "15PDC":
                     return rrDate.AddDays(15);
 
+                case "20D":
+                    return rrDate.AddDays(20);
+
+                case "21D":
+                    return rrDate.AddDays(21);
+
                 case "30D":
+                case "30PDC":
                     return rrDate.AddDays(30);
 
                 case "45D":

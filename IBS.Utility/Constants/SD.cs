@@ -10,6 +10,7 @@ namespace IBS.Utility.Constants
         public const string Terms_10d = "10D";
         public const string Terms_15d = "15D";
         public const string Terms_20d = "20D";
+        public const string Terms_21d = "21D";
         public const string Terms_30d = "30D";
         public const string Terms_45d = "45D";
         public const string Terms_60d = "60D";
