@@ -200,127 +200,78 @@
         });
     </script>
     <script>
-            var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
-            var i = @i;
+        let suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
+        let i = @i;
 
-            function seeIfNeedCategory (event){
-                console.log("seeIfNeedCategory");
-                var accountNumber = $("#AccountNo").val();
-                var debit = parseNumber($("#debit").val());
-                var credit = parseNumber($("#credit").val());
-                let selectionGroup = $("#selectionGroup");
+        function seeIfNeedSupplier (event){
+            let accountNumber = $("#AccountNo").val();
+            let debit = parseNumber($("#debit").val());
+            let credit = parseNumber($("#credit").val());
+            let selectionGroup = $("#selectionGroup");
 
-                var newRow = `
-                            <div class="form-group pt-4" id="categoryGroup">
-                                <label class="control-label">Select Category</label>
-                                <select id="Category" name="Category" class="form-select" style="width: 100%">
-                                </select>
-                                <span class="text-danger"></span>
-                            </div>`;
+            let newRow = `
+                        <div class="form-group pt-4" id="categoryGroup">
+                            <label class="control-label">Select Category</label>
+                            <select id="Category" name="Category" class="form-select" style="width: 100%"></select>
+                            <span class="text-danger"></span>
+                        </div>`;
 
-                var $categoryGroup = $("#categoryGroup"); // find if it exists already
-
-                if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200")
-                    && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
-                    if ($categoryGroup.length === 0) {
-                        $("#categoryContainer").append(newRow);
-
-                        $("#Category").append($('<option>', {
-                            value: "supplier",
-                            text: "Supplier"
-                        }));
-
-                        $("#Category").trigger("change");
-
-                        $('#Category').select2({
-                            dropdownParent: $('#AddAccEntry'),
-                            placeholder: "Select an option...",
-                            allowClear: true,
-                            width: 'resolve',
-                            theme: 'classic'
-                        });
-                    }
-                }
-                else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
-                    if ($categoryGroup.length === 0) {
-                        $("#categoryContainer").append(newRow);
-                        
-                        $("#Category").append($('<option>', {
-                            value: "supplier",
-                            text: "Supplier"
-                        }));
-
-                        $("#Category").trigger("change");
-
-                        $('#Category').select2({
-                            dropdownParent: $('#AddAccEntry'),
-                            placeholder: "Select an option...",
-                            allowClear: true,
-                            width: 'resolve',
-                            theme: 'classic'
-                        });
-                    }
-                }
-                else{
-                    if ($categoryGroup.length !== 0) {
-                        $categoryGroup.remove();
-                    }
-                    if (selectionGroup.length !== 0) {
-                        selectionGroup.remove();
-                    }
+            if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200")
+                && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
+                if (selectionGroup.length === 0) {
+                    showSupplierSelectList();
                 }
             }
-
-            function updateSelectionChoices (event){
-                let chosenCategory = $("#Category").val();
-                let selectionGroup = $("#selectionGroup");
-                let multipleSupplierSelect = $("#MultipleSupplierId");
-                let newRow = ``;
-
-                // if already exists, remove the existing
+            else if (accountNumber === "101020500" && (credit === 0 && debit !== 0)){
+                if (selectionGroup.length === 0) {
+                    showSupplierSelectList();
+                }
+            }
+            else {
                 if (selectionGroup.length !== 0) {
                     selectionGroup.remove();
                 }
-
-                // fetch the list depending on chosen category
-                $.ajax({
-                    url: '@Url.Action("GetSelectListByCategory", "CheckVoucherNonTradeInvoice")',
-                    type: "GET",
-                    data: { chosenCategory: chosenCategory },
-                    success: function (data) {
-                        console.log(data);
-                        if (Array.isArray(data) && data.length > 0) {
-
-                            // append the new empty selectlist
-                            newRow += `
-                            <div class="form-group pt-4" id="selectionGroup">
-                                <label class="control-label">Select ${chosenCategory.charAt(0).toUpperCase() + chosenCategory.slice(1)}</label>
-                                <select name='MultipleSupplierId' id="MultipleSupplierId" class='form-select js-select2 w-100'></select>
-                                <span class="text-danger"></span>
-                            </div>`;
-
-                            $("#categoryContainer").append(newRow);
-
-                            $('#MultipleSupplierId').select2({
-                                dropdownParent: $('#AddAccEntry'),
-                                placeholder: "Select an option...",
-                                allowClear: true,
-                                width: 'resolve',
-                                theme: 'classic'
-                            });
-
-                            $("#MultipleSupplierId").append('<option>');
-
-                            $.each(data, function (index, item) {
-                                $("#MultipleSupplierId").append($('<option>', {
-                                    value: item.value,
-                                    text: item.text
-                                }));
-                            });
-                        }
-                    }
-                });
             }
+        }
+
+        function showSupplierSelectList (event){
+            let selectionGroup = $("#selectionGroup");
+            let multipleSupplierSelect = $("#MultipleSupplierId");
+
+            $.ajax({
+                url: '@Url.Action("GetNonTradeSupplierSelectList", "CheckVoucherNonTradeInvoice")',
+                type: "GET",
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let newRow = `
+                    <div class="form-group pt-4" id="selectionGroup">
+                        <label class="control-label">Select Supplier</label>
+                        <select name='MultipleSupplierId' id="MultipleSupplierId" class='form-select js-select2 w-100'></select>
+                        <span class="text-danger"></span>
+                    </div>`;
+
+                        $("#categoryContainer").append(newRow);
+
+                        $('#MultipleSupplierId').select2({
+                            dropdownParent: $('#AddAccEntry'),
+                            placeholder: "Select an option...",
+                            allowClear: true,
+                            width: 'resolve',
+                            theme: 'classic'
+                        });
+
+                        $("#MultipleSupplierId").append('<option>');
+
+                        $.each(data, function (index, item) {
+                            $("#MultipleSupplierId").append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    }
+                }
+            });
+        }
 
             function saveAccountingEntry(event) {
                 // Get the values from the modal inputs
@@ -444,24 +395,6 @@
             }
     </script>
     <script>
-        $("#debit, #credit").on("input change focus blur click keyup keydown", seeIfNeedCategory);
-        $(document).on("change", "#Category", updateSelectionChoices);
-        $(document).on("click", "#modalClose", function (){
-            $("#AccountNo").val("");
-            $("#Category").val("");
-            $("#MultipleSupplierId").val("");
-            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
-            $("#debit").val("0.000");
-            $("#credit").val("0.000");
-            if ($("#selectionGroup").length !== 0) {
-                $("#selectionGroup").remove();
-            }
-            if ($("#categoryGroup").length !== 0) {
-                $("#categoryGroup").remove();
-            }
-        });
-    </script>
-    <script>
         $("#AccountNo").change(function () {
             var accountNumber = $(this).val();
             if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
@@ -557,6 +490,22 @@
                     theme: 'classic',
                 });
             });
+        });
+    </script>
+    <script>
+        $("#debit, #credit").on("input change", seeIfNeedSupplier);
+        $("#AccountNo").on("change", seeIfNeedSupplier);
+        $(document).on("input change", "#totalAmount", validateDebitAndCredit);
+        $(document).on("click", "#modalClose", function (){
+            $("#AccountNo").val("");
+            $("#Category").val("");
+            $("#MultipleSupplierId").val("");
+            $("#AccountNo, #Category, #MultipleSupplierId").trigger("change");
+            $("#debit").val("0.0000");
+            $("#credit").val("0.0000");
+            if ($("#selectionGroup").length !== 0) {
+                $("#selectionGroup").remove();
+            }
         });
     </script>
 }

@@ -1791,9 +1791,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSelectListByCategory(string chosenCategory, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetNonTradeSupplierSelectList(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem>? selectList = new List<SelectListItem>();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -1801,22 +1800,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            switch (chosenCategory)
-            {
-                case "supplier":
-                    selectList = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                    break;
-                case "employee":
-                    selectList = (await _unitOfWork.FilprideEmployee.GetAllAsync(null, cancellationToken))
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.EmployeeId.ToString(),
-                            Text = $"{s.EmployeeNumber} {s.FirstName} {s.LastName}"
-                        })
-                        .ToList();
-                    break;
-            }
-
+            var selectList = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
             return Json(selectList);
         }
     }
