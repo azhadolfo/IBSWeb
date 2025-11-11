@@ -1352,7 +1352,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             (cvd.SupplierId != null &&
                              cvd.SupplierId == supplierId &&
                              cvd.Credit > cvd.AmountPaid &&
-                             cvd.AccountName != "AR-Non Trade Receivable")
+                             cvd.AccountName == "AP-Non Trade Payable")
                         ));
 
                 if (paymentId != null)
