@@ -216,8 +216,7 @@
                             <span class="text-danger"></span>
                         </div>`;
 
-            if ((accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200" || accountNumber === "101020500")
-                && ((credit !== 0 && debit === 0) || (credit === 0 && debit !== 0))){
+            if (accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200" || accountNumber === "101020500"){
                 if (selectionGroup.length === 0) {
                     showSupplierSelectList();
                 }
@@ -488,7 +487,6 @@
         });
     </script>
     <script>
-        $("#debit, #credit").on("input change", seeIfNeedSupplier);
         $("#AccountNo").on("change", seeIfNeedSupplier);
         $(document).on("input change", "#totalAmount", validateDebitAndCredit);
         $(document).on("click", "#modalClose", function (){
