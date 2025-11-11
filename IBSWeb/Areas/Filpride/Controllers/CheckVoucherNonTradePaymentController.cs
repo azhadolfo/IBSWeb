@@ -1,21 +1,21 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1547,7 +1547,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     IsAdvances = true,
                     EmployeeId = viewModel.EmployeeId,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    TaxType = string.Empty,
+                    VatType = string.Empty
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
@@ -1952,7 +1954,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierId = viewModel.SupplierId,
                     SupplierName = supplier.SupplierName,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    TaxType = supplier.TaxType,
+                    VatType = supplier.VatType,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);

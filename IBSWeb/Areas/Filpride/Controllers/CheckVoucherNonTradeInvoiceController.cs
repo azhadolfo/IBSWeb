@@ -1,21 +1,20 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -280,7 +279,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Company = companyClaims,
                     Type = viewModel.Type,
                     Total = viewModel.Total,
-                    SupplierName = supplier.SupplierName
+                    SupplierName = supplier.SupplierName,
+                    TaxType = string.Empty,
+                    VatType = string.Empty
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
