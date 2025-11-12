@@ -151,7 +151,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="modalClose" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="calculateButton" onclick="saveAccountingEntry()">Create</button>
+                <button type="button" class="btn btn-primary" id="calculateButton" onclick="saveAccountingEntry(event)">Create</button>
             </div>
         </div>
     </div>
@@ -257,6 +257,14 @@
                 event.preventDefault();
                 alert('Please select Account No.!');
                 return;
+            }
+            
+            if ($("#MultipleSupplierId").length !== undefined){
+                if ($("#MultipleSupplierId option:selected").val() === "") {
+                    event.preventDefault();
+                    alert('Please select a sub-account');
+                    return;
+                }
             }
 
             // Format debit and credit values with commas and two decimal places
