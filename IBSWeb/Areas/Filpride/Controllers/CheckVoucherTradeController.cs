@@ -389,9 +389,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional journal entry in details
 
+                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ',2) ?? [];
+
                 var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
-                    .FirstOrDefaultAsync(x => x. AccountName
-                        .Contains($"Expanded Withholding Tax {cvh.TaxPercent * 100:N0}%"), cancellationToken);
+                    .FirstOrDefaultAsync(x => x.AccountNumber == ewtTitle.FirstOrDefault(), cancellationToken);
 
                 foreach (var cv in cvDetails.OrderBy(x => x.CheckVoucherDetailId))
                 {
