@@ -102,6 +102,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(cvh => cvh!.Employee)
                     .ToListAsync(cancellationToken);
 
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    checkVoucherDetails = checkVoucherDetails
+                        .Where(s =>
+                            s.TransactionNo.ToLower().Contains(searchValue) ||
+                            s.CheckVoucherHeader?.Date.ToString().Contains(searchValue) == true ||
+                            s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                            s.Amount.ToString().Contains(searchValue) ||
+                            s.AmountPaid.ToString().Contains(searchValue) ||
+                            (s.Amount - s.AmountPaid).ToString().Contains(searchValue) ||
+                            s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
+                            s.CheckVoucherHeader?.Status.ToLower().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.AmountPaid.ToString().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToString().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
+                        )
+                        .ToList();
+                }
+
                 var projectedQuery = checkVoucherDetails
                     .Select(x => new
                     {
@@ -110,7 +133,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         SupplierName = x.Supplier != null
                                 ? x.Supplier.SupplierName
                                 : x.CheckVoucherHeader!.Supplier!.SupplierName,
-                        SupplierId = x.SupplierId,
+                        x.Supplier?.SupplierId,
+                        x.CheckVoucherHeader!.Supplier,
                         Amount = x.Amount > 0
                             ? x.Amount
                             : x.CheckVoucherHeader!.InvoiceAmount,
@@ -125,25 +149,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.CheckVoucherHeaderId
                     })
                     .ToList();
-
-                // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
-                {
-                    var searchValue = parameters.Search.Value.ToLower();
-
-                    projectedQuery = projectedQuery
-                    .Where(s =>
-                        s.TransactionNo.ToLower().Contains(searchValue) ||
-                        s.Date.ToString().Contains(searchValue) ||
-                        s.SupplierName.ToLower().Contains(searchValue) ||
-                        s.Amount.ToString().Contains(searchValue) ||
-                        s.AmountPaid.ToString().Contains(searchValue) ||
-                        (s.Amount - s.AmountPaid).ToString().Contains(searchValue) ||
-                        s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
-                        s.Status.ToLower().Contains(searchValue)
-                        )
-                    .ToList();
-                }
 
                 // Sorting
                 if (parameters.Order?.Count > 0)
