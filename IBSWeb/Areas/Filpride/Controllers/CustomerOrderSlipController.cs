@@ -1574,6 +1574,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingCos.FmApprovedDate = null;
                 existingCos.OMReason = null;
                 existingCos.ExpirationDate = null;
+                existingCos.IsCosAtlFinalized = false;
 
                 switch (viewModel.DeliveryOption)
                 {
