@@ -46,7 +46,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money inputAmount" placeholder="0.000"/>
+                    <input asp-for="Total" id="totalAmount" class="form-control money inputAmount" placeholder="0.000"/>
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -454,6 +454,7 @@
         function validateDebitAndCredit(event) {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var totalValue = parseFloat($("#totalAmount").val()) || 0;
             var errorMessage = "";
             var isValid = true;
 
@@ -464,11 +465,11 @@
             if (totalDebit !== totalCredit) {
                 errorMessage = "Debit and Credit totals must be equal.";
                 isValid = false;
-            } else if (totalDebit === 0 && totalCredit === 0) {
-                errorMessage = "Debit and Credit cannot both be zero.";
-                isValid = false;
             } else if (totalDebit === 0 || totalCredit === 0) {
-                errorMessage = "Debit and Credit cannot be zero.";
+                errorMessage = "Debit or Credit cannot be zero.";
+                isValid = false;
+            } else if (totalValue !== totalDebit || totalValue !== totalCredit) {
+                errorMessage = "Total Amount should be equal to Total Debit and Credit.";
                 isValid = false;
             }
 

@@ -74,7 +74,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money inputAmount" value="" placeholder="0.000" />
+                    <input asp-for="Total" id="totalAmount" class="form-control money inputAmount" value="" placeholder="0.000" />
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -402,10 +402,11 @@
             const totalsRow = document.createElement("tr");
             totalsRow.innerHTML = `
             <td><strong>Totals</strong></td>
-            <td class="text-end"><strong>${formatNumber(totalDebit)}</strong></td>
-            <td class="text-end"><strong>${formatNumber(totalCredit)}</strong></td>
+            <td id="totalDebitCell" class="text-end"><strong>${formatNumber(totalDebit)}</strong></td>
+            <td id="totalCreditCell" class="text-end"><strong>${formatNumber(totalCredit)}</strong></td>
         `;
             tbody.appendChild(totalsRow);
+            validateDebitAndCredit();
         }
 
         function addJournalRow(tbody, account, debit, credit) {
@@ -659,6 +660,36 @@
                 masterFileSelector.handleSelection(type, row, selectedId, selectedText);
             });
         });
+    </script>
+    <script>
+        function validateDebitAndCredit() {
+            let totalValue = parseFloat($("#totalAmount").val()) || 0;
+            let totalDebit = parseNumber(document.getElementById("totalDebitCell").textContent);
+            let totalCredit = parseNumber(document.getElementById("totalCreditCell").textContent);
+            let errorMessage = "";
+            let isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
+
+            if (totalDebit !== totalCredit) {
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit or Credit cannot be zero.";
+                isValid = false;
+            } else if (totalValue !== totalDebit || totalValue !== totalCredit) {
+                errorMessage = "Total Amount should be equal to Total Debit and Credit.";
+                isValid = false;
+            }
+
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            return isValid;
+        }
+        $(document).on("input change", "#totalAmount", validateDebitAndCredit);
     </script>
 }
 
