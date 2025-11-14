@@ -979,7 +979,7 @@ namespace IBS.DataAccess.Repository.Filpride
         }
 
         public async Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney,
-            string currentUser, CancellationToken cancellationToken = default)
+            string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default)
         {
             deliveryReceipt.CommissionAmount -= costOfMoney;
             var commissionee = deliveryReceipt.Commissionee!;
@@ -1003,7 +1003,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 new()
                 {
-                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Date = depositedDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                     AccountId = apCommissionPayableTitle.AccountId,
@@ -1024,7 +1024,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
-                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Date = depositedDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                     AccountId = ewtTitle!.AccountId,
@@ -1041,7 +1041,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                Date = depositedDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
                 Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                 AccountId = commissionTitle.AccountId,
