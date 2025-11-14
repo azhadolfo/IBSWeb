@@ -285,10 +285,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
+                    var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, depositDate, "PH");
+                    var daysDelayed = depositDate.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                    var daysDelayed = depositDate.DayNumber - salesInvoice.DueDate.DayNumber;
-
-                    if (daysDelayed <= 0 || (salesInvoice.DeliveryReceipt != null && salesInvoice.DeliveryReceipt.CommissionAmount <= 0))
+                    if (daysDelayed <= 0 || salesInvoice.DeliveryReceipt == null || salesInvoice.DeliveryReceipt?.CommissionAmount <= 0)
                     {
                         continue;
                     }
@@ -299,7 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var costOfMoney = dr.CommissionAmount * .03m * daysDelayed / 360m;
 
                     await _unitOfWork.FilprideCollectionReceipt.ApplyCostOfMoney(dr, costOfMoney,
-                        User.Identity!.Name!, cancellationToken);
+                        User.Identity!.Name!, receipt.FilprideCollectionReceipt!.DepositedDate ?? default, cancellationToken);
 
                 }
 

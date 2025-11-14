@@ -14,4 +14,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\IBS.DTOs\IBS.DTOs.csproj" />
+  </ItemGroup>
+
 </Project>
