@@ -299,7 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var costOfMoney = dr.CommissionAmount * .03m * daysDelayed / 360m;
 
                     await _unitOfWork.FilprideCollectionReceipt.ApplyCostOfMoney(dr, costOfMoney,
-                        User.Identity!.Name!, receipt.FilprideCollectionReceipt!.DepositedDate ?? default, cancellationToken);
+                        User.Identity!.Name!, depositDate, cancellationToken);
 
                 }
 
