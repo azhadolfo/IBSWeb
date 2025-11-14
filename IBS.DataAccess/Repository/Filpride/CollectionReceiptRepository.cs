@@ -5,6 +5,8 @@ using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -423,10 +425,6 @@ namespace IBS.DataAccess.Repository.Filpride
             var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
             string description = "";
 
-            collectionReceipt.ReceiptDetails = await _db.FilprideCollectionReceiptDetails
-                .Where(rd => rd.CollectionReceiptId == collectionReceipt.CollectionReceiptId)
-                .ToListAsync(cancellationToken);
-
             var customerName = collectionReceipt.SalesInvoiceId != null
                 ?
                 collectionReceipt.SalesInvoice!.Customer!.CustomerName
@@ -443,7 +441,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 else
                 {
                     var crNoAndDate = new List<string>();
-                    foreach (var rd in collectionReceipt.ReceiptDetails)
+                    foreach (var rd in collectionReceipt.ReceiptDetails!)
                     {
                         crNoAndDate.Add($"{rd.InvoiceNo} SI Dated {rd.InvoiceDate:MMM/dd/yyyy}");
                     }
@@ -978,6 +976,93 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney,
+            string currentUser, CancellationToken cancellationToken = default)
+        {
+            deliveryReceipt.CommissionAmount -= costOfMoney;
+            var commissionee = deliveryReceipt.Commissionee!;
+            var ewtAmount = deliveryReceipt.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
+                ? ComputeEwtAmount(costOfMoney, commissionee.WithholdingTaxPercent ?? 0m)
+                : 0;
+            var netOfEwt = deliveryReceipt.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax
+                ? ComputeNetOfEwt(costOfMoney, ewtAmount)
+                : costOfMoney;
+
+            var (commissionAcctNo, commissionAcctTitle) = GetCommissionAccount(deliveryReceipt.CustomerOrderSlip!.Product!.ProductCode);
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var commissionTitle = accountTitlesDto.Find(c => c.AccountNumber == commissionAcctNo)
+                                  ?? throw new ArgumentException($"Account title '{commissionAcctNo}' not found.");
+            var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200")
+                                           ?? throw new ArgumentException("Account title '201010200' not found.");
+            var ewtAccountNo = commissionee.WithholdingTaxTitle?.Split(" ", 2).FirstOrDefault();
+            var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
+
+            var ledgers = new List<FilprideGeneralLedgerBook>
+            {
+                new()
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
+                    AccountId = apCommissionPayableTitle.AccountId,
+                    AccountNo = apCommissionPayableTitle.AccountNumber,
+                    AccountTitle = apCommissionPayableTitle.AccountName,
+                    Debit = netOfEwt,
+                    Credit = 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = currentUser,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SupplierId = deliveryReceipt.CommissioneeId,
+                    SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
+                    ModuleType = nameof(ModuleType.Sales)
+                }
+            };
+
+            if (ewtAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
+                    AccountId = ewtTitle!.AccountId,
+                    AccountNo = ewtTitle.AccountNumber,
+                    AccountTitle = ewtTitle.AccountName,
+                    Debit = ewtAmount,
+                    Credit = 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = currentUser,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+            }
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                Reference = deliveryReceipt.DeliveryReceiptNo,
+                Description = $"Cost of money from late deposit – {deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
+                AccountId = commissionTitle.AccountId,
+                AccountNo = commissionTitle.AccountNumber,
+                AccountTitle = commissionTitle.AccountName,
+                Debit = 0,
+                Credit = costOfMoney,
+                Company = deliveryReceipt.Company,
+                CreatedBy = currentUser,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                ModuleType = nameof(ModuleType.Sales)
+            });
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
         }
     }
 }

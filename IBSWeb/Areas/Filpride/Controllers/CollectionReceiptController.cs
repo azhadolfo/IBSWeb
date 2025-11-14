@@ -269,7 +269,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.BankAccountNumber = bank.AccountNo;
                 model.Status = nameof(CollectionReceiptStatus.Deposited);
 
+                model.ReceiptDetails = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(rd => rd.CollectionReceiptId == model.CollectionReceiptId)
+                    .ToListAsync(cancellationToken);
+
                 await _unitOfWork.FilprideCollectionReceipt.DepositAsync(model, cancellationToken);
+
+                foreach (var receipt in model.ReceiptDetails!)
+                {
+                    var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                                           .GetAsync(x => x.SalesInvoiceNo == receipt.InvoiceNo
+                                                          && x.Company == model.Company, cancellationToken);
+
+                    if (salesInvoice == null)
+                    {
+                        continue;
+                    }
+
+                    var daysDelayed = depositDate.DayNumber - salesInvoice.DueDate.DayNumber;
+
+                    if (daysDelayed <= 0 || (salesInvoice.DeliveryReceipt != null && salesInvoice.DeliveryReceipt.CommissionAmount <= 0))
+                    {
+                        continue;
+                    }
+
+                    var dr = salesInvoice.DeliveryReceipt!;
+
+                    //Formula: Commission Amount x 3% x Days Delayed / 360
+                    var costOfMoney = dr.CommissionAmount * .03m * daysDelayed / 360m;
+
+                    await _unitOfWork.FilprideCollectionReceipt.ApplyCostOfMoney(dr, costOfMoney,
+                        User.Identity!.Name!, cancellationToken);
+
+                }
 
                 #region --Audit Trail Recording
 
@@ -2302,7 +2334,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.PostedBy = GetUserFullName();
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(CollectionReceiptStatus.Posted);
-                bool isMultipleSi = false;
+                bool isMultipleSi = model.MultipleSIId?.Length > 0;
 
                 List<FilprideOffsettings>? offset;
 

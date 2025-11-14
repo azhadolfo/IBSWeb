@@ -208,7 +208,10 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
+                .Include(si => si.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.Hauler)
+                .Include(si => si.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.Commissionee)
                 .Include(si => si.CustomerOrderSlip)
                 .FirstOrDefaultAsync(cancellationToken);
         }

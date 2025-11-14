@@ -1,6 +1,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Models.Filpride.Integrated;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
@@ -33,5 +34,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task ReturnedCheck(string crNo, string company, string userName, CancellationToken cancellationToken = default);
 
         Task RedepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
+
+        Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney, string currentUser, CancellationToken cancellationToken = default);
     }
 }
