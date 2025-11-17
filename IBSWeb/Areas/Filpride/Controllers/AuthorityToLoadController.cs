@@ -341,7 +341,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(a => a.PurchaseOrder)
                 .Where(a => a.SupplierId == supplierId
                             && !a.CustomerOrderSlip!.IsCosAtlFinalized
-                            && a.CustomerOrderSlip!.PickUpPointId == loadPortId
+                            && a.CustomerOrderSlip.Status != nameof(CosStatus.Closed)
+                            && a.CustomerOrderSlip.Status != nameof(CosStatus.Expired)
+                            && a.CustomerOrderSlip.Status != nameof(CosStatus.Disapproved)
+                            && a.CustomerOrderSlip.PickUpPointId == loadPortId
                             && a.UnreservedQuantity > 0)
                 .Select(g => new
                 {
