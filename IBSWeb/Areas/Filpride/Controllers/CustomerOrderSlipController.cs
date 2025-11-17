@@ -151,7 +151,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 cos.Status == nameof(CosStatus.Created));
                             break;
                         case "ForATLBooking":
-                            query = query.Where(cos => !cos.IsCosAtlFinalized);
+                            query = query.Where(cos => !cos.IsCosAtlFinalized
+                                                       && cos.Depot != null
+                                                       && cos.Status != nameof(CosStatus.Closed)
+                                                       && cos.Status != nameof(CosStatus.Disapproved)
+                                                       && cos.Status != nameof(CosStatus.Expired));
                             break;
                         case "ForCNCApproval":
                             query = query.Where(cos =>
