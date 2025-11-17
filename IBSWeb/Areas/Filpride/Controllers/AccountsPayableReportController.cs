@@ -1642,11 +1642,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var currencyFormat = "#,##0.0000"; // numbers format
                     var currencyFormat2 = "#,##0.00"; // numbers format
 
-                    var atlNos = purchaseReport.Select(pr => pr.AuthorityToLoadNo).Distinct().ToList();
+                    var atlNos = purchaseReport
+                        .Select(pr => pr.AuthorityToLoadNo)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct()
+                        .ToList();
+
                     var atls = await _dbContext.FilprideAuthorityToLoads
                         .Where(x => atlNos.Contains(x.AuthorityToLoadNo))
                         .ToListAsync(cancellationToken);
-                    var atlLookup = atls.ToDictionary(x => x.AuthorityToLoadNo);
+
+                    var atlLookup = atls
+                        .GroupBy(x => x.AuthorityToLoadNo)
+                        .ToDictionary(g => g.Key, g => g.First());
 
                     #region -- Populate data rows --
 
