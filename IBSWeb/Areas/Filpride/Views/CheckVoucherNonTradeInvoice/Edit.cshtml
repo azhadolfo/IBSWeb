@@ -185,60 +185,6 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        $("#AccountNo").change(function () {
-            var accountNumber = $(this).val();
-            if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
-                // Close the modal
-                $("#AddAccEntry").modal("hide");
-                Swal.fire({
-                    title: "Create Automatic Journal Entry",
-                    text: "Do you want to create an automatic journal entry?",
-                    icon: "question",
-                    showCancelButton: true,
-                    allowEscapeKey: false,
-                    allowOutsideClick: false,
-                    confirmButtonText: "Yes",
-                    cancelButtonText: "No",
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        return new Promise((resolve) => {
-                            Swal.fire({
-                                title: "Input Start Date and Number of Years",
-                                html:
-                                    "<input id='start-date' type='date' class='swal2-input' placeholder='Start Date'>" +
-                                    "<input id='num-years' type='number' class='swal2-input' placeholder='Number of Years'>",
-                                focusConfirm: false,
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                preConfirm: () => {
-                                    return [
-                                        $("#start-date").val(),
-                                        $("#num-years").val()
-                                    ];
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    resolve(result.value);
-                                }
-                            });
-                        });
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Result contains an array with the start date and number of years
-                        var startDate = result.value[0];
-                        var numYears = result.value[1];
-                        // Assign the values to hidden inputs in your form
-                        $("#StartDate").val(startDate);
-                        $("#NumberOfYears").val(numYears);
-                        // Close the modal
-                        $("#AddAccEntry").modal("show");
-                    }
-                });
-            }
-        });
-    </script>
-    <script>
         // Constants for calculations
         const VAT_RATE = 0.12;
         const VAT_INCLUDED_PRICE_MULTIPLIER = 1.12;
