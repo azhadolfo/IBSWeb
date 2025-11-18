@@ -13,12 +13,12 @@ COPY ["IBS.Models/IBS.Models.csproj", "IBS.Models/"]
 COPY ["IBS.Utility/IBS.Utility.csproj", "IBS.Utility/"]
 COPY ["IBS.Services/IBS.Services.csproj", "IBS.Services/"]
 
-RUN dotnet restore "IBSWeb/IBSWeb.csproj"
+RUN dotnet restore "./IBSWeb/IBSWeb.csproj"
 COPY . .
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "IBSWeb.csproj" \
+RUN dotnet publish "./IBSWeb.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
     --no-restore \
