@@ -1,0 +1,54 @@
+@model FilprideTerms
+
+@{
+    ViewData["Title"] = "Terms - Edit";
+}
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input asp-for="TermsCode" type="hidden"/>
+            
+            <div class="form-floating mb-3">
+                <input asp-for="NumberOfDays" class="form-control " placeholder="" />
+                <label asp-for="NumberOfDays" class="control-label" >Number of Days<span class="required">*</span></label>
+                <span asp-validation-for="NumberOfDays" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="NumberOfMonths" class="form-control " placeholder="" />
+                <label asp-for="NumberOfMonths" class="control-label">Number of Months<span class="required">*</span></label>
+                <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="PaymentTerms" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

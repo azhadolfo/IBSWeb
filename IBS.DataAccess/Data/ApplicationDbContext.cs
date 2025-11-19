@@ -162,6 +162,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideEmployee> FilprideEmployees { get; set; }
 
+        public DbSet<FilprideTerms> FilprideTerms { get; set; }
+
         #endregion
 
         #endregion
