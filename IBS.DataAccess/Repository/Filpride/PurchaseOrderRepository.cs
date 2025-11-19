@@ -23,6 +23,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var po = await _db
                 .FilpridePurchaseOrders
+                .Include(x => x.PaymentTerms)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
 
             if (po == null)
@@ -32,62 +33,24 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var poDate = DateOnly.FromDateTime(po.CreatedDate);
 
-            DateOnly dueDate;
+            DateOnly dueDate = default;
 
-            switch (po.Terms)
+            if (po.Terms.Contains("M"))
             {
-                case "7D":
-                case "10D":
-                    return poDate.AddDays(7);
+                dueDate =  poDate.AddMonths(po.PaymentTerms.NumberOfMonths).AddDays(po.PaymentTerms.NumberOfDays - poDate.Day);
 
-                case "15D":
-                    return poDate.AddDays(15);
-
-                case "30D":
-                    return poDate.AddDays(30);
-
-                case "45D":
-                case "45PDC":
-                    return poDate.AddDays(45);
-
-                case "60D":
-                case "60PDC":
-                    return poDate.AddDays(60);
-
-                case "90D":
-                    return poDate.AddDays(90);
-
-                case "M15":
-                    return poDate.AddMonths(1).AddDays(15 - poDate.Day);
-
-                case "M30":
-                    dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                    if (dueDate.Day == 31)
-                    {
-                        dueDate = dueDate.AddDays(-1);
-                    }
-
-                    return dueDate;
-
-                case "M29":
-                    dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                    switch (dueDate.Day)
-                    {
-                        case 31:
-                            dueDate = dueDate.AddDays(-2);
-                            break;
-                        case 30:
-                            dueDate = dueDate.AddDays(-1);
-                            break;
-                    }
-
-                    return dueDate;
-
-                default:
-                    return poDate;
+                if (poDate.Month == 1 && po.PaymentTerms.NumberOfDays > 28)
+                {
+                    var test = DateTime.DaysInMonth(dueDate.Year, 2) - po.PaymentTerms.NumberOfDays;
+                    dueDate = dueDate.AddDays(test);
+                }
             }
+            else
+            {
+                dueDate =  poDate.AddDays(po.PaymentTerms.NumberOfDays);
+            }
+
+            return dueDate;
         }
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
