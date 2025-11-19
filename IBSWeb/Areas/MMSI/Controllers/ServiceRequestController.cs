@@ -485,14 +485,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = _dbContext.MMSIDispatchTickets
+                var queried = await _dbContext.MMSIDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt!.Port)
                     .Include(dt => dt.Tugboat)
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
-                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled");
+                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled")
+                    .ToListAsync(cancellationToken);
 
                 // Apply status filter based on filterType
                 if (!string.IsNullOrEmpty(filterTypeClaim))
@@ -501,23 +502,23 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         case "ForPosting":
                             queried = queried.Where(dt =>
-                                dt.Status == "For Posting");
+                                dt.Status == "For Posting").ToList();
                             break;
                         case "ForTariff":
                             queried = queried.Where(dt =>
-                                dt.Status == "For Tariff");
+                                dt.Status == "For Tariff").ToList();
                             break;
                         case "TariffPending":
                             queried = queried.Where(dt =>
-                                dt.Status == "Tariff Pending");
+                                dt.Status == "Tariff Pending").ToList();
                             break;
                         case "ForBilling":
                             queried = queried.Where(dt =>
-                                dt.Status == "For Billing");
+                                dt.Status == "For Billing").ToList();
                             break;
                         case "ForCollection":
                             queried = queried.Where(dt =>
-                                dt.Status == "For Collection");
+                                dt.Status == "For Collection").ToList();
                             break;
                             // Add other cases as needed
                     }
@@ -539,7 +540,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
                         dt.Vessel!.VesselName.ToString().Contains(searchValue) == true ||
                         dt.Status.Contains(searchValue) == true
-                        );
+                        )
+                        .ToList();
                 }
 
                 // Column-specific search
@@ -553,15 +555,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             case "status":
                                 if (searchValue == "for posting")
                                 {
-                                    queried = queried.Where(s => s.Status == "For Posting");
+                                    queried = queried.Where(s => s.Status == "For Posting").ToList();
                                 }
                                 if (searchValue == "cancelled")
                                 {
-                                    queried = queried.Where(s => s.Status == "Cancelled");
+                                    queried = queried.Where(s => s.Status == "Cancelled").ToList();
                                 }
                                 else
                                 {
-                                    queried = queried.Where(s => !string.IsNullOrEmpty(s.Status));
+                                    queried = queried.Where(s => !string.IsNullOrEmpty(s.Status)).ToList();
                                 }
                                 break;
                         }
@@ -577,7 +579,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     queried = queried
                         .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}");
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
                 }
 
                 var totalRecords = queried.Count();
