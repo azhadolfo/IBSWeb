@@ -144,6 +144,7 @@ namespace IBS.DataAccess.Repository
         public IAuditTrailRepository FilprideAuditTrail { get; private set; }
         public Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; private set; }
         public ICustomerBranchRepository FilprideCustomerBranch { get; private set; }
+        public ITermsRepository FilprideTerms { get; }
 
         #endregion
 
@@ -268,6 +269,7 @@ namespace IBS.DataAccess.Repository
             FilprideAuditTrail = new AuditTrailRepository(_db);
             FilprideEmployee = new Filpride.EmployeeRepository(_db);
             FilprideCustomerBranch = new CustomerBranchRepository(_db);
+            FilprideTerms = new TermsRepository(_db);
 
             #endregion
 

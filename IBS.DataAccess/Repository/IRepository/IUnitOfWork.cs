@@ -116,6 +116,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IAuditTrailRepository FilprideAuditTrail { get; }
         Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; }
         ICustomerBranchRepository FilprideCustomerBranch { get; }
+        ITermsRepository FilprideTerms { get; }
 
         Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default);
 

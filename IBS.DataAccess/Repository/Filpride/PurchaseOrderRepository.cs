@@ -61,40 +61,28 @@ namespace IBS.DataAccess.Repository.Filpride
                     return poDate.AddMonths(1).AddDays(15 - poDate.Day);
 
                 case "M30":
-                    if (poDate.Month == 1)
-                    {
-                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
-                    }
-                    else
-                    {
-                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+                    dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
 
-                        if (dueDate.Day == 31)
-                        {
-                            dueDate = dueDate.AddDays(-1);
-                        }
+                    if (dueDate.Day == 31)
+                    {
+                        dueDate = dueDate.AddDays(-1);
                     }
+
                     return dueDate;
 
                 case "M29":
-                    if (poDate.Month == 1)
-                    {
-                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
-                    }
-                    else
-                    {
-                        dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
+                    dueDate = new DateOnly(poDate.Year, poDate.Month, 1).AddMonths(2).AddDays(-1);
 
-                        switch (dueDate.Day)
-                        {
-                            case 31:
-                                dueDate = dueDate.AddDays(-2);
-                                break;
-                            case 30:
-                                dueDate = dueDate.AddDays(-1);
-                                break;
-                        }
+                    switch (dueDate.Day)
+                    {
+                        case 31:
+                            dueDate = dueDate.AddDays(-2);
+                            break;
+                        case 30:
+                            dueDate = dueDate.AddDays(-1);
+                            break;
                     }
+
                     return dueDate;
 
                 default:
