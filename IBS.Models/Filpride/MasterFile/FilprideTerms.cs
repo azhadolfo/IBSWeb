@@ -6,7 +6,7 @@ namespace IBS.Models.Filpride.MasterFile
     public class FilprideTerms
     {
         [Key]
-        [StringLength(4)]
+        [StringLength(10)]
         public string TermsCode { get; set; }
 
         [Range(0, 365)]

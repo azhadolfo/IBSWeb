@@ -81,6 +81,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(10)]
         public string Terms { get; set; }
 
+        [ForeignKey(nameof(Terms))]
+        public FilprideTerms PaymentTerms { get; set; }
+
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal QuantityReceived { get; set; }

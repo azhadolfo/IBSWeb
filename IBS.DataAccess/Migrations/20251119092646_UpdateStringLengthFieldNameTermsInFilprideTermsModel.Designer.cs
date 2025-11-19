@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251119092646_UpdateStringLengthFieldNameTermsInFilprideTermsModel")]
+    partial class UpdateStringLengthFieldNameTermsInFilprideTermsModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1218,9 +1221,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_purchase_orders_supplier_id");
-
-                    b.HasIndex("Terms")
-                        .HasDatabaseName("ix_filpride_purchase_orders_terms");
 
                     b.ToTable("filpride_purchase_orders", (string)null);
                 });
@@ -11568,16 +11568,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideTerms", "PaymentTerms")
-                        .WithMany()
-                        .HasForeignKey("Terms")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_purchase_orders_filpride_terms_terms");
-
                     b.Navigation("Customer");
-
-                    b.Navigation("PaymentTerms");
 
                     b.Navigation("PickUpPoint");
 
