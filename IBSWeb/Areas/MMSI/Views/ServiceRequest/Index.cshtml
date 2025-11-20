@@ -197,9 +197,7 @@
                     // Initialize all tooltips
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
-                "createdRow": function(row, data, dataIndex) {
-                    $(row).addClass('clickable-row');
-                },
+                "createdRow": function(row, data, dataIndex) { },
                 "columns": [
                     {
                         "data": null,
@@ -395,22 +393,6 @@
             $('.btn-group button').on('click', function() {
                 $('.btn-group button').removeClass('active');
                 $(this).addClass('active');
-            });
-
-            table.on('click', '.clickable-row', function(event) {
-                if (!$(event.target).is('input[type="checkbox"]')) {
-                    const $checkbox = $(this).find('.selectCheckbox');
-                    if ($checkbox.length && !$checkbox.prop('disabled')) {
-                        $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
-                        // Update selectedRecords if needed
-                        const ticketId = $checkbox.val();
-                        if ($checkbox.prop('checked')) {
-                            selectedRecords.add(String(ticketId));
-                        } else {
-                            selectedRecords.delete(String(ticketId));
-                        }
-                    }
-                }
             });
             
             table.columns().search(''); // Clear previous filters
