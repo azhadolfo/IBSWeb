@@ -286,5 +286,35 @@ namespace IBS.DataAccess.Repository
                })
                .ToListAsync(cancellationToken);
         }
+
+        public async Task<DateOnly> ComputeDueDateAsync(string terms, DateOnly transactionDate, CancellationToken cancellationToken = default)
+        {
+            var getTerms = await _db.FilprideTerms
+                .FirstOrDefaultAsync(x => x.TermsCode == terms, cancellationToken);
+
+            if (getTerms == null)
+            {
+                throw new ArgumentException("No terms found.");
+            }
+
+            var date = transactionDate;
+
+            DateOnly dueDate = default;
+
+            dueDate =  date.AddMonths(getTerms.NumberOfMonths).AddDays(getTerms.NumberOfDays);
+
+            if (terms.Contains("M"))
+            {
+                dueDate =  dueDate.AddDays(-date.Day);
+
+                if (date.Month == 1 && getTerms.NumberOfDays > 28)
+                {
+                    var daysToDeductIfMonthIsFebruary = DateTime.DaysInMonth(dueDate.Year, 2) - getTerms.NumberOfDays;
+                    dueDate = dueDate.AddDays(daysToDeductIfMonthIsFebruary);
+                }
+            }
+
+            return dueDate;
+        }
     }
 }

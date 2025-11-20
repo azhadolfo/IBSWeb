@@ -219,7 +219,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = viewModel.Remarks,
                     TransactionDate = viewModel.TransactionDate,
                     Discount = viewModel.Discount,
-                    DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(viewModel.Terms, viewModel.TransactionDate),
+                    DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(viewModel.Terms, viewModel.TransactionDate, cancellationToken),
                     PurchaseOrderId = viewModel.PurchaseOrderId,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
@@ -422,7 +422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
                 existingRecord.DeliveryReceiptId = viewModel.DeliveryReceiptId;
                 existingRecord.Terms = viewModel.Terms;
-                existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, viewModel.TransactionDate);
+                existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, viewModel.TransactionDate, cancellationToken);
                 existingRecord.CustomerAddress = viewModel.CustomerAddress;
                 existingRecord.CustomerTin = viewModel.CustomerTin;
 

@@ -58,5 +58,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
 
         Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default);
+
+        Task<DateOnly> ComputeDueDateAsync(string terms, DateOnly transactionDate, CancellationToken cancellationToken = default);
     }
 }

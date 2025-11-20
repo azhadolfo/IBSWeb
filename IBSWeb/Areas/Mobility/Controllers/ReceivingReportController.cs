@@ -239,7 +239,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         QuantityDelivered = viewModel.QuantityDelivered,
                         QuantityReceived = viewModel.QuantityReceived,
                         AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
-                        DueDate = await _unitOfWork.MobilityReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrderId, viewModel.Date, cancellationToken),
+                        DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrder!.Terms, viewModel.Date, cancellationToken),
                         Amount = viewModel.QuantityReceived * existingPo.UnitPrice,
                     };
 
