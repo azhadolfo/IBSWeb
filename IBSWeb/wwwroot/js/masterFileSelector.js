@@ -175,66 +175,58 @@ class MasterFileSelector {
 
     createModal(type) {
         const modalId = `${type.id}Modal`;
+
+        // Destroy Select2 before removing modal
+        const existingSelect = $(`#${type.id}Select`);
+        if (existingSelect.length && existingSelect.data('select2')) {
+            existingSelect.select2('destroy');
+        }
+
         $(`#${modalId}`).remove();
 
         const modalHTML = `
-            <div class="modal fade" id="${modalId}" tabindex="-1" style="z-index: 1060;">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Select ${type.title}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="${type.id}Select" class="form-label">${type.title}</label>
-                                <select id="${type.id}Select" class="form-select js-select2" style="width:100%">
-                                    <option value="">Loading...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary select-master-file" data-type="${type.id}">
-                                Select
-                            </button>
+        <div class="modal fade" id="${modalId}" tabindex="-1" style="z-index: 1060;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Select ${type.title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="${type.id}Select" class="form-label">${type.title}</label>
+                            <select id="${type.id}Select" class="form-select" style="width:100%">
+                                <option value="">Loading...</option>
+                            </select>
                         </div>
                     </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary select-master-file" data-type="${type.id}">
+                            Select
+                        </button>
+                    </div>
                 </div>
-            </div>`;
+            </div>
+        </div>`;
 
         $('body').append(modalHTML);
 
-        // Initialize select2
-        $(`#${type.id}Select`).select2({
-            dropdownParent: $(`#${modalId}`),
-            placeholder: type.placeholder,
-            width: '100%',
-            theme: 'classic',
-            dropdownCssClass: 'select2-dropdown-above-modal'
+        // DO NOT initialize Select2 here - it will be done in showMasterFileModal
+
+        // Handle modal cleanup on close
+        $(`#${modalId}`).on('hidden.bs.modal', () => {
+            const select = $(`#${type.id}Select`);
+            if (select.data('select2')) {
+                select.select2('destroy');
+            }
         });
 
-        // Add CSS for the higher z-index dropdown
-        if (!document.getElementById('select2-modal-styles')) {
-            const styleSheet = document.createElement('style');
-            styleSheet.id = 'select2-modal-styles';
-            styleSheet.textContent = `
-                .select2-dropdown-above-modal {
-                    z-index: 1061 !important;
-                }
-                .select2-container--open {
-                    z-index: 1061 !important;
-                }
-            `;
-            document.head.appendChild(styleSheet);
-        }
-
-        // Handle modal dismiss
+        // Handle cancel button
         $(`#${modalId}`).on('hidden.bs.modal', () => {
             const row = $(`#${modalId}`).data('row');
             const accountSelect = row.find('.chart-of-accounts');
 
-            // If no selection was made, reset the account dropdown
             if (!row.find(`input[name$="${type.inputName}"]`).length) {
                 accountSelect.val('').trigger('change');
             }
@@ -254,6 +246,12 @@ class MasterFileSelector {
             });
 
             const select = $(`#${type.id}Select`);
+
+            // DESTROY existing Select2 first
+            if (select.data('select2')) {
+                select.select2('destroy');
+            }
+
             select.empty();
 
             if (response && response.length > 0) {
@@ -265,12 +263,13 @@ class MasterFileSelector {
                 select.append('<option value="">No records found</option>');
             }
 
-            // Reinitialize select2
+            // Initialize Select2 ONLY ONCE here
             select.select2({
                 dropdownParent: $(`#${modalId}`),
                 placeholder: type.placeholder,
                 width: '100%',
-                theme: 'classic'
+                theme: 'classic',
+                dropdownCssClass: 'select2-dropdown-above-modal'
             });
 
             $(`#${modalId}`).data('row', row);
@@ -284,11 +283,11 @@ class MasterFileSelector {
                 icon: 'error'
             });
 
-            // Reset the account dropdown on error
             row.find('.chart-of-accounts').val('').trigger('change');
         }
     }
 
+    // In masterFileSelector.js, update handleSelection
     handleSelection(type, row, selectedId, selectedText) {
         if (!selectedId) {
             Swal.fire({
@@ -302,20 +301,27 @@ class MasterFileSelector {
         const index = row.index();
         const inputName = `AccountingEntries[${index}].${type.inputName}`;
 
-        // Clear any existing master file IDs first
         this.clearAllMasterFileIds(row);
 
-        // Add the new master file ID
         row.find(`input[name$="${type.inputName}"]`).remove();
         row.append(`<input type="hidden" name="${inputName}" value="${selectedId}">`);
 
-        // Update account display
         const accountSelect = row.find('.chart-of-accounts');
         accountSelect.find('option:selected').text(
             `${accountSelect.find('option:selected').text().split('(')[0].trim()} (${selectedText})`
         );
 
-        // Close modal
-        bootstrap.Modal.getInstance(document.getElementById(`${type.id}Modal`)).hide();
+        // Properly destroy and close modal
+        const modalElement = document.getElementById(`${type.id}Modal`);
+        const select = $(`#${type.id}Select`);
+
+        if (select.data('select2')) {
+            select.select2('destroy');
+        }
+
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     }
 }
