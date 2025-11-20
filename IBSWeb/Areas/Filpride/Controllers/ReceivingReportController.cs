@@ -295,7 +295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken),
                     Date = viewModel.Date,
-                    DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrder!.Terms, viewModel.Date, cancellationToken),
+                    DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(existingPo.Terms, viewModel.Date, cancellationToken),
                     POId = existingPo.PurchaseOrderId,
                     PONo = existingPo.PurchaseOrderNo,
                     SupplierInvoiceNumber = viewModel.SupplierSiNo,
