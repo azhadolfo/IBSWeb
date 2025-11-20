@@ -5514,7 +5514,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[19, 4].Value = purchaseOrder.Terms;
                 worksheet.Cells[20, 3].Value = "Due Date: ";
 
-                var dueDate = await _unitOfWork.FilpridePurchaseOrder.ComputeDueDateAsync(purchaseOrder.PurchaseOrderId, cancellationToken);
+                var dueDate = await _unitOfWork.ComputeDueDateAsync(purchaseOrder.Terms, purchaseOrder.Date, cancellationToken);
 
                 worksheet.Cells[20, 4].Value = dueDate.ToString("MMM dd, yyyy");
 

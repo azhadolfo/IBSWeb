@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -50,6 +51,19 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideTermsListAsyncByCode(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideTerms
+                .OrderBy(x => x.TermsCode)
+                .Where(x => x.Company == company)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.TermsCode,
+                    Text = x.TermsCode
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

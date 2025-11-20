@@ -7,8 +7,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IPurchaseOrderRepository : IRepository<FilpridePurchaseOrder>
     {
-        Task<DateOnly> ComputeDueDateAsync(int poId, CancellationToken cancellationToken = default);
-
         Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetPurchaseOrderListAsyncByCode(string company, CancellationToken cancellationToken = default);

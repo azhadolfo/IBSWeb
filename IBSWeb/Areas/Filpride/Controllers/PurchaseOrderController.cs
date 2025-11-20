@@ -237,6 +237,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(companyClaims, cancellationToken);
+
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier
                 .GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
