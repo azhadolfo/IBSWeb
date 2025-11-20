@@ -1537,6 +1537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvType = nameof(CVType.Payment),
                     BankId = viewModel.BankId,
                     Payee = viewModel.Payee,
+                    SupplierName = viewModel.Payee,
                     Address = viewModel.PayeeAddress,
                     Tin = viewModel.PayeeTin,
                     CheckNo = viewModel.CheckNo,
@@ -1750,6 +1751,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.BankId = viewModel.BankId;
                 existingHeaderModel.Payee = viewModel.Payee;
+                existingHeaderModel.SupplierName = viewModel.Payee;
                 existingHeaderModel.Address = viewModel.PayeeAddress;
                 existingHeaderModel.Tin = viewModel.PayeeTin;
                 existingHeaderModel.CheckNo = viewModel.CheckNo;
