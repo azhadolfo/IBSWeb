@@ -24,8 +24,5 @@ namespace IBS.Models.Filpride.MasterFile
         public string EditedBy { get; set; } = string.Empty;
 
         public DateTime EditedDate { get; set; }
-
-        [StringLength(50)]
-        public string Company { get; set; } = string.Empty;
     }
 }

@@ -9,6 +9,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task UpdateAsync(FilprideTerms model, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetFilprideTermsListAsyncByCode(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideTermsListAsyncByCode(CancellationToken cancellationToken = default);
     }
 }

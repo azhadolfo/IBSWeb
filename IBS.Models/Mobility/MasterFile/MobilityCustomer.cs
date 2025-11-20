@@ -115,5 +115,8 @@ namespace IBS.Models.Mobility.MasterFile
         public decimal? RetentionRate { get; set; }
 
         public bool HasMultipleTerms { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 }

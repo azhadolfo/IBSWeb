@@ -238,7 +238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
-                .GetFilprideTermsListAsyncByCode(companyClaims, cancellationToken);
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier
                 .GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
@@ -266,6 +266,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
                 viewModel.SupplierId, cancellationToken);
+            viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -380,6 +382,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TriggerDate = purchaseOrder.TriggerDate,
                 OldPoNo = purchaseOrder.OldPoNo,
                 SupplierSalesOrderNo = purchaseOrder.SupplierSalesOrderNo,
+                PaymentTerms = await _unitOfWork.FilprideTerms
+                    .GetFilprideTermsListAsyncByCode(cancellationToken)
             };
 
             ViewBag.FilterType = await GetCurrentFilterType();
@@ -402,6 +406,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
                 viewModel.SupplierId, cancellationToken);
+            viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             if (!ModelState.IsValid)
             {

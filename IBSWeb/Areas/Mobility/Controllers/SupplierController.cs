@@ -100,6 +100,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.AccountNumber!.Contains("2010302"))
                 .Select(s => new SelectListItem
@@ -108,6 +109,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             return View(model);
         }
@@ -146,6 +149,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                 return View(model);
             }
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -206,6 +211,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (supplier != null)
             {
+                supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
                 supplier.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
@@ -244,6 +250,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return BadRequest();
             }
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -301,6 +309,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (supplier != null)
             {
+                supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(supplier);
             }
 
@@ -322,6 +332,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
+
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -365,6 +377,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (supplier != null)
             {
+                supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(supplier);
             }
 
@@ -386,6 +400,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
+
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 

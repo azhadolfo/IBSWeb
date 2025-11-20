@@ -15,7 +15,6 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class CustomerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -67,9 +66,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            return View();
+            var model = new FilprideCustomer()
+            {
+                PaymentTerms = await _unitOfWork.FilprideTerms
+                    .GetFilprideTermsListAsyncByCode(cancellationToken)
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -88,6 +92,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return BadRequest();
             }
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
@@ -142,6 +149,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (customer != null)
             {
+                customer.PaymentTerms = await _unitOfWork.FilprideTerms
+                    .GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(customer);
             }
 
@@ -156,6 +166,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return View(model);
             }
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -257,6 +270,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
+
             return View(customer);
         }
 
@@ -276,6 +292,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -321,6 +340,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (customer != null)
             {
+                customer.PaymentTerms = await _unitOfWork.FilprideTerms
+                    .GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(customer);
             }
 
@@ -343,6 +365,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms
+                .GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 

@@ -69,5 +69,7 @@ namespace IBS.Models.Mobility.ViewModels
         public List<SelectListItem>? Stations { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 }

@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class PickupPointController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

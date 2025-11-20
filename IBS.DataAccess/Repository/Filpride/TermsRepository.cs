@@ -39,7 +39,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingTerms.TermsCode = model.TermsCode;
             existingTerms.NumberOfDays = model.NumberOfDays;
             existingTerms.NumberOfMonths = model.NumberOfMonths;
-            existingTerms.Company = model.Company;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -53,11 +52,10 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetFilprideTermsListAsyncByCode(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideTermsListAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideTerms
                 .OrderBy(x => x.TermsCode)
-                .Where(x => x.Company == company)
                 .Select(x => new SelectListItem
                 {
                     Value = x.TermsCode,

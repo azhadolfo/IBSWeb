@@ -16,7 +16,6 @@ using Microsoft.IdentityModel.Tokens;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class PaymentTermsController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -149,7 +148,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CreatedBy = getUserFullName;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.EditedBy = string.Empty;
-                model.Company = companyClaims;
                 await _unitOfWork.FilprideTerms.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -215,7 +213,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.EditedBy = getUserFullName;
-                model.Company = companyClaims;
                 await _unitOfWork.FilprideTerms.UpdateAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --

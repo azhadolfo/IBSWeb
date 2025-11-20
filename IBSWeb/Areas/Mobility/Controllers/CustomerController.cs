@@ -55,6 +55,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (customer != null)
             {
+                customer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(customer);
             }
 
@@ -76,6 +78,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
+
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -123,7 +127,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["StationCode"] = stationCodeClaims;
             MobilityCustomer model = new()
             {
-                MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
+                MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
+                PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken)
             };
             return View(model);
         }
@@ -136,6 +141,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 return View(model);
             }
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
             bool IsTinExist = false;
@@ -199,6 +206,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (customer != null)
             {
+                customer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
                 return View(customer);
             }
 
@@ -220,6 +229,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
+
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -268,6 +279,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             customer.MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
+            customer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             return View(customer);
         }
@@ -289,6 +301,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
+
+            existingCustomer.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 

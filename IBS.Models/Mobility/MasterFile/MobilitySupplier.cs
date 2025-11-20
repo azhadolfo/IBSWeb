@@ -115,5 +115,8 @@ namespace IBS.Models.Mobility.MasterFile
         [Display(Name = "Zip Code")]
         [Column(TypeName = "varchar(10)")]
         public string? ZipCode { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 }

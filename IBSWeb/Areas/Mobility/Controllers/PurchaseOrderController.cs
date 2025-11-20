@@ -146,6 +146,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
 
+            viewModel.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
             return View(viewModel);
         }
 
@@ -163,6 +165,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
+
+            viewModel.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -271,6 +275,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     UnitPrice = existingRecord.UnitPrice,
                     SupplierSalesOrderNo = existingRecord.SupplierSalesOrderNo,
                     Remarks = existingRecord.Remarks,
+                    PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken)
                 };
 
                 return View(viewModel);
@@ -315,6 +320,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
                     viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
+                    viewModel.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
                     existingModel.Date = viewModel.Date;
                     existingModel.SupplierId = viewModel.SupplierId;
