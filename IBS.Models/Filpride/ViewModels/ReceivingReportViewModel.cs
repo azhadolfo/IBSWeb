@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.AccountsPayable;
 
 namespace IBS.Models.Filpride.ViewModels
 {
@@ -12,6 +14,9 @@ namespace IBS.Models.Filpride.ViewModels
 
         [Required]
         public int PurchaseOrderId { get; set; }
+
+        [ForeignKey(nameof(PurchaseOrderId))]
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
 

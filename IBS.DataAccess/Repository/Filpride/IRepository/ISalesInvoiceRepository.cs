@@ -7,8 +7,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default);
 
-        DateOnly ComputeDueDateAsync(string customerTerms, DateOnly transactionDate);
-
         Task PostAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default);
     }
 }

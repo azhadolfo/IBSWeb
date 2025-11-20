@@ -191,87 +191,6 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default)
-        {
-            var po = await _db
-                .MobilityPurchaseOrders
-                .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
-
-            if (po == null)
-            {
-                throw new ArgumentException("No record found.");
-            }
-
-            DateOnly dueDate;
-
-            switch (po.Terms)
-            {
-                case "7D":
-                case "10D":
-                    return rrDate.AddDays(7);
-
-                case "15D":
-                    return rrDate.AddDays(15);
-
-                case "30D":
-                    return rrDate.AddDays(30);
-
-                case "45D":
-                case "45PDC":
-                    return rrDate.AddDays(45);
-
-                case "60D":
-                case "60PDC":
-                    return rrDate.AddDays(60);
-
-                case "90D":
-                    return rrDate.AddDays(90);
-
-                case "M15":
-                    return rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
-
-                case "M30":
-                    if (rrDate.Month == 1)
-                    {
-                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                    }
-                    else
-                    {
-                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                        if (dueDate.Day == 31)
-                        {
-                            dueDate = dueDate.AddDays(-1);
-                        }
-                    }
-                    return dueDate;
-
-                case "M29":
-                    if (rrDate.Month == 1)
-                    {
-                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                    }
-                    else
-                    {
-                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                        switch (dueDate.Day)
-                        {
-                            case 31:
-                                dueDate = dueDate.AddDays(-2);
-                                break;
-                            case 30:
-                                dueDate = dueDate.AddDays(-1);
-                                break;
-                        }
-                    }
-                    return dueDate;
-
-                default:
-                    return rrDate;
-            }
-        }
-
         public async Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly deliveredDate, CancellationToken cancellationToken = default)
         {
             var getPurchaseOrder = await _db.MobilityPurchaseOrders
@@ -310,7 +229,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.StationCode, model.Type, cancellationToken);
-            model.DueDate = await ComputeDueDateAsync(model.PurchaseOrderId, model.Date, cancellationToken);
+            model.DueDate = await ComputeDueDateAsync(model.PurchaseOrder!.Terms, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
             model.Amount = model.QuantityReceived * (getPurchaseOrder.UnitPrice + freight);
 

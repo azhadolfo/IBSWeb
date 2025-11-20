@@ -11,8 +11,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
 
-        Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default);
-
         Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, string userName, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default);
