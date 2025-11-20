@@ -30,9 +30,6 @@ namespace IBS.Models.Mobility.ViewModels
         [Display(Name = "PO No")]
         public string? PurchaseOrderNo { get; set; }
 
-        [ForeignKey(nameof(PurchaseOrderNo))]
-        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
-
         [Display(Name = "Supplier Invoice#")]
         public string? SupplierInvoiceNumber { get; set; }
 
