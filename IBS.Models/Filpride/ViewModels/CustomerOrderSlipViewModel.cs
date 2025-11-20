@@ -88,6 +88,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string? ArrayOfFileNames { get; set; }
 
         public DateTime MinDate { get; set; }
+
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 
     public class COSFileInfo

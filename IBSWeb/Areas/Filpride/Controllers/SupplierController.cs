@@ -18,7 +18,6 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class SupplierController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -101,7 +100,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Value = s.AccountNumber + " " + s.AccountName,
                         Text = s.AccountNumber + " " + s.AccountName
                     })
-                    .ToListAsync(cancellationToken)
+                    .ToListAsync(cancellationToken),
+                PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken)
             };
 
             return View(model);
@@ -111,6 +111,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
@@ -120,6 +127,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
@@ -130,17 +138,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 return View(model);
-            }
-
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
             }
 
             if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category,
@@ -281,6 +284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
             supplier.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
@@ -290,6 +294,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
             return View(supplier);
         }
 
@@ -306,6 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
@@ -315,6 +322,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
+            model.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -376,6 +385,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
             return View(supplier);
         }
 
@@ -393,6 +404,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -438,6 +451,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
+
             return View(supplier);
         }
 
@@ -455,6 +470,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            supplier.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 

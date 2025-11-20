@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class CustomerBranchController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

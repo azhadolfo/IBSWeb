@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.MasterFile
 {
@@ -123,5 +124,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Display(Name = "Requires Price Adjustment")]
         public bool RequiresPriceAdjustment { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 }

@@ -17,7 +17,6 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [CompanyAuthorize(nameof(Filpride))]
     public class ServiceController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
