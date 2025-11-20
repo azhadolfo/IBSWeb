@@ -288,9 +288,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CVNo = model.CheckVoucherHeaderNo,
                     model.Date,
-                    Name = model.Supplier!.SupplierName,
-                    Address = model.Supplier.SupplierAddress,
-                    TinNo = model.Supplier.SupplierTin,
+                    Name = model.SupplierName,
+                    Address = model.Address,
+                    TinNo = model.Tin,
                     model.PONo,
                     model.SINo,
                     model.Payee,
