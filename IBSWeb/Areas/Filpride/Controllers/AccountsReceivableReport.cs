@@ -1071,6 +1071,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 deliveryReceipts = deliveryReceipts.OrderBy(dr => dr.Date);
+                var drIds = deliveryReceipts
+                    .Select(dr => dr.DeliveryReceiptId)
+                    .ToList();
+                var receivingReports = await _dbContext.FilprideReceivingReports
+                    .Where(rr => rr.DeliveryReceiptId != null && drIds.Contains(rr.DeliveryReceiptId.Value))
+                    .GroupBy(rr => rr.DeliveryReceiptId!.Value)
+                    .Select(g => g.OrderByDescending(rr => rr.Date).First())
+                    .ToDictionaryAsync(rr => rr.DeliveryReceiptId!.Value, cancellationToken);
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
@@ -1114,25 +1122,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["O9"].Value = "ECC";
                 worksheet.Cells["P9"].Value = "TOTAL FREIGHT";
 
+                #region Remove this in the future
                 //TODO Remove this in the future
                 worksheet.Cells["Q9"].Value = "OTC COS No.";
                 worksheet.Cells["R9"].Value = "OTC DR No.";
 
+                #endregion
+
+                worksheet.Cells["S9"].Value = "RR NO.";
+                worksheet.Cells["T9"].Value = "COST.";
+                worksheet.Cells["U9"].Value = "SUPPLIER'S SI";
+                worksheet.Cells["V9"].Value = "SUPPLIER'S WC";
+
                 if (viewModel.ReportType == "Delivered")
                 {
-                    worksheet.Cells["S9"].Value = "DELIVERED DATE";
-                    worksheet.Cells["T9"].Value = "STATUS";
+                    worksheet.Cells["W9"].Value = "DELIVERED DATE";
+                    worksheet.Cells["X9"].Value = "STATUS";
                 }
                 else
                 {
-                    worksheet.Cells["S9"].Value = "LIFTING DATE";
-                    worksheet.Cells["T9"].Value = "LIFTING QUANTITY";
+                    worksheet.Cells["W9"].Value = "LIFTING DATE";
+                    worksheet.Cells["X9"].Value = "LIFTING QUANTITY";
                 }
 
 
                 int currentRow = 10;
-                string headerColumn = "T9";
-                int grandTotalColumn = 20;
+                string headerColumn = "X9";
+                int grandTotalColumn = 24;
                 decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
                 decimal totalLiftedQuantity = 0;
@@ -1144,6 +1160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var ecc = dr.ECC;
                     var totalFreightAmount = dr.FreightAmount;
                     var liftedQuantity = 0m;
+                    receivingReports.TryGetValue(dr.DeliveryReceiptId, out var rr);
 
                     if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                         dr.Date != viewModel.DateFrom)
@@ -1171,23 +1188,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[currentRow, 16].Value = totalFreightAmount;
                         worksheet.Cells[currentRow, 17].Value = dr.CustomerOrderSlip?.OldCosNo;
                         worksheet.Cells[currentRow, 18].Value = dr.ManualDrNo;
+                        worksheet.Cells[currentRow, 19].Value = rr?.ReceivingReportNo;
+                        worksheet.Cells[currentRow, 20].Value = rr?.Amount / rr?.QuantityReceived;
+                        worksheet.Cells[currentRow, 21].Value = rr?.SupplierInvoiceNumber;
+                        worksheet.Cells[currentRow, 22].Value = rr?.WithdrawalCertificate;
 
                         if (viewModel.ReportType == "Delivered")
                         {
-                            worksheet.Cells[currentRow, 19].Value = dr.DeliveredDate;
-                            worksheet.Cells[currentRow, 19].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 20].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            worksheet.Cells[currentRow, 23].Value = dr.DeliveredDate;
+                            worksheet.Cells[currentRow, 23].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 24].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
                         else
                         {
                             if (dr.HasReceivingReport)
                             {
-                                var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
-                                liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
-                                worksheet.Cells[currentRow, 19].Value = getReceivingReport?.Date;
-                                worksheet.Cells[currentRow, 19].Style.Numberformat.Format = "MMM/dd/yyyy";
-                                worksheet.Cells[currentRow, 20].Value = liftedQuantity;
-                                worksheet.Cells[currentRow, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                liftedQuantity = rr?.QuantityReceived ?? 0m;
+                                worksheet.Cells[currentRow, 23].Value = rr?.Date;
+                                worksheet.Cells[currentRow, 23].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[currentRow, 24].Value = liftedQuantity;
+                                worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
                         }
 
@@ -1216,8 +1236,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (totalLiftedQuantity != 0)
                     {
-                        worksheet.Cells[currentRow, 20].Value = totalLiftedQuantity;
-                        worksheet.Cells[currentRow, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[currentRow, 24].Value = totalLiftedQuantity;
+                        worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
                 }
 
@@ -1251,7 +1271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow, 8].Value = "CNC SUPERVISOR";
 
                 // Styling and formatting (optional)
-                worksheet.Cells["N:O"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["N,O,T"].Style.Numberformat.Format = "#,##0.0000";
                 worksheet.Cells["F,P"].Style.Numberformat.Format = "#,##0.00";
 
                 using (var range = worksheet.Cells[$"A9:{headerColumn}"])
