@@ -49,5 +49,6 @@ namespace IBS.Models.Filpride.ViewModels
         [StringLength(100)]
         public string? SupplierSalesOrderNo { get; set; }
 
+        public List<SelectListItem>? PaymentTerms { get; set; }
     }
 }

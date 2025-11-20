@@ -19,40 +19,6 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<DateOnly> ComputeDueDateAsync(int poId, CancellationToken cancellationToken = default)
-        {
-            var po = await _db
-                .FilpridePurchaseOrders
-                .Include(x => x.PaymentTerms)
-                .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
-
-            if (po == null)
-            {
-                throw new ArgumentException("No record found.");
-            }
-
-            var poDate = DateOnly.FromDateTime(po.CreatedDate);
-
-            DateOnly dueDate = default;
-
-            if (po.Terms.Contains("M"))
-            {
-                dueDate =  poDate.AddMonths(po.PaymentTerms.NumberOfMonths).AddDays(po.PaymentTerms.NumberOfDays - poDate.Day);
-
-                if (poDate.Month == 1 && po.PaymentTerms.NumberOfDays > 28)
-                {
-                    var test = DateTime.DaysInMonth(dueDate.Year, 2) - po.PaymentTerms.NumberOfDays;
-                    dueDate = dueDate.AddDays(test);
-                }
-            }
-            else
-            {
-                dueDate =  poDate.AddDays(po.PaymentTerms.NumberOfDays);
-            }
-
-            return dueDate;
-        }
-
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
             if (type == nameof(DocumentType.Documented))
