@@ -1902,6 +1902,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken));
         }
 
+        public async Task<IActionResult> GetCustomerOrderSlipDetails(int id, CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            return Json(await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken));
+        }
+
         [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
         public async Task<IActionResult> ChangeCommission (int? id, decimal? commissionRate, string? commissioneeId, string? hasCommission,  CancellationToken cancellationToken)
         {
