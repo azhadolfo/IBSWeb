@@ -2,18 +2,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-# --- Cloud Run & Memory Leak Protection ---
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 ENV DOTNET_GCHeapHardLimit=1800m
 ENV COMPlus_gcServer=1
 ENV COMPlus_GCLatencyLevel=1
 
-# --- Diagnostic tools for memory leak investigation inside Cloud Run ---
 RUN apt-get update && apt-get install -y procps
-RUN dotnet tool install --global dotnet-counters
-RUN dotnet tool install --global dotnet-gcdump
-RUN dotnet tool install --global dotnet-dump
-ENV PATH="$PATH:/root/.dotnet/tools"
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -28,6 +22,7 @@ COPY ["IBS.Services/IBS.Services.csproj", "IBS.Services/"]
 
 RUN dotnet restore "./IBSWeb/IBSWeb.csproj"
 COPY . .
+
 WORKDIR "/src/IBSWeb"
 
 FROM build AS publish
