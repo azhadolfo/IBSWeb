@@ -63,6 +63,11 @@
                         <label for="floatingInput" class="control-label">Remarks</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="BatchNumber" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                        <label for="floatingInput" class="control-label">Batch#</label>
+                        <span asp-validation-for="BatchNumber" class="text-danger"></span>
+                    </div>
                     <div class="form-group mb-3">
                         <label class="control-label">SI NO.<span class="required">*</span></label>
                         <select asp-for="MultipleSIId" id="invoices" asp-items="@Model.SalesInvoices" class="form-select js-multiple siNo" multiple="multiple" style="width:100%">

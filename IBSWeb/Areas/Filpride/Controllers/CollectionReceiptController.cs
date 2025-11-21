@@ -390,9 +390,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 var model = new FilprideCollectionReceipt
                 {
                     CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
@@ -420,6 +417,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = existingSalesInvoice.Type,
+                    BatchNumber = viewModel.BatchNumber
                 };
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
@@ -452,39 +450,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
 
                 #endregion --Saving default value
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                //
-                // var offsettings = new List<FilprideOffsettings>();
-                //
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     offsettings.Add(
-                //         new FilprideOffsettings
-                //         {
-                //             AccountNo = accountTitle[i],
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = viewModel.CollectionReceiptNo,
-                //             Reference = viewModel.SINo,
-                //             Amount = currentAccountAmount,
-                //             Company = viewModel.Company,
-                //             CreatedBy = viewModel.CreatedBy,
-                //             CreatedDate = viewModel.CreatedDate
-                //         }
-                //     );
-                // }
-                //
-                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-                //
-                // #endregion --Offsetting function
 
                 var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
                 var offsetAmount = offset.Sum(o => o.Amount);
@@ -584,9 +549,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 #region --Saving default value
 
                 var model = new FilprideCollectionReceipt
@@ -613,6 +575,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Company = companyClaims,
                     MultipleSIId = viewModel.MultipleSIId,
                     SIMultipleAmount = viewModel.SIMultipleAmount,
+                    BatchNumber = viewModel.BatchNumber
                 };
 
                 model.MultipleSI = new string[model.MultipleSIId.Length];
@@ -673,38 +636,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 #endregion --Saving default value
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                // var offsettings = new List<FilprideOffsettings>();
-                //
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     offsettings.Add(
-                //         new FilprideOffsettings
-                //         {
-                //             AccountNo = accountTitle[i],
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = viewModel.CollectionReceiptNo,
-                //             Reference = viewModel.SINo,
-                //             Amount = currentAccountAmount,
-                //             Company = viewModel.Company,
-                //             CreatedBy = viewModel.CreatedBy,
-                //             CreatedDate = viewModel.CreatedDate
-                //         }
-                //     );
-                // }
-                //
-                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-                //
-                // #endregion --Offsetting function
 
                 var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
                 var offsetAmount = offset.Sum(o => o.Amount);
@@ -830,7 +761,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 SIMultipleAmount = existingModel.SIMultipleAmount!,
                 InvoicePayments = crPayments,
-                MinDate = minDate
+                MinDate = minDate,
+                BatchNumber = existingModel.BatchNumber
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -923,9 +855,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var details = new List<FilprideCollectionReceiptDetail>();
 
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 existingModel.CustomerId = viewModel.CustomerId;
                 existingModel.TransactionDate = viewModel.TransactionDate;
                 existingModel.ReferenceNo = viewModel.ReferenceNo;
@@ -948,6 +877,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.MultipleSI = new string[viewModel.MultipleSIId.Length];
                 existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
                 existingModel.MultipleTransactionDate = new DateOnly[viewModel.MultipleSIId.Length];
+                existingModel.BatchNumber = viewModel.BatchNumber;
 
                 // looping all the new SI
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
@@ -1008,92 +938,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingModel.EditedBy = GetUserFullName();
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                //
-                // var findOffsettings = await _dbContext.FilprideOffsettings
-                // .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
-                // .ToListAsync(cancellationToken);
-                //
-                // var accountTitleSet = new HashSet<string>(accountTitle);
-                //
-                // // Remove records not in accountTitle
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
-                //     {
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // // Dictionary to keep track of AccountNo and their ids for comparison
-                // var accountTitleDict = new Dictionary<string, List<int>>();
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                //     {
-                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
-                //     }
-                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                // }
-                //
-                // // Add or update records
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var accountNo = accountTitle[i];
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                //     {
-                //         // Update the first matching record and remove it from the list
-                //         var offsettingId = ids.First();
-                //         ids.RemoveAt(0);
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-                //
-                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                //         offsetting.Amount = currentAccountAmount;
-                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                //
-                //         if (ids.Count == 0)
-                //         {
-                //             accountTitleDict.Remove(accountNo);
-                //         }
-                //     }
-                //     else
-                //     {
-                //         // Add new record
-                //         var newOffsetting = new FilprideOffsettings
-                //         {
-                //             AccountNo = accountNo,
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = existingModel.CollectionReceiptNo!,
-                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                //             Amount = currentAccountAmount,
-                //             CreatedBy = _userManager.GetUserName(this.User),
-                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                //         };
-                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
-                //     }
-                // }
-                //
-                // // Remove remaining records that were duplicates
-                // foreach (var ids in accountTitleDict.Values)
-                // {
-                //     foreach (var id in ids)
-                //     {
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // #endregion --Offsetting function
 
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -1183,9 +1027,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FirstOrDefaultAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId,
                         cancellationToken);
 
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 if (existingServiceInvoice == null)
                 {
                     return NotFound();
@@ -1217,7 +1058,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = total,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
-                    Type = existingServiceInvoice.Type
+                    Type = existingServiceInvoice.Type,
+                    BatchNumber = string.Empty
                 };
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
@@ -1254,38 +1096,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
 
                 #endregion --Saving default value
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                // var offsettings = new List<FilprideOffsettings>();
-                //
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     offsettings.Add(
-                //         new FilprideOffsettings
-                //         {
-                //             AccountNo = accountTitle[i],
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = viewModel.CollectionReceiptNo,
-                //             Reference = viewModel.SVNo,
-                //             Amount = currentAccountAmount,
-                //             Company = viewModel.Company,
-                //             CreatedBy = viewModel.CreatedBy,
-                //             CreatedDate = viewModel.CreatedDate
-                //         }
-                //     );
-                // }
-                //
-                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-                //
-                // #endregion --Offsetting function
 
                 #region --Audit Trail Recording
 
@@ -1686,6 +1496,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 HasAlready2306 = existingModel.F2306FilePath != null,
                 HasAlready2307 = existingModel.F2307FileName != null,
                 MinDate = minDate,
+                BatchNumber = existingModel.BatchNumber
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -1782,9 +1593,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // based on details, revert the calculation done to sales invoices
                 await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
 
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 existingModel.SalesInvoiceId = existingSalesInvoice.SalesInvoiceId;
                 existingModel.SINo = existingSalesInvoice.SalesInvoiceNo;
                 existingModel.CustomerId = viewModel.CustomerId;
@@ -1805,6 +1613,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
+                existingModel.BatchNumber = viewModel.BatchNumber;
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -1850,93 +1659,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(existingModel.SalesInvoice!.SalesInvoiceId, existingModel.Total, offsetAmount, cancellationToken);
 
                 #endregion --Saving default value
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                //
-                // var findOffsettings = await _dbContext.FilprideOffsettings
-                // .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
-                // .ToListAsync(cancellationToken);
-                //
-                // var accountTitleSet = new HashSet<string>(accountTitle);
-                //
-                // // Remove records not in accountTitle
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
-                //     {
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // // Dictionary to keep track of AccountNo and their ids for comparison
-                // var accountTitleDict = new Dictionary<string, List<int>>();
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                //     {
-                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
-                //     }
-                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                // }
-                //
-                // // Add or update records
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var accountNo = accountTitle[i];
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                //     {
-                //         // Update the first matching record and remove it from the list
-                //         var offsettingId = ids.First();
-                //         ids.RemoveAt(0);
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-                //
-                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                //         offsetting.Amount = currentAccountAmount;
-                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                //         offsetting.Company = companyClaims;
-                //
-                //         if (ids.Count == 0)
-                //         {
-                //             accountTitleDict.Remove(accountNo);
-                //         }
-                //     }
-                //     else
-                //     {
-                //         // Add new record
-                //         var newOffsetting = new FilprideOffsettings
-                //         {
-                //             AccountNo = accountNo,
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = existingModel.CollectionReceiptNo!,
-                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                //             Amount = currentAccountAmount,
-                //             CreatedBy = _userManager.GetUserName(this.User),
-                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                //         };
-                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
-                //     }
-                // }
-                //
-                // // Remove remaining records that were duplicates
-                // foreach (var ids in accountTitleDict.Values)
-                // {
-                //     foreach (var id in ids)
-                //     {
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // #endregion --Offsetting function
 
                 #region --Audit Trail Recording
 
@@ -2133,9 +1855,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCollectionReceipt.UndoServiceInvoiceChanges(detail, cancellationToken);
 
-                var bankAccount = await _unitOfWork.FilprideBankAccount
-                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
                 existingModel.ServiceInvoiceId = existingServiceInvoice.ServiceInvoiceId;
                 existingModel.SVNo = existingServiceInvoice.ServiceInvoiceNo;
                 existingModel.CustomerId = viewModel.CustomerId;
@@ -2201,93 +1920,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCollectionReceipt.UpdateSV(existingModel.ServiceInvoice!.ServiceInvoiceId, existingModel.Total, offsetAmount, cancellationToken);
 
                 #endregion --Saving default value
-
-                // #region --Offsetting function
-                //
-                // decimal offsetAmount = 0;
-                //
-                // var findOffsettings = await _dbContext.FilprideOffsettings
-                // .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
-                // .ToListAsync(cancellationToken);
-                //
-                // var accountTitleSet = new HashSet<string>(accountTitle);
-                //
-                // // Remove records not in accountTitle
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
-                //     {
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // // Dictionary to keep track of AccountNo and their ids for comparison
-                // var accountTitleDict = new Dictionary<string, List<int>>();
-                // foreach (var offsetting in findOffsettings)
-                // {
-                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                //     {
-                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
-                //     }
-                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                // }
-                //
-                // // Add or update records
-                // for (int i = 0; i < accountTitle.Length; i++)
-                // {
-                //     var accountNo = accountTitle[i];
-                //     var currentAccountTitle = accountTitleText[i];
-                //     var currentAccountAmount = accountAmount[i];
-                //     offsetAmount += accountAmount[i];
-                //
-                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-                //
-                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                //     {
-                //         // Update the first matching record and remove it from the list
-                //         var offsettingId = ids.First();
-                //         ids.RemoveAt(0);
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-                //
-                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                //         offsetting.Amount = currentAccountAmount;
-                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                //         offsetting.Company = companyClaims;
-                //
-                //         if (ids.Count == 0)
-                //         {
-                //             accountTitleDict.Remove(accountNo);
-                //         }
-                //     }
-                //     else
-                //     {
-                //         // Add new record
-                //         var newOffsetting = new FilprideOffsettings
-                //         {
-                //             AccountNo = accountNo,
-                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                //             Source = existingModel.CollectionReceiptNo!,
-                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                //             Amount = currentAccountAmount,
-                //             CreatedBy = _userManager.GetUserName(this.User),
-                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                //         };
-                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
-                //     }
-                // }
-                //
-                // // Remove remaining records that were duplicates
-                // foreach (var ids in accountTitleDict.Values)
-                // {
-                //     foreach (var id in ids)
-                //     {
-                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                //         _dbContext.FilprideOffsettings.Remove(offsetting);
-                //     }
-                // }
-                //
-                // #endregion --Offsetting function
 
                 #region --Audit Trail Recording
 
