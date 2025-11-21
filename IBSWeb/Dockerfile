@@ -2,12 +2,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-ENV DOTNET_GCHeapHardLimit=1800m
-ENV COMPlus_gcServer=1
-ENV COMPlus_GCLatencyLevel=1
-
-RUN apt-get update && apt-get install -y procps
-
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
