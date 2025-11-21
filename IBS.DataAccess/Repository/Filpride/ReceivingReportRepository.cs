@@ -185,7 +185,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type!, cancellationToken);
-            model.DueDate = await ComputeDueDateAsync(model.PurchaseOrder!.Terms, model.Date, cancellationToken);
+            model.DueDate = await ComputeDueDateAsync(deliveryReceipt.PurchaseOrder.Terms, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
 
             var poActualPrice = await _db.FilpridePOActualPrices
