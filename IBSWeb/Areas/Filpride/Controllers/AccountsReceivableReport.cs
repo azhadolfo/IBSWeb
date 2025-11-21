@@ -292,7 +292,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var headers = new[]
                 {
                     "COS Date", "Customer", "Product", "P.O. No.",
-                    "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS", "OTC COS No."
+                    "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS",
+                    "Commissionee", "Commission Rate"
                 };
 
                 for (int i = 0; i < headers.Length; i++)
@@ -326,10 +327,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 8].Value = item.TotalAmount;
                     worksheet.Cells[row, 9].Value = item.Status.ToUpper();
                     worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
-                    worksheet.Cells[row, 11].Value = item.OldCosNo;
+                    worksheet.Cells[row, 11].Value = item.CommissioneeName;
+                    worksheet.Cells[row, 12].Value = item.CommissionRate;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     row++;

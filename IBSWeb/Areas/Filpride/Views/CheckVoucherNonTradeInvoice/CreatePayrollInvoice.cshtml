@@ -273,19 +273,19 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                    <td>
-                                        <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly/>
-                                    </td>
-                                    <td>
-                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                    </td>
-                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                    <td>
-                                        <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
-                                        <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/></td>
-                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                </tr>`;
+                                <td>
+                                    <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly/>
+                                </td>
+                                <td>
+                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                </td>
+                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td>
+                                    <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
+                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                            </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
@@ -314,6 +314,9 @@
             updateTotalDebitAndCredit();
         }
 
+        
+        
+        
         function safeVal(selector) {
             var element = $(selector);
             return element.length ? (element.val() || "") : "";
@@ -367,60 +370,6 @@
     
     </script>
     <script>
-        $("#AccountNo").change(function () {
-            var accountNumber = $(this).val();
-            if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
-                // Close the modal
-                $("#AddAccEntry").modal("hide");
-                Swal.fire({
-                    title: "Create Automatic Journal Entry",
-                    text: "Do you want to create an automatic journal entry?",
-                    icon: "question",
-                    showCancelButton: true,
-                    allowEscapeKey: false,
-                    allowOutsideClick: false,
-                    confirmButtonText: "Yes",
-                    cancelButtonText: "No",
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        return new Promise((resolve) => {
-                            Swal.fire({
-                                title: "Input Start Date and Number of Years",
-                                html:
-                                    "<input id='start-date' type='date' class='swal2-input' placeholder='Start Date'>" +
-                                    "<input id='num-years' type='number' class='swal2-input' placeholder='Number of Years'>",
-                                focusConfirm: false,
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                preConfirm: () => {
-                                    return [
-                                        $("#start-date").val(),
-                                        $("#num-years").val()
-                                    ];
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    resolve(result.value);
-                                }
-                            });
-                        });
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Result contains an array with the start date and number of years
-                        var startDate = result.value[0];
-                        var numYears = result.value[1];
-                        // Assign the values to hidden inputs in your form
-                        $("#StartDate").val(startDate);
-                        $("#NumberOfYears").val(numYears);
-                        // Close the modal
-                        $("#AddAccEntry").modal("show");
-                    }
-                });
-            }
-        });
-    </script>
-    <script>
         function validateDebitAndCredit() {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
@@ -465,6 +414,19 @@
             if ($("#selectionGroup").length !== 0) {
                 $("#selectionGroup").remove();
             }
+        });
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            var value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+    
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
         });
     </script>
 }

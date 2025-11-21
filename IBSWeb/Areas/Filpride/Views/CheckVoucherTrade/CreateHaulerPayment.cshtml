@@ -61,7 +61,17 @@
                         <table >
                             <thead class="sticky-top bg-white">
                             <tr>
-                                <th colspan="7" class="text-center py-4">DR LIST</th>
+                                <th colspan="5" class="text-center py-3">
+                                    <span>DR LIST</span>
+                                    <span class="selected-dr-count ms-2 px-2 py-1 rounded-pill" 
+                                          style="display: none;
+                                           background: linear-gradient(135deg, #5a9a9a, #4a8a8a);
+                                            color: white;
+                                             font-size: 0.75rem;
+                                              vertical-align: middle;">
+                                        <span id="selectedCount">0</span> selected
+                                    </span>
+                                </th>
                             </tr>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
@@ -201,7 +211,6 @@
 
             function supplierDetails(suppId) {
                 if (suppId !== "") {
-                    // Make an AJAX request to get the TaxType based on the selected SupplierId
                     $.ajax({
                         url: "@Url.Action("GetSupplierDetails", "CheckVoucherTrade")",
                         method: "GET",
@@ -233,8 +242,8 @@
             $.ajax({
                 url: "@Url.Action("GetHaulerDRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { haulerId: haulerId }, // Pass PO numbers to controller
-                traditional: true, // Ensure jQuery sends the array properly
+                data: { haulerId: haulerId },
+                traditional: true,
                 success: function (data) {
                     const tbody = $('.drList');
                     let totalGross = 0;
@@ -242,6 +251,9 @@
                     let totalBalance = 0;
 
                     tbody.empty();
+                    
+                    selectedRecords.clear();
+                    updateSelectedCount();
 
                     if (data){
                         data.forEach((dr) => {
@@ -263,7 +275,6 @@
                         });
                     }
 
-                    // Append Grand Total Rows
                     const totalRow = $(`
                 <tr style="border-bottom:double;" class="sticky-lg-bottom">
                     <td colspan="7" class="pt-1"></td>
@@ -284,18 +295,28 @@
             });
         }
 
-        let selectedRecords = new Set(); // Store selected records
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = new Set();
+        let allRecordsSelected = false;
+
+        // Function to update the selected count display
+        function updateSelectedCount() {
+            const count = selectedRecords.size;
+            $('#selectedCount').text(count);
+            
+            if (count > 0) {
+                $('.selected-dr-count').fadeIn();
+            } else {
+                $('.selected-dr-count').fadeOut();
+            }
+        }
 
         function toggleSelectAll(selectAllCheckbox) {
             const isChecked = selectAllCheckbox.checked;
 
             $(".selectCheckbox").each(function () {
                 if (isChecked && !this.checked) {
-                    // Check unchecked ones only
                     $(this).prop("checked", true).trigger("change");
                 } else if (!isChecked && this.checked) {
-                    // Uncheck checked ones only
                     $(this).prop("checked", false).trigger("change");
                 }
             });
@@ -322,6 +343,11 @@
 
             reindexSelected();
             updateAmounts();
+            updateSelectedCount();
+            
+            const totalCheckboxes = $('.selectCheckbox').length;
+            const checkedCheckboxes = $('.selectCheckbox:checked').length;
+            $('#selectAll').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
         });
 
         function reindexSelected() {
@@ -359,12 +385,10 @@
             var totalDebit = 0;
             var totalCredit = 0;
 
-            // Loop through each row in the table body and sum up the debit values
             $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
                 var debitInput = $(this).find("td:eq(2) input").val();
                 var creditInput = $(this).find("td:eq(3) input").val();
-                // Ensure debitInput and creditInput are strings before using replace
-                debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
+                debitInput = debitInput ? String(debitInput) : "";
                 creditInput = creditInput ? String(creditInput) : "";
 
                 var debit = parseNumber(debitInput);
@@ -374,7 +398,6 @@
                 totalCredit += credit;
             });
 
-            // Display the total debit value
             $(".totalDebit").text(formatNumber(totalDebit));
             $(".totalCredit").text(formatNumber(totalCredit));
             $("#debit").val("0.000");
@@ -403,10 +426,7 @@
                 isValid = false;
             }
 
-            // Display or clear the error message
             $("#balance-error-message").text(errorMessage);
-
-            // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
 
             return isValid;
@@ -420,26 +440,20 @@
                     type: "GET",
                     data: { checkNo: checkNo },
                     success: function(exists) {
-
                         const submitButton = $('button[type="submit"]');
 
                         if (exists) {
                             alert("Check # already exists. Please enter a different number.");
                             $('input[name="CheckNo"]').addClass('is-invalid');
 
-                            // Optional: Add error message near the field
                             if ($('input[name="CheckNo"]').next('.text-danger.check-no-exists').length === 0) {
                                 $('input[name="CheckNo"]').after('<span class="text-danger check-no-exists">Check # already exists</span>');
                             }
 
-                            // Disable the submit button
                             submitButton.prop('disabled', true);
-
                         } else {
-                            // Clear any error styling/messages
                             $('input[name="CheckNo"]').removeClass('is-invalid');
                             $('.check-no-exists').remove();
-
                             submitButton.prop('disabled', false);
                         }
                     },
@@ -449,6 +463,5 @@
                 });
             }
         });
-        
     </script>
 }

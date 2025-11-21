@@ -697,6 +697,9 @@
                 isValid = false;
             }
 
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
+
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
 

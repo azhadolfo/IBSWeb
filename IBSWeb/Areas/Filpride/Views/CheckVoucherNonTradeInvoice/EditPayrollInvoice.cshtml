@@ -80,35 +80,31 @@
                         </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
-                        @if (Model.AccountNumber != null)
+                        @foreach (var accountNumber in Model.AccountNumber)
                         {
-                            @foreach (var accountNumber in Model.AccountNumber)
-                            {
-                                var supplierId = i < Model.MultipleSupplierId!.Length ? Model.MultipleSupplierId[i] : 0;
-                                <tr>
-                                    <td><input type="text" name="AccountNumber" value="@accountNumber" class="w-100" style="border:none" readonly/></td>
-                                    <td><input type="text" name="AccountTitle" value="@Model.AccountTitle[i]" class="w-100" style="border:none" readonly/></td>
-                                    <td><input type="text" name="Debit" value="@Model.Debit[i]" class="w-100" style="border:none" readonly/></td>
-                                    <td><input type="text" name="Credit" value="@Model.Credit[i]" class="w-100" style="border:none" readonly/></td>
-                                    @if (Model.SupplierNames![i] != "")
-                                    {
-                                        <td>
-                                            <input value="@Model.SupplierNames![i]" style='border:none' class='w-100' readonly />
-                                            <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId[i]"/>
-                                        </td>
-                                    }
-                                    else
-                                    {
-                                        <td>
-                                            <input value="" style='border:none' class='w-100' readonly />
-                                            <input name='MultipleSupplierId' type="hidden" value="0"/>
-                                            <input name='Category' type='hidden' value=""/>
-                                        </td>
-                                    }
-                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                </tr>
-                                i++; // increment the counter after each row
-                            }
+                            <tr>
+                                <td><input type="text" name="AccountNumber" value="@accountNumber" class="w-100" style="border:none" readonly/></td>
+                                <td><input type="text" name="AccountTitle" value="@Model.AccountTitle[i]" class="w-100" style="border:none" readonly/></td>
+                                <td><input type="text" name="Debit" value="@Model.Debit[i]" class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()'/></td>
+                                <td><input type="text" name="Credit" value="@Model.Credit[i]" class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()'/></td>
+                                @if (Model.SupplierNames![i] != "")
+                                {
+                                    <td>
+                                        <input value="@Model.SupplierNames![i]" style='border:none' class='w-100' readonly />
+                                        <input name='MultipleSupplierId' type='hidden' value="@Model.MultipleSupplierId![i]"/>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <input value="" style='border:none' class='w-100' readonly />
+                                        <input name='MultipleSupplierId' type="hidden" value="0"/>
+                                        <input name='Category' type='hidden' value=""/>
+                                    </td>
+                                }
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                            </tr>
+                            i++; // increment the counter after each row
                         }
                         </tbody>
                         <tbody>
@@ -303,19 +299,19 @@
                 var classDropdownSelect = "form-select js-select-custom w-100";
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
-                                                <td>
-                                                    <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly />
-                                                </td>
-                                                <td>
-                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                </td>
-                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                <td>
-                                                    <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
-                                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/>
-                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                            </tr>`;
+                                <td>
+                                    <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly/>
+                                </td>
+                                <td>
+                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                </td>
+                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td>
+                                    <input value='${multipleSupplierCodeName}' style='border:none' class='w-100' readonly />
+                                    <input name='MultipleSupplierId' type='hidden' value='${multipleSupplierId}'/></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                            </tr>`;
 
                 // Append the new row to the table body
                 $("#accountingEntriesBody").append(newRow);
@@ -508,6 +504,19 @@
             if ($("#selectionGroup").length !== 0) {
                 $("#selectionGroup").remove();
             }
+        });
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            var value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+    
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
         });
     </script>
 }
