@@ -318,7 +318,7 @@
                     const price = document.getElementById('swal-input1').value;
                     const ref = document.getElementById('swal-input2').value;
                     const file = document.getElementById('formFileLg').files[0];
-                    if (!price || !ref || !file) {
+                    if (!price || price <= 0 || !ref || !file) {
                         Swal.showValidationMessage('Price, Ref#, and Attachment are required');
                         return false;
                     }
