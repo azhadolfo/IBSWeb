@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 ENV DOTNET_GCHeapHardLimit=1800m
 ENV COMPlus_gcServer=1
 ENV COMPlus_GCLatencyLevel=1
