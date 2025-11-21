@@ -451,9 +451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Saving default value
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -1654,9 +1652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SINo!, existingModel.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(existingModel.SalesInvoice!.SalesInvoiceId, existingModel.Total, offsetAmount, cancellationToken);
+                await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(existingModel.SalesInvoice!.SalesInvoiceId, existingModel.Total, cancellationToken);
 
                 #endregion --Saving default value
 
