@@ -8,16 +8,16 @@ using Quartz;
 
 namespace IBS.Services
 {
-    public class FirstOfTheMonthService : IJob
+    public class StartOfTheMonthService : IJob
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<FirstOfTheMonthService> _logger;
+        private readonly ILogger<StartOfTheMonthService> _logger;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public FirstOfTheMonthService(IUnitOfWork unitOfWork,
-            ILogger<FirstOfTheMonthService> logger, ApplicationDbContext dbContext)
+        public StartOfTheMonthService(IUnitOfWork unitOfWork,
+            ILogger<StartOfTheMonthService> logger, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
