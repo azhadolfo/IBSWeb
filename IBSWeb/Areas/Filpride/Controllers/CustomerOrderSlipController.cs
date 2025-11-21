@@ -1889,5 +1889,90 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var extension = Path.GetExtension(incomingFileName);
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
+
+        public async Task<IActionResult> GetCommissionees(CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            return Json(await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken));
+        }
+
+        [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
+        public async Task<IActionResult> ChangeCommission (int? id, decimal? commissionRate, string? commissioneeId, string? hasCommission,  CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                var oldCommissioneeName = existingRecord.CommissioneeName;
+                var oldCommissionRate = existingRecord.CommissionRate;
+
+                if (hasCommission == "true")
+                {
+                    var commissionee = await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == int.Parse(commissioneeId!), cancellationToken);
+
+                    if (commissionee == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingRecord.CommissioneeName = commissionee.SupplierName;
+                    existingRecord.CommissioneeId = commissionee.SupplierId;
+                    existingRecord.CommissionRate = commissionRate ?? 0;
+                    existingRecord.HasCommission = true;
+                    existingRecord.CommissioneeVatType = commissionee.VatType;
+                    existingRecord.CommissioneeTaxType = commissionee.TaxType;
+                }
+                else
+                {
+                    existingRecord.CommissioneeName = null;
+                    existingRecord.CommissioneeId = null;
+                    existingRecord.CommissionRate = 0;
+                    existingRecord.HasCommission = false;
+                    existingRecord.CommissioneeVatType = null;
+                    existingRecord.CommissioneeTaxType = null;
+                }
+
+                var userName = User.Identity!.Name!;
+
+                FilprideAuditTrail auditTrailBook = new(userName,
+                    $"Update commission details for customer order slip# {existingRecord.CustomerOrderSlipNo}, from ({oldCommissioneeName}) => ({existingRecord.CommissioneeName}), rate from ({oldCommissionRate}) => ({existingRecord.CommissionRate:N4})",
+                    "Customer Order Slip",
+                    existingRecord.Company);
+
+                TempData["success"] = $"Commission details for {existingRecord.CustomerOrderSlipNo} has been updated, commissionee from ({oldCommissioneeName}) => ({existingRecord.CommissioneeName}), rate from ({oldCommissionRate}) => ({existingRecord.CommissionRate:N4})";
+
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to change the commission details of the customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Changed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
     }
 }
