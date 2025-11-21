@@ -10,13 +10,13 @@ namespace IBS.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "fk_filpride_purchase_orders_filpride_terms_terms",
-                table: "filpride_purchase_orders");
-
-            migrationBuilder.DropIndex(
-                name: "ix_filpride_purchase_orders_terms",
-                table: "filpride_purchase_orders");
+            // migrationBuilder.DropForeignKey(
+            //     name: "fk_filpride_purchase_orders_filpride_terms_terms",
+            //     table: "filpride_purchase_orders");
+            //
+            // migrationBuilder.DropIndex(
+            //     name: "ix_filpride_purchase_orders_terms",
+            //     table: "filpride_purchase_orders");
         }
 
         /// <inheritdoc />
