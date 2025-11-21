@@ -246,6 +246,9 @@
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     }
+                                    if (!row.isCosAtlFinalized){
+                                        actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
+                                    }
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForDR':
@@ -256,11 +259,17 @@
                                     else if (row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
+                                    if (!row.isCosAtlFinalized){
+                                        actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
+                                    }
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.Completed':
                                     if (row.deliveredQuantity > 0 && row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    }
+                                    if (!row.isCosAtlFinalized){
+                                        actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
                                     }
                                     break;
                                 case '@CosStatus.Closed':
@@ -268,10 +277,11 @@
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     break;
-                            }
-
-                            if (!row.isCosAtlFinalized && row.depot != null){
-                                actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
+                                case '@CosStatus.Expired':
+                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0){
+                                        actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    }
+                                    break
                             }
                             
                             actions += `</ul></div>`;
