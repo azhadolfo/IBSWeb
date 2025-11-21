@@ -1059,7 +1059,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = existingServiceInvoice.Type,
-                    BatchNumber = string.Empty
+                    BatchNumber = viewModel.BatchNumber
                 };
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
@@ -1759,7 +1759,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 HasAlready2306 = existingModel.F2306FilePath != null,
                 HasAlready2307 = existingModel.F2307FileName != null,
-                MinDate = minDate
+                MinDate = minDate,
+                BatchNumber = existingModel.BatchNumber
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -1875,6 +1876,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
+                existingModel.BatchNumber = viewModel.BatchNumber;
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
