@@ -427,18 +427,17 @@
             // Add the new row to the table
             tableBody.insertAdjacentHTML("beforeend", newRowHTML);
 
-            // Initialize Select2 ONLY on the new row
-            const newRow = tableBody.lastElementChild;
-            $(newRow).find('.js-select2-row').select2({
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
                 placeholder: "Select an option...",
                 allowClear: true,
                 width: 'resolve',
                 theme: 'classic'
             });
-            
+
+            // Attach remove functionality
+            const newRow = tableBody.lastElementChild;
             newRow.querySelector(".removeRow").addEventListener("click", function() {
-                // Destroy Select2 before removing
-                $(newRow).find('.js-select2-row').select2('destroy');
                 handleRowRemoval(newRow);
             });
 
