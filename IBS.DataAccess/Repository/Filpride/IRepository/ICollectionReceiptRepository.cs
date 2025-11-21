@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default);
 
-        Task UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
+        Task UpdateInvoice(int id, decimal paidAmount, CancellationToken cancellationToken = default);
 
         Task UndoSalesInvoiceChanges(FilprideCollectionReceiptDetail collectionReceiptDetail, CancellationToken cancellationToken);
 
