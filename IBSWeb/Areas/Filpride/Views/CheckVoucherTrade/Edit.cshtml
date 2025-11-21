@@ -48,10 +48,15 @@
                 </div>
                 <div class="col-12 col-md-8">
                     <div class="row mb-3 overflow-auto" style="max-height: 300px;">
-                        <table >
+                        <table>
                             <thead class="sticky-top bg-white">
                             <tr>
-                                <th colspan="7" class="text-center py-4">RR LIST</th>
+                                <th colspan="7" class="text-center py-3">
+                                    <span>RR LIST</span>
+                                    <span class="selected-rr-count ms-2 px-2 py-1 rounded-pill" style="display: none; background: linear-gradient(135deg, #5a9a9a, #4a8a8a); color: white; font-size: 0.75rem; vertical-align: middle;">
+                                        <span id="selectedCount">0</span> selected
+                                    </span>
+                                </th>
                             </tr>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
@@ -122,12 +127,8 @@
                         <tr>
                             <th>Account No.</th>
                             <th>Account Title</th>
-                            <th>
-                                Debit
-                            </th>
-                            <th>
-                                Credit
-                            </th>
+                            <th>Debit</th>
+                            <th>Credit</th>
                             <th></th>
                         </tr>
                         </thead>
@@ -170,7 +171,7 @@
                         <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border form-control">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -202,7 +203,6 @@
         
         function computeDefaultEntry(suppId) {
             if (suppId !== "") {
-                // Make an AJAX request to get the TaxType based on the selected SupplierId
                 $.ajax({
                     url: "@Url.Action("GetSupplierDetails", "CheckVoucherTrade")",
                     method: "GET",
@@ -228,31 +228,26 @@
                 $(".supplierName").val("");
             }
         }
-        
 
         $(function () {
             $(".GetPOList").change(function () {
                 var suppId = $(this).val();
                 if (suppId !== "") {
-                    // Make an AJAX request to get the POs based on the selected SupplierId
                     $.ajax({
                         url: "@Url.Action("GetPOs", "CheckVoucherTrade")",
                         method: "GET",
-                        data: { supplierId: suppId }, // Corrected parameter name
+                        data: { supplierId: suppId },
                         success: function (data) {
                             if (data) {
-                                // Clear existing options
                                 $("#POSeries").empty();
-                                // Add new options based on the fetched data
                                 $.each(data, function (index, po) {
-                                    if (po && po.poNumber) { // Adjust property name to poNumber
-                                        $('#POSeries').append('<option value="' + po.poNumber + '">' + po.poNumber + '</option>'); // Adjust property names
+                                    if (po && po.poNumber) {
+                                        $('#POSeries').append('<option value="' + po.poNumber + '">' + po.poNumber + '</option>');
                                     } else {
                                         console.error("Invalid PO object:", po);
                                     }
                                 });
                             } else {
-                                // Clear the fields if no POs are found
                                 $("#POSeries").empty();
                             }
                         },
@@ -261,7 +256,6 @@
                         }
                     });
                 } else {
-                    // Clear the fields if no supplier is selected
                     $("#POSeries").empty();
                 }
             });
@@ -276,17 +270,29 @@
         });
 
         $(".GetRRList").change(function () {
-            let poNumber = $(this).val(); // Get all selected POIds
+            let poNumber = $(this).val();
             displayRecords(poNumber, cvId);
             displayAdvances(poNumber);
         });
+
+        // Function to update the selected count display
+        function updateSelectedCount() {
+            const count = selectedRecords.length;
+            $('#selectedCount').text(count);
+            
+            if (count > 0) {
+                $('.selected-rr-count').fadeIn();
+            } else {
+                $('.selected-rr-count').fadeOut();
+            }
+        }
 
         function displayRecords(poNumber, cvId) {
             $.ajax({
                 url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber, cvId: cvId  }, // Pass PO numbers to controller
-                traditional: true, // Ensure jQuery sends the array properly
+                data: { poNumber: poNumber, cvId: cvId },
+                traditional: true,
                 success: function (data) {
                     const tbody = $('.rrAmount');
                     let totalGross = 0;
@@ -295,6 +301,8 @@
                     let subTotalGross = 0;
 
                     tbody.empty();
+                    // Reset selected records
+                    selectedRecords = [];
 
                     if (data) {
                         let currentPO = null;
@@ -309,6 +317,12 @@
                             let display = modelRRs.has(rr.id) ? '' : 'display: none';
                             let inputamountClass = modelRRs.has(rr.id) ? 'inputAmount' : '';
                             const amountPaid = modelRRs.get(rr.id);
+                            
+                            // Add to selectedRecords if already checked
+                            if (modelRRs.has(rr.id)) {
+                                selectedRecords.push(rr.id.toString());
+                            }
+                            
                             const tr = $(`
                                 <tr data-po="${rr.purchaseOrderNo}">
                                     <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
@@ -326,7 +340,6 @@
 
                             tbody.append(tr);
 
-                            // Append subtotal ONLY when last row of this PO group
                             if (index === data.length - 1 || data[index + 1].purchaseOrderNo !== currentPO) {
                                 const subTotal = $(`
                                 <tr class="fw-bold bg-light subtotalRow" data-po="${currentPO}">
@@ -342,10 +355,9 @@
                             }
                         });
                         reindexSelected();
+                        updateSelectedCount(); // Update count after loading
                     }
 
-
-                    // Append Grand Total Rows
                     const totalRow = $(`
                         <tr style="border-bottom:double;" class="sticky-lg-bottom">
                             <td colspan="7" class="pt-1"></td>
@@ -360,6 +372,11 @@
                     `);
                     tbody.append(totalRow);
                     updateAmounts();
+                    
+                    // Update "Select All" checkbox state
+                    const totalCheckboxes = $('.selectCheckbox').length;
+                    const checkedCheckboxes = $('.selectCheckbox:checked').length;
+                    $('#selectAll').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching RRs:', error);
@@ -368,7 +385,6 @@
         }
 
         function displayAdvances(poNumber){
-            // New addition: Check if any selected PO has COD or PREPAID terms
             if (poNumber && poNumber.length > 0) {
                 $.ajax({
                     url: "@Url.Action("CheckPOPaymentTerms", "CheckVoucherTrade")",
@@ -376,10 +392,8 @@
                     data: { poNumbers: poNumber },
                     traditional: true,
                     success: function(response) {
-                        // If any PO has COD or PREPAID terms, show the Advances row
                         if (response.hasCodOrPrepaid && response.advanceAmount > 0) {
                             $("#advancesRow").show();
-                            // Default values can be set based on what makes sense for your business logic
                             $("#advancesDebit").val(formatNumber(0));
                             $("#advancesCredit").val(formatNumber(response.advanceAmount));
                             $("#AdvancesCVNo").val(response.advanceCVNo);
@@ -402,18 +416,16 @@
             }
         }
 
-        let selectedRecords = []; // Store selected records
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled
+        let selectedRecords = [];
+        let allRecordsSelected = false;
 
         function toggleSelectAll(selectAllCheckbox) {
             const isChecked = selectAllCheckbox.checked;
 
             $(".selectCheckbox").each(function () {
                 if (isChecked && !this.checked) {
-                    // Check unchecked ones only
                     $(this).prop("checked", true).trigger("change");
                 } else if (!isChecked && this.checked) {
-                    // Uncheck checked ones only
                     $(this).prop("checked", false).trigger("change");
                 }
             });
@@ -429,12 +441,12 @@
 
             if (this.checked) {
                 if (!selectedRecords.includes(this.value)) {
-                    selectedRecords.push(this.value); // ✅ push instead of add
+                    selectedRecords.push(this.value);
                 }
                 inputField.val(balance).addClass("inputAmount").show();
                 row.find('.balance').text(formatNumberToFour(grossAmount - balance));
             } else {
-                selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
+                selectedRecords = selectedRecords.filter(v => v !== this.value);
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
                 row.find('.balance').text(formatNumberToFour(grossAmount));
@@ -442,6 +454,12 @@
 
             reindexSelected();
             updateAmounts();
+            updateSelectedCount(); // Update count on checkbox change
+            
+            // Update "Select All" checkbox state
+            const totalCheckboxes = $('.selectCheckbox').length;
+            const checkedCheckboxes = $('.selectCheckbox:checked').length;
+            $('#selectAll').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
         });
 
         function reindexSelected() {
@@ -484,18 +502,15 @@
             let grandTotalGross = parseNumber($(".grandTotalGross").text());
             $(".grandTotalBalance").text(formatNumber(Math.abs(grandTotalGross - totalNetOfEWT)));
 
-            // Check if advances row is visible
             var hasAdvances = $("#advancesRow").is(":visible");
             var advancesAmount = hasAdvances ? parseNumber($("#advancesCredit").val()) : 0;
 
-            // Adjust the Cash in Bank (Credit) - deduct advances if present
             var cashInBankAmount = totalNetOfEWT;
             if (hasAdvances) {
                 cashInBankAmount = totalNetOfEWT - advancesAmount;
-                if (cashInBankAmount < 0) cashInBankAmount = 0; // Prevent negative values
+                if (cashInBankAmount < 0) cashInBankAmount = 0;
             }
 
-            // Update the Cash in Bank amount
             $(".cib-credit").val(formatNumber(cashInBankAmount));
 
             updateTotalDebitAndCredit();
@@ -506,12 +521,10 @@
             var totalDebit = 0;
             var totalCredit = 0;
 
-            // Loop through each row in the table body and sum up the debit values
             $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
                 var debitInput = $(this).find("td:eq(2) input").val();
                 var creditInput = $(this).find("td:eq(3) input").val();
-                // Ensure debitInput and creditInput are strings before using replace
-                debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
+                debitInput = debitInput ? String(debitInput) : "";
                 creditInput = creditInput ? String(creditInput) : "";
 
                 var debit = parseNumber(debitInput);
@@ -521,7 +534,6 @@
                 totalCredit += credit;
             });
 
-            // Display the total debit value
             $(".totalDebit").text(formatNumber(totalDebit));
             $(".totalCredit").text(formatNumber(totalCredit));
             $("#debit").val("0.000");
@@ -550,10 +562,7 @@
                 isValid = false;
             }
 
-            // Display or clear the error message
             $("#balance-error-message").text(errorMessage);
-
-            // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
 
             return isValid;
@@ -568,26 +577,20 @@
                     type: "GET",
                     data: { checkNo: checkNo, cvId: cvId },
                     success: function(exists) {
-
                         const submitButton = $('button[type="submit"]');
 
                         if (exists) {
                             alert("Check # already exists. Please enter a different number.");
                             $('input[name="CheckNo"]').addClass('is-invalid');
 
-                            // Optional: Add error message near the field
                             if ($('input[name="CheckNo"]').next('.text-danger.check-no-exists').length === 0) {
                                 $('input[name="CheckNo"]').after('<span class="text-danger check-no-exists">Check # already exists</span>');
                             }
 
-                            // Disable the submit button
                             submitButton.prop('disabled', true);
-
                         } else {
-                            // Clear any error styling/messages
                             $('input[name="CheckNo"]').removeClass('is-invalid');
                             $('.check-no-exists').remove();
-
                             submitButton.prop('disabled', false);
                         }
                     },
@@ -597,6 +600,5 @@
                 });
             }
         });
-        
     </script>
 }
