@@ -193,10 +193,9 @@
                                 actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data}, '${row.authorityToLoadNo}', '${row.uppiAtlNo}')">Record Lifting Date</a></li>`;
                             }
                         }
-                        if (!row.voidedBy && !row.canceledBy && row.status === "@DRStatus.Invoiced") {
-                            if (isAdmin){
-                                actions += `<li><a class="dropdown-item" href="#" onclick="changeHaulerFreight('${deliveryReceiptId}')">Change Hauler/Freight</a></li>`;
-                            }
+                        
+                        if (isAdmin && !row.voidedBy && !row.canceledBy && row.deliveredDate) {
+                            actions += `<li><a class="dropdown-item" href="#" onclick="changeHaulerFreight('${deliveryReceiptId}')">Change Hauler/Freight</a></li>`;
                         }
 
                         actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>`;
