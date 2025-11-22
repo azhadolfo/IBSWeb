@@ -275,9 +275,6 @@
                                     if (row.deliveredQuantity > 0 && row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
-                                    if (isAdmin){
-                                        actions += `<li><a class="dropdown-item" href="#" onclick="changeCommission('${customerOrderSlipId}')">Change Commission</a></li>`;
-                                    }
                                     if (!row.isCosAtlFinalized){
                                         actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
                                     }
@@ -292,6 +289,10 @@
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     break;
+                            }
+                            
+                            if (isAdmin && row.deliveredQuantity > 0){
+                                actions += `<li><a class="dropdown-item" href="#" onclick="changeCommission('${customerOrderSlipId}')">Change Commission</a></li>`;
                             }
                             
                             actions += `</ul></div>`;
