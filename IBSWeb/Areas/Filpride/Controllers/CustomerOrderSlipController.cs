@@ -1914,6 +1914,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken));
         }
 
+        public async Task<IActionResult> GetDeliveryReceiptDetails(int id, CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            var dr = await _dbContext.FilprideDeliveryReceipts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            return Json(dr);
+        }
+
         public async Task<IActionResult> ChangeCommission (int? id, decimal? commissionRate, string? commissioneeId, string? hasCommission,  CancellationToken cancellationToken)
         {
             if (id == null)

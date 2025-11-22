@@ -409,34 +409,34 @@
             const dr = await drResponse.json();
             
             let haulerOptions = `
-    <option value="">Select hauler</option>
-    ${haulers.map(c => `<option value="${c.value}">${c.text}</option>`).join('')}
-`;
+                <option value="">Select hauler</option>
+                ${haulers.map(c => `<option value="${c.value}">${c.text}</option>`).join('')}
+            `;
 
             let haulerSelect = `
-    <div class="form-group py-2">
-        <label for="swal-input2"><b>Commissionee</b></label>
-        <select id="swal-input2" class="swal2-select w-75" value="${dr.haulerId}">
-            ${haulerOptions}
-        </select>
-    </div>
-`;
+                <div class="form-group py-2">
+                    <label for="swal-input2"><b>Hauler</b></label>
+                    <select id="swal-input2" class="swal2-select w-75" value="${dr.haulerId}">
+                        ${haulerOptions}
+                    </select>
+                </div>
+            `;
 
             Swal.fire({
                 title: 'Change Hauler/Freight',
                 html: `
-        <div class="form-group py-2">
-            <label for="freight"><b>Freight</b></label>
-            <input 
-                id="freight" 
-                type="number" 
-                class="swal2-input" 
-                placeholder="Enter Freight"
-                value="${dr.freight}">
-        </div>
-
-        ${haulerSelect}
-    `,
+                    <div class="form-group py-2">
+                        <label for="freight"><b>Freight</b></label></br>
+                        <input 
+                            id="freight" 
+                            type="number" 
+                            class="swal2-input" 
+                            placeholder="Enter Freight"
+                            value="${dr.freight}">
+                    </div>
+            
+                    ${haulerSelect}
+                `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -460,13 +460,10 @@
                     const freight = result.value.freight;
                     const haulerId = result.value.haulerId;
                     const haulerName = result.value.haulerName;
-                    let htmlMessage = "";
-                    
-                    htmlMessage = `<b>Hauler:</b> ${haulerName}<br><b>Freight:</b> ${freight}`;
 
                     Swal.fire({
                         title: 'Apply Hauler/Freight changes?',
-                        html: htmlMessage,
+                        html: `<b>Hauler:</b> ${haulerName}<br><b>Freight:</b> ${freight}`,
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
@@ -480,52 +477,43 @@
                             formData.append('haulerId', haulerId);
                             formData.append('freight', freight);
 
-                            if (dr.freightAmountPaid !== 0){
-                                htmlMessage = `<b>Freight amount paid in DR:</b> ${dr.freightAmountPaid}<br>Continue?`;
-
-                                Swal.fire({
-                                    title: 'Freight payment detected',
-                                    html: htmlMessage,
-                                    icon: 'question',
-                                    showCancelButton: true,
-                                    confirmButtonColor: '#3085d6',
-                                    cancelButtonColor: '#d33',
-                                    confirmButtonText: 'Yes',
-                                    cancelButtonText: 'No'
-                                }).then((confirmResult) => {
-                                    if (confirmResult.isConfirmed) {
-                                        if (haulerId !== "") {
-                                            const form = document.getElementById("changeHaulerFreightForm");
-                                            form.querySelector("input[name='id']").value = deliveryReceiptId;
-                                            form.querySelector("input[name='haulerId']").value = haulerId ?? "";
-                                            form.querySelector("input[name='freight']").value = freight ?? "";
-                                            form.submit();
-                                        } else {
-                                            Swal.fire({
-                                                title: "Error",
-                                                text: "The value entered is invalid",
-                                                icon: "error"
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-                            else {
-                                if (haulerId !== "") {
+                            if (haulerId !== "") {
+                                if (dr.freightAmountPaid !== 0){
+    
+                                    Swal.fire({
+                                        title: 'Freight payment detected',
+                                        html: `<b>Freight amount paid in DR:</b> ${dr.freightAmountPaid}<br>Continue?`,
+                                        icon: 'question',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#3085d6',
+                                        cancelButtonColor: '#d33',
+                                        confirmButtonText: 'Yes',
+                                        cancelButtonText: 'No'
+                                    }).then((confirmResult) => {
+                                        if (confirmResult.isConfirmed) {
+                                                const form = document.getElementById("changeHaulerFreightForm");
+                                                form.querySelector("input[name='id']").value = deliveryReceiptId;
+                                                form.querySelector("input[name='haulerId']").value = haulerId ?? "";
+                                                form.querySelector("input[name='freight']").value = freight ?? "";
+                                                form.submit();
+                                            } 
+                                    });
+                                }
+                                else {
                                     const form = document.getElementById("changeHaulerFreightForm");
                                     form.querySelector("input[name='id']").value = deliveryReceiptId;
                                     form.querySelector("input[name='haulerId']").value = haulerId ?? "";
                                     form.querySelector("input[name='freight']").value = freight ?? "";
                                     form.submit();
-                                } else {
-                                    Swal.fire({
-                                        title: "Error",
-                                        text: "The value entered is invalid",
-                                        icon: "error"
-                                    });
                                 }
                             }
-
+                            else {
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "The value entered is invalid",
+                                    icon: "error"
+                                });
+                            }
                         }
                     });
                 }
