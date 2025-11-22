@@ -1288,5 +1288,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         }
 
+        public async Task<IActionResult> GetDeliveryReceiptDetails(int id, CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            var dr = await _dbContext.FilprideDeliveryReceipts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            return Json(dr);
+        }
     }
 }
