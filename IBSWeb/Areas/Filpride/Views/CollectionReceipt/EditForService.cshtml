@@ -72,6 +72,11 @@
                         <label for="floatingInput" class="control-label">Remarks</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="BatchNumber" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                        <label for="floatingInput" class="control-label">Batch#</label>
+                        <span asp-validation-for="BatchNumber" class="text-danger"></span>
+                    </div>
                 </div>
 
                 <div class="col-12 col-md-4 p-3" style="border:dotted 1px;">

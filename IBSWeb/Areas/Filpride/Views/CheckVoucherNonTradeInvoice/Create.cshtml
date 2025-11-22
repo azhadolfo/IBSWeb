@@ -427,18 +427,17 @@
             // Add the new row to the table
             tableBody.insertAdjacentHTML("beforeend", newRowHTML);
 
-            // Initialize Select2 ONLY on the new row
-            const newRow = tableBody.lastElementChild;
-            $(newRow).find('.js-select2-row').select2({
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
                 placeholder: "Select an option...",
                 allowClear: true,
                 width: 'resolve',
                 theme: 'classic'
             });
-            
+
+            // Attach remove functionality
+            const newRow = tableBody.lastElementChild;
             newRow.querySelector(".removeRow").addEventListener("click", function() {
-                // Destroy Select2 before removing
-                $(newRow).find('.js-select2-row').select2('destroy');
                 handleRowRemoval(newRow);
             });
 
@@ -616,7 +615,7 @@
             let isValid = true;
 
             if ($("#balance-error-message").length === 0) {
-                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+                $("#journalEntriesTable").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
             }
 
             if (totalDebit !== totalCredit) {
@@ -629,6 +628,9 @@
                 errorMessage = "Total Amount should be equal to Total Debit and Credit.";
                 isValid = false;
             }
+
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
 
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);

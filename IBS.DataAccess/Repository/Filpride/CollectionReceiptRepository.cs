@@ -566,7 +566,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateInvoice(int id, decimal paidAmount, CancellationToken cancellationToken = default)
         {
             var si = await _db
                 .FilprideSalesInvoices
@@ -576,8 +576,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var netDiscount = si.Amount - si.Discount;
 
-                var total = paidAmount + offsetAmount;
-                si.AmountPaid += total;
+                si.AmountPaid += paidAmount;
                 si.Balance = netDiscount - si.AmountPaid;
 
                 if (si.Balance == 0 && si.AmountPaid == netDiscount)

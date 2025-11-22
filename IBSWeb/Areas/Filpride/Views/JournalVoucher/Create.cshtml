@@ -292,14 +292,14 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                                    <td>
-                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                    </td>
-                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                             </tr>`;
+                                <td>
+                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                </td>
+                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100 money editable-amount' oninput='updateTotalDebitAndCredit()' /></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                         </tr>`;
 
 
             // Append the new row to the table body
@@ -342,6 +342,8 @@
             $(".totalCredit").text(formatNumber(totalCredit));
             $("#debit").val("0.0000");
             $("#credit").val("0.0000");
+
+            validateDebitAndCredit();
         }
 
         // Function to remove the corresponding row
@@ -434,20 +436,41 @@
         function validateDebitAndCredit(event) {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
 
             if (totalDebit !== totalCredit) {
-                alert("Debit and Credit totals must be equal.");
-                event.preventDefault(); // Prevent form submission
-                return false;
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
             }
 
-            if (totalDebit === 0 && totalCredit === 0) {
-                alert("Debit and Credit cannot both be zero.");
-                event.preventDefault(); // Prevent form submission
-                return false;
-            }
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
 
-            return true; // Allow form submission
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            return isValid;
         }
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            var value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+    
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
+        });
     </script>
 }

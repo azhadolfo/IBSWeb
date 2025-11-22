@@ -184,9 +184,11 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var cos = await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => (cos.Status == nameof(CosStatus.ForDR) ||
+                .Where(cos => cos.Status == nameof(CosStatus.ForDR) ||
                                cos.Status == nameof(CosStatus.Completed) ||
-                               cos.Status == nameof(CosStatus.Closed)) &&
+                               cos.Status == nameof(CosStatus.Closed) ||
+                               cos.Status == nameof(CosStatus.Expired) &&
+                               cos.DeliveredQuantity > 0 &&
                                cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
