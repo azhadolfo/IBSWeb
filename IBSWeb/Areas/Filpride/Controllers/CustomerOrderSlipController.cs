@@ -1963,6 +1963,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.CommissioneeTaxType = null;
                 }
 
+                var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
+
+                if (dr != null)
+                {
+                    dr.CommissionRate = existingRecord.CommissionRate;
+                    dr.CommissionAmount = existingRecord.CommissionRate * dr.Quantity;
+                    dr.CommissioneeId = existingRecord.CommissioneeId;
+                }
+
                 var userName = User.Identity!.Name!;
 
                 FilprideAuditTrail auditTrailBook = new(userName,
