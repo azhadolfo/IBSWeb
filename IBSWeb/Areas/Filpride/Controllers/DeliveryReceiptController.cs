@@ -1288,6 +1288,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         }
 
+        public async Task<IActionResult> GetHaulers(CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            return Json(await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken));
+        }
+
         public async Task<IActionResult> GetDeliveryReceiptDetails(int id, CancellationToken cancellationToken = default)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -1300,9 +1312,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var dr = await _dbContext.FilprideDeliveryReceipts
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                cos => cos.CustomerOrderSlipId == id, cancellationToken);
+                cos => cos.DeliveryReceiptId == id, cancellationToken);
 
             return Json(dr);
+        }
+
+        public async Task<IActionResult> ChangeHaulerFreight (int? id, decimal? freight, string? haulerId, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                var oldHaulerName = existingRecord.HaulerName;
+                var oldFreight = existingRecord.Freight;
+
+                    var hauler =
+                        await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == int.Parse(haulerId!),
+                            cancellationToken);
+
+                    if (hauler == null)
+                    {
+                        return NotFound();
+                    }
+
+                existingRecord.Freight = freight ?? 0m;
+                existingRecord.FreightAmount = (freight ?? 0m) * existingRecord.Quantity;
+                existingRecord.HaulerId = hauler.SupplierId;
+                existingRecord.HaulerName = hauler.SupplierName;
+                existingRecord.HaulerVatType = hauler.VatType;
+                existingRecord.HaulerTaxType = hauler.TaxType;
+
+                var userName = User.Identity!.Name!;
+
+                FilprideAuditTrail auditTrailBook = new(userName,
+                    $"Update hauler/freight for delivery receipt# {existingRecord.DeliveryReceiptNo}, hauler from ({oldHaulerName}) => ({existingRecord.HaulerName}), freight from ({oldFreight}) => ({existingRecord.Freight:N4})",
+                    "Delivery Receipt",
+                    existingRecord.Company);
+
+                TempData["success"] =
+                    $"Hauler/Freight for {existingRecord.DeliveryReceiptNo} has been updated, hauler from ({oldHaulerName}) => ({existingRecord.HaulerName}), freight from ({oldFreight}) => ({existingRecord.Freight:N4})";
+
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex,
+                    "Failed to change the commission details of the customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Changed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
         }
     }
 }

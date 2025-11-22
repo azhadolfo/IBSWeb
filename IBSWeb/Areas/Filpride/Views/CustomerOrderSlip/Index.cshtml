@@ -394,7 +394,6 @@
         }
 
         async function changeCommission(customerOrderSlipId) {
-            // Fetch banks
             const response = await fetch('@Url.Action("GetCommissionees", "CustomerOrderSlip", new { area = "Filpride" })');
             const cosResponse = await fetch('@Url.Action("GetCustomerOrderSlipDetails", "CustomerOrderSlip", new { area = "Filpride" })'
                 + '?id=' + encodeURIComponent(customerOrderSlipId));
@@ -403,8 +402,7 @@
             const commissionees = await response.json();
             const cos = await cosResponse.json();
             const dr = await drResponse.json();
-
-            // Build <option>s
+            
             let commissioneeOptions = `
     <option value="">Select commissionee</option>
     ${commissionees.map(c => `<option value="${c.value}">${c.text}</option>`).join('')}
@@ -492,7 +490,6 @@
                     else {
                         htmlMessage = "Commission details removed";
                     }
-                    console.log("test 001");
                     
                     Swal.fire({
                         title: 'Apply Commission Changes?',
