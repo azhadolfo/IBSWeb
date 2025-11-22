@@ -35,7 +35,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         [StringLength(50)]
         [Display(Name = "Check No.")]
-        [RegularExpression(@"^(?:\d{7,}|DM\d{10})$", ErrorMessage = "Invalid format. Please enter either a 'DM' followed by a 10-digits or CV number minimum 7 digits.")]
         public string CheckNo { get; set; }
 
         [Display(Name = "Check Date")]
