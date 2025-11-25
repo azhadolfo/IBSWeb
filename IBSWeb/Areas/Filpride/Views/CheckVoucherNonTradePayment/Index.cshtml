@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<FilprideCheckVoucherDetail>
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @{
     ViewData["Title"] = "Check Voucher Non-Trade Payment";
@@ -8,7 +9,13 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        <div class="d-flex align-items-center">
+            <h2 class="text-white m-0">@ViewData["Title"]</h2>
+            <button id="toggleBtn" class="btn btn-light btn-sm ms-5" 
+                    data-val="@DateTimeHelper.GetCurrentPhilippineTime().ToString(SD.Date_Format)">
+                Filter by Date Today
+            </button>
+        </div>
         <div class="dropdown actions-dropdown">
             <button class="btn btn-light btn-sm dropdown-toggle w-100 responsive-index-button"
                     type="button"
@@ -111,6 +118,9 @@
     </script>
     <script>
         $(document).ready(function () {
+            let toggle = false;
+            let filterValue = "";
+            
             var table = $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -127,8 +137,17 @@
                     "url": "@Url.Action("GetPaymentCheckVouchers", "CheckVoucherNonTradePayment", new { area = "Filpride" })",
                     "type": "POST",
                     "data": function (d) {
-                        return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        // Combine the original search.value with your custom filter
+                        var combinedSearch = d.search.value || ""; // built-in search box
+                        if (filterValue) {
+                            // Append or override depending on how you want to filter
+                            combinedSearch = filterValue; // if you want custom filter to take priority
+                            // Or combine: combinedSearch += " " + filterValue;
+                        }
+
+                        return $.extend(true, {}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                            search: $.extend({}, d.search, { value: combinedSearch })
                         });
                     },
                     "error": function (xhr, error, thrown) {
@@ -240,8 +259,14 @@
                     $(this.api().column(4).footer()).html(formatNumber(totalAmount));
                 }
             });
+            
+            $("#toggleBtn").on("click", function () {
+                filterValue = toggle ? "" : $(this).data("val");
+                toggle = !toggle;
+
+                table.ajax.reload();
+            });
         });
-    
     </script>
     <script>
         document.getElementById("newAdvancesBtn").addEventListener("click", function () {
