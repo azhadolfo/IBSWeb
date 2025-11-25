@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                         s.Total.ToString().Contains(searchValue) ||
                         s.Payee?.ToLower().Contains(searchValue) == true ||
-                        s.Date.ToString(SD.Date_Format).Contains(searchValue) ||
+                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Reference?.ToLower().Contains(searchValue) == true ||
                         s.Status.ToLower().Contains(searchValue)
                         )
