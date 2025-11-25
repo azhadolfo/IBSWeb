@@ -562,7 +562,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Category == "Trade")
+                .Where(s => s.IsActive)
                 .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {

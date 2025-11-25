@@ -2087,7 +2087,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var supplier =
-                    await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims,
+                    await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims,
                         cancellationToken);
 
                 var bankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
