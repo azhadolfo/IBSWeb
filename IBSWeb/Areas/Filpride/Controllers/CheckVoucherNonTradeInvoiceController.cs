@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetInvoiceCheckVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetInvoiceCheckVouchers([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -121,6 +121,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
+                        )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    checkVoucherDetails = checkVoucherDetails
+                        .Where(s =>
+                            s.CheckVoucherHeader!.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue)
                         )
                         .ToList();
                 }
