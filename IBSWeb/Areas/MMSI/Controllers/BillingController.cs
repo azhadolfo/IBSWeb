@@ -439,6 +439,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}");
                     }
 
+                    if (currentModel.PrincipalId != model.PrincipalId)
+                    {
+                        changes.Add($"PrincipalId: #{string.Join(", #", currentModel.PrincipalId)} -> #{string.Join(", #", model.PrincipalId!)}");
+                    }
+
                     if (currentModel.VoyageNumber != model.VoyageNumber)
                     {
                         changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}");
@@ -491,6 +496,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #endregion -- Audit Trail
 
                     currentModel.CustomerId = model.CustomerId;
+                    currentModel.PrincipalId = model.PrincipalId;
                     currentModel.VoyageNumber = model.VoyageNumber;
                     currentModel.Date = model.Date;
                     currentModel.PortId = model.PortId;
