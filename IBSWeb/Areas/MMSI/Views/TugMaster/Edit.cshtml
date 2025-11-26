@@ -4,6 +4,8 @@
     ViewData["Title"] = "Tug Master - Edit";
 }
 
+<link rel="stylesheet" href="~/css/form-style.css">
+
 <div class="card shadow mt-4">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -37,8 +39,8 @@
                 </div>
                 <div class="row pb-3">
                     <div class="form-check col-3 ps-2 text-start d-flex align-items-center justify-content-start">
-                        <input asp-for="IsActive" class="form-check-input m-0 ms-2" type="checkbox">
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0">
+                        <input asp-for="IsActive" id="IsActive" class="form-check-input m-0 ms-2" type="checkbox">
+                        <label class="text-decoration-underline form-check-label ps-1 m-0" for="IsActive">
                             Active
                         </label>
                     </div>
