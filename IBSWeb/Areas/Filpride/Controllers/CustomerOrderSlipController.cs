@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCustomerOrderSlips([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCustomerOrderSlips([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -199,6 +199,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue));
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    // Try to parse the searchValue into a DateOnly
+                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
+
+                    query = query.Where(s =>
+                        isDateSearch && s.Date == searchDate);
                 }
 
                 // Sorting
