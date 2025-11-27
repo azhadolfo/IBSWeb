@@ -105,6 +105,8 @@ app.MapPost("/jobs/daily-service", async (
     return Results.Ok("DailyService job executed.");
 });
 
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
 
 app.UseSerilogRequestLogging();
 
