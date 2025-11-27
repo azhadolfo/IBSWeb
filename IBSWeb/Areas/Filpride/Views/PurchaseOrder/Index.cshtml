@@ -16,6 +16,10 @@
 
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-3">
+            <div class="me-2">
+                <label class="fw-semibold small text-muted mb-1">Filter by Date</label>
+                <input type="date" id="inputDate" class="form-control rounded-3 shadow-sm" style="width:150px;">
+            </div>
             <div class="table-responsive" style="max-height: 70vh">
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
@@ -154,7 +158,10 @@
     </script>
     <script>
     $(document).ready(function() {
-        $('#paginatedTable').DataTable({
+        let filterValue = localStorage.getItem('filterDate') || "";
+        $('#inputDate').val(filterValue);
+        
+        let table = $('#paginatedTable').DataTable({
             "processing": true, // Enable processing indicator
             "serverSide": true, // Enable server-side processing
             "stateSave" : true,
@@ -171,7 +178,10 @@
                 "type": "POST",
                 "data": function (d) {
                     return $.extend({}, d, {
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+
+                        // NEW PARAMETER FOR DATE — this goes to controller
+                        filterDate: filterValue
                     });
                 },
                 "error": function (xhr, error, thrown) {
@@ -356,6 +366,12 @@
             ],
             "order": [[0, "asc"]], // Default sort by TransactionDate
             "pageLength": 10 // Default number of rows per page
+        });
+
+        $('#inputDate').on('change', function() {
+            filterValue = $(this).val();
+            localStorage.setItem('filterDate', filterValue); // persist the date
+            table.ajax.reload();
         });
     });
     </script>
