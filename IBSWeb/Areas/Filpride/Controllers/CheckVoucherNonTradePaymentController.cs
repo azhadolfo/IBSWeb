@@ -1132,7 +1132,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(i => cv.CVId == i.CheckVoucherHeaderId &&
                                     i.SupplierId != null &&
                                     i.SupplierId == viewModel.MultipleSupplierId &&
-                                    i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing))
+                                    i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing) &&
+                                    i.Amount > 0m)
                         .OrderBy(i => i.CheckVoucherHeaderId)
                         .FirstOrDefaultAsync(cancellationToken);
 
