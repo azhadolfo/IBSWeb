@@ -74,7 +74,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetServiceInvoices([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetServiceInvoices([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -98,6 +98,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Instructions.ToLower().Contains(searchValue) ||
                             s.CreatedBy?.ToLower().Contains(searchValue) == true
                             )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    serviceInvoices = serviceInvoices
+                        .Where(s =>
+                            s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
                         .ToList();
                 }
 
