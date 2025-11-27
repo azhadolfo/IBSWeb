@@ -1955,7 +1955,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasCommission == "true")
                 {
-                    var commissionee = await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == int.Parse(commissioneeId!), cancellationToken);
+                    var commissionee = await _unitOfWork.FilprideSupplier
+                        .GetAsync(s => s.SupplierId == int.Parse(commissioneeId!), cancellationToken);
 
                     if (commissionee == null)
                     {
@@ -1979,7 +1980,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.CommissioneeTaxType = null;
                 }
 
-                var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
+                var dr = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
 
                 if (dr != null)
                 {

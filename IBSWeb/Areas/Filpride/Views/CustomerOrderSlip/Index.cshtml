@@ -263,7 +263,7 @@
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     }
-                                    else if (row.oldPrice === 0 && isAdmin){
+                                    else if (row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     if (!row.isCosAtlFinalized){
@@ -272,7 +272,7 @@
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.Completed':
-                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0 && isAdmin){
+                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     if (!row.isCosAtlFinalized){
@@ -285,7 +285,7 @@
                                     }
                                     break;
                                 case '@CosStatus.Expired':
-                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0 && isAdmin){
+                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     break;
