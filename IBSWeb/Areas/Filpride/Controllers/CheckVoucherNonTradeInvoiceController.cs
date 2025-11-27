@@ -549,7 +549,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable")
                     {
                         apNonTradeTotal += viewModel.Credit[i];
                     }
@@ -597,7 +597,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
-                            Amount = viewModel.Credit[i],
+                            Amount = viewModel.AccountTitle[i] == "AP-Non Trade Payable" ? viewModel.Credit[i] : 0m,
                             SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
                             IsUserSelected = true
                         });
@@ -1501,7 +1501,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable")
                     {
                         apNonTradeTotal += viewModel.Credit[i];
                     }
@@ -1541,7 +1541,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = viewModel.CVId,
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
-                            Amount = viewModel.Credit[i],
+                            Amount = viewModel.AccountTitle[i] == "AP-Non Trade Payable" ? viewModel.Credit[i] : 0m,
                             SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
                         });
                     }
