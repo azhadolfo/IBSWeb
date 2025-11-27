@@ -368,7 +368,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(cosList);
         }
 
+        public async Task<IActionResult> GetSupplierCOSForEdit(int supplierId, int loadPortId, int atlId)
+        {
+            // Get the COS IDs and appointed IDs that are currently in this ATL with their quantities
+            var existingBookDetails = await _dbContext.FilprideBookAtlDetails
+                .Where(b => b.AuthorityToLoadId == atlId)
+                .Select(b => new
+                {
+                    b.CustomerOrderSlipId,
+                    b.AppointedId,
+                    b.Quantity
+                })
+                .ToListAsync();
 
+            var cosList = await _dbContext.FilprideCOSAppointedSuppliers
+                .Include(a => a.CustomerOrderSlip)
+                .Include(a => a.PurchaseOrder)
+                .Where(a => a.SupplierId == supplierId
+                            && a.CustomerOrderSlip!.Status != nameof(CosStatus.Closed)
+                            && a.CustomerOrderSlip.Status != nameof(CosStatus.Expired)
+                            && a.CustomerOrderSlip.Status != nameof(CosStatus.Disapproved)
+                            && a.CustomerOrderSlip.PickUpPointId == loadPortId)
+                .Select(g => new
+                {
+                    appointedId = g.SequenceId,
+                    cosId = g.CustomerOrderSlipId,
+                    cosNo = g.CustomerOrderSlip!.CustomerOrderSlipNo,
+                    volume = g.UnreservedQuantity,
+                    poNo = g.PurchaseOrder!.PurchaseOrderNo,
+                })
+                .ToListAsync();
+
+            // Add back the quantities that are currently reserved in this ATL
+            var result = cosList.Select(cos =>
+            {
+                var existingDetail = existingBookDetails
+                    .FirstOrDefault(b => b.CustomerOrderSlipId == cos.cosId
+                                      && b.AppointedId == cos.appointedId);
+
+                return new
+                {
+                    cos.appointedId,
+                    cos.cosId,
+                    cos.cosNo,
+                    volume = existingDetail != null ? cos.volume + existingDetail.Quantity : cos.volume,
+                    cos.poNo
+                };
+            })
+            .Where(x => x.volume > 0)
+            .ToList();
+
+            return Json(result);
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetHaulerDetails(int cosId)
@@ -433,6 +484,196 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to update the validity date of ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Updated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return Json(new { success = false });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            var atl = await _dbContext.FilprideAuthorityToLoads
+                .Include(a => a.Details)
+                .ThenInclude(b => b.CustomerOrderSlip)
+                .ThenInclude(c => c!.AppointedSuppliers)
+                .FirstOrDefaultAsync(a => a.AuthorityToLoadId == id, cancellationToken);
+
+            if (atl == null)
+            {
+                return NotFound();
+            }
+
+            var hasBeenUsed = atl.Details.Any(b => b.UnservedQuantity < b.Quantity);
+
+            if (hasBeenUsed)
+            {
+                TempData["error"] = $"Cannot edit ATL# {atl.AuthorityToLoadNo}. This ATL has already been partially or fully served and cannot be modified.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var selectedCosDetails = atl.Details.Select(b => new CosAppointedDetails
+            {
+                CosId = b.CustomerOrderSlipId,
+                AppointedId = b.AppointedId!.Value,
+                Volume = b.Quantity
+            }).ToList();
+
+            BookATLViewModel viewModel = new()
+            {
+                AtlId = atl.AuthorityToLoadId,
+                Date = atl.DateBooked,
+                LoadPortId = atl.LoadPortId,
+                SupplierId = atl.SupplierId,
+                UPPIAtlNo = atl.UppiAtlNo,
+                SelectedCosDetails = selectedCosDetails,
+                SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                CurrentUser = _userManager.GetUserName(User)
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(BookATLViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var atl = await _dbContext.FilprideAuthorityToLoads
+                    .Include(a => a.Details)
+                    .ThenInclude(b => b.CustomerOrderSlip)
+                    .ThenInclude(c => c!.AppointedSuppliers)
+                    .FirstOrDefaultAsync(a => a.AuthorityToLoadId == viewModel.AtlId, cancellationToken);
+
+                if (atl == null)
+                {
+                    return NotFound();
+                }
+
+                var hasBeenUsed = atl.Details.Any(b => b.UnservedQuantity < b.Quantity);
+
+                if (hasBeenUsed)
+                {
+                    TempData["error"] = $"Cannot edit ATL# {atl.AuthorityToLoadNo}. This ATL has already been partially or fully served and cannot be modified.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                foreach (var oldDetail in atl.Details)
+                {
+                    var appointedSupplier = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(c => c.CustomerOrderSlip)
+                        .FirstOrDefaultAsync(x => x.CustomerOrderSlipId == oldDetail.CustomerOrderSlipId
+                            && x.SequenceId == oldDetail.AppointedId, cancellationToken);
+
+                    if (appointedSupplier != null)
+                    {
+                        appointedSupplier.UnreservedQuantity += oldDetail.Quantity;
+                        appointedSupplier.CustomerOrderSlip!.IsCosAtlFinalized = false;
+                    }
+                }
+
+                _dbContext.FilprideBookAtlDetails.RemoveRange(atl.Details);
+
+                var firstCosId = viewModel.SelectedCosDetails.FirstOrDefault()!.CosId;
+                var cosRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(x => x.CustomerOrderSlipId == firstCosId, cancellationToken);
+
+                if (cosRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                atl.CustomerOrderSlipId = cosRecord.CustomerOrderSlipId;
+                atl.LoadPortId = cosRecord.PickUpPointId ?? 0;
+                atl.Depot = cosRecord.PickUpPoint!.Depot;
+                atl.Freight = cosRecord.Freight ?? 0m;
+                atl.DateBooked = viewModel.Date;
+                atl.ValidUntil = viewModel.Date.AddDays(4);
+                atl.UppiAtlNo = viewModel.UPPIAtlNo;
+                atl.SupplierId = viewModel.SupplierId;
+                viewModel.CurrentUser = GetUserFullName();
+
+                var bookDetails = new List<FilprideBookAtlDetail>();
+
+                foreach (var details in viewModel.SelectedCosDetails)
+                {
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(c => c.CustomerOrderSlip)
+                        .Where(c => c.CustomerOrderSlipId == details.CosId)
+                        .ToListAsync(cancellationToken);
+
+                    var appointedSupplier = appointedSuppliers.FirstOrDefault(x => x.SequenceId == details.AppointedId);
+
+                    if (appointedSupplier == null)
+                    {
+                        continue;
+                    }
+
+                    appointedSupplier.UnreservedQuantity -= details.Volume;
+
+                    bookDetails.Add(new FilprideBookAtlDetail
+                    {
+                        AuthorityToLoadId = atl.AuthorityToLoadId,
+                        CustomerOrderSlipId = appointedSupplier.CustomerOrderSlipId,
+                        Quantity = details.Volume,
+                        UnservedQuantity = details.Volume,
+                        AppointedId = appointedSupplier.SequenceId,
+                    });
+
+                    if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
+                    {
+                        appointedSupplier.CustomerOrderSlip!.IsCosAtlFinalized = true;
+                    }
+
+                    appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
+                }
+
+                await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Edited atl# {atl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = $"ATL# {atl.AuthorityToLoadNo} updated successfully.";
+                await transaction.CommitAsync(cancellationToken);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to update ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
             }
         }
     }
