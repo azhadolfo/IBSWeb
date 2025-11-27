@@ -1,0 +1,224 @@
+@model BookATLViewModel
+@{
+    ViewData["Title"] = "Authority To Load - Edit";
+}
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="AtlId" />
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Date" type="date" class="form-control border-0 shadow" />
+                <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Load Port<span class="required">*</span></label>
+                <select id="LoadPortSelect" name="LoadPortId" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="">Select load port</option>
+                    @foreach (var port in Model.LoadPorts)
+                    {
+                        <option value="@port.Value" selected="@(port.Value == Model.LoadPortId.ToString())">@port.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Supplier List<span class="required">*</span></label>
+                <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" id="SupplierId" style="width:100%">
+                    <option value="">Select supplier</option>
+                </select>
+                <span asp-validation-for="SupplierId" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12" id="uppiAtlWrapper" style="display:@(Model.SupplierId == 19 ? "block" : "none");">
+                <input asp-for="UPPIAtlNo" class="form-control border-0 shadow" required/>
+                <label asp-for="UPPIAtlNo" class="ms-2">UPPI ATL#<span class="required">*</span></label>
+                <span asp-validation-for="UPPIAtlNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">COS List<span class="required">*</span></label>
+                <div id="cosContainer"></div>
+                <div class="text-danger d-none" id="cosErrorMessage">Please select at least one COS with valid volume.</div>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control" id="submitBtn">Update</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index" class="btn btn-outline-primary form-control">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+@await Html.PartialAsync("_ValidationScriptsPartial")
+<script>
+    let cosIndex = 0;
+    const existingCosDetails = @Html.Raw(Json.Serialize(Model.SelectedCosDetails));
+
+    $(document).ready(function () {
+        const createBtn = $('#submitBtn');
+        const supplierIdInput = $('#SupplierId');
+        const loadPortInput = $('#LoadPortSelect');
+
+        // Load COS list on page load
+        loadCosList();
+
+        supplierIdInput.on('change', function () {
+            $('#uppiAtlWrapper').toggle($(this).val() === '19');
+            loadCosList();
+        });
+
+        loadPortInput.on('change', loadCosList);
+
+        function loadCosList() {
+            const supplierId = supplierIdInput.val();
+            const loadPortId = loadPortInput.val();
+            const container = $('#cosContainer');
+            container.empty();
+            cosIndex = 0;
+            disableCreateButton(true);
+
+            if (!supplierId || !loadPortId) return;
+
+            $.ajax({
+                url: '@Url.Action("GetSupplierCOSForEdit", "AuthorityToLoad", new { area = "Filpride" })',
+                type: 'GET',
+                data: { 
+                    supplierId, 
+                    loadPortId,
+                    atlId: @Model.AtlId 
+                },
+                success: function (data) {
+                    if (data?.length > 0) {
+                        data.forEach(cos => {
+                            // Check if this COS was previously selected
+                            const existingDetail = existingCosDetails.find(
+                                x => x.cosId === cos.cosId && x.appointedId === cos.appointedId
+                            );
+                            const isChecked = existingDetail ? true : false;
+                            const existingVolume = existingDetail ? existingDetail.volume : '';
+
+                            const html = `
+                                <div class="row align-items-center mb-2 cos-entry" 
+                                     data-cos-id="${cos.cosId}" 
+                                     data-appointed-id="${cos.appointedId}" 
+                                     data-volume="${cos.volume}">
+                                    <div class="col-md-6">
+                                        <input type="checkbox" class="form-check-input me-1 cos-checkbox" ${isChecked ? 'checked' : ''} />
+                                        <span class="fw-semibold">
+                                            ${cos.cosNo} | ${cos.poNo} | Available: ${formatNumber(cos.volume)}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-6 volume-wrapper" style="display:${isChecked ? 'block' : 'none'};">
+                                        <input type="number" 
+                                               step="0.01"
+                                               class="form-control form-control-sm cos-volume"
+                                               placeholder="Enter volume (max: ${formatNumber(cos.volume)})"
+                                               min="0.01" 
+                                               max="${cos.volume}"
+                                               value="${existingVolume}"
+                                               ${isChecked ? 'required' : ''}/>
+                                    </div>
+                                </div>`;
+                            container.append(html);
+
+                            // If checked, add hidden fields
+                            if (isChecked) {
+                                const entry = container.find('.cos-entry').last();
+                                entry.append(`
+                                    <input type="hidden" name="SelectedCosDetails[${cosIndex}].AppointedId" value="${cos.appointedId}" class="hidden-appointed" />
+                                    <input type="hidden" name="SelectedCosDetails[${cosIndex}].CosId" value="${cos.cosId}" class="hidden-cosid" />
+                                    <input type="hidden" name="SelectedCosDetails[${cosIndex}].Volume" value="${existingVolume}" class="hidden-volume" />
+                                `);
+                                cosIndex++;
+                            }
+                        });
+                        bindCosCheckboxEvents();
+                        validateVolumes();
+                    }
+                },
+                error: function () {
+                    console.error("Failed to fetch COS list");
+                }
+            });
+        }
+
+        function bindCosCheckboxEvents() {
+            $('.cos-checkbox').on('change', function () {
+                const entry = $(this).closest('.cos-entry');
+                const volumeInput = entry.find('.cos-volume');
+                const wrapper = entry.find('.volume-wrapper');
+
+                if (this.checked) {
+                    wrapper.show();
+                    volumeInput.prop('disabled', false).prop('required', true);
+
+                    const appointedId = entry.data('appointed-id');
+                    const cosId = entry.data('cos-id');
+
+                    entry.append(`
+                        <input type="hidden" name="SelectedCosDetails[${cosIndex}].AppointedId" value="${appointedId}" class="hidden-appointed" />
+                        <input type="hidden" name="SelectedCosDetails[${cosIndex}].CosId" value="${cosId}" class="hidden-cosid" />
+                        <input type="hidden" name="SelectedCosDetails[${cosIndex}].Volume" class="hidden-volume" />
+                    `);
+
+                    cosIndex++;
+                } else {
+                    wrapper.hide();
+                    volumeInput.prop('disabled', true).prop('required', false).val('');
+                    entry.find('.hidden-appointed, .hidden-cosid, .hidden-volume').remove();
+                }
+
+                validateVolumes();
+            });
+
+            $('#cosContainer').on('input', '.cos-volume', function () {
+                const entry = $(this).closest('.cos-entry');
+                entry.find('.hidden-volume').val($(this).val());
+                validateVolumes();
+            });
+        }
+
+        function validateVolumes() {
+            let isValid = true;
+            let hasAnyChecked = false;
+
+            $('.cos-checkbox:checked').each(function () {
+                hasAnyChecked = true;
+                const entry = $(this).closest('.cos-entry');
+                const input = entry.find('.cos-volume');
+                const max = parseFloat(entry.data('volume'));
+                const val = parseFloat(input.val());
+
+                if (isNaN(val) || val <= 0 || val > max) {
+                    isValid = false;
+                }
+            });
+
+            $('#cosErrorMessage').toggleClass('d-none', isValid && hasAnyChecked);
+            disableCreateButton(!(isValid && hasAnyChecked));
+        }
+
+        function disableCreateButton(disable) {
+            $('#submitBtn').prop('disabled', disable);
+        }
+    });
+</script>
+}
