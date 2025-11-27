@@ -17,6 +17,10 @@
 
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-3">
+            <div class="me-2">
+                <label class="fw-semibold small text-muted mb-1">Filter by Date</label>
+                <input type="date" id="inputDate" class="form-control rounded-3 shadow-sm" style="width:150px;">
+            </div>
             <div class="table-responsive" style="max-height: 70vh">
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
@@ -50,124 +54,131 @@
 
 @section Scripts {
     <script>
-        $('#paginatedTable').DataTable({
-            "processing": true,
-            "serverSide": true,
-            "stateSave": true,
-            "stateDuration": 86400,
-            "language": {
-                "processing": `<div class="d-flex justify-content-center">
+        $(document).ready(function () {
+            let filterValue = localStorage.getItem('filterDate') || "";
+            $('#inputDate').val(filterValue);
+            
+            let table = $('#paginatedTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "stateSave": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                  </div>`
-            },
-            "ajax": {
-                "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride", filterType = ViewBag.FilterType?.ToString() })",
-                "type": "POST",
-                "data": function (d) {
-                    return $.extend({}, d, {
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                    });
                 },
-                "error": function (xhr, error, thrown) {
-                    console.error('DataTables error:', error);
-                    alert('An error occurred while loading the data');
-                }
-            },
-            "preDrawCallback": function(settings) {
-                $('#paginatedTable').addClass('table-loading');
-            },
-            "drawCallback": function(settings) {
-                $('#paginatedTable').removeClass('table-loading');
+                "ajax": {
+                    "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride", filterType = ViewBag.FilterType?.ToString() })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
 
-                // Initialize all tooltips
-                $('[data-bs-toggle="tooltip"]').tooltip();
-            },
-            "columns": [
-                { 
-                    "data": "deliveryReceiptNo",
-                    "name": "deliveryReceiptNo"
-                },
-                { 
-                    "data": "manualDrNo",
-                    "name": "manualDrNo"
-                },
-                { 
-                    "data": "date",
-                    "name": "date",
-                    "render": function (data) {
-                    var date = new Date(data);
-                    return date.toLocaleDateString('en-US', { 
-                        year: 'numeric',
-                        month: 'short',
-                        day: '2-digit'
-                    });
-                }},
-                { 
-                    "data": "deliveredDate",
-                    "name": "deliveredDate",
-                    "render": function (data) {
-                        if (!data) return '';
-                        var date = new Date(data);
-                        return date.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit'
+                            // NEW PARAMETER FOR DATE — this goes to controller
+                            filterDate: filterValue
                         });
-                }},
-                { 
-                    "data": "customerOrderSlipNo",
-                    "name": "customerOrderSlip.customerOrderSlipNo"
-                },
-                { 
-                    "data": "purchaseOrderNo",
-                    "name": "purchaseOrder.PurchaseOrderNo"
-                },
-                { 
-                    "data": "depot",
-                    "name": "customerOrderSlip.depot"
-                },
-                { 
-                    "data": "customerName",
-                    "name": "customerOrderSlip.customerName",
-                },
-                { 
-                    "data": "productName",
-                    "name": "customerOrderSlip.productName"
-                },
-                {
-                    "data": "quantity",
-                    "name": "quantity",
-                    "render": function (data, type, row) {
-                        var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
-                        return `<span class="d-block fw-medium">${amount}</span>`;
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
                     }
                 },
-                { 
-                    "data": "createdBy",
-                    "name": "createdBy",
+                "preDrawCallback": function(settings) {
+                    $('#paginatedTable').addClass('table-loading');
                 },
-                {
-                    "data": "status",
-                    "name": "status",
-                    "render": function(data, type, row) {
-                        var statusClass = row.status === "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
-                                          row.status === "@nameof(DRStatus.Invoiced)" ? "bg-success" :
-                                          row.status === "@nameof(DRStatus.Voided)" || row.status === "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
-                                          row.status === "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
+                "drawCallback": function(settings) {
+                    $('#paginatedTable').removeClass('table-loading');
 
-                        return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
-                    }
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
                 },
-                {
-                    "data": "deliveryReceiptId",
-                    "name": "deliveryReceiptId",
-                    "orderable": false,
-                    "render": function (data, type, row) {
-                        const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
-                        var deliveryReceiptId = row.deliveryReceiptId;
-                        let actions = `
+                "columns": [
+                    {
+                        "data": "deliveryReceiptNo",
+                        "name": "deliveryReceiptNo"
+                    },
+                    {
+                        "data": "manualDrNo",
+                        "name": "manualDrNo"
+                    },
+                    {
+                        "data": "date",
+                        "name": "date",
+                        "render": function (data) {
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit'
+                            });
+                        }},
+                    {
+                        "data": "deliveredDate",
+                        "name": "deliveredDate",
+                        "render": function (data) {
+                            if (!data) return '';
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit'
+                            });
+                        }},
+                    {
+                        "data": "customerOrderSlipNo",
+                        "name": "customerOrderSlip.customerOrderSlipNo"
+                    },
+                    {
+                        "data": "purchaseOrderNo",
+                        "name": "purchaseOrder.PurchaseOrderNo"
+                    },
+                    {
+                        "data": "depot",
+                        "name": "customerOrderSlip.depot"
+                    },
+                    {
+                        "data": "customerName",
+                        "name": "customerOrderSlip.customerName",
+                    },
+                    {
+                        "data": "productName",
+                        "name": "customerOrderSlip.productName"
+                    },
+                    {
+                        "data": "quantity",
+                        "name": "quantity",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                            return `<span class="d-block fw-medium">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "createdBy",
+                        "name": "createdBy",
+                    },
+                    {
+                        "data": "status",
+                        "name": "status",
+                        "render": function(data, type, row) {
+                            var statusClass = row.status === "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
+                                row.status === "@nameof(DRStatus.Invoiced)" ? "bg-success" :
+                                    row.status === "@nameof(DRStatus.Voided)" || row.status === "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
+                                        row.status === "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
+
+                            return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
+                        }
+                    },
+                    {
+                        "data": "deliveryReceiptId",
+                        "name": "deliveryReceiptId",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
+                            var deliveryReceiptId = row.deliveryReceiptId;
+                            let actions = `
                                 <div class="dropdown actions-dropdown">
                                     <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                             type="button" 
@@ -177,34 +188,41 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                        if (!row.voidedBy && !row.canceledBy && row.status !== "@DRStatus.ForApprovalOfOM") {
-                            if (!row.deliveredDate) {
-                                actions += `
+                            if (!row.voidedBy && !row.canceledBy && row.status !== "@DRStatus.ForApprovalOfOM") {
+                                if (!row.deliveredDate) {
+                                    actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="confirmCancel(${data})">Cancel</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="markAsDelivered(${data})">Mark As Delivered</a></li>`;
 
-                            } else {
-                                actions += `
+                                } else {
+                                    actions += `
                                     <li><a class="dropdown-item" onclick="confirmVoid(${data})">Void</a></li>`;
+                                }
+
+                                if (!row.hasReceivingReport) {
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data}, '${row.authorityToLoadNo}', '${row.uppiAtlNo}')">Record Lifting Date</a></li>`;
+                                }
                             }
 
-                            if (!row.hasReceivingReport) {
-                                actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data}, '${row.authorityToLoadNo}', '${row.uppiAtlNo}')">Record Lifting Date</a></li>`;
+                            if (isAdmin && !row.voidedBy && !row.canceledBy && row.deliveredDate) {
+                                actions += `<li><a class="dropdown-item" href="#" onclick="changeHaulerFreight('${deliveryReceiptId}')">Change Hauler/Freight</a></li>`;
                             }
-                        }
-                        
-                        if (isAdmin && !row.voidedBy && !row.canceledBy && row.deliveredDate) {
-                            actions += `<li><a class="dropdown-item" href="#" onclick="changeHaulerFreight('${deliveryReceiptId}')">Change Hauler/Freight</a></li>`;
-                        }
 
-                        actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>`;
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>`;
 
-                        actions += `</ul></div>`;
-                        return actions;
+                            actions += `</ul></div>`;
+                            return actions;
+                        }
                     }
-                }
-            ]
+                ]
+            });
+
+            $('#inputDate').on('change', function() {
+                filterValue = $(this).val();
+                localStorage.setItem('filterDate', filterValue); // persist the date
+                table.ajax.reload();
+            });
         });
     </script>
     <script>
