@@ -65,12 +65,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetAuthorityToLoads([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAuthorityToLoads([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
-
 
                 var atlList = await _dbContext.FilprideAuthorityToLoads
                     .Include(a => a.Details).ThenInclude(d => d.CustomerOrderSlip)
@@ -93,6 +92,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    atlList = atlList
+                        .Where(s =>
+                            s.DateBooked.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
+                        .ToList();
                 }
 
                 // Sorting
