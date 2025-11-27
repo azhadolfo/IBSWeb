@@ -337,8 +337,7 @@
                     "data": function (d) {
                         return $.extend({}, d, {
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
-
-                            // NEW PARAMETER FOR DATE — this goes to controller
+                            invoiceType: "Service",
                             filterDate: filterValue
                         });
                     },
