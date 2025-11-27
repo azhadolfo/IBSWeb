@@ -202,13 +202,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 if (filterDate != DateOnly.MinValue && filterDate != default)
                 {
-                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
-
-                    // Try to parse the searchValue into a DateOnly
-                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
-
-                    query = query.Where(s =>
-                        isDateSearch && s.Date == searchDate);
+                    query = query.Where(x => x.Date == filterDate);
                 }
 
                 // Sorting
