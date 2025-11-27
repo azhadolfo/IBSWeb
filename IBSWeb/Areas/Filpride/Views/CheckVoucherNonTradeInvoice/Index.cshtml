@@ -122,7 +122,7 @@
             let filterValue = localStorage.getItem('filterDate') || "";
             $('#inputDate').val(filterValue);
             
-            var table = $('#paginatedTable').DataTable({
+            let table = $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
                 "stateSave": true,
