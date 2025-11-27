@@ -1,4 +1,5 @@
-﻿@using IBS.Utility.Enums
+﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @model IEnumerable<FilprideCheckVoucherDetail>
 @{
     ViewData["Title"] = "Check Voucher Non-Trade Invoice";
@@ -8,7 +9,9 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        <div class="d-flex align-items-center">
+            <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        </div>
         <div class="dropdown actions-dropdown">
             <button class="btn btn-light btn-sm dropdown-toggle w-100"
                     type="button"
@@ -30,6 +33,10 @@
     </div>
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-3">
+            <div class="form-floating mb-3 w-25">
+                <input type="date" id="inputDate" class="form-control" />
+                <label class="control-label">Filter by Date</label>
+            </div>
             <div class="table-responsive" style="max-height: 70vh">
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
@@ -112,6 +119,9 @@
     </script>
     <script>
         $(document).ready(function () {
+            let filterValue = localStorage.getItem('filterDate') || "";
+            $('#inputDate').val(filterValue);
+            
             var table = $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -129,7 +139,10 @@
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+
+                            // NEW PARAMETER FOR DATE — this goes to controller
+                            filterDate: filterValue
                         });
                     },
                     "error": function (xhr, error, thrown) {
@@ -266,6 +279,12 @@
                     $(this.api().column(4).footer()).html(formatNumber(totalAmountPaid));
                     $(this.api().column(5).footer()).html(formatNumber(totalBalance));
                 }
+            });
+
+            $('#inputDate').on('change', function() {
+                filterValue = $(this).val();
+                localStorage.setItem('filterDate', filterValue); // persist the date
+                table.ajax.reload();
             });
         });
     </script>

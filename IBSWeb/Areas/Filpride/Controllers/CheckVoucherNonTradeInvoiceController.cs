@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetInvoiceCheckVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetInvoiceCheckVouchers([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -110,17 +110,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     checkVoucherDetails = checkVoucherDetails
                         .Where(s =>
                             s.TransactionNo.ToLower().Contains(searchValue) ||
-                            s.CheckVoucherHeader?.Date.ToString().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader!.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.AmountPaid.ToString().Contains(searchValue) ||
                             (s.Amount - s.AmountPaid).ToString().Contains(searchValue) ||
-                            s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
+                            s.CheckVoucherHeaderId.ToString().ToLower().Contains(searchValue) ||
                             s.CheckVoucherHeader?.Status.ToLower().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.AmountPaid.ToString().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
-                            s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToString().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
+                        )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    checkVoucherDetails = checkVoucherDetails
+                        .Where(s =>
+                            s.CheckVoucherHeader!.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue)
                         )
                         .ToList();
                 }
