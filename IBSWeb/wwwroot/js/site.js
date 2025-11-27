@@ -28,16 +28,6 @@ $(document).on('select2:open', (e) => {
     }
 });
 
-
-var table;
-
-$(document).ready(function () {
-    table = $('#dataTable').DataTable({
-        stateSave: true,
-        processing: true, // Enable the processing indicator
-    });
-});
-
 function validateDate() {
     let dateFrom = document.getElementById("dateFrom").value;
     let dateTo = document.getElementById("dateTo").value;
