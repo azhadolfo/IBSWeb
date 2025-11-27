@@ -1361,7 +1361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              !cvd.CheckVoucherHeader.IsPaid) ||
                             (cvd.SupplierId != null &&
                              cvd.SupplierId == supplierId &&
-                             cvd.Credit > cvd.AmountPaid &&
+                             cvd.Amount > cvd.AmountPaid &&
                              cvd.AccountName == "AP-Non Trade Payable")
                         ));
 
@@ -1414,11 +1414,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var invoices = await _dbContext.FilprideCheckVoucherDetails
-                .Where(i =>
-                    cvId.Contains(i.CheckVoucherHeaderId) &&
-                    i.SupplierId == supplierId)
                 .Include(i => i.Supplier)
                 .Include(i => i.CheckVoucherHeader)
+                .Where(i => cvId.Contains(i.CheckVoucherHeaderId) &&
+                            i.SupplierId == supplierId &&
+                            i.AccountName == "AP-Non Trade Payable")
                 .ToListAsync(cancellationToken);
 
             // Get the first CV's particulars
