@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -54,6 +55,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         public IActionResult GeneralLedgerBook()
@@ -211,7 +218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledger by transaction report quest pdf", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report quest pdf", "General Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -236,7 +243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {
@@ -360,7 +367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail --
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledger by transaction report excel file", "General Ledger Report", companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report excel file", "General Ledger Report", companyClaims);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion
@@ -619,7 +626,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledger by account number report quest pdf", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report quest pdf", "General Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -812,7 +819,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledger by account number report excel file", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report excel file", "General Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -845,7 +852,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(User)!;
+                var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
                 {

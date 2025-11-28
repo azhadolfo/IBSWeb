@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -42,6 +43,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
+        }
+
         public IActionResult Index()
         {
             var getEmployeeModel = _dbContext.FilprideEmployees
@@ -77,7 +84,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created new Employee #{model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -188,7 +195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Employee #{existingModel.EmployeeNumber} => {model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -47,6 +48,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         public IActionResult Index()
@@ -166,7 +173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             cv.DcpDate = dcpDate;
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update DCP date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Update DCP date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             await _unitOfWork.SaveAsync(cancellationToken);
@@ -194,7 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             cv.DcrDate = dcrDate;
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update DCR date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Update DCR date of CV# {cv.CheckVoucherHeaderNo}", "Disbursement", cv.Company);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             await _unitOfWork.SaveAsync(cancellationToken);

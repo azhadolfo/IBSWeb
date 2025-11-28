@@ -243,7 +243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate cleared disbursement report quest pdf", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cleared disbursement report quest pdf", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -391,7 +391,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate cleared disbursement report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cleared disbursement report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -558,7 +558,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate Non-Trade Invoice report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Non-Trade Invoice report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -769,7 +769,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate Cv Disbursement report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Cv Disbursement report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -947,7 +947,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase order report quest pdf", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase order report quest pdf", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -1070,7 +1070,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase order report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase order report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -1492,7 +1492,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase report quest pdf", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase report quest pdf", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -1973,7 +1973,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -2780,7 +2780,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate gross margin report quest pdf", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate gross margin report quest pdf", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -3614,7 +3614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate gross margin report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate gross margin report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -4002,7 +4002,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate trade payable report quest pdf", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate trade payable report quest pdf", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -4507,7 +4507,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate trade payable report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate trade payable report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -5311,7 +5311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate accounts payable report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate accounts payable report excel file", "Accounts Payable Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -6243,7 +6243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate liquidation report excel file", "Liquidation Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate liquidation report excel file", "Liquidation Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -7485,7 +7485,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase journal report excel file", "Liquidation Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase journal report excel file", "Liquidation Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion

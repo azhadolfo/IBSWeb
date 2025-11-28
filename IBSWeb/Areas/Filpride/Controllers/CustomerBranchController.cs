@@ -1,10 +1,10 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,6 +27,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
             _userManager = userManager;
             _dbContext = dbContext;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         public IActionResult Index()
@@ -69,7 +75,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -131,7 +137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

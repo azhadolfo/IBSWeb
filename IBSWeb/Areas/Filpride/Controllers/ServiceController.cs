@@ -157,7 +157,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Create Service #{services.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -280,7 +280,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Service #{existingModel.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

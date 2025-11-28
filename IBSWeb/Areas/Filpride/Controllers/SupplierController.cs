@@ -346,12 +346,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                 }
 
-                model.EditedBy = _userManager.GetUserName(User);
+                model.EditedBy = GetUserFullName();
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Supplier #{model.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -416,7 +416,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Activated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())!);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -482,7 +482,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Deactivated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
