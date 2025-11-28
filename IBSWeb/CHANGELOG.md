@@ -6,6 +6,14 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.0] - 2025-11-28
+### Fixed
+- Fixed redundant switch condition on the COS index.
+- Fixed the CV Non-trade invoice to mark only the AP Non-Trade payable.
+
+### Changed
+- Username value when creating audit trail
+
 ## [1.0.0] - 2025-11-28
 ### Added
 - Initial implementation of **IBSWeb – Integrated Business System**.
@@ -40,9 +48,6 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 ---
 
 ## [Unreleased]
-### Fixed
-- Fixed redundant switch condition on the COS index.
-- Fixed the CV Non-trade invoice to mark only the AP Non-Trade payable.
-### Changed
-- Username value when creating audit trail
+### Added
+- Added journal entries for updating commission or freight.
 
