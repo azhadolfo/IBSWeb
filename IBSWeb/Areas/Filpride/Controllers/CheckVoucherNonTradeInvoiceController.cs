@@ -548,7 +548,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable")
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
                     {
                         apNonTradeTotal += viewModel.Credit[i];
                     }
@@ -1500,7 +1500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable")
+                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
                     {
                         apNonTradeTotal += viewModel.Credit[i];
                     }
