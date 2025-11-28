@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims &&
                                   cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
                                   (cvd.SupplierId != null && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit > 0m && cvd.AccountName == "AP-Non Trade Payable" ||
-                                   cvd.CheckVoucherHeader.SupplierId != null && cvd.Credit > 0m))
+                                   cvd.CheckVoucherHeader.SupplierId != null && cvd.AccountName == "AP-Non Trade Payable"))
                     .Include(cvd => cvd.Supplier)
                     .Include(cvd => cvd.Employee)
                     .Include(cvd => cvd.CheckVoucherHeader)
