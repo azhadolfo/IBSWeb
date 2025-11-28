@@ -16,6 +16,8 @@ IBSWeb aims to provide a full-fledged business/accounting system including:
 - Support for financial reports, account summaries, and audit trails
 - Clean architecture to support maintainability, evolution, and scalability
 
+For full version history, see the [CHANGELOG](CHANGELOG.md).
+
 ---
 
 ## 🛠️ Tech Stack
