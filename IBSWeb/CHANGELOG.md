@@ -14,7 +14,7 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 ### Changed
 - Username value when creating audit trail
 
-## [1.0.0] - 2025-11-28
+## [v1.0.0] - 2025-11-28
 ### Added
 - Initial implementation of **IBSWeb – Integrated Business System**.
 - Added **N-Tier architecture** structure:
