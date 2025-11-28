@@ -289,10 +289,6 @@
                                     }
                                     break;
                                 case '@CosStatus.Closed':
-                                    if (row.oldPrice === 0){
-                                        actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
-                                    }
-                                    break;
                                 case '@CosStatus.Expired':
                                     if (row.deliveredQuantity > 0 && row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
