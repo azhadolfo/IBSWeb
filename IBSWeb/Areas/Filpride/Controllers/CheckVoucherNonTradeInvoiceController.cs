@@ -89,11 +89,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
-                                  && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
-                                  && ((cvd.SupplierId != null) && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit != 0 && cvd.AccountName == "AP-Non Trade Payable"
-                                      || cvd.CheckVoucherHeader.SupplierId != null
-                                      && cvd.AccountName == "AP-Non Trade Payable"))
+                    .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims &&
+                                  cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
+                                  (cvd.SupplierId != null && cvd.CheckVoucherHeader.SupplierId == null && cvd.Credit > 0m && cvd.AccountName == "AP-Non Trade Payable" ||
+                                   cvd.CheckVoucherHeader.SupplierId != null && cvd.Credit > 0m))
                     .Include(cvd => cvd.Supplier)
                     .Include(cvd => cvd.Employee)
                     .Include(cvd => cvd.CheckVoucherHeader)
