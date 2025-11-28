@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -51,6 +52,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         [HttpGet]
@@ -268,7 +275,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail --
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate sales comparative report quest pdf", "Comparative Report", companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales comparative report quest pdf", "Comparative Report", companyClaims);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion
@@ -474,7 +481,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail --
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase comparative report quest pdf", "Comparative Report", companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate purchase comparative report quest pdf", "Comparative Report", companyClaims);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion

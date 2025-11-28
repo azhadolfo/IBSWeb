@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -41,6 +42,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string GetUserFullName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
+                   ?? User.Identity?.Name!;
         }
 
         public async Task<IActionResult> Index()
@@ -93,14 +100,14 @@ namespace IBSWeb.Areas.User.Controllers
                 model.CompanyCode = await _unitOfWork.Company
                     .GenerateCodeAsync(cancellationToken);
 
-                model.CreatedBy = _userManager.GetUserName(User);
+                model.CreatedBy = GetUserFullName();
                 await _unitOfWork.Company.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Created Company {model.CompanyCode}",
+                    GetUserFullName(), $"Created Company {model.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -206,13 +213,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                model.EditedBy = _userManager.GetUserName(User);
+                model.EditedBy = GetUserFullName();
                 await _unitOfWork.Company.UpdateAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Edited Company {model.CompanyCode}",
+                    GetUserFullName(), $"Edited Company {model.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -277,7 +284,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Activated Company {company.CompanyCode}",
+                    GetUserFullName(), $"Activated Company {company.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -343,7 +350,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Deactivated Company {company.CompanyCode}",
+                    GetUserFullName(), $"Deactivated Company {company.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
