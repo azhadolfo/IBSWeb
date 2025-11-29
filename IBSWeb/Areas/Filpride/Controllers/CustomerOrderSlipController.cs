@@ -1440,7 +1440,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Appointed supplier successfully.";
 
-                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -1628,7 +1628,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Reappointed supplier successfully.";
 
-                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
