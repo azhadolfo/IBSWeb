@@ -30,10 +30,22 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade" &&
-                            x.CheckVoucherHeaderNo!.Contains("CV"))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND category = {2}
+                        AND check_voucher_header_no LIKE {3}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented),
+                    "Trade",
+                    "%CV%")
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
@@ -45,17 +57,28 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade" &&
-                            x.CheckVoucherHeaderNo!.Contains("CV"))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND category = {2}
+                        AND check_voucher_header_no LIKE {3}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented),
+                    "Trade",
+                    "%CV%")
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
@@ -67,7 +90,6 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public async Task UpdateInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default)
@@ -92,7 +114,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateMultipleInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default)
         {
-            var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken) ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
+            var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken)
+                ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
 
             var detailsVoucher = await _db.FilprideCheckVoucherDetails
                 .Where(cvd => invoiceVoucher.CheckVoucherHeaderNo!.Contains(cvd.TransactionNo))
@@ -145,9 +168,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Documented) && x.CvType == nameof(CVType.Invoicing))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND cv_type = {2}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented),
+                    nameof(CVType.Invoicing))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
@@ -165,9 +199,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Undocumented) && x.CvType == nameof(CVType.Invoicing))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND cv_type = {2}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented),
+                    nameof(CVType.Invoicing))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
@@ -195,9 +240,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Documented) && x.CvType == nameof(CVType.Payment))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND cv_type = {2}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented),
+                    nameof(CVType.Payment))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
@@ -209,16 +265,26 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         private async Task<string> GenerateCodeMultiplePaymentForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Undocumented) && x.CvType == nameof(CVType.Payment))
-                .OrderBy(c => c.CheckVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_check_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                        AND cv_type = {2}
+                    ORDER BY check_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented),
+                    nameof(CVType.Payment))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCv == null)
             {
