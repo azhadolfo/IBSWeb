@@ -6,6 +6,11 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.1] - 2025-11-29
+### Changed
+- Changed in to raw sql the query for getting the latest series, applied locking of row to prevent duplicate.
+
+
 ## [v1.2.0] - 2025-11-28
 ### Fixed
 - Fixed redundant switch condition on the COS index.
@@ -48,6 +53,7 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 ---
 
 ## [Unreleased]
+
 ### Added
 - Added journal entries for updating commission or freight.
 
