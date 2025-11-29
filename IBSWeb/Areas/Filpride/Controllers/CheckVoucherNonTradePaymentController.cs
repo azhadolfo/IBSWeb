@@ -1419,8 +1419,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(i => i.CheckVoucherHeader)
                 .Where(i => cvId.Contains(i.CheckVoucherHeaderId) &&
                             i.SupplierId == supplierId &&
-                            i.AccountName == "AP-Non Trade Payable" &&
-                            i.Amount > i.AmountPaid)
+                            i.AccountName == "AP-Non Trade Payable")
                 .ToListAsync(cancellationToken);
 
             // Get the first CV's particulars
