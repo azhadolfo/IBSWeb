@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             break;
                         case "ForATLBooking":
                             query = query.Where(cos => !cos.IsCosAtlFinalized
-                                                       && cos.Depot != null
+                                                       && !string.IsNullOrEmpty(cos.Depot)
                                                        && cos.Status != nameof(CosStatus.Closed)
                                                        && cos.Status != nameof(CosStatus.Disapproved)
                                                        && cos.Status != nameof(CosStatus.Expired));
