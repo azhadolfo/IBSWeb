@@ -63,7 +63,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 ATLBookingCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => !cos.IsCosAtlFinalized
-                                      && cos.Depot != null
+                                      && !string.IsNullOrEmpty(cos.Depot)
                                       && cos.Status != nameof(CosStatus.Closed)
                                       && cos.Status != nameof(CosStatus.Disapproved)
                                       && cos.Status != nameof(CosStatus.Expired)

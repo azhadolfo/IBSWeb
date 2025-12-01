@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             break;
                         case "ForATLBooking":
                             query = query.Where(cos => !cos.IsCosAtlFinalized
-                                                       && cos.Depot != null
+                                                       && !string.IsNullOrEmpty(cos.Depot)
                                                        && cos.Status != nameof(CosStatus.Closed)
                                                        && cos.Status != nameof(CosStatus.Disapproved)
                                                        && cos.Status != nameof(CosStatus.Expired));
@@ -1956,6 +1956,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var oldCommissioneeName = existingRecord.CommissioneeName;
                 var oldCommissionRate = existingRecord.CommissionRate;
+                var userName = GetUserFullName();
 
                 if (hasCommission == "true")
                 {
@@ -1989,12 +1990,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (dr != null)
                 {
+                    var newCommissionAmount = existingRecord.CommissionRate * dr.Quantity;
+                    var difference = newCommissionAmount - dr.CommissionAmount;
+
                     dr.CommissionRate = existingRecord.CommissionRate;
                     dr.CommissionAmount = existingRecord.CommissionRate * dr.Quantity;
                     dr.CommissioneeId = existingRecord.CommissioneeId;
-                }
 
-                var userName = GetUserFullName();
+                    if (dr.DeliveredDate != null)
+                    {
+                        await _unitOfWork.FilprideDeliveryReceipt.CreateEntriesForUpdatingCommission(dr,
+                            difference, userName, cancellationToken);
+                    }
+                }
 
                 FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update commission details for customer order slip# {existingRecord.CustomerOrderSlipNo}, from ({oldCommissioneeName}) => ({existingRecord.CommissioneeName}), rate from ({oldCommissionRate}) => ({existingRecord.CommissionRate:N4})",
