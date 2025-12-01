@@ -1349,7 +1349,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var oldHaulerName = existingRecord.HaulerName;
                 var oldFreight = existingRecord.Freight;
 
-                var hauler = await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == int.Parse(haulerId!), cancellationToken);
+                var hauler = await _unitOfWork.FilprideSupplier
+                    .GetAsync(s => s.SupplierId == int.Parse(haulerId!), cancellationToken);
+
                 if (hauler == null)
                 {
                     return NotFound();
