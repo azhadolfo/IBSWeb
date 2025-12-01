@@ -1175,5 +1175,130 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new InvalidOperationException(ex.Message);
             }
         }
+
+        public async Task CreateEntriesForUpdatingFreight(FilprideDeliveryReceipt deliveryReceipt,
+            decimal difference,
+            string userName,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+                var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+                var (freightAcctNo, freightAcctTitle) = GetFreightAccount(deliveryReceipt.CustomerOrderSlip!.Product!.ProductCode);
+                var freightTitle = accountTitlesDto.Find(c => c.AccountNumber == freightAcctNo)
+                                   ?? throw new ArgumentException($"Account title '{freightAcctNo}' not found.");
+                var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300")
+                                            ?? throw new ArgumentException("Account title '201010300' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200")
+                                    ?? throw new ArgumentException("Account title '101060200' not found.");
+
+                var haulerTaxTitle = deliveryReceipt.Hauler?.WithholdingTaxTitle?.Split(" ", 2);
+                var ewtAccountNo = haulerTaxTitle?.FirstOrDefault();
+                var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
+
+                var dateToday = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+                var particulars = $"Update freight rate on DR#{deliveryReceipt.DeliveryReceiptNo}. DR dated {deliveryReceipt.DeliveredDate}";
+                var isIncremental = difference > 0;
+                difference = Math.Abs(difference);
+
+                var freightGross = difference;
+                var freightNetOfVat = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
+                    ? ComputeNetOfVat(freightGross)
+                    : freightGross;
+                var freightEwtAmount = deliveryReceipt.HaulerTaxType == SD.TaxType_WithTax
+                    ? ComputeEwtAmount(freightNetOfVat, deliveryReceipt.Hauler?.WithholdingTaxPercent ?? 0m)
+                    : 0m;
+                var freightNetOfEwt = freightEwtAmount > 0
+                    ? ComputeNetOfEwt(freightGross, freightEwtAmount)
+                    : freightGross;
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = freightTitle.AccountId,
+                    AccountNo = freightTitle.AccountNumber,
+                    AccountTitle = freightTitle.AccountName,
+                    Debit = isIncremental ? freightNetOfVat : 0m,
+                    Credit = !isIncremental ? freightNetOfVat : 0m,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                var freightVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
+                    ? ComputeVatAmount(freightNetOfVat)
+                    : 0m;
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = vatInputTitle.AccountId,
+                    AccountNo = vatInputTitle.AccountNumber,
+                    AccountTitle = vatInputTitle.AccountName,
+                    Debit = isIncremental ? freightVatAmount : 0m,
+                    Credit = !isIncremental ? freightVatAmount : 0m,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = apHaulingPayableTitle.AccountId,
+                    AccountNo = apHaulingPayableTitle.AccountNumber,
+                    AccountTitle = apHaulingPayableTitle.AccountName,
+                    Debit = !isIncremental ? freightNetOfEwt : 0m,
+                    Credit = isIncremental ? freightNetOfEwt : 0m,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SupplierId = deliveryReceipt.HaulerId,
+                    SupplierName = deliveryReceipt.HaulerName,
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                if (freightEwtAmount > 0)
+                {
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = dateToday,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = particulars,
+                        AccountId = ewtTitle!.AccountId,
+                        AccountNo = ewtTitle.AccountNumber,
+                        AccountTitle = ewtTitle.AccountName,
+                        Debit = !isIncremental ? freightEwtAmount : 0m,
+                        Credit = isIncremental ? freightEwtAmount : 0m,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = userName,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
+                    });
+                }
+
+                if (!IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(ex.Message);
+            }
+        }
     }
 }

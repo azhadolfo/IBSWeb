@@ -36,5 +36,10 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
             decimal difference,
             string userName,
             CancellationToken cancellationToken = default);
+
+        Task CreateEntriesForUpdatingFreight(FilprideDeliveryReceipt deliveryReceipt,
+            decimal difference,
+            string userName,
+            CancellationToken cancellationToken = default);
     }
 }

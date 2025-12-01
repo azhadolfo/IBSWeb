@@ -1348,6 +1348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var oldHaulerName = existingRecord.HaulerName;
                 var oldFreight = existingRecord.Freight;
+                var userName = GetUserFullName();
 
                 var hauler = await _unitOfWork.FilprideSupplier
                     .GetAsync(s => s.SupplierId == int.Parse(haulerId!), cancellationToken);
@@ -1357,6 +1358,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var newFreightAmount = (freight ?? 0m) * existingRecord.Quantity;
+                var difference = newFreightAmount - existingRecord.FreightAmount;
+
                 existingRecord.Freight = freight ?? 0m;
                 existingRecord.FreightAmount = (freight ?? 0m) * existingRecord.Quantity;
                 existingRecord.HaulerId = hauler.SupplierId;
@@ -1364,7 +1368,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.HaulerVatType = hauler.VatType;
                 existingRecord.HaulerTaxType = hauler.TaxType;
 
-                var userName = GetUserFullName();
+                if (existingRecord.DeliveredDate != null)
+                {
+                    await _unitOfWork.FilprideDeliveryReceipt.CreateEntriesForUpdatingFreight(existingRecord,
+                        difference, userName, cancellationToken);
+                }
 
                 FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update hauler/freight for delivery receipt# {existingRecord.DeliveryReceiptNo}, hauler from ({oldHaulerName}) => ({existingRecord.HaulerName}), freight from ({oldFreight}) => ({existingRecord.Freight:N4})",
