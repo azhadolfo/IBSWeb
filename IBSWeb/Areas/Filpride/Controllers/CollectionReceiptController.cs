@@ -101,7 +101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, string invoiceType, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, DateOnly filterDate, string invoiceType, CancellationToken cancellationToken)
         {
             try
             {
@@ -147,6 +147,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.CreatedBy!.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue)
                             )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    collectionReceipts = collectionReceipts
+                        .Where(s =>
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
                         .ToList();
                 }
 
@@ -299,13 +309,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var costOfMoney = dr.CommissionAmount * .03m * daysDelayed / 360m;
 
                     await _unitOfWork.FilprideCollectionReceipt.ApplyCostOfMoney(dr, costOfMoney,
-                        User.Identity!.Name!, depositDate, cancellationToken);
+                        GetUserFullName(), depositDate, cancellationToken);
 
                 }
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Record deposit date of collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -1132,7 +1142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -2159,8 +2169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User)!;
-                FilprideAuditTrail auditTrail = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2169,8 +2178,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User)!;
-                FilprideAuditTrail auditTrail = new(printedBy, $"Printed re-printed copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2259,8 +2267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            var printedBy = _userManager.GetUserName(User)!;
-            FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCr.CollectionReceiptNo}", "Collection Receipt", findIdOfCr.Company);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of collection receipt# {findIdOfCr.CollectionReceiptNo}", "Collection Receipt", findIdOfCr.Company);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -2659,11 +2666,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.DepositedDate = null;
                 model.Status = nameof(CollectionReceiptStatus.Returned);
 
-                await _unitOfWork.FilprideCollectionReceipt.ReturnedCheck(model.CollectionReceiptNo!, model.Company, User.Identity!.Name!, cancellationToken);
+                await _unitOfWork.FilprideCollectionReceipt.ReturnedCheck(model.CollectionReceiptNo!, model.Company, GetUserFullName(), cancellationToken);
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Return checks of collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -2717,7 +2724,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Redeposit collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -2769,7 +2776,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Apply clearing date for collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

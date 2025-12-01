@@ -74,7 +74,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetSalesInvoices([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetSalesInvoices([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -101,6 +101,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Remarks.ToLower().Contains(searchValue) ||
                             s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
                             )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    salesInvoices = salesInvoices
+                        .Where(s =>
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
                         .ToList();
                 }
 
@@ -466,7 +476,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview sales invoice# {sales.SalesInvoiceNo}", "Sales Invoice", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview sales invoice# {sales.SalesInvoiceNo}", "Sales Invoice", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -670,8 +680,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -683,8 +692,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

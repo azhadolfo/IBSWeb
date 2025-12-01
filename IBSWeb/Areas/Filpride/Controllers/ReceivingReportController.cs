@@ -124,7 +124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetReceivingReports([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetReceivingReports([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -171,6 +171,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    receivingReports = receivingReports
+                        .Where(s =>
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
+                        .ToList();
                 }
 
                 // Sorting
@@ -527,7 +537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -762,8 +772,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -775,8 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

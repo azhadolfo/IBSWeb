@@ -212,7 +212,7 @@
                             <span class="text-danger"></span>
                         </div>`;
 
-            if (accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200" || accountNumber === "101020500"){
+            if (accountNumber === "201030550" || accountNumber === "201030510" || accountNumber === "201030600" || accountNumber === "202010200" || accountNumber === "101020500" || accountNumber === "201030700"){
                 if (selectionGroup.length === 0) {
                     showSupplierSelectList();
                 }
@@ -453,6 +453,22 @@
             var totalValue = parseFloat($("#totalAmount").val()) || 0;
             var errorMessage = "";
             var isValid = true;
+            let hasValidSubaccount = false;
+            const rows = document.querySelectorAll("#accountingEntriesBody tr");
+
+            for (const row of rows) {
+                const titleInput = row.querySelector("input[name='AccountTitle']");
+                const creditInput = row.querySelector("input[name='Credit']");
+
+                if (!titleInput || !creditInput) continue;
+
+                const title = titleInput.value.trim();
+                const credit = parseFloat(creditInput.value.replace(/,/g, "")) || 0;
+
+                if (title === "AP-Non Trade Payable" && credit !== 0) {
+                    hasValidSubaccount = true;
+                }
+            }
 
             if ($("#balance-error-message").length === 0) {
                 $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
@@ -466,6 +482,9 @@
                 isValid = false;
             } else if (totalValue !== totalDebit || totalValue !== totalCredit) {
                 errorMessage = "Total Amount should be equal to Total Debit and Credit.";
+                isValid = false;
+            } else if (!hasValidSubaccount) {
+                errorMessage = "No AP-Nontrade Payable with credit detected.";
                 isValid = false;
             }
 

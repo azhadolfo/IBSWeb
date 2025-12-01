@@ -90,7 +90,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCheckVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckVouchers([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -114,6 +114,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Category.ToLower().Contains(searchValue) ||
                             s.CvType?.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy!.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    checkVoucherHeaders = checkVoucherHeaders
+                        .Where(s =>
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue)
                         )
                         .ToList();
                 }
@@ -687,7 +697,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Particulars = existingHeaderModel.Particulars!,
                     CVId = existingHeaderModel.CheckVoucherHeaderId,
                     CVNo = existingHeaderModel.CheckVoucherHeaderNo,
-                    CreatedBy = _userManager.GetUserName(this.User),
                     RRs = new List<ReceivingReportList>(),
                     OldCVNo = existingHeaderModel.OldCvNo,
                     Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims,
@@ -1128,7 +1137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview check voucher# {header.CheckVoucherHeaderNo}", "Check Voucher", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview check voucher# {header.CheckVoucherHeaderNo}", "Check Voucher", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -1150,8 +1159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User)!;
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1163,7 +1171,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed re-printed copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1554,7 +1562,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 throw new NullReferenceException("CV Header not found.");
             }
 
-            var userName = _userManager.GetUserName(this.User);
+            var userName = GetUserFullName();
             if (userName == null)
             {
                 throw new NullReferenceException("User not found.");
@@ -2884,6 +2892,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var deliverReceipt = await query
                 .Include(dr => dr.CustomerOrderSlip)
+                .Include(filprideDeliveryReceipt => filprideDeliveryReceipt.Commissionee)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
@@ -3024,7 +3033,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckNo = existingHeaderModel.CheckNo!,
                     CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
                     Particulars = existingHeaderModel.Particulars!,
-                    CreatedBy = _userManager.GetUserName(User),
                     DRs = [],
                     Suppliers =
                         await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
@@ -3408,7 +3416,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckNo = existingHeaderModel.CheckNo!,
                     CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
                     Particulars = existingHeaderModel.Particulars!,
-                    CreatedBy = _userManager.GetUserName(this.User),
                     DRs = [],
                     Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),

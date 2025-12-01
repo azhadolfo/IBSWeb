@@ -75,7 +75,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetJournalVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetJournalVouchers([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
         {
             try
             {
@@ -101,6 +101,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                     .ToList();
+                }
+                if (filterDate != DateOnly.MinValue && filterDate != default)
+                {
+                    var searchValue = filterDate.ToString(SD.Date_Format).ToLower();
+
+                    journalVoucherHeader = journalVoucherHeader
+                        .Where(s =>
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue)
+                        )
+                        .ToList();
                 }
 
                 // Sorting
@@ -341,7 +351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview journal voucher# {header.JournalVoucherHeaderNo}", "Journal Voucher", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview journal voucher# {header.JournalVoucherHeaderNo}", "Journal Voucher", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -738,8 +748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -751,8 +760,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

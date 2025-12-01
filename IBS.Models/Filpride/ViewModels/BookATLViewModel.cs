@@ -5,6 +5,8 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class BookATLViewModel
     {
+        public int? AtlId { get; set; }
+
         public int SupplierId { get; set; }
 
         public List<SelectListItem>? CosList { get; set; }

@@ -1,3 +1,4 @@
+
 @using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
@@ -16,6 +17,8 @@
     var userDepartment = ViewBag.GetUserDepartment;
 
     var userName = UserManager.GetUserName(this.User);
+    
+    ViewBag.AppVersion = "1.2.1";
 }
 
 <!DOCTYPE html>
@@ -1121,7 +1124,7 @@
 
     <footer b-q5eydxz0xc class="border-top footer bg-primary text-light">
         <div class="container text-center">
-            &copy; 2024 - Filpride <i class="bi bi-r-circle"></i>
+            &copy; 2024 - Filpride <i class="bi bi-r-circle"></i> &middot; @($"v{ViewBag.AppVersion}")
         </div>
     </footer>
 
