@@ -6,6 +6,13 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.2] - 2025-12-01
+### Added
+- Added journal entries for updating the commission and freight.
+
+### Fixed
+- Fixed atl booking card in dashboard not accurate.
+
 ## [v1.2.1] - 2025-11-29
 ### Changed
 - Changed in to raw sql the query for getting the latest series, applied locking of row to prevent duplicate.
@@ -54,6 +61,4 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ## [Unreleased]
 
-### Added
-- Added journal entries for updating commission or freight.
 
