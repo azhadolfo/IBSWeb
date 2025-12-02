@@ -1,6 +1,4 @@
-using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace IBSWeb.Hubs
@@ -16,7 +14,6 @@ namespace IBSWeb.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            await Clients.Caller.SendAsync("OnConnected");
             await base.OnConnectedAsync();
         }
 

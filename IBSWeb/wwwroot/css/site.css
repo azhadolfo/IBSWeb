@@ -681,3 +681,26 @@ body.loading {
     overflow-y: auto !important;
     overflow-x: hidden;
 }
+
+/* Notification badge pulse animation */
+@keyframes badge-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.badge-pulse {
+    animation: badge-pulse 0.5s ease-in-out 3;
+}
+
+/* Make notification icon more visible */
+#notificationCount {
+    font-size: 0.7rem;
+    padding: 0.25em 0.4em;
+}
