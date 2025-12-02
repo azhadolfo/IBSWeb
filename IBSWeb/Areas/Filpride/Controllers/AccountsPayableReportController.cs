@@ -602,21 +602,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var nonTradeInvoiceReport =
-                    await _dbContext.FilprideCheckVoucherDetails
-                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
-                                      && cvd.CheckVoucherHeader.CvType != nameof(CVType.Invoicing)
-                                      && cvd.CheckVoucherHeader.Date >= dateFrom &&
-                                      cvd.CheckVoucherHeader.Date <= dateTo)
-                        .Include(cvd => cvd.Supplier)
-                        .Include(cvd => cvd.CheckVoucherHeader)
-                        .ThenInclude(cvh => cvh!.Supplier)
-                        .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
-                        .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
-                        .ThenByDescending(cvd => cvd.Debit)
+                var nonTradeInvoiceHeaderReport = await _dbContext.FilprideCheckVoucherHeaders
+                        .Where(cvh => cvh.Company == companyClaims &&
+                                      cvh.CvType != nameof(CVType.Invoicing) &&
+                                      cvh.Date >= dateFrom &&
+                                      cvh.Date <= dateTo)
+                        .Include(cvh => cvh.Details!.OrderBy(cvd => cvd.Debit))
+                        .Include(cvh => cvh.Supplier)
+                        .OrderBy(cvh => cvh.Date)
+                        .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
+                        .AsNoTracking()
                         .ToListAsync(cancellationToken);
 
-                if (nonTradeInvoiceReport.Count == 0)
+                var allReceivingReports = await _unitOfWork.FilprideReceivingReport.GetAllAsync(null, cancellationToken);
+                var allCvTradePayments = await _dbContext.FilprideCVTradePayments.ToListAsync(cancellationToken);
+
+                if (nonTradeInvoiceHeaderReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(CvDisbursementReport));
@@ -673,70 +674,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalCredit = 0m;
                 var totalDebit = 0m;
 
-                foreach (var inv in nonTradeInvoiceReport)
+                foreach (var header in nonTradeInvoiceHeaderReport)
                 {
-                    col = 1;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.DcrDate.HasValue ? inv.CheckVoucherHeader.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckNo; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
-
-                    if (inv.CheckVoucherHeader.Category == "Trade")
+                    foreach (var details in header.Details!)
                     {
-                        var rrListOfString = new List<string>();
-                        var cvTradeRrs = await _dbContext.FilprideCVTradePayments.Where(ctp =>
-                            ctp.CheckVoucherId == inv.CheckVoucherHeader.CheckVoucherHeaderId).ToListAsync(cancellationToken);
+                        col = 1;
+                        worksheet.Cells[row, col].Value = header.Date.ToDateTime(TimeOnly.MinValue); col++;
+                        worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
+                        worksheet.Cells[row, col].Value = header.DcrDate.HasValue ? header.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null; col++;
+                        worksheet.Cells[row, col].Value = header.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = header.Payee; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars; col++;
+                        worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
 
-                        if (cvTradeRrs.Count > 0)
+                        if (header.Category == "Trade")
                         {
-                            foreach (var cvTradeRr in cvTradeRrs)
+                            var rrListOfString = new List<string>();
+                            var cvTradeRrs = allCvTradePayments.Where(ctp =>
+                                ctp.CheckVoucherId == header.CheckVoucherHeaderId).ToList();
+
+                            if (cvTradeRrs.Count > 0)
                             {
-                                var rr = await _unitOfWork.FilprideReceivingReport.GetAsync(r => r.ReceivingReportId == cvTradeRr.DocumentId, cancellationToken);
-                                if (rr != null)
+                                foreach (var cvTradeRr in cvTradeRrs)
                                 {
-                                    rrListOfString.Add(rr.ReceivingReportNo!);
+                                    var rr = allReceivingReports.FirstOrDefault(r => r.ReceivingReportId == cvTradeRr.DocumentId);
+                                    if (rr != null)
+                                    {
+                                        rrListOfString.Add(rr.ReceivingReportNo!);
+                                    }
                                 }
                             }
-                        }
 
-                        if (rrListOfString.Count > 0)
+                            if (rrListOfString.Count > 0)
+                            {
+                                worksheet.Cells[row, col].Value = $"{string.Join(", ", rrListOfString)}";
+                            }
+                        }
+                        else
                         {
-                            worksheet.Cells[row, col].Value = $"{string.Join(", ", rrListOfString)}";
+                            worksheet.Cells[row, col].Value = header.Reference;
                         }
+                        col++;
+
+                        worksheet.Cells[row, col].Value = details.AccountNo; col++;
+
+                        if (details.AccountName == "Cash in Bank")
+                        {
+                            worksheet.Cells[row, col].Value = $"{details.AccountName} ({header.BankAccountNumber} {header.BankAccountName})";
+                        }
+                        else
+                        {
+                            worksheet.Cells[row, col].Value = $"{details.AccountName}";
+                        }
+                        col++;
+
+                        worksheet.Cells[row, col].Value = details.Debit; col++;
+                        worksheet.Cells[row, col].Value = details.Credit; col++;
+                        worksheet.Cells[row, col].Value = header.Status;
+
+                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+
+                        totalCredit += details.Credit;
+                        totalDebit += details.Debit;
+
+                        row++;
                     }
-                    else
-                    {
-                        worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Reference;
-                    }
-                    col++;
-
-                    worksheet.Cells[row, col].Value = inv.AccountNo; col++;
-
-                    if (inv.AccountName == "Cash in Bank")
-                    {
-                        worksheet.Cells[row, col].Value = $"{inv.AccountName} ({inv.CheckVoucherHeader.BankAccountNumber} {inv.CheckVoucherHeader.BankAccountName})";
-                    }
-                    else
-                    {
-                        worksheet.Cells[row, col].Value = $"{inv.AccountName}";
-                    }
-                    col++;
-
-                    worksheet.Cells[row, col].Value = inv.Debit; col++;
-                    worksheet.Cells[row, col].Value = inv.Credit; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
-
-                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-
-                    totalCredit += inv.Credit;
-                    totalDebit += inv.Debit;
-
-                    row++;
                 }
 
                 worksheet.Cells[row, 10].Value = "TOTAL: ";
