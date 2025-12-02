@@ -374,8 +374,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BusinessStyle = customer.BusinessStyle,
                     AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
-                    ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7)),
                 };
+
+                ///TODO Temporary solution for 14 days expiration of GASSO FUEL TRADING customer
+                model.ExpirationDate = !model.CustomerName.Contains("GASSO FUEL TRADING", StringComparison.CurrentCultureIgnoreCase)
+                    ? DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7))
+                    : DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(14));
 
                 // Upload files if there is existing
                 if (viewModel.UploadedFiles != null)
