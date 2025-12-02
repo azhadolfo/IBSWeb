@@ -61,4 +61,10 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ## [Unreleased]
 
+### Added
+- Added default commissionee and commission rate to customer master file
+
+### Changed
+- Modified the date parameter needed when generating AR Per Customer.
+
 
