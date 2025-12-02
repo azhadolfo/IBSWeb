@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
+                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
                 if (checkVoucherHeader.Count == 0)
                 {
