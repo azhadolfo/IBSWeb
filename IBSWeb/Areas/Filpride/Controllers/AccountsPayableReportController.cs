@@ -602,7 +602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var nonTradeInvoiceHeaderReport = await _dbContext.FilprideCheckVoucherHeaders
+                var cvTradeHeaderReport = await _dbContext.FilprideCheckVoucherHeaders
                         .Where(cvh => cvh.Company == companyClaims &&
                                       cvh.CvType != nameof(CVType.Invoicing) &&
                                       cvh.Date >= dateFrom &&
@@ -614,10 +614,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .AsNoTracking()
                         .ToListAsync(cancellationToken);
 
-                var allReceivingReports = await _unitOfWork.FilprideReceivingReport.GetAllAsync(null, cancellationToken);
-                var allCvTradePayments = await _dbContext.FilprideCVTradePayments.ToListAsync(cancellationToken);
+                var cvTradeHeaderIds = cvTradeHeaderReport.Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var cvTradePayments = await _dbContext.FilprideCVTradePayments.Where(cvp => cvTradeHeaderIds.Contains(cvp.CheckVoucherId)).ToListAsync(cancellationToken);
 
-                if (nonTradeInvoiceHeaderReport.Count == 0)
+                var supplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType == "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var receivingReportIds = cvTradePayments.Where(cvp => supplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
+                var receivingReports = await _unitOfWork.FilprideReceivingReport.GetAllAsync(dr => receivingReportIds.Contains(dr.ReceivingReportId), cancellationToken);
+
+                var notSupplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType != "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var deliveryReceiptIds = cvTradePayments.Where(cvp => notSupplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
+                var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetAllAsync(dr => deliveryReceiptIds.Contains(dr.DeliveryReceiptId), cancellationToken);
+
+                if (cvTradeHeaderReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(CvDisbursementReport));
@@ -674,7 +682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalCredit = 0m;
                 var totalDebit = 0m;
 
-                foreach (var header in nonTradeInvoiceHeaderReport)
+                foreach (var header in cvTradeHeaderReport)
                 {
                     foreach (var details in header.Details!)
                     {
@@ -690,17 +698,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (header.Category == "Trade")
                         {
                             var rrListOfString = new List<string>();
-                            var cvTradeRrs = allCvTradePayments.Where(ctp =>
-                                ctp.CheckVoucherId == header.CheckVoucherHeaderId).ToList();
 
-                            if (cvTradeRrs.Count > 0)
+                            if (header.CvType == "Supplier")
                             {
-                                foreach (var cvTradeRr in cvTradeRrs)
+                                var cvTradeRrs = cvTradePayments
+                                    .Where(ctp => ctp.CheckVoucherId == header.CheckVoucherHeaderId)
+                                    .ToList();
+
+                                if (cvTradeRrs.Count > 0)
                                 {
-                                    var rr = allReceivingReports.FirstOrDefault(r => r.ReceivingReportId == cvTradeRr.DocumentId);
-                                    if (rr != null)
+                                    foreach (var cvTradeRr in cvTradeRrs)
                                     {
-                                        rrListOfString.Add(rr.ReceivingReportNo!);
+                                        var rr = receivingReports.FirstOrDefault(r => r.ReceivingReportId == cvTradeRr.DocumentId);
+                                        if (rr != null)
+                                        {
+                                            rrListOfString.Add(rr.ReceivingReportNo!);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var cvTradeDrs = cvTradePayments
+                                    .Where(ctp => ctp.CheckVoucherId == header.CheckVoucherHeaderId)
+                                    .ToList();
+
+                                if (cvTradeDrs.Count > 0)
+                                {
+                                    foreach (var cvTradeRr in cvTradeDrs)
+                                    {
+                                        var rr = deliveryReceipts.FirstOrDefault(r => r.DeliveryReceiptId == cvTradeRr.DocumentId);
+                                        if (rr != null)
+                                        {
+                                            rrListOfString.Add(rr.DeliveryReceiptNo!);
+                                        }
                                     }
                                 }
                             }
