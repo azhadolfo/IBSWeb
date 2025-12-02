@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "MSAP Import";
+}
+
+<style>
+    .container {
+        max-width: 90% !important;
+        width: 90% !important;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-4">
+            <form asp-action="Index" method="post">
+                <h1 class="display-6 mb-4">Master File</h1>
+                @foreach (var option in new List<string> { "Customer", "Port" })
+                {
+                    <div class="form-check mx-4">
+                        <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
+                        <label class="form-check-label" for="@option">
+                            @option Masterfile
+                        </label>
+                    </div>
+                }
+                <button class="btn btn-primary mt-4" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            
+        });
+    </script>
+}
