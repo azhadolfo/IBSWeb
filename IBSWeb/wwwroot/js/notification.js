@@ -37,3 +37,20 @@ connection.on("ReceivedNotification", function (message) {
         }
     });
 });
+
+function updateNotificationCount() {
+    $.ajax({
+        url: '/User/Notification/GetNotificationCount',
+        type: 'GET',
+        success: function (count) {
+            $('#notificationCount').text(count);
+        },
+        error: function () {
+            console.error("Error fetching notification count");
+        }
+    });
+}
+
+$(document).ready(function () {
+    updateNotificationCount();
+});

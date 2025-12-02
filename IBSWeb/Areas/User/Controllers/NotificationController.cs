@@ -53,7 +53,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNotificationCount()
         {
-            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User)!);
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Json(0);
+            }
+
+            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(userId);
 
             if (count <= 0)
             {

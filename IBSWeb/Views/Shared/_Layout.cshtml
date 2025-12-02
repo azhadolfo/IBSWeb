@@ -1137,32 +1137,6 @@
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script src="~/js/notification.js"></script>
     <script src="~/js/spinner.js"></script>
-    <script>
-    $(document).ready(function () {
-        // Check if the user is logged in
-        if ($('#hfUsername').length && $('#hfUsername').val() !== "") {
-            // Function to fetch and update notification count
-            function updateNotificationCount() {
-                $.ajax({
-                    url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
-                    type: 'GET',
-                    success: function (count) {
-                        $('#notificationCount').text(count);
-                    },
-                    error: function () {
-                        console.error("Error fetching notification count");
-                    }
-                });
-            }
-
-            // Initial load
-            updateNotificationCount();
-
-            // Optional: Poll every 30 seconds to update count
-            setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
-        }
-    });
-    </script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
         const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
