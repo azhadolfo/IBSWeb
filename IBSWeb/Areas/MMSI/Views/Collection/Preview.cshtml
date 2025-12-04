@@ -1,8 +1,11 @@
 @using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @model MMSICollection
 
 @{
     ViewData["Title"] = "Collection - Preview";
+    
+    var decimalFormat = SD.Two_Decimal_Format;
 }
 
 <div class="loader-container" style="display: none;">
@@ -10,100 +13,128 @@
     <div class="loader-text">Importing...</div>
 </div>
 
-<div class="card shadow mt-4">
+<br class="br-top" />
+<table class="w-100 mb-2">
+    <tbody>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;">
+                <img src="~/img/mmsi-logo.jpg" width="75px" height="75px"/>
+        </td>
+    </tr>
+    <tr style="margin: 0 !important;">
+        <td class="text-center" style="padding: 0 !important;">
+            <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;MALAYAN MARITIME SERVICES INC.&nbsp;</b></u></h2>
+            <p style="margin: 0; padding: 0; line-height: 1;">
+                Office Address 14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
+                Phone No: 633-4302 * 633-9472 * 634-4904<br/>
+                Business Office: 10 JP LAUREL AVE, SASA, DAVAO CITY<br/>
+                Mobile No: +639178202692
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td class="text-end" style="padding-top: 10px !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.MMSICollectionNumber)</b></h6></td>
+    </tr>
+    <tr>
+        <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>COLLECTION</b></h3></td>
+    </tr>
+    </tbody>
+</table>
 
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2 class="py-2"> PREVIEW COLLECTION</h2>
-        </div>
-    </div>
+<br />
+<div class="table-responsive">
+    <table class="w-100" style="margin-top:20px;">
+        <tbody>
+        <tr>
+            <td>
+                <span><b>Sold to:</b></span>
+                &nbsp; @Model.Customer!.CustomerName.ToUpper() &nbsp;<br />
 
-    <div class="card-body table-responsive">
-        <div class="row mb-2 justify-content-end">
-            <div class="col-12 d-flex justify-content-end">
-                <h2><strong>COLLECTION DETAILS</strong></h2>
-            </div>
-        </div>
+                <span><b>Address:</b></span>
+                &nbsp; @Model.Customer.CustomerAddress.ToUpper() &nbsp;<br />
 
-        <div class="row px-3">
-            <div class="col-6 d-flex flex-column justify-content-end">
-                <table class="table table-borderless table-sm align-middle m-0">
-                    <tbody>
-                    <tr>
-                        <td class="text-start"><b>Create Date: </b> @Model.Date</td>
-                        <td class="text-start"><b>Collection No. </b> @Model.MMSICollectionNumber</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="row px-2">
-            <div class="col">
-                <table class="table table-bordered table-sm align-middle">
-                    <tbody>
+                <span><b>TIN:</b></span>
+                &nbsp; @Model.Customer.CustomerTin &nbsp;<br />
+
+                <span><b>Business Style:</b></span>
+                &nbsp; @Model.Customer.BusinessStyle?.ToUpper() &nbsp;<br />
+                
+                <span><b>Check Number:</b></span>
+                &nbsp; @Model.CheckNumber.ToUpper() &nbsp;<br />
+                
+                <span><b>Check Date:</b></span>
+                &nbsp; @Model.CheckDate.ToString() &nbsp;<br />
+            </td>
+
+            <td class="w-25 text-nowrap">
+
+                <b>Date :</b> @Model.CreatedDate.ToString(SD.Date_Format)&nbsp;<br />
+                <b>Bank :</b> MBTC &nbsp;<br />
+                <b>Account No :</b> 167-7-16753668-5 &nbsp;<br />
+                <b>Account Name :</b> MALAYAN MARITIME SERVICES INC. &nbsp;<br />
+                <b>Deposit Date :</b> @Model.DepositDate.ToString() &nbsp;<br /><br />
+                &nbsp;
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="table-responsive" style="margin-top:20px;">
+    <table class="table-bordered w-100 text-center">
+        <thead>
+        <tr>
+            <th>BILLING NO.</th>
+            <th>BILLING DATE</th>
+            <th>CUSTOMER</th>
+            <th>AMOUNT</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach(var billing in Model.PaidBills){
+            <tr style="height:30px !important;">
+                <td>
+                    <a href="@Url.Action("Preview", "Billing", new { id = billing.MMSIBillingId })" class="text-decoration-none">@billing.MMSIBillingNumber</a>
+                </td>
+                <td>@billing.CreatedDate</td>
+                <td>@billing.Customer!.CustomerName</td>
+                <td>@billing.Amount</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:20px;">
+    <table class="w-100">
+        <tbody>
+        <tr>
+            <td>
+            </td>
+            <td style="width:40%;">
+                <div>
+                    <table class="w-100">
+                        <tbody class="text-nowrap">
                         <tr>
-                            <td class="text-start p-2"><b>Bank: </b> MBTC</td>
-                            <td class="text-start p-2"><b>Account Number: </b> 167-7-16753668-5</td>
-                            <td class="text-start p-2"><b>Account Name: </b> MALAYAN MARITIME SERVICES INC.</td>
+                            <td><p style="height: 9px; margin-left:8%; font-size: 15px;"><b>Collection Amount: </b></p></td>
+                            <td class="text-end" style="font-size: 15px;">@Model.Amount.ToString(decimalFormat)</td>
                         </tr>
                         <tr>
-                            <td class="text-start p-2"><b>Check Number: </b> @Model.CheckNumber</td>
-                            <td class="text-start p-2"><b>Check Date: </b> @Model.CheckDate</td>
-                            <td class="text-start p-2"><b>Date Deposited: </b> @Model.DepositDate</td>
+                            <td><p style="height: 9px; margin-left:8%; font-size: 15px;"><b>EWT Amount: </b></p></td>
+                            <td class="text-end" style="font-size: 15px;">@Model.EWT.ToString(decimalFormat)</td>
                         </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="row mx-2">
-            <div class="col-8 text-start p-2 small-text">
-                <table class="table table-striped table-hover table-bordered table-sm align-middle">
-                    <thead class="table-primary">
-                    <tr>
-                        <th scope="col" class="text-center p-2">Billing Number</th>
-                        <th scope="col" class="text-center p-2">Date</th>
-                        <th scope="col" class="text-center p-2">Customer</th>
-                        <th scope="col" class="text-center p-2">Amount</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var billing in Model.PaidBills)
-                    {
-                        <tr>
-                            <td class="text-center p-1">
-                                <a href="@Url.Action("Preview", "Billing", new { id = billing.MMSIBillingId })" class="text-decoration-none">@billing.MMSIBillingNumber</a>
-                            </td>
-                            <td class="text-center p-1">@billing.Date</td>
-                            <td class="text-center p-1">@billing.Customer?.CustomerName</td>
-                            <td class="text-center p-1">₱ @billing.Amount.ToString(SD.Two_Decimal_Format)</td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-4 text-start small-text">
-                <div class="row h-75">
-                    <div class="col-12 text-center flex-column d-flex justify-content-end small-text py-2 ps-2">
-                        <div class="row">
-                            <div class="col-6 text-end"><b>Collection Amount:</b></div>
-                            <div class="col-6 text-start">₱ @Model.Amount.ToString(SD.Two_Decimal_Format)</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 text-end"><b>EWT:</b></div>
-                            <div class="col-6 text-start">₱ @Model.EWT.ToString(SD.Two_Decimal_Format)</div>
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        </div>
-        <div class="row text-end justify-content-end mt-3">
-            <div class="d-flex me-3" style="width: 250px">
-                <a class="btn btn-outline-primary border custom2-btn col-12" asp-controller="Collection" asp-action="Index">
-                    <i class="bi bi-arrow-90deg-left"></i> Go Back
-                </a>
-            </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="row text-end justify-content-end mt-5">
+        <div class="d-flex me-3" style="width: 250px">
+            <a class="btn btn-outline-primary border custom2-btn col-12" asp-controller="Collection" asp-action="Index">
+                <i class="bi bi-arrow-90deg-left"></i> Go Back
+            </a>
         </div>
     </div>
 </div>
