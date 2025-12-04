@@ -31,9 +31,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSv = await _db
                 .FilprideServiceInvoices
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.ServiceInvoiceNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_service_invoices
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY service_invoice_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSv == null)
             {
@@ -52,9 +61,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSv = await _db
                 .FilprideServiceInvoices
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.ServiceInvoiceNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_service_invoices
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY service_invoice_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSv == null)
             {

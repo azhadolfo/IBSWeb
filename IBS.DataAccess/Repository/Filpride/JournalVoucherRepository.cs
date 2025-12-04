@@ -30,9 +30,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.JournalVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_journal_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY journal_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastJv == null)
             {
@@ -51,9 +60,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.JournalVoucherHeaderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_journal_voucher_headers
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY journal_voucher_header_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastJv == null)
             {

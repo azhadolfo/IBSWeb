@@ -30,9 +30,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDm = await _db
                 .FilprideDebitMemos
-                .Where(dm => dm.Company == company && dm.Type == nameof(DocumentType.Documented))
-                .OrderBy(dm => dm.DebitMemoNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_debit_memos
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY credit_debit_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastDm == null)
             {
@@ -50,9 +59,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDm = await _db
                 .FilprideDebitMemos
-                .Where(dm => dm.Company == company && dm.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(dm => dm.DebitMemoNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_debit_memos
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY credit_debit_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastDm == null)
             {

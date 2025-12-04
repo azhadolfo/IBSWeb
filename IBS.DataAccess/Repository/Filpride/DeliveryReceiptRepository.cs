@@ -36,11 +36,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
-                .Where(c => c.Company == companyClaims
-                            && !c.DeliveryReceiptNo.Contains("BEG")
-                            && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.DeliveryReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_delivery_receipts
+                    WHERE company = {0}
+                        AND delivery_receipt_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY delivery_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    companyClaims,
+                    "%BEG%",
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastDr == null)
             {
@@ -58,11 +67,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
-                .Where(c => c.Company == companyClaims
-                            && !c.DeliveryReceiptNo.Contains("BEG")
-                            && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.DeliveryReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_delivery_receipts
+                    WHERE company = {0}
+                        AND delivery_receipt_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY delivery_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    companyClaims,
+                    "%BEG%",
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastDr == null)
             {

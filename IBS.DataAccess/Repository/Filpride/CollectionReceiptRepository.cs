@@ -33,18 +33,27 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            var lastCv = await _db
+            var lastCr = await _db
                 .FilprideCollectionReceipts
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.CollectionReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_collection_receipts
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY collection_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastCv == null)
+            if (lastCr == null)
             {
                 return "CR0000000001";
             }
 
-            var lastSeries = lastCv.CollectionReceiptNo!;
+            var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(2);
             var incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -54,18 +63,27 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            var lastCv = await _db
+            var lastCr = await _db
                 .FilprideCollectionReceipts
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.CollectionReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_collection_receipts
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY collection_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastCv == null)
+            if (lastCr == null)
             {
                 return "CRU000000001";
             }
 
-            var lastSeries = lastCv.CollectionReceiptNo!;
+            var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(3);
             var incrementedNumber = int.Parse(numericPart) + 1;
 

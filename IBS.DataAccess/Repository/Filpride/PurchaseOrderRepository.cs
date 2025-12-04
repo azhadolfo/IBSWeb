@@ -33,9 +33,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastPo = await _db
                 .FilpridePurchaseOrders
-                .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.PurchaseOrderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_purchase_orders
+                    WHERE company = {0}
+                        AND purchase_order_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY purchase_order_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "POBEG%",
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastPo == null)
             {
@@ -53,9 +64,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastPo = await _db
                 .FilpridePurchaseOrders
-                .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.PurchaseOrderNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_purchase_orders
+                    WHERE company = {0}
+                        AND purchase_order_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY purchase_order_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "POBEG%",
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastPo == null)
             {

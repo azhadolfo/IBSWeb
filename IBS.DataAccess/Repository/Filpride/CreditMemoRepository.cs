@@ -28,11 +28,20 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideCreditMemo? lastCm = await _db
+            var lastCm = await _db
                 .FilprideCreditMemos
-                .Where(cm => cm.Company == company && cm.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.CreditMemoNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_credit_memos
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY credit_memo_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCm == null)
             {
@@ -50,9 +59,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCm = await _db
                 .FilprideCreditMemos
-                .Where(cm => cm.Company == company && cm.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.CreditMemoNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_credit_memos
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY credit_memo_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCm == null)
             {

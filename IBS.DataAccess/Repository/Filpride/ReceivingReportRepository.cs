@@ -34,9 +34,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.ReceivingReportNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_receiving_reports
+                    WHERE company = {0}
+                        AND receiving_report_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY receiving_report_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "RRBEG%",
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRr == null)
             {
@@ -54,9 +65,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.ReceivingReportNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_receiving_reports
+                    WHERE company = {0}
+                        AND receiving_report_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY receiving_report_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "RRBEG%",
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRr == null)
             {
