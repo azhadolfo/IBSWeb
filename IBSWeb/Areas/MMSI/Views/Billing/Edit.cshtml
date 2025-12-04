@@ -182,8 +182,8 @@
 
                     </div>
                     <div class="form-floating col-3 my-3">
-                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
-                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
+                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="" required>
+                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
                     </div>
                 </div>
