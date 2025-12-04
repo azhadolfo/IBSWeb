@@ -6,6 +6,10 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.3] - 2025-12-04
+### Added
+- Added locking of database when creating new series no.
+
 ## [v1.2.2] - 2025-12-01
 ### Added
 - Added journal entries for updating the commission and freight.
