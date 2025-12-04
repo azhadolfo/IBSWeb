@@ -17,16 +17,18 @@
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-4">
             <form asp-action="Index" method="post">
-                <h1 class="display-6 mb-4">Master File</h1>
-                @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service" })
-                {
-                    <div class="form-check mx-4">
-                        <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
-                        <label class="form-check-label" for="@option">
-                            @option Masterfile
-                        </label>
-                    </div>
-                }
+                <h2 class="mb-3">Master Files</h2>
+                <div class="border rounded p-3">
+                    @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service", "Tugboat", "TugMaster", "Vessel" })
+                    {
+                        <div class="form-check m-1">
+                            <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
+                            <label class="form-check-label" for="@option">
+                                @option Masterfile
+                            </label>
+                        </div>
+                    }
+                </div>
                 <button class="btn btn-primary mt-4" type="submit">Submit</button>
             </form>
         </div>

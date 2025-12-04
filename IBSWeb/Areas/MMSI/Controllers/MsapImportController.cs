@@ -88,11 +88,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<string> ImportFromCSV(string field, CancellationToken cancellationToken = default)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var customerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\customerDB(nullables).csv";
             var portCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\portDB.csv";
             var principalCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\principalDB(nullables)v2.csv";
             var serviceCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\servicesDB.csv";
+            var tugboatCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugboatDB.csv";
+            var tugboatOwnerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugboatOwnerDBv2.csv";
+            var tugMasterCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugMasterDBv2.csv";
+            var vesselCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\vesselDB.csv";
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -173,7 +178,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     case "Port":
                     {
                         var existingIdentifier = (await _dbContext.MMSIPorts.ToListAsync(cancellationToken))
-                            .Select(c => c.PortName).ToList();
+                            .Select(c => c.PortNumber).ToList();
 
                         var newRecords = new List<MMSIPort>();
                         using var reader = new StreamReader(portCSVPath);
@@ -323,6 +328,148 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             newRecord.ServiceNumber = padded;
                             newRecord.ServiceName = record.name;
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Tugboat":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSITugboats.ToListAsync(cancellationToken))
+                            .Select(c => c.TugboatNumber).ToList();
+                        var existingTugboatOwners = (await _dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
+                            .Select(c => new { c.TugboatOwnerId, c.TugboatOwnerNumber }).ToList();
+
+                        var newRecords = new List<MMSITugboat>();
+                        using var reader = new StreamReader(tugboatCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            string originalNumber = record.number ?? "";
+                            var padded = int.Parse(originalNumber).ToString("D3");
+
+                            var paddedOwnerNumber = int.Parse(record.owner ?? "").ToString("D3");
+                            var owner = existingTugboatOwners.FirstOrDefault(t => t.TugboatOwnerNumber == paddedOwnerNumber);
+
+                            if (existingIdentifier.Contains(padded))
+                            {
+                                continue;
+                            }
+
+                            MMSITugboat newRecord = new MMSITugboat();
+
+                            if (owner != null)
+                            {
+                                newRecord.TugboatOwnerId = owner.TugboatOwnerId;
+                            }
+
+                            newRecord.TugboatNumber = padded;
+                            newRecord.TugboatName = record.name;
+                            newRecord.IsCompanyOwned = record.companyowner == "T";
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "TugboatOwner":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
+                            .Select(c => c.TugboatOwnerNumber).ToList();
+
+                        var newRecords = new List<MMSITugboatOwner>();
+                        using var reader = new StreamReader(tugboatOwnerCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            string originalNumber = record.number ?? "";
+                            var padded = int.Parse(originalNumber).ToString("D3");
+
+                            if (existingIdentifier.Contains(padded))
+                            {
+                                continue;
+                            }
+
+                            MMSITugboatOwner newRecord = new MMSITugboatOwner();
+
+                            newRecord.TugboatOwnerNumber = padded;
+                            newRecord.TugboatOwnerName = record.name;
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "TugMaster":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSITugMasters.ToListAsync(cancellationToken))
+                            .Select(c => c.TugMasterNumber).ToList();
+
+                        var newRecords = new List<MMSITugMaster>();
+                        using var reader = new StreamReader(tugMasterCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            if (existingIdentifier.Contains(record.number))
+                            {
+                                continue;
+                            }
+
+                            MMSITugMaster newRecord = new MMSITugMaster();
+
+                            newRecord.TugMasterNumber = record.number;
+                            newRecord.TugMasterName = record.name;
+                            newRecord.IsActive = record.active == "T";
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Vessel":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSIVessels.ToListAsync(cancellationToken))
+                            .Select(c => c.VesselNumber).ToList();
+
+                        var newRecords = new List<MMSIVessel>();
+                        using var reader = new StreamReader(vesselCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            string originalNumber = record.number ?? "";
+                            var padded = int.Parse(originalNumber).ToString("D4");
+
+                            if (existingIdentifier.Contains(padded))
+                            {
+                                continue;
+                            }
+
+                            MMSIVessel newRecord = new MMSIVessel();
+
+                            newRecord.VesselNumber = padded;
+                            newRecord.VesselName = record.name;
+                            newRecord.VesselType = record.type == "L" ? "LOCAL" : "FOREIGN";
 
                             newRecords.Add(newRecord);
                             _dbContext.Add(newRecord);
