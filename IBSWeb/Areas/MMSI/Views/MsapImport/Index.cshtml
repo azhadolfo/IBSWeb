@@ -4,8 +4,15 @@
 
 <style>
     .container {
-        max-width: 90% !important;
-        width: 90% !important;
+        max-width: 50% !important;
+        width: 50% !important;
+    }
+    
+    @@media (max-width: 768px) {
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
     }
 </style>
 
@@ -17,17 +24,35 @@
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-4">
             <form asp-action="Index" method="post">
-                <h2 class="mb-3">Master Files</h2>
-                <div class="border rounded p-3">
-                    @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service", "Tugboat", "TugMaster", "Vessel" })
-                    {
-                        <div class="form-check m-1">
-                            <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
-                            <label class="form-check-label" for="@option">
-                                @option Masterfile
-                            </label>
+                <div class="row">
+                    <div class="col-12 col-md-6 py-2">
+                        <h2 class="mb-3">Master Files</h2>
+                        <div class="border rounded p-3">
+                            @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service", "Tugboat", "TugMaster", "Vessel" })
+                            {
+                                <div class="form-check m-1">
+                                    <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
+                                    <label class="form-check-label" for="@option">
+                                        @option Masterfile
+                                    </label>
+                                </div>
+                            }
                         </div>
-                    }
+                    </div>
+                    <div class="col-12 col-md-6 py-2">
+                        <h2 class="mb-3">Data Entries</h2>
+                        <div class="border rounded p-3">
+                            @foreach (var option in new List<string> { "DispatchTicket", "Billing", "Collection", "Tariff" })
+                            {
+                                <div class="form-check m-1">
+                                    <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">
+                                    <label class="form-check-label" for="@option">
+                                        @option entries
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
                 <button class="btn btn-primary mt-4" type="submit">Submit</button>
             </form>
