@@ -18,7 +18,7 @@
         <div class="card-body p-4">
             <form asp-action="Index" method="post">
                 <h1 class="display-6 mb-4">Master File</h1>
-                @foreach (var option in new List<string> { "Customer", "Port" })
+                @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service" })
                 {
                     <div class="form-check mx-4">
                         <input class="form-check-input" type="checkbox" value="@option" name="fieldList" id="@option">

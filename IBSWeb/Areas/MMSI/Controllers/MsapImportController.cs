@@ -91,6 +91,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var customerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\customerDB(nullables).csv";
             var portCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\portDB.csv";
+            var principalCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\principalDB(nullables)v2.csv";
+            var serviceCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\servicesDB.csv";
 
             try
             {
@@ -193,7 +195,134 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             newRecord.PortNumber = padded;
                             newRecord.PortName = record.port_name;
-                            newRecord.HasSBMA = record.has_sbma;
+                            newRecord.HasSBMA = record.has_sbma == "T";
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Principal":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSIPrincipals.ToListAsync(cancellationToken))
+                            .Select(c => new { c.PrincipalNumber, c.PrincipalName}).ToList();
+
+                        var mmsiCustomers = await _unitOfWork.FilprideCustomer
+                            .GetAllAsync(c => c.Company == "MMSI", cancellationToken);
+
+                        var newRecords = new List<MMSIPrincipal>();
+                        using var reader = new StreamReader(principalCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        using var reader2 = new StreamReader(customerCSVPath);
+                        using var csv2 = new CsvReader(reader2, CultureInfo.InvariantCulture);
+                        var customers = csv2.GetRecords<dynamic>().ToList();
+
+                        var customersList = customers
+                            .Select(c => new
+                            {
+                                CustomerId = mmsiCustomers.FirstOrDefault(cu => cu.CustomerName == c.name)!.CustomerId,
+                                CustomerNumber = c.number,
+                                CustomerName = c.name
+                            })
+                            .ToList();
+
+                        foreach (var record in records)
+                        {
+                            string original = record.number ?? "";
+                            var padded = int.Parse(original).ToString("D4");
+                            var identity = new
+                            {
+                                PrincipalNumber = padded,
+                                PrincipalName = record.name as string ?? "",
+                            };
+
+                            // check if already in the database
+                            if (existingIdentifier.Contains(identity))
+                            {
+                                continue;
+                            }
+
+                            var paddedCustomerNumber = int.Parse(record.agent).ToString("D4");
+
+                            MMSIPrincipal newRecord = new MMSIPrincipal();
+                            var agent = customersList.FirstOrDefault(c => c.CustomerNumber == paddedCustomerNumber);
+
+                            if (agent == null)
+                            {
+                                throw new NullReferenceException("Agent not found");
+                            }
+
+                            switch (record.terms)
+                            {
+                                case "7":
+                                    newRecord.Terms = "7D";
+                                    break;
+                                case "0":
+                                    newRecord.Terms = "COD";
+                                    break;
+                                case "15":
+                                    newRecord.Terms = "15D";
+                                    break;
+                                case "30":
+                                    newRecord.Terms = "30D";
+                                    break;
+                                case "60":
+                                    newRecord.Terms = "60D";
+                                    break;
+                            }
+
+                            newRecord.CustomerId = agent.CustomerId;
+                            newRecord.PrincipalNumber = padded;
+                            newRecord.PrincipalName = record.name;
+                            var addressConcatenated = $"{record.address1} {record.address2} {record.address3}";
+                            newRecord.Address = addressConcatenated.IsNullOrWhiteSpace() ? "-" : addressConcatenated;
+                            newRecord.TIN = record.tin as string ?? "000-000-000000";
+                            newRecord.BusinessType = record.business;
+                            newRecord.Landline1 = record.landline1;
+                            newRecord.Landline2 = record.landline2;
+                            newRecord.Mobile1 = record.mobile1;
+                            newRecord.Mobile2 = record.mobile2;
+                            newRecord.IsVatable = record.vatable == "T";
+                            newRecord.IsActive = record.active == "T";
+
+                            newRecords.Add(newRecord);
+                            _dbContext.Add(newRecord);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        //await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Service":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSIServices.ToListAsync(cancellationToken))
+                            .Select(c => c.ServiceNumber).ToList();
+
+                        var newRecords = new List<MMSIService>();
+                        using var reader = new StreamReader(serviceCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            string originalNumber = record.number ?? "";
+                            var padded = int.Parse(originalNumber).ToString("D3");
+
+                            // check if already in the database
+                            if (existingIdentifier.Contains(padded))
+                            {
+                                continue;
+                            }
+
+                            MMSIService newRecord = new MMSIService();
+
+                            newRecord.ServiceNumber = padded;
+                            newRecord.ServiceName = record.name;
 
                             newRecords.Add(newRecord);
                             _dbContext.Add(newRecord);
