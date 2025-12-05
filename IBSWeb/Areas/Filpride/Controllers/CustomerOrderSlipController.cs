@@ -1989,10 +1989,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.CommissioneeTaxType = null;
                 }
 
-                var dr = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
+                var drs = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
 
-                if (dr != null)
+                foreach (var dr in drs)
                 {
                     var newCommissionAmount = existingRecord.CommissionRate * dr.Quantity;
                     var difference = newCommissionAmount - dr.CommissionAmount;
