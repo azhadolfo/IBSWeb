@@ -161,34 +161,39 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         ViewBag.Message = "Video uploaded successfully!";
                     }
 
-                    model.Status = "For Posting";
-                    model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                    var dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    var dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    var timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
-
-                    // find the nearest half hour if the customer is phil-ceb
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null &&
+                        model.TimeArrived != null)
                     {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
+                        model.Status = "For Posting";
+                        model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                        var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        var timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                        if (fractionalPart >= 0.75m)
+                        // find the nearest half hour if the customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
                         }
-                        else if (fractionalPart >= 0.25m)
-                        {
-                            totalHours = wholeHours + 0.5m; // round to half hour
-                        }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
-                        }
+
+                        model.TotalHours = totalHours;
                     }
 
-                    model.TotalHours = totalHours;
                     await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
 
                     #region -- Audit Trail
@@ -286,40 +291,46 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
-                    // calculate for the hours of the new entry
-                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+                    TimeSpan timeDifference = default;
 
-                    // find the nearest half hour if the new customer is phil-ceb
-                    model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null &&
+                        model.TimeArrived != null)
                     {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
+                        // calculate for the hours of the new entry
+                        DateTime dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        DateTime dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                        if (fractionalPart >= 0.75m)
+                        // find the nearest half hour if the new customer is phil-ceb
+                        model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
-                        }
-                        else if (fractionalPart >= 0.25m)
-                        {
-                            totalHours = wholeHours + 0.5m; // round to half hour
-                        }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
+
+                            if (totalHours == 0)
+                            {
+                                totalHours = 0.5m;
+                            }
                         }
 
-                        if (totalHours == 0)
-                        {
-                            totalHours = 0.5m;
-                        }
+                        model.TotalHours = totalHours;
                     }
-
-                    model.TotalHours = totalHours;
 
                     if (imageFile != null)
                     {
@@ -532,7 +543,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     queried = queried
                     .Where(dt =>
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber.ToString().Contains(searchValue) == true ||
+                        (dt.DispatchNumber != null && dt.DispatchNumber.ToLower().Contains(searchValue)) ||
                         dt.Service!.ServiceName.ToString().Contains(searchValue) == true ||
                         dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
                         dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||

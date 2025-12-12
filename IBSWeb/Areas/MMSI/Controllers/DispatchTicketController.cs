@@ -113,34 +113,39 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         ViewBag.Message = "Video uploaded successfully!";
                     }
 
-                    model.Status = "For Tariff";
-                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+                    model.Status = "Pending";
 
-                    // find the nearest half hour if the customer is phil-ceb
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
                     {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
+                        model.Status = "For Tariff";
+                        DateTime dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        DateTime dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                        if (fractionalPart >= 0.75m)
+                        // find the nearest half hour if the customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
                         }
-                        else if (fractionalPart >= 0.25m)
-                        {
-                            totalHours = wholeHours + 0.5m; // round to half hour
-                        }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
-                        }
+
+                        model.TotalHours = totalHours;
+                        await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
                     }
-
-                    model.TotalHours = totalHours;
-                    await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
 
                     #region -- Audit Trail
 
@@ -480,37 +485,44 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     model.Tugboat = await _unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugBoatId, cancellationToken);
                     model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(t => t.CustomerId == model.CustomerId, cancellationToken);
-                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                    // find the nearest half hour if the customer is phil-ceb
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null &&
+                        model.TimeArrived != null)
                     {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
+                        DateTime dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        DateTime dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                        if (fractionalPart >= 0.75m)
+                        // find the nearest half hour if the customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
                         }
-                        else if (fractionalPart >= 0.25m)
+
+                        if (totalHours == 0)
                         {
-                            totalHours = wholeHours + 0.5m; // round to half hour
+                            totalHours = 0.5m;
                         }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
-                        }
+
+                        model.TotalHours = totalHours;
+
+                        currentModel.TotalHours = totalHours;
                     }
-
-                    if (totalHours == 0)
-                    {
-                        totalHours = 0.5m;
-                    }
-
-                    model.TotalHours = totalHours;
 
                     if (imageFile != null)
                     {
@@ -569,7 +581,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     currentModel.EditedBy = user!.UserName;
                     currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    currentModel.TotalHours = totalHours;
                     currentModel.Date = model.Date;
                     currentModel.DispatchNumber = model.DispatchNumber;
                     currentModel.COSNumber = model.COSNumber;
@@ -925,37 +936,46 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
-                    .Where(dt =>
-                        dt.Date.Day.ToString().Contains(searchValue) == true ||
-                        dt.Date.Month.ToString().Contains(searchValue) == true ||
-                        dt.Date.Year.ToString().Contains(searchValue) == true ||
+                    queried = queried.Where(dt =>
+                        (dt.Date.HasValue && (
+                            dt.Date.Value.Day.ToString().Contains(searchValue) ||
+                            dt.Date.Value.Month.ToString().Contains(searchValue) ||
+                            dt.Date.Value.Year.ToString().Contains(searchValue)
+                        )) ||
 
-                        dt.COSNumber!.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber.ToLower().Contains(searchValue) == true ||
+                        (dt.COSNumber != null && dt.COSNumber.ToLower().Contains(searchValue)) ||
+                        (dt.DispatchNumber != null && dt.DispatchNumber.ToLower().Contains(searchValue)) ||
 
-                        dt.DateLeft.Day.ToString().Contains(searchValue) == true ||
-                        dt.DateLeft.Month.ToString().Contains(searchValue) == true ||
-                        dt.DateLeft.Year.ToString().Contains(searchValue) == true ||
+                        (dt.DateLeft.HasValue && (
+                            dt.DateLeft.Value.Day.ToString().Contains(searchValue) ||
+                            dt.DateLeft.Value.Month.ToString().Contains(searchValue) ||
+                            dt.DateLeft.Value.Year.ToString().Contains(searchValue)
+                        )) ||
 
-                        dt.TimeLeft.Hour.ToString().Contains(searchValue) == true ||
-                        dt.TimeLeft.Minute.ToString().Contains(searchValue) == true ||
+                        (dt.TimeLeft.HasValue && (
+                            dt.TimeLeft.Value.Hour.ToString().Contains(searchValue) ||
+                            dt.TimeLeft.Value.Minute.ToString().Contains(searchValue)
+                        )) ||
 
-                        dt.DateArrived.Day.ToString().Contains(searchValue) == true ||
-                        dt.DateArrived.Month.ToString().Contains(searchValue) == true ||
-                        dt.DateArrived.Year.ToString().Contains(searchValue) == true ||
+                        (dt.DateArrived.HasValue && (
+                            dt.DateArrived.Value.Day.ToString().Contains(searchValue) ||
+                            dt.DateArrived.Value.Month.ToString().Contains(searchValue) ||
+                            dt.DateArrived.Value.Year.ToString().Contains(searchValue)
+                        )) ||
 
-                        dt.TimeArrived.Hour.ToString().Contains(searchValue) == true ||
-                        dt.TimeArrived.Minute.ToString().Contains(searchValue) == true ||
+                        (dt.TimeArrived.HasValue && (
+                            dt.TimeArrived.Value.Hour.ToString().Contains(searchValue) ||
+                            dt.TimeArrived.Value.Minute.ToString().Contains(searchValue)
+                        )) ||
 
-                        dt.Service!.ServiceName.ToLower().Contains(searchValue) == true ||
-                        dt.Terminal!.Port!.PortName!.ToLower().Contains(searchValue) == true ||
-                        dt.Terminal!.TerminalName!.ToLower().Contains(searchValue) == true ||
-                        dt.Tugboat!.TugboatName.ToLower().Contains(searchValue) == true ||
-                        dt.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
-                        dt.Vessel!.VesselName.ToLower().Contains(searchValue) == true ||
-                        dt.Status.ToLower().Contains(searchValue) == true
-                        );
+                        (dt.Service != null && dt.Service.ServiceName.ToLower().Contains(searchValue)) ||
+                        (dt.Terminal != null && dt.Terminal.Port != null && dt.Terminal.Port.PortName!.ToLower().Contains(searchValue)) ||
+                        (dt.Terminal != null && dt.Terminal.TerminalName!.ToLower().Contains(searchValue)) ||
+                        (dt.Tugboat != null && dt.Tugboat.TugboatName.ToLower().Contains(searchValue)) ||
+                        (dt.Customer != null && dt.Customer.CustomerName.ToLower().Contains(searchValue)) ||
+                        (dt.Vessel != null && dt.Vessel.VesselName.ToLower().Contains(searchValue)) ||
+                        (dt.Status != null && dt.Status.ToLower().Contains(searchValue))
+                    );
                 }
 
                 // Column-specific search

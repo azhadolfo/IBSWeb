@@ -10,7 +10,7 @@ namespace IBS.Models.MMSI.ViewModels
     {
         public int? DispatchTicketId { get; set; }
 
-        public DateOnly Date { get; set; }
+        public DateOnly? Date { get; set; }
 
         [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
         public string? COSNumber { get; set; }
@@ -23,26 +23,26 @@ namespace IBS.Models.MMSI.ViewModels
 
         public int? CustomerId { get; set; }
 
-        public DateOnly DateLeft { get; set; }
+        public DateOnly? DateLeft { get; set; }
 
-        public TimeOnly TimeLeft { get; set; }
+        public TimeOnly? TimeLeft { get; set; }
 
-        public DateOnly DateArrived { get; set; }
+        public DateOnly? DateArrived { get; set; }
 
-        public TimeOnly TimeArrived { get; set; }
+        public TimeOnly? TimeArrived { get; set; }
 
-        public int TerminalId { get; set; }
+        public int? TerminalId { get; set; }
 
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
 
-        public int TugBoatId { get; set; }
+        public int? TugBoatId { get; set; }
 
-        public int TugMasterId { get; set; }
+        public int? TugMasterId { get; set; }
 
-        public int VesselId { get; set; }
+        public int? VesselId { get; set; }
 
         public string? ImageName { get; set; }
 

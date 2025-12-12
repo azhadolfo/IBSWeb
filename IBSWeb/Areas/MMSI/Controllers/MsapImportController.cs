@@ -539,7 +539,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             var comparableVariable = new
                             {
-                                DispatchNumber = record.number as string ?? string.Empty,
+                                DispatchNumber = record.number as string ?? "",
                                 CreatedDate = DateTime.Parse((string)record.entrydate)
                             };
 
@@ -603,32 +603,37 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 }
                             }
 
-                            DateTime dateTimeLeft = newRecord.DateLeft.ToDateTime(newRecord.TimeLeft);
-                            DateTime dateTimeArrived = newRecord.DateArrived.ToDateTime(newRecord.TimeArrived);
-                            TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                            var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                            // find the nearest half hour if the customer is phil-ceb
-                            if (newRecord.CustomerId == 179)
+
+                            if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                             {
-                                var wholeHours = Math.Truncate(totalHours);
-                                var fractionalPart = totalHours - wholeHours;
+                                DateTime dateTimeLeft = newRecord.DateLeft.Value.ToDateTime(newRecord.TimeLeft.Value);
+                                DateTime dateTimeArrived = newRecord.DateArrived.Value.ToDateTime(newRecord.TimeArrived.Value);
+                                TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                                var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                                if (fractionalPart >= 0.75m)
+                                // find the nearest half hour if the customer is phil-ceb
+                                if (newRecord.CustomerId == 179)
                                 {
-                                    totalHours = wholeHours + 1.0m; // round up to next hour
+                                    var wholeHours = Math.Truncate(totalHours);
+                                    var fractionalPart = totalHours - wholeHours;
+
+                                    if (fractionalPart >= 0.75m)
+                                    {
+                                        totalHours = wholeHours + 1.0m; // round up to next hour
+                                    }
+                                    else if (fractionalPart >= 0.25m)
+                                    {
+                                        totalHours = wholeHours + 0.5m; // round to half hour
+                                    }
+                                    else
+                                    {
+                                        totalHours = wholeHours; // keep as is
+                                    }
                                 }
-                                else if (fractionalPart >= 0.25m)
-                                {
-                                    totalHours = wholeHours + 0.5m; // round to half hour
-                                }
-                                else
-                                {
-                                    totalHours = wholeHours; // keep as is
-                                }
+
+                                newRecord.TotalHours = totalHours;
                             }
-
-                            newRecord.TotalHours = totalHours;
 
                             // dispatch charge type none
                             // baf charge type --none

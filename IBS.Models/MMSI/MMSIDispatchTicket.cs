@@ -12,7 +12,7 @@ namespace IBS.Models.MMSI
         public int DispatchTicketId { get; set; }
 
         [Display(Name = "Date")]
-        public DateOnly Date { get; set; }
+        public DateOnly? Date { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string DispatchNumber
@@ -33,16 +33,16 @@ namespace IBS.Models.MMSI
         private string? _cosNumber;
 
         [Display(Name = "Date Left")]
-        public DateOnly DateLeft { get; set; }
+        public DateOnly? DateLeft { get; set; }
 
         [Display(Name = "Date Arrived")]
-        public DateOnly DateArrived { get; set; }
+        public DateOnly? DateArrived { get; set; }
 
         [Display(Name = "Time Left")]
-        public TimeOnly TimeLeft { get; set; }
+        public TimeOnly? TimeLeft { get; set; }
 
         [Display(Name = "Date Arrived")]
-        public TimeOnly TimeArrived { get; set; }
+        public TimeOnly? TimeArrived { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string? Remarks
@@ -65,9 +65,9 @@ namespace IBS.Models.MMSI
 
         private string? _voyageNumber;
 
-        public string DispatchChargeType { get; set; }
+        public string? DispatchChargeType { get; set; }
 
-        public string BAFChargeType { get; set; }
+        public string? BAFChargeType { get; set; }
 
         public decimal TotalHours { get; set; }
 
@@ -126,15 +126,15 @@ namespace IBS.Models.MMSI
 
         public decimal ApOtherTugs { get; set; }
 
-        public string TariffBy { get; set; }
+        public string? TariffBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime TariffDate { get; set; }
 
-        public string TariffEditedBy { get; set; }
+        public string? TariffEditedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime TariffEditedDate { get; set; }
+        public DateTime? TariffEditedDate { get; set; }
 
         #endregion == Tariff ==
 
@@ -161,23 +161,23 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        public int TugBoatId { get; set; }
+        public int? TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]
         public MMSITugboat? Tugboat { get; set; } //carries the columns of one record
 
-        public int TugMasterId { get; set; }
+        public int? TugMasterId { get; set; }
         [ForeignKey(nameof(TugMasterId))]
         public MMSITugMaster? TugMaster { get; set; } //carries the columns of one record
 
-        public int VesselId { get; set; }
+        public int? VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public MMSIVessel? Vessel { get; set; } //carries the columns of one record
 
-        public int TerminalId { get; set; }
+        public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; } //carries the columns of one record
 
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
         [ForeignKey(nameof(ServiceId))]
         public MMSIService? Service { get; set; } //carries the columns of one record
 

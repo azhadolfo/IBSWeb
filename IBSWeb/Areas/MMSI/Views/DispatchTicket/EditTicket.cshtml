@@ -24,7 +24,7 @@
 
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="Date" type="date" value="@(Model.Date.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
+                        <input asp-for="Date" type="date" value="@(Model.Date == null ? null : Model.Date!.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
                         <label asp-for="Date" for="CreateDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
@@ -57,24 +57,24 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateLeft" value="@(Model.DateLeft.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
+                        <input type="date" asp-for="DateLeft" value="@(Model.DateLeft == null ? null : Model.DateLeft.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
                         <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start<span class="required text-danger">*</span></label>
                         <span asp-validation-for="DateLeft" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeLeft" value="@(Model.TimeLeft.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeLeft" placeholder=" " required>
+                        <input type="time" asp-for="TimeLeft" value="@(Model.TimeLeft == null ? null : Model.TimeLeft.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeLeft" placeholder=" " required>
                         <label asp-for="TimeLeft" for="TimeLeft" class="ms-2">Time Start<span class="required text-danger">*</span></label>
                         <span asp-validation-for="TimeLeft" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateArrived" value="@(Model.DateArrived.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateArrived" placeholder=" " required>
+                        <input type="date" asp-for="DateArrived" value="@(Model.DateArrived == null ? null : Model.DateArrived.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateArrived" placeholder=" " required>
                         <label asp-for="DateArrived" for="DateArrived" class="ms-2">Date End<span class="required text-danger">*</span></label>
                         <span asp-validation-for="DateArrived" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeArrived" value="@(Model.TimeArrived.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeArrived" placeholder=" " required>
+                        <input type="time" asp-for="TimeArrived" value="@(Model.TimeArrived == null ? null : Model.TimeArrived.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeArrived" placeholder=" " required>
                         <label asp-for="TimeArrived" for="TimeArrived" class="ms-2">Time End<span class="required text-danger">*</span></label>
                         <span asp-validation-for="TimeArrived" class="text-danger"></span>
                     </div>
