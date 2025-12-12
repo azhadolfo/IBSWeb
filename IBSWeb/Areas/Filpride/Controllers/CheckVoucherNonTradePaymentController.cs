@@ -955,7 +955,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.CheckVoucherHeader)
                 .Select(cvd => new
                 {
-                    RemainingCredit = cvd.Credit - cvd.AmountPaid,
+                    RemainingCredit = cvd.Amount - cvd.AmountPaid,
                     cvd.CheckVoucherHeader!.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
@@ -1015,7 +1015,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.CheckVoucherHeader)
                 .Select(cvd => new
                 {
-                    RemainingCredit = cvd.Credit - cvd.AmountPaid,
+                    RemainingCredit = cvd.Amount - cvd.AmountPaid,
                     cvd.CheckVoucherHeader!.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
@@ -1362,7 +1362,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              !cvd.CheckVoucherHeader.IsPaid) ||
                             (cvd.SupplierId != null &&
                              cvd.SupplierId == supplierId &&
-                             cvd.Credit > cvd.AmountPaid &&
+                             cvd.Amount > cvd.AmountPaid &&
                              cvd.AccountName == "AP-Non Trade Payable")
                         ));
 
