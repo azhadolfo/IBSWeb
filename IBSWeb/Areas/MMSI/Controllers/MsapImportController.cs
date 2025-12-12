@@ -496,10 +496,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new { c.number, c.name }).ToList();
 
                         var existingIdentifier = await _dbContext.MMSIDispatchTickets
+                            .AsNoTracking()
                             .Select(dt => new { dt.DispatchNumber, dt.CreatedDate })
                             .ToListAsync(cancellationToken);
 
                         var existingVessels = await _dbContext.MMSIVessels
+                            .AsNoTracking()
                             .Select(v => new { v.VesselNumber, v.VesselId })
                             .ToListAsync(cancellationToken);
 
@@ -509,21 +511,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             .ToListAsync(cancellationToken);
 
                         var existingTugboats = await _dbContext.MMSITugboats
+                            .AsNoTracking()
                             .Select(dt => new { dt.TugboatNumber, dt.TugboatId })
                             .ToListAsync(cancellationToken);
 
                         var existingTugMasters = await _dbContext.MMSITugMasters
+                            .AsNoTracking()
                             .Select(dt => new { dt.TugMasterNumber, dt.TugMasterId })
                             .ToListAsync(cancellationToken);
 
                         var existingServices = await _dbContext.MMSIServices
+                            .AsNoTracking()
                             .Select(dt => new { dt.ServiceNumber, dt.ServiceId })
                             .ToListAsync(cancellationToken);
 
                         var ibsCustomerList = await _dbContext.FilprideCustomers.Where(c => c.Company == "MMSI")
+                            .AsNoTracking()
                             .ToListAsync(cancellationToken);
 
                         var newRecords = new List<MMSIDispatchTicket>();
+
                         using var reader = new StreamReader(dispatchTicketCSVPath);
                         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
                         var records = csv.GetRecords<dynamic>().ToList();
@@ -558,6 +565,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
                             var paddedTugboatNum = int.Parse(originalTugboatNum).ToString("D3");
 
+                            newRecord.BillingId = record.billnum;
                             newRecord.DispatchNumber = record.number;
                             newRecord.Date = DateOnly.Parse(record.date);
                             newRecord.COSNumber = record.cosno;
@@ -577,7 +585,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.TotalNetRevenue = newRecord.DispatchNetRevenue + newRecord.BAFNetRevenue;
                             newRecord.TugBoatId = 1; // existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum)!.TugboatId;
                             newRecord.TugMasterId = 1; //existingTugMasters.FirstOrDefault(tm => tm.TugMasterNumber == record.masterno)!.TugMasterId;
-                            newRecord.VesselId = 1; // existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
+                            newRecord.VesselId = 1; // newRecord.VesselId = vesselDict.TryGetValue(paddedVesselNum, out var v) ? v.VesselId : throw new Exception("Vessel not found"); // existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
                             newRecord.TerminalId = 1; // existingTerminals.FirstOrDefault(t => t.PortNumber == portNumber && t.TerminalNumber == terminalNumber)!.PortId;
                             newRecord.ServiceId = 1; // existingServices.FirstOrDefault(t => t.ServiceNumber == record.srvctype)!.ServiceId;
                             newRecord.CreatedBy = record.entryby;
@@ -651,9 +659,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.TariffEditedBy = string.Empty;
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
+                            _dbContext.MMSIDispatchTickets.Add(newRecord);
                         }
+
+                        await _dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
 
                         //await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
