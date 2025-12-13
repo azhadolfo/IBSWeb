@@ -62,6 +62,17 @@ namespace IBS.DataAccess.Repository.MMSI
                     Text = s.TerminalName
                 }).ToListAsync(cancellationToken);
             }
+            else if (model.PortId != null)
+            {
+                terminals = await _db.MMSITerminals
+                .Where(t => t.PortId == model.PortId)
+                .OrderBy(s => s.TerminalName)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalName
+                }).ToListAsync(cancellationToken);
+            }
             else
             {
                 terminals = new List<SelectListItem>();
