@@ -48,40 +48,40 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateLeft" value="@(Model.DateLeft == null ? null : Model.DateLeft.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
-                        <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start<span class="required text-danger">*</span></label>
+                        <input type="date" asp-for="DateLeft" value="@(Model.DateLeft == null ? null : Model.DateLeft.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateLeft" placeholder=" ">
+                        <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start</label>
                         <span asp-validation-for="DateLeft" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeLeft" value="@(Model.TimeLeft == null ? null : Model.TimeLeft.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeLeft" placeholder=" " required>
-                        <label asp-for="TimeLeft" for="TimeLeft" class="ms-2">Time Start<span class="required text-danger">*</span></label>
+                        <input type="time" asp-for="TimeLeft" value="@(Model.TimeLeft == null ? null : Model.TimeLeft.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeLeft" placeholder=" ">
+                        <label asp-for="TimeLeft" for="TimeLeft" class="ms-2">Time Start</label>
                         <span asp-validation-for="TimeLeft" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateArrived" value="@(Model.DateArrived == null ? null : Model.DateArrived.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateArrived" placeholder=" " required>
-                        <label asp-for="DateArrived" for="DateArrived" class="ms-2">Date End<span class="required text-danger">*</span></label>
+                        <input type="date" asp-for="DateArrived" value="@(Model.DateArrived == null ? null : Model.DateArrived.Value.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateArrived" placeholder=" ">
+                        <label asp-for="DateArrived" for="DateArrived" class="ms-2">Date End</label>
                         <span asp-validation-for="DateArrived" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeArrived" value="@(Model.TimeArrived == null ? null : Model.TimeArrived.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeArrived" placeholder=" " required>
-                        <label asp-for="TimeArrived" for="TimeArrived" class="ms-2">Time End<span class="required text-danger">*</span></label>
+                        <input type="time" asp-for="TimeArrived" value="@(Model.TimeArrived == null ? null : Model.TimeArrived.Value.ToString("HH\\:mm"))" class="form-control border-0 shadow" id="TimeArrived" placeholder=" ">
+                        <label asp-for="TimeArrived" for="TimeArrived" class="ms-2">Time End</label>
                         <span asp-validation-for="TimeArrived" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label ps-1 pb-1">Port</label>
+                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Port</option>
                         </select>
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label ps-1 pb-1">Terminal</label>
+                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Terminal</option>
                         </select>
                         <span asp-validation-for="TerminalId" class="text-danger"></span>
@@ -90,16 +90,16 @@
 
                 <div class="row">
                     <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Activity/Service Type<span class="required text-danger">*</span></label>
-                        <select asp-for="ServiceId" asp-items="@Model.Services" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label ps-1 pb-1">Activity/Service Type</label>
+                        <select asp-for="ServiceId" asp-items="@Model.Services" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Activity Service</option>
                         </select>
                         <span asp-validation-for="ServiceId" class="text-danger"></span>
                     </div>
 
                     <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Tugboat/Service provider<span class="required text-danger">*</span></label>
-                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label ps-1 pb-1">Tugboat/Service provider</label>
+                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Tugboat</option>
                         </select>
                         <span asp-validation-for="TugBoatId" class="text-danger"></span>
@@ -108,15 +108,15 @@
                 
                 <div class="row">
                     <div class="form-group col-6 my-2">
-                        <label class="control-label pb-1">Master on Duty<span class="required text-danger">*</span></label>
-                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label pb-1">Master on Duty</label>
+                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Tug Master</option>
                         </select>
                         <span asp-validation-for="TugMasterId" class="text-danger"></span>
                     </div>
                     <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
-                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <label class="control-label ps-1 pb-1">Vessel</label>
+                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Vessel</option>
                         </select>
                         <span asp-validation-for="VesselId" class="text-danger"></span>
