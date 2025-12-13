@@ -64,13 +64,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
             else
             {
-                terminals = await _db.MMSITerminals
-                .OrderBy(s => s.TerminalName)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.TerminalId.ToString(),
-                    Text = s.TerminalName
-                }).ToListAsync(cancellationToken);
+                terminals = new List<SelectListItem>();
             }
 
             return terminals;

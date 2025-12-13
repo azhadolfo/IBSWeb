@@ -60,14 +60,17 @@
         <div class="card-body p-3">
             <div class="table-responsive" style="max-height: 70vh">
                 <div class="btn-group mb-3" role="group" aria-label="Filter Options">
-                    <button id="filterForPosting" class="btn btn-outline-primary active">
+                    <button id="filterAll" class="btn btn-outline-primary active">
+                        <i class="bi bi-list"></i> All
+                    </button>
+                    <button id="filterForPosting" class="btn btn-outline-primary">
                         <i class="bi bi-check-circle"></i> For Posting
+                    </button>
+                    <button id="filterIncomplete" class="btn btn-outline-primary">
+                        <i class="bi bi-dash-circle"></i> Incomplete
                     </button>
                     <button id="filterCancelled" class="btn btn-outline-primary">
                         <i class="bi bi-x-circle"></i> Cancelled
-                    </button>
-                    <button id="filterAll" class="btn btn-outline-primary">
-                        <i class="bi bi-list"></i> All
                     </button>
                 </div>
                 <table class="table table-hover mb-0" id="paginatedTable">
@@ -218,9 +221,15 @@
                     {"data": "dateArrived"},
                     {"data": "service.serviceName"},
                     {
-                        "data": "terminal.port.portName",
-                        "render": function(data, type, row) {
-                            return `${row.terminal.port.portName} - ${row.terminal.terminalName}`;
+                        "data": null,
+                        "name": "terminal.port.portName",
+                        "render": function (data, type, row) {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+
+                            return portName || terminalName
+                                ? `${portName} - ${terminalName}`
+                                : "";
                         }
                     },
                     {"data": "tugboat.tugboatName"},
@@ -385,6 +394,11 @@
                 table.columns(11).search('For Posting', true, true).draw();
             });
 
+            $('#filterIncomplete').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(11).search('Incomplete', true, true).draw();
+            });
+
             $('#filterCancelled').on('click', function() {
                 table.columns().search(''); // Clear previous filters
                 table.columns(11).search('Cancelled', true, true).draw();
@@ -396,7 +410,7 @@
             });
             
             table.columns().search(''); // Clear previous filters
-            table.columns(11).search('For Posting', true, true).draw();
+            table.columns().search('').draw();
         });
     </script>
 }
