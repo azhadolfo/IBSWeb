@@ -170,13 +170,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             #endregion -- Saving Values --
 
-                            _dbContext.Add(newCustomer);
                             customerList.Add(newCustomer);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
-
+                        await _dbContext.FilprideCustomers.AddRangeAsync(customerList, cancellationToken);
                         return $"{field} imported successfully, {customerList.Count} new records";
                     }
                     case "Port":
@@ -207,11 +204,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.HasSBMA = record.has_sbma == "T";
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSIPorts.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Principal":
@@ -300,11 +295,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.IsActive = record.active == "T";
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSIPrincipals.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Service":
@@ -334,11 +327,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.ServiceName = record.name;
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSIServices.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Tugboat":
@@ -378,11 +369,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.IsCompanyOwned = record.companyowner == "T";
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSITugboats.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "TugboatOwner":
@@ -411,11 +400,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.TugboatOwnerName = record.name;
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSITugboatOwners.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "TugMaster":
@@ -442,11 +429,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.IsActive = record.active == "T";
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSITugMasters.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Vessel":
@@ -476,11 +461,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.VesselType = record.type == "L" ? "LOCAL" : "FOREIGN";
 
                             newRecords.Add(newRecord);
-                            _dbContext.Add(newRecord);
-                            await _dbContext.SaveChangesAsync(cancellationToken);
                         }
 
-                        //await transaction.CommitAsync(cancellationToken);
+                        await _dbContext.MMSIVessels.AddRangeAsync(newRecords, cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
 
@@ -490,7 +473,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     case "DispatchTicket":
                     {
-                        var msapCustomerList = new List<FilprideCustomer>();
                         using var reader0 = new StreamReader(customerCSVPath);
                         using var csv0 = new CsvReader(reader0, CultureInfo.InvariantCulture);
                         var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new { c.number, c.name }).ToList();
@@ -603,8 +585,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 }
                             }
 
-
-
                             if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                             {
                                 DateTime dateTimeLeft = newRecord.DateLeft.Value.ToDateTime(newRecord.TimeLeft.Value);
@@ -668,15 +648,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
-                        await _dbContext.SaveChangesAsync(cancellationToken);
 
-                        //await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
+                    default:
+                        break;
 
                     #endregion -- Data entries --
                 }
 
+                // await _dbContext.SaveChangesAsync(cancellationToken);
+                // await transaction.CommitAsync(cancellationToken);
                 return $"{field} field is invalid";
             }
             catch (Exception ex)
