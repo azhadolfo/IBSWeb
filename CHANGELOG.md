@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.4] - 2025-12-16
+### Changed
+- Modified the configuration of notification.js to low the cost of GCP.
+
+---
+
 ## [v1.2.3] - 2025-12-04
 ### Added
 - Added locking of database when creating new series no.
