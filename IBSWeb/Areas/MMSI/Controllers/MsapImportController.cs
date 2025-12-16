@@ -97,7 +97,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tugboatOwnerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugboatOwnerDBv2.csv";
             var tugMasterCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugMasterDBv2.csv";
             var vesselCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\vesselDB.csv";
-            var dispatchTicketCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\data entries\\dispatchTickets.csv";
+            var dispatchTicketCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\data entries\\dispatchTicketsTest.csv";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -174,6 +174,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.FilprideCustomers.AddRangeAsync(customerList, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {customerList.Count} new records";
                     }
                     case "Port":
@@ -207,6 +209,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIPorts.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Principal":
@@ -298,6 +302,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIPrincipals.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Service":
@@ -330,6 +336,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIServices.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Tugboat":
@@ -372,6 +380,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSITugboats.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "TugboatOwner":
@@ -403,6 +413,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSITugboatOwners.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "TugMaster":
@@ -432,6 +444,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSITugMasters.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     case "Vessel":
@@ -464,6 +478,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIVessels.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
 
@@ -475,7 +491,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         using var reader0 = new StreamReader(customerCSVPath);
                         using var csv0 = new CsvReader(reader0, CultureInfo.InvariantCulture);
-                        var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new { c.number, c.name }).ToList();
+                        var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new
+                        {
+                            c.number,
+                            c.name,
+                            address = c.address1 == string.Empty ? "-" : $"{c.address1} {c.address2} {c.address3}"
+                        }).ToList();
 
                         var existingIdentifier = await _dbContext.MMSIDispatchTickets
                             .AsNoTracking()
@@ -544,19 +565,36 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             var originalVesselNum = record.vesselnum ?? string.Empty;
                             var originalTugboatNum = record.tugnum ?? string.Empty;
+                            var originalServiceNum = record.srvctype ?? string.Empty;
                             var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
                             var paddedTugboatNum = int.Parse(originalTugboatNum).ToString("D3");
+                            var paddedServiceNum = int.Parse(originalServiceNum).ToString("D3");
 
-                            newRecord.BillingId = record.billnum;
+                            // get customer from msap that replicates the record's customer number
+                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
+
+                            if (msapCustomer != null)
+                            {
+                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+
+                                if (customer != null)
+                                {
+                                    newRecord.CustomerId = customer.CustomerId;
+                                }
+
+                                newRecord.CustomerId = null;
+                            }
+
+                            newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
                             newRecord.DispatchNumber = record.number;
                             newRecord.Date = DateOnly.Parse(record.date);
-                            newRecord.COSNumber = record.cosno;
+                            newRecord.COSNumber = record.cosno == string.Empty ? null : record.cosno;
                             newRecord.DateLeft = DateOnly.Parse(record.dateleft);
                             newRecord.DateArrived = DateOnly.Parse(record.datearrived);
-                            newRecord.TimeLeft = TimeOnly.ParseExact(record.timeleft, "HHmm", CultureInfo.InvariantCulture);
+                            newRecord.TimeLeft =  TimeOnly.ParseExact(record.timeleft, "HHmm", CultureInfo.InvariantCulture);
                             newRecord.TimeArrived = TimeOnly.ParseExact(record.timearrived, "HHmm", CultureInfo.InvariantCulture);
-                            newRecord.BaseOrStation = record.basestation ?? string.Empty;
-                            newRecord.VoyageNumber = record.voyage ?? string.Empty;
+                            newRecord.BaseOrStation = record.basestation == string.Empty ? null : record.basestation;
+                            newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
                             newRecord.DispatchRate = decimal.Parse(record.dispatchrate);
                             newRecord.DispatchBillingAmount = decimal.Parse(record.dispatchbillamt);
                             newRecord.DispatchNetRevenue = decimal.Parse(record.dispatchnetamt);
@@ -565,25 +603,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.BAFNetRevenue = decimal.Parse(record.bafnetamt);
                             newRecord.TotalBilling = newRecord.DispatchBillingAmount + newRecord.BAFBillingAmount;
                             newRecord.TotalNetRevenue = newRecord.DispatchNetRevenue + newRecord.BAFNetRevenue;
-                            newRecord.TugBoatId = 1; // existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum)!.TugboatId;
-                            newRecord.TugMasterId = 1; //existingTugMasters.FirstOrDefault(tm => tm.TugMasterNumber == record.masterno)!.TugMasterId;
-                            newRecord.VesselId = 1; // newRecord.VesselId = vesselDict.TryGetValue(paddedVesselNum, out var v) ? v.VesselId : throw new Exception("Vessel not found"); // existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
-                            newRecord.TerminalId = 1; // existingTerminals.FirstOrDefault(t => t.PortNumber == portNumber && t.TerminalNumber == terminalNumber)!.PortId;
-                            newRecord.ServiceId = 1; // existingServices.FirstOrDefault(t => t.ServiceNumber == record.srvctype)!.ServiceId;
+                            newRecord.TugBoatId = existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum)!.TugboatId;
+                            newRecord.TugMasterId = existingTugMasters.FirstOrDefault(tm => tm.TugMasterNumber == record.masterno)!.TugMasterId;
+                            newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
+                            newRecord.TerminalId = record.terminal == string.Empty ? null : existingTerminals.FirstOrDefault(t => t.PortNumber == portNumber && t.TerminalNumber == terminalNumber)!.PortId;
+                            newRecord.ServiceId = existingServices.FirstOrDefault(t => t.ServiceNumber == paddedServiceNum)!.ServiceId;
                             newRecord.CreatedBy = record.entryby;
                             newRecord.CreatedDate = DateTime.Parse(record.entrydate);
-
-                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
-
-                            if (msapCustomer != null)
-                            {
-                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name);
-
-                                if (customer != null)
-                                {
-                                    newRecord.CustomerId = 1; // customer.CustomerId;
-                                }
-                            }
+                            newRecord.ApOtherTugs = Decimal.Parse(record.apothertug);
+                            newRecord.DispatchChargeType = null;
+                            newRecord.BAFChargeType = null;
+                            newRecord.Status = "Imported";
+                            newRecord.Remarks = null;
+                            newRecord.TariffBy = null;
+                            newRecord.TariffEditedBy = null;
 
                             if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                             {
@@ -635,31 +668,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             //  image saved url
                             //  image signed url
 
-                            newRecord.ApOtherTugs = Decimal.Parse(record.apothertug);
-                            newRecord.DispatchChargeType = string.Empty;
-                            newRecord.BAFChargeType = string.Empty;
-                            newRecord.Status = "Imported";
-                            newRecord.Remarks = string.Empty;
-                            newRecord.TariffBy = string.Empty;
-                            newRecord.TariffEditedBy = string.Empty;
 
                             newRecords.Add(newRecord);
                             _dbContext.MMSIDispatchTickets.Add(newRecord);
                         }
 
                         await _dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
-
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
                     }
                     default:
-                        break;
+                        return $"{field} field is invalid";
 
                     #endregion -- Data entries --
                 }
-
-                // await _dbContext.SaveChangesAsync(cancellationToken);
-                // await transaction.CommitAsync(cancellationToken);
-                return $"{field} field is invalid";
             }
             catch (Exception ex)
             {
