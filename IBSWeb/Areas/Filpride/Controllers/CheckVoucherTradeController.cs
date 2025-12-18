@@ -74,16 +74,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.CheckVoucher))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != "Payment", cancellationToken);
-
-                return View("ExportIndex", checkVoucherHeaders);
+                return View("ExportIndex");
             }
 
             return View();
@@ -3828,6 +3823,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Any(cv => cv.CheckNo == checkNo);
 
             return Json(exists);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCheckVoucherHeaderList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var checkVoucherHeaders = (await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != "Payment", cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CheckVoucherHeaderId,
+                        x.CheckVoucherHeaderNo,
+                        x.Date,
+                        x.SupplierName,
+                        x.CvType,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = checkVoucherHeaders
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

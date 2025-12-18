@@ -14,6 +14,18 @@
     <div class="card-body p-4 table-responsive">
         <div class="row pb-3">
             <div class="col-6">
+                <div class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Filter by Date</label><br/>
+                        <label class="fw-semibold small text-muted mb-1">Date From</label>
+                        <input type="date" id="dateFrom" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Date To</label>
+                        <input type="date" id="dateTo" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+                </div>
             </div>
             <div class="col-6 text-end">
                 <p>
@@ -22,11 +34,10 @@
             </div>
         </div>
 
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="checkVoucherTable">
             <thead class="table-secondary">
             <tr>
-                <th data-orderable="false">
-                    <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
+                <th>
                 </th>
                 <th class="text-nowrap">
                     @Html.DisplayNameFor(model => model.CheckVoucherHeaderNo)
@@ -49,43 +60,6 @@
             </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            <input type="checkbox" class="selectCheckbox text-center" value="@item.CheckVoucherHeaderId">
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CheckVoucherHeaderNo)
-                        </td>
-                        <td>
-                            @item.Date.ToString("MM/dd/yyyy")
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Supplier!.SupplierName)
-                        </td>
-                        <td>
-                            @item.Category @item.CvType
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CreatedBy)
-                        </td>
-                        <td>
-                            @{
-                                var status = item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null
-                                    ? "Posted"
-                                    : item.VoidedBy != null
-                                        ? "Voided"
-                                        : item.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if (status == "Posted") { <text>bg-info</text> }else if (status == "Voided") { <text>bg-danger</text> }else if (status == "Cancelled") { <text>bg-warning</text> }">
-                                @status
-                            </span>
-                        </td>
-                    </tr>
-                }
             </tbody>
         </table>
     </div>
@@ -93,77 +67,111 @@
 
 @section Scripts {
     <script>
-        let selectedRecords = new Set(); // To track selected record IDs
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = new Set();
+        $(document).ready(function () {
+            let table = $('#checkVoucherTable').DataTable({
+                processing: true,
+                serverSide: false,
+                stateSave: true,
+                ajax: {
+                    url: '@Url.Action("GetCheckVoucherHeaderList", "CheckVoucherTrade")',
+                    type: 'POST',
+                    data: function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    error: function (xhr) {
+                        console.log(xhr.responseText);
+                    }
+                },
+                columns: [
+                    {data: 'checkVoucherHeaderId', orderable: false, searchable: false, render: DataTable.render.select()},
+                    { data: 'checkVoucherHeaderNo' },
+                    {
+                        "data": "date",
+                        "name": "date",
+                        "render": function (data) {
+                            let date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    { data: 'supplierName' },
+                    { data: 'cvType' },
+                    { data: 'createdBy' },
+                    {
+                        "data": "isPosted",
+                        "render": function (data, type, row) {
+                            let status = row.isPosted && !row.isVoided && !row.isCanceled
+                                ? "Posted"
+                                : row.isVoided
+                                    ? "Voided"
+                                    : row.isCanceled
+                                        ? "Cancelled"
+                                        : "Pending";
 
-        function toggleSelectAll(selectAllCheckbox) {
-            const checkboxes = document.querySelectorAll('.selectCheckbox');
+                            let statusClass = status === "Posted" ? "bg-info" :
+                                status === "Voided" ? "bg-danger" :
+                                    status === "Cancelled" ? "bg-warning" : "";
 
-            if (selectAllCheckbox.checked) {
-                // Select all visible checkboxes and mark all records as selected
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = true;
-                    selectedRecords.add(checkbox.value);
-                });
-                allRecordsSelected = true;
-            } else {
-                // Unselect all visible checkboxes and mark all records as unselected
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                    selectedRecords.clear();  // Clear the set
-                });
-                allRecordsSelected = false;
-            }
-        }
+                            return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                        }
+                    }
+                ],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
+                order: [[1, 'desc']]
+            });
 
-        // Update selectedRecords when individual checkboxes are toggled
-        document.addEventListener('change', function (e) {
-            if (e.target && e.target.classList.contains('selectCheckbox')) {
-                if (e.target.checked) {
-                    selectedRecords.add(e.target.value);
-                } else {
-                    selectedRecords.delete(e.target.value);
+            table.on('select deselect', function(e, dt, type, indexes) {
+                if (type === 'row') {
+                    indexes.forEach(function(idx) {
+                        let id = table.row(idx).data().checkVoucherHeaderId;
+                        selectedRecords[e.type === 'select' ? 'add' : 'delete'](id);
+                    });
                 }
-            }
+            });
+
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let getDateFrom = $('#dateFrom');
+                let getDateTo = $('#dateTo');
+                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
+                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
+                let transactionDate = new Date(data[2]);
+
+                // Remove time part
+                if (dateFrom) dateFrom.setHours(0,0,0,0);
+                if (dateTo) dateTo.setHours(0,0,0,0);
+                transactionDate.setHours(0,0,0,0);
+
+                return (dateFrom === null || transactionDate >= dateFrom) &&
+                    (dateTo === null || transactionDate <= dateTo);
+            });
+
+            $('#dateFrom, #dateTo').on('change', function() {
+                $('#checkVoucherTable').DataTable().draw();
+            });
         });
-
+        
         function exportToExcel() {
-            let selectedIds = '';
-
-            if (allRecordsSelected) {
-                // Optionally make an AJAX call to get all IDs if "Select All" was selected
-                // Example of a call:
-                fetch('@Url.Action("GetAllCheckVoucherIds", "CheckVoucherTrade", new { area = "Filpride" })')
-                    .then(response => response.json())
-                    .then(data => {
-                        selectedIds = data.join(',');
-                        submitForm(selectedIds);
-                    })
-                    .catch(error => console.error('Error:', error));
+            let selectedIds = Array.from(selectedRecords).join(',');
+            
+            if (selectedIds) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Export", "CheckVoucherTrade")';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedRecord';
+                input.value = selectedIds;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             } else {
-                // Only get IDs from selected checkboxes in current set
-                selectedIds = Array.from(selectedRecords).join(',');
-                if (selectedIds) {
-                    submitForm(selectedIds);
-                } else {
-                    alert('No CheckVoucher selected.');
-                }
+                alert('No Check Voucher selected.');
             }
-        }
-
-        function submitForm(selectedIds) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '@Url.Action("Export", "CheckVoucherTrade", new { area = "Filpride" })';
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selectedRecord';
-            input.value = selectedIds;
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
         }
     </script>
 }
