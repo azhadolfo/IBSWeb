@@ -55,10 +55,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (view == nameof(DynamicView.ChartOfAccount))
             {
-                var chartOfAccounts = await _unitOfWork.FilprideChartOfAccount
-                    .GetAllAsync(cancellationToken : cancellationToken);
-
-                return View("ExportIndex", chartOfAccounts);
+                return View("ExportIndex");
             }
 
             var level1 = await _unitOfWork.FilprideChartOfAccount
@@ -175,6 +172,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetChartOfAccountList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var chartOfAccounts = (await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(cancellationToken : cancellationToken))
+                    .Select(x => new
+                    {
+                        x.AccountId,
+                        x.AccountNumber,
+                        x.AccountName,
+                        x.AccountType,
+                        x.NormalBalance,
+                        x.Level,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = chartOfAccounts
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
