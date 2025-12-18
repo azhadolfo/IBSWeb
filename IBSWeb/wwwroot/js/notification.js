@@ -56,5 +56,5 @@ function updateNotificationCount() {
 }
 
 $(document).ready(function () {
-    updateNotificationCount();
+    setInterval(updateNotificationCount, 30000);
 });
