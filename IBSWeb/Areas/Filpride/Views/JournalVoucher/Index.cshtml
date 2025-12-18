@@ -161,7 +161,8 @@
                          "data": "journalVoucherHeaderId",
                          "orderable": false,
                          "render": function (data, type, row) {
-                             var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                             const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
+                             return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                                  <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -175,7 +176,7 @@
                                                          <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                      ` : `
                                                          <li><a class="dropdown-item" href="@Url.Action("Print", "JournalVoucher", new { area = "Filpride" })/${data}">Preview</a></li>
-                                                         ${row.amountPaid == 0 ? `
+                                                         ${isAdmin ? `
                                                              <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                                          ` : `
                                                              <li><button class="dropdown-item" disabled readonly>Void</button></li>
@@ -183,7 +184,6 @@
                                                      `}
                                                  </ul>
                                              </div>`;
-                             return dropdown;
                          }
                      }
                  ],
