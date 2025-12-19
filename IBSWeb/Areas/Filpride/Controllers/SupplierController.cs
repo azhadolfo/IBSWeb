@@ -65,14 +65,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
-            IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.FilprideSupplier
-                .GetAllAsync(null, cancellationToken);
-
             if (view == nameof(DynamicView.Supplier))
             {
-                return View("ExportIndex", suppliers);
+                return View("ExportIndex");
             }
 
             return View();
@@ -498,6 +495,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSupplierList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var suppliers = (await _unitOfWork.FilprideSupplier
+                    .GetAllAsync(null, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.SupplierId,
+                        x.SupplierCode,
+                        x.SupplierName,
+                        x.SupplierAddress,
+                        x.SupplierTin,
+                        x.SupplierTerms,
+                        x.VatType,
+                        x.Category,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = suppliers
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 
