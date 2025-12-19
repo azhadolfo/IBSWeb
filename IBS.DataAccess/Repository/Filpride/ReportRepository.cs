@@ -533,6 +533,25 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports;
         }
 
+        public async Task<List<FilprideDeliveryReceipt>> GetHaulerPayableReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var deliveryReceipts = await _db.FilprideDeliveryReceipts
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(dr => dr.Hauler)
+                .Where(dr => dr.Company == company && dr.DeliveredDate <= dateTo && dr.DeliveredDate != null && dr.HaulerId != null)
+                .OrderBy(dr => dr.DeliveredDate!.Value.Year)
+                .ThenBy(dr => dr.DeliveredDate!.Value.Month)
+                .ThenBy(dr => dr.Hauler!.SupplierName)
+                .ToListAsync(cancellationToken);
+
+            return deliveryReceipts;
+        }
+
         public async Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, string company, CancellationToken cancellationToken = default)
         {
             var purchaseOrders = await _db.FilpridePurchaseOrders
