@@ -58,16 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.ServiceInvoice))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", serviceInvoices);
+                return View("ExportIndex");
             }
 
             return View();
@@ -1031,5 +1026,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GetServiceInvoiceList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var serviceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.ServiceInvoiceId,
+                        x.ServiceInvoiceNo,
+                        x.CustomerName,
+                        x.ServiceName,
+                        x.Period,
+                        x.Total,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = serviceInvoices
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }

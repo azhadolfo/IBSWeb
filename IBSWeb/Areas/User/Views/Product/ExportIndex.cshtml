@@ -57,19 +57,30 @@
     <div class="card-body p-4 table-responsive">
         <div class="row pb-3">
             <div class="col-6">
+                <div class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Filter by Date</label><br/>
+                        <label class="fw-semibold small text-muted mb-1">Date From</label>
+                        <input type="date" id="dateFrom" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Date To</label>
+                        <input type="date" id="dateTo" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+                </div>
             </div>
             <div class="col-6 text-end">
                 <p>
-                    <button type="button" class="btn btn-primary" onclick="exportToCsv()">Export Selected to CSV</button>
+                    <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export Selected to CSV</button>
                 </p>
             </div>
         </div>
 
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="productTable">
             <thead class="table-secondary">
             <tr>
-                <th data-orderable="false">
-                    <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
+                <th>
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.ProductCode)
@@ -80,104 +91,108 @@
                 <th>
                     @Html.DisplayNameFor(model => model.ProductUnit)
                 </th>
+                <th>
+                    CREATED BY
+                </th>
+                <th>
+                    CREATED DATE
+                </th>
             </tr>
             </thead>
             <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.ProductCode))
-                {
-                    <tr>
-                        <td>
-                            <input type="checkbox" class="selectCheckbox text-center" value="@obj.ProductId">
-                        </td>
-                        <td>
-                            @obj.ProductCode
-                        </td>
-                        <td>
-                            @obj.ProductName
-                        </td>
-                        <td>
-                            @obj.ProductUnit
-                        </td>
-                    </tr>
-                }
             </tbody>
         </table>
     </div>
 </div>
 @section Scripts {
     <script>
-        let selectedRecords = new Set(); // To track selected record IDs
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = new Set();
+        $(document).ready(function () {
+            let table = $('#productTable').DataTable({
+                processing: true,
+                serverSide: false,
+                stateSave: true,
+                ajax: {
+                    url: '@Url.Action("GetProducts", "Product")',
+                    type: 'POST',
+                    data: function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    error: function (xhr) {
+                        console.log(xhr.responseText);
+                    }
+                },
+                columns: [
+                    {data: 'productId', orderable: false, searchable: false, render: DataTable.render.select()},
+                    { data: 'productCode' },
+                    { data: 'productName' },
+                    { data: 'productUnit' },
+                    { data: 'createdBy' },
+                    {
+                        "data": "createdDate",
+                        "name": "createdDate",
+                        "render": function (data) {
+                            let date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    }
+                ],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
+                order: [[1, 'desc']]
+            });
 
-        function toggleSelectAll(selectAllCheckbox) {
-            const checkboxes = document.querySelectorAll('.selectCheckbox');
-
-            if (selectAllCheckbox.checked) {
-                // Select all visible checkboxes and mark all records as selected
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = true;
-                    selectedRecords.add(checkbox.value);
-                });
-                allRecordsSelected = true;
-            } else {
-                // Unselect all visible checkboxes and mark all records as unselected
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                    selectedRecords.clear();  // Clear the set
-                });
-                allRecordsSelected = false;
-            }
-        }
-
-        // Update selectedRecords when individual checkboxes are toggled
-        document.addEventListener('change', function (e) {
-            if (e.target && e.target.classList.contains('selectCheckbox')) {
-                if (e.target.checked) {
-                    selectedRecords.add(e.target.value);
-                } else {
-                    selectedRecords.delete(e.target.value);
+            table.on('select deselect', function(e, dt, type, indexes) {
+                if (type === 'row') {
+                    indexes.forEach(function(idx) {
+                        let id = table.row(idx).data().productId;
+                        selectedRecords[e.type === 'select' ? 'add' : 'delete'](id);
+                    });
                 }
-            }
+            });
+
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let getDateFrom = $('#dateFrom');
+                let getDateTo = $('#dateTo');
+                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
+                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
+                let transactionDate = new Date(data[5]);
+
+                // Remove time part
+                if (dateFrom) dateFrom.setHours(0,0,0,0);
+                if (dateTo) dateTo.setHours(0,0,0,0);
+                transactionDate.setHours(0,0,0,0);
+
+                return (dateFrom === null || transactionDate >= dateFrom) &&
+                    (dateTo === null || transactionDate <= dateTo);
+            });
+
+            $('#dateFrom, #dateTo').on('change', function() {
+                $('#productTable').DataTable().draw();
+            });
         });
-
-        function exportToCsv() {
-            let selectedIds = '';
-
-            if (allRecordsSelected) {
-                // Optionally make an AJAX call to get all IDs if "Select All" was selected
-                // Example of a call:
-                fetch('@Url.Action("GetAllProductIds", "Product", new { area = "User" })')
-                    .then(response => response.json())
-                    .then(data => {
-                        selectedIds = data.join(',');
-                        submitForm(selectedIds);
-                    })
-                    .catch(error => console.error('Error:', error));
+        
+        function exportToExcel() {
+            let selectedIds = Array.from(selectedRecords).join(',');
+            
+            if (selectedIds) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Export", "Product")';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedRecord';
+                input.value = selectedIds;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             } else {
-                // Only get IDs from selected checkboxes in current set
-                selectedIds = Array.from(selectedRecords).join(',');
-                if (selectedIds) {
-                    submitForm(selectedIds);
-                } else {
-                    alert('No Product selected.');
-                }
+                alert('No Product selected.');
             }
-        }
-
-        function submitForm(selectedIds) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '@Url.Action("Export", "Product", new { area = "User" })';
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selectedRecord';
-            input.value = selectedIds;
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
         }
     </script>
-
 }
