@@ -59,16 +59,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.JournalVoucher))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var journalVoucherHeader = await _unitOfWork.FilprideJournalVoucher
-                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", journalVoucherHeader);
+                return View("ExportIndex");
             }
 
             return View();
@@ -766,6 +761,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Audit Trail Recording
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetJournalVoucherList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var journalVoucherHeader = (await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.JournalVoucherHeaderId,
+                        x.JournalVoucherHeaderNo,
+                        x.Date,
+                        x.CheckVoucherHeader!.CheckVoucherHeaderNo,
+                        x.CRNo,
+                        x.JVReason,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = journalVoucherHeader
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)
