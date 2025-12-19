@@ -58,16 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.CreditMemo))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var creditMemos = await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
-
-                return View("ExportIndex", creditMemos);
+                return View("ExportIndex");
             }
 
             return View();
@@ -1107,6 +1102,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCreditMemoList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var creditMemos = (await _unitOfWork.FilprideCreditMemo
+                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CreditMemoId,
+                        x.CreditMemoNo,
+                        x.TransactionDate,
+                        x.SalesInvoice?.SalesInvoiceNo,
+                        x.ServiceInvoice?.ServiceInvoiceNo,
+                        x.Source,
+                        x.CreditAmount,
+                        x.CreatedBy,
+                        x.Status,
+                        x.SalesInvoiceId
+                    });
+
+                return Json(new
+                {
+                    data = creditMemos
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)
