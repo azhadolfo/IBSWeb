@@ -235,9 +235,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new CheckVoucherNonTradeInvoicingViewModel();
             var companyClaims = await GetCompanyClaimAsync();
-            var coaCacheKey = "scoaCacheKey";
-            var supplierCacheKey = "ssupplierCacheKey";
-            var minDateCacheKey = "sminDateCacheKey";
+            var coaCacheKey = "coaCacheKey";
+            var supplierCacheKey = "supplierCacheKey";
+            var minDateCacheKey = "minDateCacheKey";
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
