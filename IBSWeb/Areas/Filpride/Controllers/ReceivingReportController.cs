@@ -95,7 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, string filterType, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string? view, string filterType)
         {
             await UpdateFilterTypeClaim(filterType);
             if (view != nameof(DynamicView.ReceivingReport))
@@ -103,12 +103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var receivingReports = await _unitOfWork.FilprideReceivingReport
-                .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
-
-            return View("ExportIndex", receivingReports);
+            return View("ExportIndex");
 
             //For the function of correcting the journal entries
             // var receivingReportss = await _unitOfWork.FilprideReceivingReport
@@ -791,6 +786,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetReceivingReportList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var receivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.ReceivingReportId,
+                        x.ReceivingReportNo,
+                        x.Date,
+                        x.PurchaseOrder!.PurchaseOrderNo,
+                        x.QuantityDelivered,
+                        x.QuantityReceived,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = receivingReports
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)
