@@ -1,6 +1,6 @@
 ﻿var connection = new signalR.HubConnectionBuilder()
     .withUrl("/notificationHub")
-    .configureLogging(signalR.LogLevel.Error) // Suppress SignalR logs
+    .configureLogging(signalR.LogLevel.None) // Suppress SignalR logs
     .build();
 
 connection.start()
@@ -40,21 +40,4 @@ connection.on("ReceivedNotification", function (message) {
             window.location.href = '/User/Notification/Index';
         }
     });
-});
-
-function updateNotificationCount() {
-    $.ajax({
-        url: '/User/Notification/GetNotificationCount',
-        type: 'GET',
-        success: function (count) {
-            $('#notificationCount').text(count);
-        },
-        error: function () {
-            console.error("Error fetching notification count");
-        }
-    });
-}
-
-$(document).ready(function () {
-    setInterval(updateNotificationCount, 30000);
 });
