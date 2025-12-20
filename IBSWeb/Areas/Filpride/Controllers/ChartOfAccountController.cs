@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Services;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -20,16 +21,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ChartOfAccountController> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICacheService _cacheService;
 
         public ChartOfAccountController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             ILogger<ChartOfAccountController> logger,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ICacheService cacheService)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         private string GetUserFullName()
@@ -113,6 +117,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideChartOfAccount.AddAsync(newAccount, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -154,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 

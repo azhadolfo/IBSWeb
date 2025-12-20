@@ -235,16 +235,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new CheckVoucherNonTradeInvoicingViewModel();
             var companyClaims = await GetCompanyClaimAsync();
-            var coaCacheKey = "coaCacheKey";
-            var supplierCacheKey = "supplierCacheKey";
-            var minDateCacheKey = "minDateCacheKey";
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
 
             if (companyClaims == null)
             {
                 return BadRequest();
             }
+
+            var coaCacheKey = $"coa:{companyClaims}";
+            var supplierCacheKey = $"supplier:{companyClaims}";
+            var minDateCacheKey = $"minDate:{companyClaims}";
 
             // Chart of Accounts
             var coaSelectList = await _cacheService.GetAsync<List<SelectListItem>>(
@@ -259,7 +258,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _cacheService.SetAsync(
                     coaCacheKey,
                     coaSelectList,
-                    TimeSpan.FromSeconds(45),
+                    TimeSpan.FromMinutes(1),
                     TimeSpan.FromHours(1),
                     cancellationToken);
             }
@@ -277,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _cacheService.SetAsync(
                     supplierCacheKey,
                     supplierSelectList,
-                    TimeSpan.FromSeconds(45),
+                    TimeSpan.FromMinutes(1),
                     TimeSpan.FromHours(1),
                     cancellationToken);
             }
@@ -294,7 +293,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _cacheService.SetAsync(
                     minDateCacheKey,
                     minDate,
-                    TimeSpan.FromSeconds(45),
+                    TimeSpan.FromMinutes(1),
                     TimeSpan.FromHours(1),
                     cancellationToken);
             }
@@ -302,10 +301,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = coaSelectList;
             viewModel.Suppliers = supplierSelectList;
             viewModel.MinDate = minDate;
-
-            stopwatch.Stop();
-
-            _logger.LogInformation("Getting list in {ElapsedTime}.", stopwatch.ElapsedMilliseconds);
 
             return View(viewModel);
         }

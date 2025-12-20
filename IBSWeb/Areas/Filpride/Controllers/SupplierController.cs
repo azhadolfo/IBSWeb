@@ -6,7 +6,6 @@ using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services;
-using IBS.Services.Attributes;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -25,18 +24,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly ICacheService _cacheService;
 
         public SupplierController(IUnitOfWork unitOfWork,
             ILogger<SupplierController> logger,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
-            ICloudStorageService cloudStorageService)
+            ICloudStorageService cloudStorageService,
+            ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
+            _cacheService = cacheService;
         }
 
         private string GetUserFullName()
@@ -178,6 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Company = companyClaims;
                 await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -345,6 +348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.EditedBy = GetUserFullName();
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -410,6 +414,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -476,6 +481,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
 
                 #region --Audit Trail Recording
 
