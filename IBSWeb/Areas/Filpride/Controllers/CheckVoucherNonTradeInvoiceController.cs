@@ -1454,6 +1454,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .OrderBy(s => s.CheckVoucherDetailId)
                     .ToListAsync(cancellationToken);
 
                 var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
