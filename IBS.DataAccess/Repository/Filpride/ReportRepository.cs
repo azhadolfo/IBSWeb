@@ -543,7 +543,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var deliveryReceipts = await _db.FilprideDeliveryReceipts
                 .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .Include(dr => dr.Hauler)
-                .Where(dr => dr.Company == company && dr.DeliveredDate <= dateTo && dr.DeliveredDate != null && dr.HaulerId != null)
+                .Where(dr => dr.Company == company && dr.DeliveredDate <= dateTo && dr.DeliveredDate != null && dr.HaulerId != null && dr.FreightAmount > 0m)
                 .OrderBy(dr => dr.DeliveredDate!.Value.Year)
                 .ThenBy(dr => dr.DeliveredDate!.Value.Month)
                 .ThenBy(dr => dr.Hauler!.SupplierName)
