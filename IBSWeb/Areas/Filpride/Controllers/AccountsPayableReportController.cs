@@ -7572,64 +7572,81 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var currencyFormat = "#,##0.00";
 
-                var allCvUpToLatest = await _dbContext.FilprideCheckVoucherHeaders
+                var allCv = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv => cv.Category == "Trade" && cv.CvType == "Hauler" && cv.Date <= dateTo)
                     .Include(cv => cv.Supplier)
                     .ToListAsync(cancellationToken);
 
-                var cvIdOfAllPeriod = allCvUpToLatest
-                    .Select(cv => cv.CheckVoucherHeaderId)
-                    .ToList();
-
-                var cvPaymentsAllPeriodFromCv = await _dbContext.FilprideCVTradePayments
-                    .Where(ctp => cvIdOfAllPeriod.Contains(ctp.DocumentId))
-                    .ToListAsync(cancellationToken);
-
-
-                var cvIdOfThisPeriod = allCvUpToLatest
+                var cvIdOfSelected = allCv
                     .Where(cv => cv.Date >= dateFrom)
                     .Select(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                var cvPaymentsThisPeriodFromCv = await _dbContext.FilprideCVTradePayments
-                    .Where(ctp => cvIdOfThisPeriod.Contains(ctp.DocumentId))
-                    .Include(ctp => ctp.CV)
-                    .ToListAsync(cancellationToken);
-
-                var drIdsPaidThisPeriodFromCv = cvPaymentsThisPeriodFromCv
-                    .Select(ctp => ctp.DocumentId)
-                    .ToList();
-
-                var cvIdOfPreviousPeriod = allCvUpToLatest
+                var cvIdOfPrevious = allCv
                     .Where(cv => cv.Date < dateFrom)
                     .Select(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                var drIdsPaidPreviousPeriodFromCv = await _dbContext.FilprideCVTradePayments
-                    .Where(ctp => cvIdOfPreviousPeriod.Contains(ctp.DocumentId))
-                    .Select(ctp => ctp.DocumentId)
+                var cvPaymentsOfSelected = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfSelected.Contains(ctp.DocumentId))
+                    .Include(ctp => ctp.CV)
                     .ToListAsync(cancellationToken);
+
+                var cvPaymentsOfPrevious = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfPrevious.Contains(ctp.DocumentId))
+                    .Include(ctp => ctp.CV)
+                    .ToListAsync(cancellationToken);
+
+                var idsOfDrsOfSelectedPeriodFromCv = cvPaymentsOfSelected
+                    .Select(ctp => new
+                    {
+                        DeliveryReceiptId = ctp.DocumentId,
+                        ctp.CV.AmountPaid
+                    })
+                    .ToList();
+
+                var idsOfDrsOfPreviousPeriodsFromCv = cvPaymentsOfPrevious
+                    .Select(ctp => new
+                    {
+                        DeliveryReceiptId = ctp.DocumentId,
+                        ctp.CV.AmountPaid
+                    })
+                    .ToList();
 
                 var allDr = await _unitOfWork.FilprideReport
                     .GetHaulerPayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
 
-                var drsPaidThisPeriodGroupedByMonthYearFromCv = allDr
-                    .Where(dr => drIdsPaidThisPeriodFromCv.Contains(dr.DeliveryReceiptId) && dr.FreightAmount != 0m)
-                    .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month });
+                var drAndAmountPaidForSelectedPeriodFromCvGroupedByMonthYear = allDr
+                    .Where(dr => idsOfDrsOfSelectedPeriodFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
+                    dr.FreightAmount != 0m)
+                    .Select(drSet => new
+                    {
+                        DeliveryReceipt = drSet,
+                        AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
+                        idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(dr => new { dr.DeliveryReceipt.DeliveredDate!.Value.Year, dr.DeliveryReceipt.DeliveredDate!.Value.Month });
 
-                var drsPaidPreviousPeriodGroupedByMonthYearFromCv = allDr
-                    .Where(dr => drIdsPaidPreviousPeriodFromCv.Contains(dr.DeliveryReceiptId) && dr.FreightAmount != 0m)
-                    .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month });
+                var drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear = allDr
+                    .Where(dr => idsOfDrsOfPreviousPeriodsFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
+                    dr.FreightAmount != 0m)
+                    .Select(drSet => new
+                    {
+                        DeliveryReceipt = drSet,
+                        AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
+                        idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(dr => new { dr.DeliveryReceipt.DeliveredDate!.Value.Year, dr.DeliveryReceipt.DeliveredDate!.Value.Month });
 
                 var allDrGroupedByMonthYear = allDr
                     .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month });
 
-                var previousMonthDrGroupedByMonthYear = allDr
+                var allPreviousDrGroupedByMonthYear = allDr
                     .Where(dr => dr.DeliveredDate!.Value < dateFrom)
                     .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month })
                     .ToList();
 
-                var thisPeriodDrGroupedByMonthYear = allDr
+                var allSelectedDrGroupedByMonthYear = allDr
                     .Where(dr => dr.DeliveredDate!.Value >= dateFrom)
                     .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month })
                     .ToList();
@@ -7705,7 +7722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var row = 8;
                 IEnumerable<IGrouping<object, FilprideDeliveryReceipt>> loopingMainDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<object, FilprideDeliveryReceipt>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<object, object>> loopingSecondDrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
@@ -7792,20 +7809,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 // beginning
                                 case 1:
-                                    loopingMainDrGroupedByMonthYear = previousMonthDrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = drsPaidPreviousPeriodGroupedByMonthYearFromCv;
+                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
                                     columnName = "beginning";
                                     break;
                                 // current
                                 case 2:
-                                    loopingMainDrGroupedByMonthYear = thisPeriodDrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                    // loopingMainDrGroupedByMonthYear = thisPeriodDrGroupedByMonthYear;
+                                    // loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
                                     columnName = "purchases";
                                     break;
                                 // payment
                                 case 3:
-                                    loopingMainDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
-                                    loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                    // loopingMainDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                    // loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
                                     columnName = "payments";
                                     break;
                                 // ending
@@ -7819,10 +7840,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 switch (columnName)
                                 {
                                     case "beginning":
-                                        loopingMainDrGroupedByMonthYear = drsPaidPreviousPeriodGroupedByMonthYearFromCv;
+                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
                                         break;
                                     case "purchases":
-                                        loopingMainDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
+                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCvGroupedByMonthYear;
                                         break;
                                 }
                             }
@@ -7845,9 +7866,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var idOfDrInCurrentMonthYear = sameHaulerSameMonthYear
                                         .Select(dr => dr.DeliveryReceiptId).ToList();
 
-                                    var cvPaymentOfTheCurrentDrs = cvPaymentsThisPeriodFromCv
-                                        .Where(cv => idOfDrInCurrentMonthYear.Contains(cv.DocumentId))
-                                        .ToList();
+                                    //var cvPaymentOfTheCurrentDrs = cvPaymentsThisPeriodFromCv
+                                    //    .Where(cv => idOfDrInCurrentMonthYear.Contains(cv.DocumentId))
+                                    //    .ToList();
 
                                     // var cvPaidInPreviousMonthYear = cvPaymentOfTheCurrentDrs
                                     //     .Where(cv => cv.CV.Date < DateFrom)
