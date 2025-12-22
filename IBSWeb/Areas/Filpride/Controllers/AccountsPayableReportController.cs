@@ -510,7 +510,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
+                    worksheet.Cells[row, col].Style.WrapText = true;
+                    col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
@@ -670,7 +672,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -689,10 +691,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         col = 1;
                         worksheet.Cells[row, col].Value = header.Date.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
-                        worksheet.Cells[row, col].Value = header.DcrDate.HasValue ? header.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null; col++;
+                        worksheet.Cells[row, col].Value = header.DcrDate?.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckNo; col++;
                         worksheet.Cells[row, col].Value = header.Payee; col++;
-                        worksheet.Cells[row, col].Value = header.Particulars; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars;
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
                         worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
 
                         if (header.Category == "Trade")
