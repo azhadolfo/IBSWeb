@@ -9,10 +9,8 @@ namespace IBS.Models.Filpride.MasterFile
         [StringLength(10)]
         public string TermsCode { get; set; }
 
-        [Range(0, 365)]
         public int NumberOfDays { get; set; }
 
-        [Range(0, 12)]
         public int NumberOfMonths { get; set; }
 
         [StringLength(100)]
