@@ -7599,12 +7599,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var cvPaymentsOfSelected = await _dbContext.FilprideCVTradePayments
-                    .Where(ctp => cvIdOfSelected.Contains(ctp.DocumentId))
+                    .Where(ctp => cvIdOfSelected.Contains(ctp.DocumentId) && ctp.DocumentType == "DR")
                     .Include(ctp => ctp.CV)
                     .ToListAsync(cancellationToken);
 
                 var cvPaymentsOfPrevious = await _dbContext.FilprideCVTradePayments
-                    .Where(ctp => cvIdOfPrevious.Contains(ctp.DocumentId))
+                    .Where(ctp => cvIdOfPrevious.Contains(ctp.DocumentId) && ctp.DocumentType == "DR")
                     .Include(ctp => ctp.CV)
                     .ToListAsync(cancellationToken);
 
@@ -7807,7 +7807,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // group the drs by hauler
                     var sameMonthYearGroupedByHauler = allDrsSameMonthYear.GroupBy(rr => rr.Hauler!.SupplierName)
                         .ToList();
-
+                    // a
                     // MONTH YEAR LABEL
                     worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Month ?? 0))
                                                     + " " +
@@ -7850,7 +7850,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     break;
                                 // payment
                                 case 3:
-                                    loopingMainDrGroupedByMonthYear = allPreviousDrGroupedByMonthYear;
+                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
                                     loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
                                     loopingThirdDrGroupedByMonthYear = null!;
                                     columnName = "payments";
@@ -7887,7 +7887,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     IEnumerable<DrWithAmountPaid>? secondLoopSameMonthYearSameHauler = null;
                                     IGrouping<MonthYear, DrWithAmountPaid>? secondLoopSameMonthYear = null!;
-                                    // IGrouping<MonthYear, DrWithAmountPaid>? thirdLoopSameMonthYear = null!;
 
                                     // GET DR SET WITH SAME MONTH YEAR + HAULER
                                     var sameHaulerSameMonthYear = sameMonthYear
@@ -7914,13 +7913,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
                                                 .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
 
-                                            // GET PAID WITH SAME SUPPLIER
+                                            // GET PREVIOUS PAID WITH SAME SUPPLIER
                                             if (secondLoopSameMonthYear != null)
                                             {
                                                 secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
-                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
+                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler
+                                                    .FirstOrDefault()?.Hauler!.SupplierName)
+                                                    .ToList();
 
-                                                if (secondLoopSameMonthYearSameHauler.Count != 0       )
+                                                if (secondLoopSameMonthYearSameHauler.Count() != 0)
                                                 {
                                                     sumOfAmountPaid =
                                                         secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
@@ -8051,13 +8052,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             subtotalGrossPayments += gross;
                                             subtotalEwtPayments += ewt;
                                             subtotalNetPayments += net;
-                                            if (columnName == "purchases")
-                                            {
-                                                currentVolumeEnding -= volume;
-                                                currentGrossEnding -= gross;
-                                                currentEwtEnding -= ewt;
-                                                currentNetEnding -= net;
-                                            }
+                                            currentVolumeEnding -= volume;
+                                            currentGrossEnding -= gross;
+                                            currentEwtEnding -= ewt;
+                                            currentNetEnding -= net;
                                             break;
                                     }
                                 }
