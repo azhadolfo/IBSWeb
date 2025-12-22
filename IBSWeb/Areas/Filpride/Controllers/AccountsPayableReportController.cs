@@ -7548,7 +7548,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generate Hauler Journal Report Excel File --
+        #region -- Generate Hauler Payable Report Excel File --
 
         [HttpPost]
         public async Task<IActionResult> GenerateHaulerPayableReportExcelFile(ViewModelBook viewModel, CancellationToken cancellationToken)
@@ -7601,7 +7601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(ctp => new
                     {
                         DeliveryReceiptId = ctp.DocumentId,
-                        ctp.CV.AmountPaid
+                        ctp.AmountPaid
                     })
                     .ToList();
 
@@ -7609,46 +7609,61 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(ctp => new
                     {
                         DeliveryReceiptId = ctp.DocumentId,
-                        ctp.CV.AmountPaid
+                        ctp.AmountPaid
                     })
                     .ToList();
 
                 var allDr = await _unitOfWork.FilprideReport
                     .GetHaulerPayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
 
-                var drAndAmountPaidForSelectedPeriodFromCvGroupedByMonthYear = allDr
+                var drAndAmountPaidForSelectedPeriodFromCv = allDr
                     .Where(dr => idsOfDrsOfSelectedPeriodFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
                     dr.FreightAmount != 0m)
-                    .Select(drSet => new
+                    .Select(drSet => new DrWithAmountPaid
                     {
                         DeliveryReceipt = drSet,
                         AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
                         idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
                     })
-                    .GroupBy(dr => new { dr.DeliveryReceipt.DeliveredDate!.Value.Year, dr.DeliveryReceipt.DeliveredDate!.Value.Month });
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Year,
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Month
+                    ));
 
-                var drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear = allDr
+                var drAndAmountPaidForPreviousPeriodFromCv = allDr
                     .Where(dr => idsOfDrsOfPreviousPeriodsFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
                     dr.FreightAmount != 0m)
-                    .Select(drSet => new
+                    .Select(drSet => new DrWithAmountPaid
                     {
                         DeliveryReceipt = drSet,
-                        AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
-                        idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
+                        AmountPaid = idsOfDrsOfPreviousPeriodsFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
+                            idsOfDrsOfPreviousPeriodsFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
                     })
-                    .GroupBy(dr => new { dr.DeliveryReceipt.DeliveredDate!.Value.Year, dr.DeliveryReceipt.DeliveredDate!.Value.Month });
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Year,
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Month
+                    ));
 
                 var allDrGroupedByMonthYear = allDr
-                    .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month });
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ));
 
                 var allPreviousDrGroupedByMonthYear = allDr
                     .Where(dr => dr.DeliveredDate!.Value < dateFrom)
-                    .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month })
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ))
                     .ToList();
 
                 var allSelectedDrGroupedByMonthYear = allDr
                     .Where(dr => dr.DeliveredDate!.Value >= dateFrom)
-                    .GroupBy(dr => new { dr.DeliveredDate!.Value.Year, dr.DeliveredDate!.Value.Month })
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ))
                     .ToList();
 
                 using var package = new ExcelPackage();
@@ -7721,8 +7736,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion
 
                 var row = 8;
-                IEnumerable<IGrouping<object, FilprideDeliveryReceipt>> loopingMainDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<object, object>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, FilprideDeliveryReceipt>> loopingMainDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaid>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaid>> loopingThirdDrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
@@ -7771,7 +7787,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                // loop for month year
+                // DO NOT CHANGE loop for month year
                 foreach (var allDrsSameMonthYear in allDrGroupedByMonthYear)
                 {
                     // reset placing per category
@@ -7781,7 +7797,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var sameMonthYearGroupedByHauler = allDrsSameMonthYear.GroupBy(rr => rr.Hauler!.SupplierName)
                         .ToList();
 
-                    // enter the current month-year label to the Excel
+                    // MONTH YEAR LABEL
                     worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Month ?? 0))
                                                     + " " +
                                                     (sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Year.ToString() ?? " ");
@@ -7789,10 +7805,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
                     row++;
 
-                    // in the month-year loop by hauler
+                    // LOOP BY HAULER
                     foreach (var sameMonthYearSameHauler in sameMonthYearGroupedByHauler)
                     {
-                        // write the name of hauler
+                        // NAME OF HAULER
                         var supplierName = sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName ?? "";
                         var isSupplierVatable = sameMonthYearSameHauler.First().Hauler!.VatType == SD.VatType_Vatable;
                         var isSupplierTaxable = sameMonthYearSameHauler.First().Hauler!.TaxType == SD.TaxType_WithTax;
@@ -7809,24 +7825,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 // beginning
                                 case 1:
-                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
+                                    loopingMainDrGroupedByMonthYear = allPreviousDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCv;
+                                    loopingThirdDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
                                     columnName = "beginning";
                                     break;
                                 // current
                                 case 2:
-                                    // loopingMainDrGroupedByMonthYear = thisPeriodDrGroupedByMonthYear;
-                                    // loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
                                     loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = null!;
+                                    loopingThirdDrGroupedByMonthYear = null!;
                                     columnName = "purchases";
                                     break;
                                 // payment
                                 case 3:
-                                    // loopingMainDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
-                                    // loopingSecondDrGroupedByMonthYear = drsPaidThisPeriodGroupedByMonthYearFromCv;
-                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
+                                    loopingMainDrGroupedByMonthYear = allPreviousDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
+                                    loopingThirdDrGroupedByMonthYear = null!;
                                     columnName = "payments";
                                     break;
                                 // ending
@@ -7840,10 +7855,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 switch (columnName)
                                 {
                                     case "beginning":
-                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCvGroupedByMonthYear;
+                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCv;
                                         break;
                                     case "purchases":
-                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCvGroupedByMonthYear;
+                                        loopingSecondDrGroupedByMonthYear = null!;
                                         break;
                                 }
                             }
@@ -7859,69 +7874,130 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         continue;
                                     }
 
-                                    // get the dr set with same hauler and month/year for writing
+                                    IEnumerable<DrWithAmountPaid>? secondLoopSameMonthYearSameHauler = null;
+                                    IGrouping<MonthYear, DrWithAmountPaid>? secondLoopSameMonthYear = null!;
+                                    // IGrouping<MonthYear, DrWithAmountPaid>? thirdLoopSameMonthYear = null!;
+
+                                    // GET DR SET WITH SAME MONTH YEAR + HAULER
                                     var sameHaulerSameMonthYear = sameMonthYear
                                         .Where(rr => rr.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
 
-                                    var idOfDrInCurrentMonthYear = sameHaulerSameMonthYear
-                                        .Select(dr => dr.DeliveryReceiptId).ToList();
-
-                                    //var cvPaymentOfTheCurrentDrs = cvPaymentsThisPeriodFromCv
-                                    //    .Where(cv => idOfDrInCurrentMonthYear.Contains(cv.DocumentId))
-                                    //    .ToList();
-
-                                    // var cvPaidInPreviousMonthYear = cvPaymentOfTheCurrentDrs
-                                    //     .Where(cv => cv.CV.Date < DateFrom)
-                                    //     .ToList();
-
-                                    // get the grouping that has the same month/year
-                                    var sameMonthYearSecondary =
-                                        loopingSecondDrGroupedByMonthYear.Where(dr => dr.Key == sameMonthYear.Key);
-
                                     var volume = 0m;
                                     var gross = 0m;
+                                    var netOfVat = 0m;
+                                    var ewtPercentage = 0m;
+                                    var ewt = 0m;
+                                    var net = 0m;
+                                    var totalAmount = 0m;
+                                    var totalVolume = 0m;
+                                    decimal sumOfAmountPaid = 0m;
+                                    decimal sumOfVolumePaid = 0m;
 
-                                    // decide which value to use for each: volume, gross, ewt, and net
+                                    // PROCESS DEPENDING ON CATEGORY
                                     switch (i)
                                     {
-                                        // beginning
+
+                                        // BEGINNING
                                         case 1:
-                                            var totalAmount = sameHaulerSameMonthYear
+                                            // CONTAINS PREVIOUS PAID
+                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PAID WITH SAME SUPPLIER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
+                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
+
+                                                if (secondLoopSameMonthYearSameHauler.Count != 0       )
+                                                {
+                                                    sumOfAmountPaid =
+                                                        secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+                                                    sumOfVolumePaid =
+                                                        secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
+                                                }
+                                            }
+
+                                            totalAmount = sameHaulerSameMonthYear
                                                 .Sum(dr => dr.FreightAmount);
 
-                                            volume = sameHaulerSameMonthYear
-                                                .Where(dr => dr.FreightAmountPaid == 0m)
-                                                .Sum(dr => dr.Quantity);
+                                            totalVolume = sameHaulerSameMonthYear
+                                                  .Sum(dr => dr.Quantity);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(dr => dr.Hauler!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
                                             break;
-                                        // current negative gross
+
+                                        // CURRENT
                                         case 2:
-                                            gross = sameHaulerSameMonthYear
+
+                                            totalAmount = sameHaulerSameMonthYear
                                                 .Sum(dr => dr.FreightAmount);
-                                            volume = sameHaulerSameMonthYear
+
+                                            totalVolume = sameHaulerSameMonthYear
                                                 .Sum(dr => dr.Quantity);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(dr => dr.Hauler!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
                                             break;
-                                        // payment
+
+                                        // PAYMENT
                                         case 3:
-                                            gross = sameHaulerSameMonthYear
-                                                .Sum(dr => dr.FreightAmountPaid);
-                                            volume = sameHaulerSameMonthYear
-                                                .Where(dr => dr.FreightAmountPaid > 0m)
-                                                .Sum(dr => dr.Quantity);
+                                            // CONTAINS SELECTED PAID
+                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PAID WITH SAME SUPPLIER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
+                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
+
+                                                sumOfAmountPaid =
+                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+                                                sumOfVolumePaid =
+                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
+
+                                                ewtPercentage = secondLoopSameMonthYear.Average(dr => dr.DeliveryReceipt.Hauler!.WithholdingTaxPercent ?? 0m);
+
+                                                ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+                                            }
+
+                                            if (secondLoopSameMonthYearSameHauler == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            gross = sumOfAmountPaid;
+
+                                            volume = sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            net = gross - ewt;
+
                                             break;
                                     }
-
-                                    var payment = sameHaulerSameMonthYear
-                                        .Sum(dr => dr.FreightAmountPaid);
-
-                                    var netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
-
-                                    decimal ewtPercentage = sameMonthYear
-                                        .Average(dr => dr.Hauler!.WithholdingTaxPercent ?? 0m);
-
-                                    var ewt = isSupplierTaxable ? repoCalculator
-                                        .ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
-
-                                    var net = gross - ewt;
 
                                     // write in the category
                                     worksheet.Cells[row, i * 5 - 1].Value = volume;
@@ -8166,6 +8242,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(TradePayableReport));
             }
         }
+
+        public class DrWithAmountPaid
+        {
+            public FilprideDeliveryReceipt DeliveryReceipt { get; set; } = null!;
+            public decimal AmountPaid { get; set; }
+        }
+
+        public record MonthYear(int Year, int Month);
 
         #endregion
 
