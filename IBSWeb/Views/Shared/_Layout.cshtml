@@ -1166,5 +1166,27 @@
         }
     });
     </script>
+    <script>
+        const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+        function updateFavicon(e) {
+            const faviconLight = document.getElementById('favicon-light');
+            const faviconDark = document.getElementById('favicon-dark');
+    
+            if (e.matches) {
+                faviconDark.rel = 'shortcut icon';
+                faviconLight.rel = '';
+            } else {
+                faviconDark.rel = '';
+                faviconLight.rel = 'shortcut icon';
+            }
+        }
+    
+        // Initial check
+        updateFavicon(darkModeMediaQuery);
+    
+        // Listen for changes
+        darkModeMediaQuery.addEventListener('change', updateFavicon);
+    </script>
 </body>
 </html>
