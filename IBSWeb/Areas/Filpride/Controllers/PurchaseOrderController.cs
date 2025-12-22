@@ -209,7 +209,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         po.PostedBy,
                         po.UnTriggeredQuantity,
                         po.IsSubPo,
-                        po.IsClosed
+                        po.IsClosed,
+                        TypeOfPurchase = po.TypeOfPurchase.ToUpper()
                     })
                     .ToList();
 
@@ -320,7 +321,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TaxType = supplier.TaxType,
                     OldPoNo = string.Empty,
                     FinalPrice = viewModel.Price,
-                    TypeOfPurchase = viewModel.TypeOfPurchase,
+                    TypeOfPurchase = viewModel.TypeOfPurchase.ToUpper(),
                 };
 
                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
@@ -463,7 +464,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.ProductName = product.ProductName;
                 existingModel.VatType = supplier.VatType;
                 existingModel.TaxType = supplier.TaxType;
-                existingModel.TypeOfPurchase = viewModel.TypeOfPurchase;
+                existingModel.TypeOfPurchase = viewModel.TypeOfPurchase.ToUpper();
 
                 if (!_dbContext.ChangeTracker.HasChanges())
                 {
