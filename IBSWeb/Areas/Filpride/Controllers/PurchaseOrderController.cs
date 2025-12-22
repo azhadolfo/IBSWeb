@@ -318,8 +318,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PickUpPointId = viewModel.PickUpPointId,
                     VatType = supplier.VatType,
                     TaxType = supplier.TaxType,
-                    OldPoNo = viewModel.OldPoNo,
+                    OldPoNo = string.Empty,
                     FinalPrice = viewModel.Price,
+                    TypeOfPurchase = viewModel.TypeOfPurchase,
                 };
 
                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
@@ -385,10 +386,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Price = purchaseOrder.Price,
                 Remarks = purchaseOrder.Remarks,
                 TriggerDate = purchaseOrder.TriggerDate,
-                OldPoNo = purchaseOrder.OldPoNo,
                 SupplierSalesOrderNo = purchaseOrder.SupplierSalesOrderNo,
                 PaymentTerms = await _unitOfWork.FilprideTerms
-                    .GetFilprideTermsListAsyncByCode(cancellationToken)
+                    .GetFilprideTermsListAsyncByCode(cancellationToken),
+                TypeOfPurchase = purchaseOrder.TypeOfPurchase,
             };
 
             ViewBag.FilterType = await GetCurrentFilterType();
@@ -454,7 +455,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.SupplierSalesOrderNo = viewModel.SupplierSalesOrderNo;
                 existingModel.Remarks = viewModel.Remarks;
                 existingModel.Terms = viewModel.Terms;
-                existingModel.OldPoNo = viewModel.OldPoNo;
                 existingModel.TriggerDate = viewModel.TriggerDate;
                 existingModel.PickUpPointId = viewModel.PickUpPointId;
                 existingModel.SupplierName = supplier.SupplierName;
@@ -463,6 +463,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.ProductName = product.ProductName;
                 existingModel.VatType = supplier.VatType;
                 existingModel.TaxType = supplier.TaxType;
+                existingModel.TypeOfPurchase = viewModel.TypeOfPurchase;
 
                 if (!_dbContext.ChangeTracker.HasChanges())
                 {
