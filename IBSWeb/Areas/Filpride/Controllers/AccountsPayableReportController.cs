@@ -4068,7 +4068,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Please input date range";
-                return RedirectToAction(nameof(HaulerPayableReport));
+                return RedirectToAction(nameof(TradePayableReport));
             }
 
             try
@@ -4207,7 +4207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["A7"].Value = "MONTH";
                 worksheet.Cells["A7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
-                worksheet.Cells["B7"].Value = "HAULER";
+                worksheet.Cells["B7"].Value = "SUPPL";
                 worksheet.Cells["B7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
                 titleCells = worksheet.Cells["A6:B6"];
@@ -4307,32 +4307,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     // reset placing per category
 
-                    // get current group of month-year drs
-                    // group the drs by hauler
-                    var sameMonthYearGroupedByHauler = allRrsSameMonthYear.GroupBy(rr => rr.PurchaseOrder?.Supplier?.SupplierName)
+                    // get current group of month-year rr
+                    // group the rr by supplier
+                    var sameMonthYearGroupedBySupplier = allRrsSameMonthYear.GroupBy(rr => rr.PurchaseOrder?.Supplier?.SupplierName)
                         .ToList();
 
                     // MONTH YEAR LABEL
-                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.Date!.Month ?? 0))
+                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Month ?? 0))
                                                     + " " +
-                                                    (sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.Date!.Year.ToString() ?? " ");
+                                                    (sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
                     worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
                     row++;
 
-                    // LOOP BY HAULER
-                    foreach (var sameMonthYearSameHauler in sameMonthYearGroupedByHauler)
+                    // LOOP BY SUPPLIER
+                    foreach (var sameMonthYearSameSupplier in sameMonthYearGroupedBySupplier)
                     {
-                        // NAME OF HAULER
-                        var supplierName = sameMonthYearSameHauler.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
-                        var isSupplierVatable = sameMonthYearSameHauler.First().PurchaseOrder?.Supplier!.VatType == SD.VatType_Vatable;
-                        var isSupplierTaxable = sameMonthYearSameHauler.First().PurchaseOrder?.Supplier!.TaxType == SD.TaxType_WithTax;
+                        // NAME OF SUPPLIER
+                        var supplierName = sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
+                        var isSupplierVatable = sameMonthYearSameSupplier.First().PurchaseOrder?.Supplier!.VatType == SD.VatType_Vatable;
+                        var isSupplierTaxable = sameMonthYearSameSupplier.First().PurchaseOrder?.Supplier!.TaxType == SD.TaxType_WithTax;
                         worksheet.Cells[row, 2].Value = supplierName;
                         var columnName = string.Empty;
                         var isPayment = false;
                         var isEnding = false;
 
-                        // loop by month-year and hauler
+                        // loop by month-year and supplier
                         for (var i = 1; i != 5; i++)
                         {
                             // determines if the loop is beginning, current, payment, or ending
@@ -4379,19 +4379,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 foreach (var sameMonthYear in loopingMainDrGroupedByMonthYear)
                                 {
-                                    // this process finds the dr that has the same month/year for current month/year section
+                                    // this process finds the rr that has the same month/year for current month/year section
                                     if (sameMonthYear.FirstOrDefault()?.Date!.Month != allRrsSameMonthYear.FirstOrDefault()?.Date!.Month ||
                                         sameMonthYear.FirstOrDefault()?.Date!.Year != allRrsSameMonthYear.FirstOrDefault()?.Date!.Year)
                                     {
                                         continue;
                                     }
 
-                                    IEnumerable<RrWithAmountPaidViewModel>? secondLoopSameMonthYearSameHauler = null;
+                                    IEnumerable<RrWithAmountPaidViewModel>? secondLoopSameMonthYearSameSupplier = null;
                                     IGrouping<MonthYear, RrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
 
                                     // GET DR SET WITH SAME MONTH YEAR + HAULER
                                     var sameHaulerSameMonthYear = sameMonthYear
-                                        .Where(rr => rr.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
+                                        .Where(rr => rr.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
 
                                     var volume = 0m;
                                     var gross = 0m;
@@ -4407,7 +4407,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     // PROCESS DEPENDING ON CATEGORY
                                     switch (i)
                                     {
-
                                         // BEGINNING
                                         case 1:
                                             // CONTAINS PREVIOUS PAID
@@ -4417,18 +4416,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             // GET PREVIOUS PAID WITH SAME SUPPLIER
                                             if (secondLoopSameMonthYear != null)
                                             {
-                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
-                                                    .Where(rr => rr.ReceivingReport!.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameHauler
+                                                secondLoopSameMonthYearSameSupplier = secondLoopSameMonthYear
+                                                    .Where(rr => rr.ReceivingReport!.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier
                                                     .FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName)
                                                     .ToList();
 
-                                                if (secondLoopSameMonthYearSameHauler.Count() != 0)
+                                                if (secondLoopSameMonthYearSameSupplier.Count() != 0)
                                                 {
                                                     sumOfAmountPaid =
-                                                        secondLoopSameMonthYearSameHauler.Sum(rr => rr.AmountPaid);
+                                                        secondLoopSameMonthYearSameSupplier.Sum(rr => rr.AmountPaid);
 
                                                     sumOfVolumePaid =
-                                                        secondLoopSameMonthYearSameHauler.Sum(rr => rr.ReceivingReport.QuantityReceived);
+                                                        secondLoopSameMonthYearSameSupplier.Sum(rr => rr.ReceivingReport.QuantityReceived);
                                                 }
                                             }
 
@@ -4484,19 +4483,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             // GET PAID WITH SAME SUPPLIER
                                             if (secondLoopSameMonthYear != null)
                                             {
-                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
-                                                    .Where(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
+                                                secondLoopSameMonthYearSameSupplier = secondLoopSameMonthYear
+                                                    .Where(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
 
                                                 sumOfAmountPaid =
-                                                    secondLoopSameMonthYearSameHauler.Sum(rr => rr.AmountPaid);
+                                                    secondLoopSameMonthYearSameSupplier.Sum(rr => rr.AmountPaid);
 
                                                 sumOfVolumePaid =
-                                                    secondLoopSameMonthYearSameHauler.Sum(rr => rr.ReceivingReport.QuantityReceived);
+                                                    secondLoopSameMonthYearSameSupplier.Sum(rr => rr.ReceivingReport.QuantityReceived);
 
                                                 ewtPercentage = secondLoopSameMonthYear.Average(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
                                             }
 
-                                            if (secondLoopSameMonthYearSameHauler == null)
+                                            if (secondLoopSameMonthYearSameSupplier == null)
                                             {
                                                 continue;
                                             }
@@ -4527,7 +4526,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     // decide what to do to subtotals depending on category (beg, current, payment)
                                     switch (i)
                                     {
-                                        // beginning positive gross
+                                        // beginning
                                         case 1:
                                             subtotalVolumeBeginning += volume;
                                             subtotalGrossBeginning += gross;
@@ -4538,7 +4537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             currentEwtEnding += ewt;
                                             currentNetEnding += net;
                                             break;
-                                        // current negative gross
+                                        // current
                                         case 2:
                                             subtotalVolumePurchases += volume;
                                             subtotalGrossPurchases += gross;
@@ -4583,7 +4582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             isPayment = false;
                         }
 
-                        // after the four colums(beginning, current, payment, ending), next hauler
+                        // after the four columns(beginning, current, payment, ending), next is supplier
                         row++;
                     }
 
@@ -4756,7 +4755,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to generate hauler payable report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                _logger.LogError(ex, "Failed to generate trade payable report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(TradePayableReport));
             }
@@ -7875,6 +7874,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var worksheet = package.Workbook.Worksheets.Add("Hauler Payable");
 
                 #region == Title ==
+
                 var titleCells = worksheet.Cells["A1:B1"];
                 titleCells.Merge = true;
                 titleCells.Value = "HAULER PAYABLE REPORT";
@@ -7887,9 +7887,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
+
                 #endregion
 
                 #region == Header Row ==
+
                 titleCells = worksheet.Cells["A7:B7"];
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
@@ -7938,6 +7940,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     col = col + 1;
                 }
+
                 #endregion
 
                 var row = 8;
@@ -8001,7 +8004,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // group the drs by hauler
                     var sameMonthYearGroupedByHauler = allDrsSameMonthYear.GroupBy(rr => rr.Hauler!.SupplierName)
                         .ToList();
-                    // a
+
                     // MONTH YEAR LABEL
                     worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Month ?? 0))
                                                     + " " +
@@ -8107,7 +8110,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
                                                 .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
 
-                                            // GET PREVIOUS PAID WITH SAME SUPPLIER
+                                            // GET PREVIOUS PAID WITH SAME HAULER
                                             if (secondLoopSameMonthYear != null)
                                             {
                                                 secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
@@ -8220,7 +8223,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     // decide what to do to subtotals depending on category (beg, current, payment)
                                     switch (i)
                                     {
-                                        // beginning positive gross
+                                        // beginning
                                         case 1:
                                             subtotalVolumeBeginning += volume;
                                             subtotalGrossBeginning += gross;
@@ -8231,7 +8234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             currentEwtEnding += ewt;
                                             currentNetEnding += net;
                                             break;
-                                        // current negative gross
+                                        // current
                                         case 2:
                                             subtotalVolumePurchases += volume;
                                             subtotalGrossPurchases += gross;
@@ -8275,12 +8278,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             isPayment = false;
                         }
-                        // after the four colums(beginning, current, payment, ending), next hauler
+                        // after the four columns(beginning, current, payment, ending), next hauler
                         row++;
                     }
 
                     #region == Subtotal Inputting ==
-                    // after all supplier, input subtotals if not zero
+
+                    // after all hauler, input subtotals if not zero
                     if (subtotalGrossBeginning != 0m)
                     {
                         worksheet.Cells[row, 4].Value = subtotalVolumeBeginning;
@@ -8317,9 +8321,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                         range.Style.Numberformat.Format = currencyFormat;
                     }
+
                     #endregion
 
                     #region == Ending Subtotal and Grand Total Processes ==
+
                     // input subtotal of ending
                     var subtotalVolumeEnding = subtotalVolumeBeginning + subtotalVolumePurchases - subtotalVolumePayments;
                     var subtotalGrossEnding = subtotalGrossBeginning + subtotalGrossPurchases - subtotalGrossPayments;
@@ -8330,6 +8336,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 20].Value = subtotalGrossEnding;
                     worksheet.Cells[row, 21].Value = subtotalEwtEnding;
                     worksheet.Cells[row, 22].Value = subtotalNetEnding;
+
                     using (var range = worksheet.Cells[row, 19, row, 22])
                     {
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -8380,12 +8387,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     subtotalNetPayments = 0m;
 
                     #endregion
-
                 }
 
                 row++;
 
                 #region == Grand Total Inputting ==
+
                 worksheet.Cells[row, 2].Value = "GRAND TOTAL:";
                 worksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                 worksheet.Cells[row, 4].Value = grandTotalVolumeBeginning;
@@ -8404,17 +8411,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 20].Value = grandTotalGrossEnding;
                 worksheet.Cells[row, 21].Value = grandTotalEwtEnding;
                 worksheet.Cells[row, 22].Value = grandTotalNetEnding;
+
                 using (var range = worksheet.Cells[row, 4, row, 22])
                 {
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Numberformat.Format = currencyFormat;
                 }
+
                 using (var range = worksheet.Cells[row, 1, row, 22])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
+
                 #endregion
 
                 worksheet.Cells.AutoFitColumns();
@@ -8444,7 +8454,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to generate hauler payable report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                return RedirectToAction(nameof(TradePayableReport));
+                return RedirectToAction(nameof(HaulerPayableReport));
             }
         }
 
