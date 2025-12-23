@@ -4422,6 +4422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 {
                                                     sumOfAmountPaid =
                                                         secondLoopSameMonthYearSameHauler.Sum(rr => rr.AmountPaid);
+
                                                     sumOfVolumePaid =
                                                         secondLoopSameMonthYearSameHauler.Sum(rr => rr.ReceivingReport.QuantityReceived);
                                                 }
@@ -4484,14 +4485,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 sumOfAmountPaid =
                                                     secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+
                                                 sumOfVolumePaid =
                                                     secondLoopSameMonthYearSameHauler.Sum(dr => dr.ReceivingReport.QuantityReceived);
 
                                                 ewtPercentage = secondLoopSameMonthYear.Average(dr => dr.ReceivingReport.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
-
-                                                netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
-
-                                                ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
                                             }
 
                                             if (secondLoopSameMonthYearSameHauler == null)
@@ -4502,6 +4500,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             gross = sumOfAmountPaid;
 
                                             volume = sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
 
                                             net = gross - ewt;
 
@@ -8106,6 +8108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 {
                                                     sumOfAmountPaid =
                                                         secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+
                                                     sumOfVolumePaid =
                                                         secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
                                                 }
@@ -8168,12 +8171,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 sumOfAmountPaid =
                                                     secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+
                                                 sumOfVolumePaid =
                                                     secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
 
                                                 ewtPercentage = secondLoopSameMonthYear.Average(dr => dr.DeliveryReceipt.Hauler!.WithholdingTaxPercent ?? 0m);
-
-                                                ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
                                             }
 
                                             if (secondLoopSameMonthYearSameHauler == null)
@@ -8186,6 +8188,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             volume = sumOfVolumePaid;
 
                                             netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
 
                                             net = gross - ewt;
 
