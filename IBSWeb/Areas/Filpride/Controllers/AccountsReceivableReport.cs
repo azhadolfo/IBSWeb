@@ -283,15 +283,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Setting header
                 worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
-                worksheet.Cells["A2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
-                worksheet.Cells["A1:L1"].Merge = true;
-                worksheet.Cells["A1:L1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                worksheet.Cells["A1:L1"].Style.Font.Bold = true;
+                worksheet.Cells["A2:B2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
+                worksheet.Cells["A2:B2"].Merge = true;
+                worksheet.Cells["A1:M1"].Merge = true;
+                worksheet.Cells["A1:M1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells["A1:M1"].Style.Font.Bold = true;
 
                 // Define table headers
                 var headers = new[]
                 {
-                    "COS Date", "Customer", "Product", "P.O. No.",
+                    "COS Date", "Customer", "Branch", "Product", "P.O. No.",
                     "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS",
                     "Commissionee", "Commission Rate"
                 };
@@ -319,22 +320,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 1].Value = item.Date;
                     worksheet.Cells[row, 2].Value = item.CustomerName;
-                    worksheet.Cells[row, 3].Value = item.ProductName;
-                    worksheet.Cells[row, 4].Value = item.CustomerPoNo;
-                    worksheet.Cells[row, 5].Value = item.CustomerOrderSlipNo;
-                    worksheet.Cells[row, 6].Value = item.DeliveredPrice;
-                    worksheet.Cells[row, 7].Value = unservedVolume;
-                    worksheet.Cells[row, 8].Value = item.TotalAmount;
-                    worksheet.Cells[row, 9].Value = item.Status.ToUpper();
-                    worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
-                    worksheet.Cells[row, 11].Value = item.CommissioneeName;
-                    worksheet.Cells[row, 12].Value = item.CommissionRate;
+                    worksheet.Cells[row, 3].Value = item.Branch;
+                    worksheet.Cells[row, 4].Value = item.ProductName;
+                    worksheet.Cells[row, 5].Value = item.CustomerPoNo;
+                    worksheet.Cells[row, 6].Value = item.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 7].Value = item.DeliveredPrice;
+                    worksheet.Cells[row, 8].Value = unservedVolume;
+                    worksheet.Cells[row, 9].Value = item.TotalAmount;
+                    worksheet.Cells[row, 10].Value = item.Status.ToUpper();
+                    worksheet.Cells[row, 11].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
+                    worksheet.Cells[row, 12].Value = item.CommissioneeName;
+                    worksheet.Cells[row, 13].Value = item.CommissionRate;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     row++;
 
                     totalUnservedVolume += unservedVolume;
@@ -342,12 +344,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Add total row
-                worksheet.Cells[row, 6].Value = "TOTAL";
-                worksheet.Cells[row, 7].Value = totalUnservedVolume;
-                worksheet.Cells[row, 8].Value = totalAmount;
-                worksheet.Cells[row, 6, row, 8].Style.Font.Bold = true;
-                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 7].Value = "TOTAL";
+                worksheet.Cells[row, 8].Value = totalUnservedVolume;
+                worksheet.Cells[row, 9].Value = totalAmount;
+                worksheet.Cells[row, 7, row, 9].Style.Font.Bold = true;
                 worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 // Auto-fit columns for readability
                 worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
