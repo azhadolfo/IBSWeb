@@ -7851,7 +7851,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     break;
                                 // payment
                                 case 3:
-                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
+                                    loopingMainDrGroupedByMonthYear = allDrGroupedByMonthYear;
                                     loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
                                     loopingThirdDrGroupedByMonthYear = null!;
                                     columnName = "payments";
