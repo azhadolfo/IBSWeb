@@ -4,6 +4,7 @@ using Google.Type;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Models.Filpride;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
@@ -8240,14 +8241,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(TradePayableReport));
             }
         }
-
-        public class DrWithAmountPaid
-        {
-            public FilprideDeliveryReceipt DeliveryReceipt { get; set; } = null!;
-            public decimal AmountPaid { get; set; }
-        }
-
-        public record MonthYear(int Year, int Month);
 
         #endregion
 
