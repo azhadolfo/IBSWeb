@@ -14,6 +14,7 @@ namespace IBSWeb.Hubs
 
         public override async Task OnConnectedAsync()
         {
+            await Clients.Caller.SendAsync("OnConnected");
             await base.OnConnectedAsync();
         }
 

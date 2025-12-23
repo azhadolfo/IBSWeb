@@ -1078,7 +1078,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(dr => dr.DeliveryReceiptId)
                     .ToList();
                 var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.DeliveryReceiptId != null && drIds.Contains(rr.DeliveryReceiptId.Value))
+                    .Where(rr => rr.DeliveryReceiptId != null
+                                 && drIds.Contains(rr.DeliveryReceiptId.Value)
+                                 && rr.Status == nameof(Status.Posted))
                     .GroupBy(rr => rr.DeliveryReceiptId!.Value)
                     .Select(g => g.OrderByDescending(rr => rr.Date).First())
                     .ToDictionaryAsync(rr => rr.DeliveryReceiptId!.Value, cancellationToken);

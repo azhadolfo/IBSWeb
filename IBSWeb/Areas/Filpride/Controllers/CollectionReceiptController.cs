@@ -84,12 +84,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-            return View("ExportIndex", collectionReceipts);
+            return View("ExportIndex");
 
         }
 
@@ -2808,5 +2803,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GetCollectionReceiptList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var collectionReceipts = (await _unitOfWork.FilprideCollectionReceipt
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CollectionReceiptId,
+                        x.CollectionReceiptNo,
+                        x.TransactionDate,
+                        x.SINo,
+                        x.MultipleSI,
+                        x.SVNo,
+                        x.Customer!.CustomerName,
+                        x.Total,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = collectionReceipts
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }

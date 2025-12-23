@@ -1,10 +1,13 @@
+using System.Diagnostics;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -14,7 +17,10 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -33,17 +39,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<CheckVoucherNonTradeInvoiceController> _logger;
 
+        private readonly ICacheService _cacheService;
+
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             ICloudStorageService cloudStorageService,
-            ILogger<CheckVoucherNonTradeInvoiceController> logger)
+            ILogger<CheckVoucherNonTradeInvoiceController> logger,
+            ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         private string GetUserFullName()
@@ -231,9 +241,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
-            viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+            var coaCacheKey = $"coa:{companyClaims}";
+            var supplierCacheKey = $"supplier:{companyClaims}";
+            var minDateCacheKey = $"minDate:{companyClaims}";
+
+            // Chart of Accounts
+            var coaSelectList = await _cacheService.GetAsync<List<SelectListItem>>(
+                coaCacheKey,
+                cancellationToken);
+
+            if (coaSelectList == null)
+            {
+                coaSelectList = await _unitOfWork
+                    .GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
+
+                await _cacheService.SetAsync(
+                    coaCacheKey,
+                    coaSelectList,
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromHours(1),
+                    cancellationToken);
+            }
+
+            var supplierSelectList = await _cacheService.GetAsync<List<SelectListItem>>(
+                supplierCacheKey,
+                cancellationToken);
+
+            // Suppliers
+            if (supplierSelectList == null)
+            {
+                supplierSelectList = await _unitOfWork
+                    .GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                await _cacheService.SetAsync(
+                    supplierCacheKey,
+                    supplierSelectList,
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromHours(1),
+                    cancellationToken);
+            }
+
+            // Min Date
+            var minDate = await _cacheService.GetAsync<DateTime>(
+                minDateCacheKey,
+                cancellationToken);
+
+            if (minDate == default)
+            {
+                minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+
+                await _cacheService.SetAsync(
+                    minDateCacheKey,
+                    minDate,
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromHours(1),
+                    cancellationToken);
+            }
+
+            viewModel.ChartOfAccounts = coaSelectList;
+            viewModel.Suppliers = supplierSelectList;
+            viewModel.MinDate = minDate;
 
             return View(viewModel);
         }
@@ -1387,6 +1454,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .OrderBy(s => s.CheckVoucherDetailId)
                     .ToListAsync(cancellationToken);
 
                 var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();

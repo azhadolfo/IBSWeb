@@ -58,7 +58,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (view == nameof(DynamicView.Customer))
             {
-                return View("ExportIndex", customer);
+                return View("ExportIndex");
             }
 
             return View(customer);
@@ -393,6 +393,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCustomerList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var customer = (await _unitOfWork.FilprideCustomer
+                    .GetAllAsync(null, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CustomerId,
+                        x.CustomerCode,
+                        x.CustomerName,
+                        x.CustomerTin,
+                        x.BusinessStyle,
+                        x.CustomerTerms,
+                        x.CustomerType,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = customer
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

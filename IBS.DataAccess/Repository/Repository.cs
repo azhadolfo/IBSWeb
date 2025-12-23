@@ -297,22 +297,16 @@ namespace IBS.DataAccess.Repository
                 throw new ArgumentException("No terms found.");
             }
 
-            var date = transactionDate;
-
             DateOnly dueDate = default;
 
-            dueDate =  date.AddMonths(getTerms.NumberOfMonths).AddDays(getTerms.NumberOfDays);
+            dueDate =  transactionDate.AddMonths(getTerms.NumberOfMonths).AddDays(getTerms.NumberOfDays);
 
-            if (terms.Contains("M"))
+            if (!terms.Contains('M'))
             {
-                dueDate =  dueDate.AddDays(-date.Day);
-
-                if (date.Month == 1 && getTerms.NumberOfDays > 28)
-                {
-                    var daysToDeductIfMonthIsFebruary = DateTime.DaysInMonth(dueDate.Year, 2) - getTerms.NumberOfDays;
-                    dueDate = dueDate.AddDays(daysToDeductIfMonthIsFebruary);
-                }
+                return dueDate;
             }
+
+            dueDate =  dueDate.AddDays(-transactionDate.Day);
 
             return dueDate;
         }

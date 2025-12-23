@@ -39,8 +39,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly TriggerDate { get; set; }
 
-        [StringLength(50)]
-        public string OldPoNo { get; set; }
+        [StringLength(4)]
+        public string TypeOfPurchase { get; set; } = string.Empty;
 
         public int PickUpPointId { get; set; }
 
@@ -50,5 +50,6 @@ namespace IBS.Models.Filpride.ViewModels
         public string? SupplierSalesOrderNo { get; set; }
 
         public List<SelectListItem>? PaymentTerms { get; set; }
+
     }
 }

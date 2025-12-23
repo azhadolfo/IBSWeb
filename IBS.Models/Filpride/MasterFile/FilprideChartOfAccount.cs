@@ -23,9 +23,11 @@ namespace IBS.Models.Filpride.MasterFile
         public string AccountName { get; set; }
 
         [StringLength(25)]
+        [Display(Name = "Account Type")]
         public string? AccountType { get; set; }
 
         [StringLength(20)]
+        [Display(Name = "Normal Balance")]
         public string? NormalBalance { get; set; }
 
         public int Level { get; set; }

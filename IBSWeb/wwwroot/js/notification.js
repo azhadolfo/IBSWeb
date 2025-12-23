@@ -1,98 +1,30 @@
 ﻿var connection = new signalR.HubConnectionBuilder()
-    .withUrl("/notificationHub", {
-        transport: signalR.HttpTransportType.LongPolling // ⬅ IMPORTANT
-    })
-    .withAutomaticReconnect([10000, 30000, 60000]) // less aggressive
-    .configureLogging(signalR.LogLevel.Error)
+    .withUrl("/notificationHub")
+    .configureLogging(signalR.LogLevel.None) // Suppress SignalR logs
     .build();
 
-let isConnected = false;
-let reconnectTimer = null;
+connection.start()
+    .then(function () {
+        console.log("✅ Notification channel connected"); // Optional custom log
+    })
+    .catch(function (err) {
+        return console.error("❌ SignalR start failed:", err.toString());
+    });
 
-// ==========================
-// Start connection safely
-// ==========================
-async function startConnection() {
-    if (connection.state !== signalR.HubConnectionState.Disconnected) return;
-
-    try {
-        await connection.start();
-        isConnected = true;
-        await onConnected();
-        console.log("✅ Notification channel connected");
-    } catch (err) {
-        isConnected = false;
-        console.error("❌ SignalR start failed:", err.toString());
-        scheduleReconnect();
-    }
-}
-
-// ==========================
-// Controlled reconnect
-// ==========================
-function scheduleReconnect() {
-    if (reconnectTimer) return;
-
-    reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        startConnection();
-    }, 30000); // reconnect every 30s max
-}
-
-// ==========================
-// SignalR lifecycle handlers
-// ==========================
-connection.onreconnecting(() => {
-    isConnected = false;
-    console.warn("🔄 Reconnecting notification channel...");
+connection.on("OnConnected", function () {
+    OnConnected();
 });
 
-connection.onreconnected(async () => {
-    isConnected = true;
-    await onConnected();
-    console.log("✅ Notification channel reconnected");
-});
-
-connection.onclose(() => {
-    isConnected = false;
-    console.warn("❌ Notification channel closed");
-    scheduleReconnect();
-});
-
-// ==========================
-// Register user once per session
-// ==========================
-async function onConnected() {
-    const username = $('#hfUsername').val();
-    if (!username) return;
-
-    try {
-        await connection.invoke("SaveUserConnection", username);
-    } catch (err) {
-        console.error("❌ Failed to register user:", err.toString());
-    }
-}
-
-// ==========================
-// Receive notification count
-// ==========================
-connection.on("ReceiveNotificationCount", function (count) {
-    $('#notificationCount').text(count);
-
-    if (count > 0) {
-        $('#notificationCount')
-            .addClass('badge-pulse')
-            .delay(1500)
-            .queue(function (next) {
-                $(this).removeClass('badge-pulse');
-                next();
+function OnConnected() {
+    var username = $('#hfUsername').val();
+    if (username !== "") {
+        connection.invoke("SaveUserConnection", username)
+            .catch(function (err) {
+                return console.error("❌ Failed to register user:", err.toString());
             });
     }
-});
+}
 
-// ==========================
-// Receive notification message
-// ==========================
 connection.on("ReceivedNotification", function (message) {
     Swal.fire({
         title: 'New Notification',
@@ -108,33 +40,4 @@ connection.on("ReceivedNotification", function (message) {
             window.location.href = '/User/Notification/Index';
         }
     });
-});
-
-// ==========================
-// Initial count fetch (ONCE)
-// ==========================
-function fetchInitialNotificationCount() {
-    $.get('/User/Notification/GetNotificationCount')
-        .done(count => $('#notificationCount').text(count))
-        .fail(() => $('#notificationCount').text('0'));
-}
-
-// ==========================
-// Page lifecycle
-// ==========================
-$(document).ready(function () {
-    const username = $('#hfUsername').val();
-    if (!username) return;
-
-    fetchInitialNotificationCount();
-    startConnection();
-});
-
-// ==========================
-// Cleanup on tab close
-// ==========================
-window.addEventListener("beforeunload", function () {
-    if (connection.state === signalR.HubConnectionState.Connected) {
-        connection.stop();
-    }
 });

@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Services;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -20,16 +21,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ChartOfAccountController> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICacheService _cacheService;
 
         public ChartOfAccountController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             ILogger<ChartOfAccountController> logger,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ICacheService cacheService)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         private string GetUserFullName()
@@ -55,10 +59,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (view == nameof(DynamicView.ChartOfAccount))
             {
-                var chartOfAccounts = await _unitOfWork.FilprideChartOfAccount
-                    .GetAllAsync(cancellationToken : cancellationToken);
-
-                return View("ExportIndex", chartOfAccounts);
+                return View("ExportIndex");
             }
 
             var level1 = await _unitOfWork.FilprideChartOfAccount
@@ -116,6 +117,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideChartOfAccount.AddAsync(newAccount, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -157,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -175,6 +178,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetChartOfAccountList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var chartOfAccounts = (await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(cancellationToken : cancellationToken))
+                    .Select(x => new
+                    {
+                        x.AccountId,
+                        x.AccountNumber,
+                        x.AccountName,
+                        x.AccountType,
+                        x.NormalBalance,
+                        x.Level,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = chartOfAccounts
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
