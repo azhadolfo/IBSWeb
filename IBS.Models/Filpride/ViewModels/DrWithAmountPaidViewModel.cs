@@ -1,13 +1,8 @@
 using IBS.Models.Filpride.Integrated;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace IBS.Models.Filpride
+namespace IBS.Models.Filpride.ViewModels
 {
-    public class DrWithAmountPaid
+    public class DrWithAmountPaidViewModel
     {
         public FilprideDeliveryReceipt DeliveryReceipt { get; set; } = null!;
         public decimal AmountPaid { get; set; }
