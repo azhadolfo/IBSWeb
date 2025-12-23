@@ -2012,29 +2012,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["A7"].Value = "Date Delivered";
                 worksheet.Cells["B7"].Value = "Customer Name";
-                worksheet.Cells["C7"].Value = "Segment";
-                worksheet.Cells["D7"].Value = "Specialist";
-                worksheet.Cells["E7"].Value = "SI No.";
-                worksheet.Cells["F7"].Value = "COS #";
-                worksheet.Cells["G7"].Value = "OTC COS #";
-                worksheet.Cells["H7"].Value = "DR #";
-                worksheet.Cells["I7"].Value = "OTC DR #";
-                worksheet.Cells["J7"].Value = "PO #";
-                worksheet.Cells["K7"].Value = "IS PO #";
-                worksheet.Cells["L7"].Value = "Delivery Option";
-                worksheet.Cells["M7"].Value = "Items";
-                worksheet.Cells["N7"].Value = "Quantity";
-                worksheet.Cells["O7"].Value = "Freight";
-                worksheet.Cells["P7"].Value = "Sales G. VAT";
-                worksheet.Cells["Q7"].Value = "VAT";
-                worksheet.Cells["R7"].Value = "Sales N. VAT";
-                worksheet.Cells["S7"].Value = "Freight N. VAT";
-                worksheet.Cells["T7"].Value = "Commission";
-                worksheet.Cells["U7"].Value = "Commissionee";
-                worksheet.Cells["V7"].Value = "Remarks";
+                worksheet.Cells["C7"].Value = "Branch";
+                worksheet.Cells["D7"].Value = "Segment";
+                worksheet.Cells["E7"].Value = "Specialist";
+                worksheet.Cells["F7"].Value = "SI No.";
+                worksheet.Cells["G7"].Value = "COS #";
+                worksheet.Cells["H7"].Value = "OTC COS #";
+                worksheet.Cells["I7"].Value = "DR #";
+                worksheet.Cells["J7"].Value = "OTC DR #";
+                worksheet.Cells["K7"].Value = "PO #";
+                worksheet.Cells["L7"].Value = "IS PO #";
+                worksheet.Cells["M7"].Value = "Delivery Option";
+                worksheet.Cells["N7"].Value = "Items";
+                worksheet.Cells["O7"].Value = "Quantity";
+                worksheet.Cells["P7"].Value = "Freight";
+                worksheet.Cells["Q7"].Value = "Sales G. VAT";
+                worksheet.Cells["R7"].Value = "VAT";
+                worksheet.Cells["S7"].Value = "Sales N. VAT";
+                worksheet.Cells["T7"].Value = "Freight N. VAT";
+                worksheet.Cells["U7"].Value = "Commission";
+                worksheet.Cells["V7"].Value = "Commissionee";
+                worksheet.Cells["W7"].Value = "Remarks";
 
                 // Apply styling to the header row
-                using (var range = worksheet.Cells["A7:V7"])
+                using (var range = worksheet.Cells["A7:W7"])
                 {
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Font.Bold = true;
@@ -2070,35 +2071,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
                     worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerName;
-                    worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerType;
-                    worksheet.Cells[row, 4].Value = dr.DeliveryReceipt.CustomerOrderSlip?.AccountSpecialist;
-                    worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
-                    worksheet.Cells[row, 6].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
-                    worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
-                    worksheet.Cells[row, 8].Value = dr.DeliveryReceipt.DeliveryReceiptNo;
-                    worksheet.Cells[row, 9].Value = dr.DeliveryReceipt.ManualDrNo;
-                    worksheet.Cells[row, 10].Value = dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
-                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption;
-                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip!.ProductName;
-                    worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
-                    worksheet.Cells[row, 15].Value = freightAmount;
-                    worksheet.Cells[row, 16].Value = segment;
-                    worksheet.Cells[row, 17].Value = vat;
-                    worksheet.Cells[row, 18].Value = salesNetOfVat;
-                    worksheet.Cells[row, 19].Value = freightNetOfVat;
-                    worksheet.Cells[row, 20].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
-                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeName;
-                    worksheet.Cells[row, 22].Value = dr.DeliveryReceipt.Remarks;
+                    worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.CustomerOrderSlip?.Branch;
+                    worksheet.Cells[row, 4].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerType;
+                    worksheet.Cells[row, 5].Value = dr.DeliveryReceipt.CustomerOrderSlip?.AccountSpecialist;
+                    worksheet.Cells[row, 6].Value = dr.SalesInvoiceNo;
+                    worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 8].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
+                    worksheet.Cells[row, 9].Value = dr.DeliveryReceipt.DeliveryReceiptNo;
+                    worksheet.Cells[row, 10].Value = dr.DeliveryReceipt.ManualDrNo;
+                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption;
+                    worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.CustomerOrderSlip!.ProductName;
+                    worksheet.Cells[row, 15].Value = dr.DeliveryReceipt.Quantity;
+                    worksheet.Cells[row, 16].Value = freightAmount;
+                    worksheet.Cells[row, 17].Value = segment;
+                    worksheet.Cells[row, 18].Value = vat;
+                    worksheet.Cells[row, 19].Value = salesNetOfVat;
+                    worksheet.Cells[row, 20].Value = freightNetOfVat;
+                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
+                    worksheet.Cells[row, 22].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeName;
+                    worksheet.Cells[row, 23].Value = dr.DeliveryReceipt.Remarks;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
 
                     row++;
 
@@ -2109,32 +2111,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalCommissionRate += dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate ?? 0m;
                 }
 
-                worksheet.Cells[row, 13].Value = "Total ";
-                worksheet.Cells[row, 14].Value = totalQuantity;
-                worksheet.Cells[row, 15].Value = totalFreightAmount;
-                worksheet.Cells[row, 16].Value = totalAmount;
-                worksheet.Cells[row, 17].Value = totalVat;
-                worksheet.Cells[row, 18].Value = totalSalesNetOfVat;
-                worksheet.Cells[row, 19].Value = totalFreightNetOfVat;
-                worksheet.Cells[row, 20].Value = totalCommissionRate;
+                worksheet.Cells[row, 14].Value = "Total ";
+                worksheet.Cells[row, 15].Value = totalQuantity;
+                worksheet.Cells[row, 16].Value = totalFreightAmount;
+                worksheet.Cells[row, 17].Value = totalAmount;
+                worksheet.Cells[row, 18].Value = totalVat;
+                worksheet.Cells[row, 19].Value = totalSalesNetOfVat;
+                worksheet.Cells[row, 20].Value = totalFreightNetOfVat;
+                worksheet.Cells[row, 21].Value = totalCommissionRate;
 
-                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
 
                 // Apply style to subtotal row
-                using (var range = worksheet.Cells[row, 1, row, 22])
+                using (var range = worksheet.Cells[row, 1, row, 23])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
 
-                using (var range = worksheet.Cells[row, 13, row, 20])
+                using (var range = worksheet.Cells[row, 13, row, 23])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
