@@ -4207,7 +4207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["A7"].Value = "MONTH";
                 worksheet.Cells["A7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
-                worksheet.Cells["B7"].Value = "SUPPL";
+                worksheet.Cells["B7"].Value = "SUPPLIER";
                 worksheet.Cells["B7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
                 titleCells = worksheet.Cells["A6:B6"];
@@ -4220,7 +4220,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
-                string[] headers = ["BEGINNING", "FREIGHT AMOUNTS", "PAYMENTS", "ENDING"];
+                string[] headers = ["BEGINNING", "PURCHASES", "PAYMENTS", "ENDING"];
                 string[] subHeaders = ["VOLUME", "GROSS", "EWT", "NET AMOUNT"];
                 var col = 4;
 
@@ -4253,8 +4253,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var row = 8;
 
-                IEnumerable<IGrouping<MonthYear, FilprideReceivingReport>> loopingMainDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<MonthYear, RrWithAmountPaidViewModel>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, FilprideReceivingReport>> loopingMainRrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, RrWithAmountPaidViewModel>> loopingSecondRrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
@@ -4340,20 +4340,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 // beginning
                                 case 1:
-                                    loopingMainDrGroupedByMonthYear = allPreviousRrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
+                                    loopingMainRrGroupedByMonthYear = allPreviousRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
                                     columnName = "beginning";
                                     break;
                                 // current
                                 case 2:
-                                    loopingMainDrGroupedByMonthYear = allSelectedRrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = null!;
+                                    loopingMainRrGroupedByMonthYear = allSelectedRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = null!;
                                     columnName = "purchases";
                                     break;
                                 // payment
                                 case 3:
-                                    loopingMainDrGroupedByMonthYear = allRrGroupedByMonthYear;
-                                    loopingSecondDrGroupedByMonthYear = rrAndAmountPaidForSelectedPeriodFromCv;
+                                    loopingMainRrGroupedByMonthYear = allRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForSelectedPeriodFromCv;
                                     columnName = "payments";
                                     break;
                                 // ending
@@ -4367,17 +4367,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 switch (columnName)
                                 {
                                     case "beginning":
-                                        loopingSecondDrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
+                                        loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
                                         break;
                                     case "purchases":
-                                        loopingSecondDrGroupedByMonthYear = null!;
+                                        loopingSecondRrGroupedByMonthYear = null!;
                                         break;
                                 }
                             }
 
-                            if (loopingMainDrGroupedByMonthYear != null)
+                            if (loopingMainRrGroupedByMonthYear != null)
                             {
-                                foreach (var sameMonthYear in loopingMainDrGroupedByMonthYear)
+                                foreach (var sameMonthYear in loopingMainRrGroupedByMonthYear)
                                 {
                                     // this process finds the rr that has the same month/year for current month/year section
                                     if (sameMonthYear.FirstOrDefault()?.Date!.Month != allRrsSameMonthYear.FirstOrDefault()?.Date!.Month ||
@@ -4389,8 +4389,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     IEnumerable<RrWithAmountPaidViewModel>? secondLoopSameMonthYearSameSupplier = null;
                                     IGrouping<MonthYear, RrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
 
-                                    // GET DR SET WITH SAME MONTH YEAR + HAULER
-                                    var sameHaulerSameMonthYear = sameMonthYear
+                                    // GET DR SET WITH SAME MONTH YEAR + SUPPLIER
+                                    var sameSupplierSameMonthYear = sameMonthYear
                                         .Where(rr => rr.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
 
                                     var volume = 0m;
@@ -4410,7 +4410,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         // BEGINNING
                                         case 1:
                                             // CONTAINS PREVIOUS PAID
-                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                            secondLoopSameMonthYear = loopingSecondRrGroupedByMonthYear
                                                 .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
 
                                             // GET PREVIOUS PAID WITH SAME SUPPLIER
@@ -4431,10 +4431,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 }
                                             }
 
-                                            totalAmount = sameHaulerSameMonthYear
+                                            totalAmount = sameSupplierSameMonthYear
                                                 .Sum(rr => rr.Amount);
 
-                                            totalVolume = sameHaulerSameMonthYear
+                                            totalVolume = sameSupplierSameMonthYear
                                                   .Sum(rr => rr.QuantityReceived);
 
                                             gross = totalAmount - sumOfAmountPaid;
@@ -4454,10 +4454,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         // CURRENT
                                         case 2:
 
-                                            totalAmount = sameHaulerSameMonthYear
+                                            totalAmount = sameSupplierSameMonthYear
                                                 .Sum(rr => rr.Amount);
 
-                                            totalVolume = sameHaulerSameMonthYear
+                                            totalVolume = sameSupplierSameMonthYear
                                                 .Sum(rr => rr.QuantityReceived);
 
                                             gross = totalAmount - sumOfAmountPaid;
@@ -4477,7 +4477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         // PAYMENT
                                         case 3:
                                             // CONTAINS SELECTED PAID
-                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                            secondLoopSameMonthYear = loopingSecondRrGroupedByMonthYear
                                                 .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
 
                                             // GET PAID WITH SAME SUPPLIER
