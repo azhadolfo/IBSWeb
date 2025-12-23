@@ -4459,7 +4459,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 .Sum(rr => rr.Amount);
 
                                             totalVolume = sameHaulerSameMonthYear
-                                                .Sum(dr => dr.QuantityReceived);
+                                                .Sum(rr => rr.QuantityReceived);
 
                                             gross = totalAmount - sumOfAmountPaid;
 
@@ -4488,12 +4488,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     .Where(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
 
                                                 sumOfAmountPaid =
-                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+                                                    secondLoopSameMonthYearSameHauler.Sum(rr => rr.AmountPaid);
 
                                                 sumOfVolumePaid =
-                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.ReceivingReport.QuantityReceived);
+                                                    secondLoopSameMonthYearSameHauler.Sum(rr => rr.ReceivingReport.QuantityReceived);
 
-                                                ewtPercentage = secondLoopSameMonthYear.Average(dr => dr.ReceivingReport.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
+                                                ewtPercentage = secondLoopSameMonthYear.Average(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
                                             }
 
                                             if (secondLoopSameMonthYearSameHauler == null)
