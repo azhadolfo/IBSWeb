@@ -4131,7 +4131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var rrAndAmountPaidForSelectedPeriodFromCv = allRr
                     .Where(rr => idsOfRrsOfSelectedPeriodFromCv.Select(rrSet => rrSet.ReceivingReportId).ToList().Contains(rr.ReceivingReportId) &&
                     rr.Amount != 0m)
-                    .Select(rrSet => new RrWithAmountPaid
+                    .Select(rrSet => new RrWithAmountPaidViewModel
                     {
                         ReceivingReport = rrSet,
                         AmountPaid = idsOfRrsOfSelectedPeriodFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault() == null ? 0m :
@@ -4145,7 +4145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var rrAndAmountPaidForPreviousPeriodFromCv = allRr
                     .Where(rr => idsOfRrsOfPreviousPeriodsFromCv.Select(rrSet => rrSet.ReceivingReportId).ToList().Contains(rr.ReceivingReportId) &&
                     rr.Amount != 0m)
-                    .Select(rrSet => new RrWithAmountPaid
+                    .Select(rrSet => new RrWithAmountPaidViewModel
                     {
                         ReceivingReport = rrSet,
                         AmountPaid = idsOfRrsOfPreviousPeriodsFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault() == null ? 0m :
@@ -4254,7 +4254,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var row = 8;
 
                 IEnumerable<IGrouping<MonthYear, FilprideReceivingReport>> loopingMainDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<MonthYear, RrWithAmountPaid>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, RrWithAmountPaidViewModel>> loopingSecondDrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
@@ -4386,8 +4386,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         continue;
                                     }
 
-                                    IEnumerable<RrWithAmountPaid>? secondLoopSameMonthYearSameHauler = null;
-                                    IGrouping<MonthYear, RrWithAmountPaid>? secondLoopSameMonthYear = null!;
+                                    IEnumerable<RrWithAmountPaidViewModel>? secondLoopSameMonthYearSameHauler = null;
+                                    IGrouping<MonthYear, RrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
 
                                     // GET DR SET WITH SAME MONTH YEAR + HAULER
                                     var sameHaulerSameMonthYear = sameMonthYear
@@ -7824,7 +7824,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drAndAmountPaidForSelectedPeriodFromCv = allDr
                     .Where(dr => idsOfDrsOfSelectedPeriodFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
                     dr.FreightAmount != 0m)
-                    .Select(drSet => new DrWithAmountPaid
+                    .Select(drSet => new DrWithAmountPaidViewModel
                     {
                         DeliveryReceipt = drSet,
                         AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
@@ -7838,7 +7838,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drAndAmountPaidForPreviousPeriodFromCv = allDr
                     .Where(dr => idsOfDrsOfPreviousPeriodsFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
                     dr.FreightAmount != 0m)
-                    .Select(drSet => new DrWithAmountPaid
+                    .Select(drSet => new DrWithAmountPaidViewModel
                     {
                         DeliveryReceipt = drSet,
                         AmountPaid = idsOfDrsOfPreviousPeriodsFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
@@ -7942,8 +7942,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var row = 8;
                 IEnumerable<IGrouping<MonthYear, FilprideDeliveryReceipt>> loopingMainDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<MonthYear, DrWithAmountPaid>> loopingSecondDrGroupedByMonthYear = null!;
-                IEnumerable<IGrouping<MonthYear, DrWithAmountPaid>> loopingThirdDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaidViewModel>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaidViewModel>> loopingThirdDrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
@@ -8079,8 +8079,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         continue;
                                     }
 
-                                    IEnumerable<DrWithAmountPaid>? secondLoopSameMonthYearSameHauler = null;
-                                    IGrouping<MonthYear, DrWithAmountPaid>? secondLoopSameMonthYear = null!;
+                                    IEnumerable<DrWithAmountPaidViewModel>? secondLoopSameMonthYearSameHauler = null;
+                                    IGrouping<MonthYear, DrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
 
                                     // GET DR SET WITH SAME MONTH YEAR + HAULER
                                     var sameHaulerSameMonthYear = sameMonthYear
