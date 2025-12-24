@@ -620,12 +620,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.ApOtherTugs = Decimal.Parse(record.apothertug);
                             newRecord.DispatchChargeType = null;
                             newRecord.BAFChargeType = null;
-                            newRecord.Status = "Imported";
+                            newRecord.Status = "For Billing";
                             newRecord.Remarks = null;
                             newRecord.TariffBy = null;
                             newRecord.TariffEditedBy = null;
                             newRecord.DispatchChargeType = record.perhour == "T" ? "Per hour" : "Per move";
                             newRecord.BAFChargeType = "Per move";
+                            newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
+                            newRecord.Status = record.billnum == string.Empty ? "For Billing" : "Billed";
+
 
                             if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                             {
@@ -657,18 +660,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 newRecord.TotalHours = totalHours;
                             }
 
-                            // total hours difference --calculate
-                            // status -- none
                             // dispatch discount -- none
                             // baf discount -- none
-                            // video url
-                            // billing id (text)
-                            //  edited by -- none
-                            //  edited date -- none
                             //  tariff by -- none
                             //  tariff date -- none
                             //  tariff edited by -- none
                             //  tariff edited date -- none
+                            // video url
                             //  video name
                             //  video saved url
                             //  image name
