@@ -89,15 +89,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<string> ImportFromCSV(string field, CancellationToken cancellationToken = default)
         {
-            var customerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\customerDB(nullables).csv";
-            var portCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\portDB.csv";
-            var principalCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\principalDB(nullables)v2.csv";
-            var serviceCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\servicesDB.csv";
-            var tugboatCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugboatDB.csv";
-            var tugboatOwnerCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugboatOwnerDBv2.csv";
-            var tugMasterCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\tugMasterDBv2.csv";
-            var vesselCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\dbs(raw)\\vesselDB.csv";
-            var dispatchTicketCSVPath = "C:\\Users\\MIS2\\Desktop\\Import files to IBS from MMSI\\data entries\\dispatchTicketsTest.csv";
+            var customerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\customerDB(nullables).csv";
+            var portCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\portDB.csv";
+            var principalCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\principalDB(nullables)v2.csv";
+            var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
+            var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
+            var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
+            var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
+            var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
+            var dispatchTicketCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\dispatchTicketsTest.csv";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
