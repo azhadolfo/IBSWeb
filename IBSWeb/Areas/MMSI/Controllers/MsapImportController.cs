@@ -590,6 +590,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 newRecord.CustomerId = null;
                             }
 
+                            #region -- Assigning Values --
+
                             newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
                             newRecord.DispatchNumber = record.number;
                             newRecord.Date = DateOnly.Parse(record.date);
@@ -673,6 +675,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             //  image saved url
                             //  image signed url
 
+                            #endregion -- Assigning Values --
 
                             newRecords.Add(newRecord);
                             _dbContext.MMSIDispatchTickets.Add(newRecord);
