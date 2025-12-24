@@ -491,12 +491,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         using var reader0 = new StreamReader(customerCSVPath);
                         using var csv0 = new CsvReader(reader0, CultureInfo.InvariantCulture);
+
                         var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new
                         {
                             c.number,
                             c.name,
                             address = c.address1 == string.Empty ? "-" : $"{c.address1} {c.address2} {c.address3}"
                         }).ToList();
+
+                        #region -- Creating Identifier Variables --
 
                         var existingIdentifier = await _dbContext.MMSIDispatchTickets
                             .AsNoTracking()
@@ -531,6 +534,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var ibsCustomerList = await _dbContext.FilprideCustomers.Where(c => c.Company == "MMSI")
                             .AsNoTracking()
                             .ToListAsync(cancellationToken);
+
+                        #endregion -- Creating Identifier Variables --
 
                         var newRecords = new List<MMSIDispatchTicket>();
 
