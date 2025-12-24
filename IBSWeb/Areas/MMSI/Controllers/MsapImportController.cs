@@ -624,6 +624,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.Remarks = null;
                             newRecord.TariffBy = null;
                             newRecord.TariffEditedBy = null;
+                            newRecord.DispatchChargeType = record.perhour == "T" ? "Per hour" : "Per move";
+                            newRecord.BAFChargeType = "Per move";
 
                             if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                             {
@@ -655,8 +657,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 newRecord.TotalHours = totalHours;
                             }
 
-                            // dispatch charge type none
-                            // baf charge type --none
                             // total hours difference --calculate
                             // status -- none
                             // dispatch discount -- none
