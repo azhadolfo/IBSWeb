@@ -192,6 +192,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 PortId = viewModel.PortId,
                 TerminalId = viewModel.TerminalId,
                 ToBillDispatchTickets = viewModel.ToBillDispatchTickets,
+                ApOtherTug = viewModel.ApOtherTug
             };
 
             if (viewModel.MMSIBillingId != null)
@@ -224,7 +225,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 VesselId = model.VesselId,
                 PortId = model.PortId,
                 TerminalId = model.TerminalId,
-                ToBillDispatchTickets = model.ToBillDispatchTickets
+                ToBillDispatchTickets = model.ToBillDispatchTickets,
+                ApOtherTug = model.ApOtherTug
             };
 
             return viewModel;

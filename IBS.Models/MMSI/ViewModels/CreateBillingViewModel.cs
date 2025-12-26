@@ -43,6 +43,8 @@ namespace IBS.Models.MMSI.ViewModels
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
+        public decimal ApOtherTug { get; set; }
+
         #region ---Select Lists---
 
         [NotMapped]
