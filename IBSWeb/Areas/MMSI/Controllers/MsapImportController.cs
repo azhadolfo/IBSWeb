@@ -99,6 +99,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
             var dispatchTicketCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\dispatchTicketsTest.csv";
 
+            var billingCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\billings.csv";
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -683,6 +685,96 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Billing":
+                    {
+                        // Billing data structure
+                        // recid, 21
+                        // number, 1877
+                        // date, 11/3/2022
+                        // custno, 7
+                        // vesselnum. 14
+                        // portnum, 5
+                        // amount, 0
+                        // apothertug,0
+                        // vat, T | F
+                        // printed, T | F
+                        // entrydate, 10/13/2022 13:25
+                        // entryby, 2364
+                        // voyage, 279
+                        // dispatchamount, 0
+                        // bafamount, 0
+                        // collected, T | F
+                        // crnum,
+                        // undocumented, T | F
+                        // billto, 2366
+                        // terminal, 005
+
+                        using var reader = new StreamReader(billingCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
+                        var records = csv.GetRecords<dynamic>().ToList();
+                        var newRecords = new List<MMSIBilling>();
+
+                        var existingIdentifier = await _dbContext.MMSIBillings
+                            .AsNoTracking()
+                            .Select(b => b.MMSIBillingNumber)
+                            .ToListAsync(cancellationToken);
+
+                        var existingVessels = await _dbContext.MMSIVessels
+                            .AsNoTracking()
+                            .Select(v => new { v.VesselNumber, v.VesselId })
+                            .ToListAsync(cancellationToken);
+
+                        var existingPorts = await _dbContext.MMSIPorts
+                            .AsNoTracking()
+                            .Select(p => new { p.PortNumber, p.PortId })
+                            .ToListAsync(cancellationToken);
+
+                        var existingCustomers = await _dbContext.FilprideCustomers
+                            .Where(c => c.Company == "MMSI")
+                            .AsNoTracking()
+                            .Select(c => new { c.CustomerId, c.CustomerName })
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var record in records)
+                        {
+
+                            if (existingIdentifier.Contains(record.number))
+                            {
+                                continue;
+                            }
+
+
+                            var originalVesselNum = record.vesselnum ?? string.Empty;
+                            var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
+                            var originalPortNum = record.portnum ?? string.Empty;
+                            var paddedPortNum = int.Parse(originalPortNum).ToString("D3");
+
+                            MMSIBilling newRecord = new MMSIBilling();
+
+                            newRecord.MMSIBillingNumber = record.number;
+                            newRecord.Date = DateOnly.ParseExact(record.date, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                            newRecord.CustomerId = record.customer == string.Empty ? null : record.customer; // to check
+                            newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
+                            newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
+                            newRecord.Amount = decimal.Parse(record.amount);
+                            newRecord.IsUndocumented = record.undocumented == "T" ? true : false;
+                            newRecord.ApOtherTug = decimal.Parse(record.apothertug);
+                            newRecord.CreatedDate = DateTime.ParseExact(
+                                record.entrydate,
+                                "MM/dd/yyyy  hh:mm:ss tt",
+                                CultureInfo.InvariantCulture,
+                                DateTimeStyles.None
+                                );
+
+
+                            newRecords.Add(newRecord);
+                        }
+
+
+
+                        return "Billing import successful";
                     }
                     default:
                         return $"{field} field is invalid";
