@@ -600,5 +600,28 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return salesInvoices.OrderBy(rr => rr.TransactionDate).ToList();
         }
+
+
+        public async Task<List<FilprideJournalVoucherDetail>> GetJournalVoucherReport(DateOnly dateFrom,
+            DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            // Base query without date filter yet
+            var journalVoucherDetails = await _db.FilprideJournalVoucherDetails
+                .Include(jvd => jvd.JournalVoucherHeader)
+                .ThenInclude(jvh => jvh!.CheckVoucherHeader)
+                .Where(x => x.JournalVoucherHeader!.Company == company
+                            && x.JournalVoucherHeader!.CheckVoucherHeader!.DcrDate >= dateFrom
+                            && x.JournalVoucherHeader!.CheckVoucherHeader!.DcrDate <= dateTo)
+                .OrderBy(jvd => jvd.JournalVoucherHeader!.Date)
+                .ToListAsync(cancellationToken);
+
+
+            return journalVoucherDetails;
+        }
     }
 }
