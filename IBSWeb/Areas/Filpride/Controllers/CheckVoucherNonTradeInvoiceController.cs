@@ -1515,7 +1515,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CVId = existingHeaderModel.CheckVoucherHeaderId,
                     PoNo = existingHeaderModel.PONo?.First(),
                     SiNo = existingHeaderModel.SINo?.First(),
-                    Type = existingHeaderModel.Type,
                     MinDate = minDate,
                     SupplierNames = getPayeeName
                 };
