@@ -8537,7 +8537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Set filter information
                 worksheet.Cells["A2"].Value = "Date Range: ";
-                worksheet.Cells["B2"].Value = $"{model.DateFrom}+{model.DateTo}";
+                worksheet.Cells["B2"].Value = $"{model.DateFrom} - {model.DateTo}";
                 worksheet.Cells["A3"].Value = "Extracted By: ";
                 worksheet.Cells["B3"].Value = GetUserFullName();
                 worksheet.Cells["A4"].Value = "Company: ";
@@ -8550,21 +8550,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[headerRow, 1].Value = "DATE";
                 worksheet.Cells[headerRow, 2].Value = "JVF #";
                 worksheet.Cells[headerRow, 3].Value = "PARTICULARS";
-                worksheet.Cells[headerRow, 4].Value = "DEPT CD";
-                worksheet.Cells[headerRow, 5].Value = "ACCOUNT ENTRIES";
-                worksheet.Cells[headerRow, 6].Value = "DEBIT";
-                worksheet.Cells[headerRow, 7].Value = "CREDIT";
-                worksheet.Cells[headerRow, 8].Value = "JV STATUS";
-                worksheet.Cells[headerRow, 9].Value = "JV REASON";
-                worksheet.Cells[headerRow, 10].Value = "Check No";
-                worksheet.Cells[headerRow, 11].Value = "CV No.";
-                worksheet.Cells[headerRow, 12].Value = "Prepared By";
+                worksheet.Cells[headerRow, 4].Value = "ACCOUNT ENTRIES";
+                worksheet.Cells[headerRow, 5].Value = "DEBIT";
+                worksheet.Cells[headerRow, 6].Value = "CREDIT";
+                worksheet.Cells[headerRow, 7].Value = "ACCOUNTCD";
+                worksheet.Cells[headerRow, 8].Value = "ACCOUNT NAME";
+                worksheet.Cells[headerRow, 9].Value = "JV STATUS";
+                worksheet.Cells[headerRow, 10].Value = "JV REASON";
+                worksheet.Cells[headerRow, 11].Value = "Check No";
+                worksheet.Cells[headerRow, 12].Value = "CV No.";
+                worksheet.Cells[headerRow, 13].Value = "PAYEE";
+
+                worksheet.Cells[headerRow, 14].Value = "Prepared By";
 
                 // Apply styling to the header row
-                using (var range = worksheet.Cells[headerRow, 1, headerRow, 12])
+                using (var range = worksheet.Cells[headerRow, 1, headerRow, 14])
                 {
                     range.Style.Font.Bold = true;
-                    range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                    range.Style.Border.BorderAround(ExcelBorderStyle.Medium);
                 }
 
                 // Populate the data rows
@@ -8583,10 +8586,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 6].Value = detail.Credit;
                     worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 8].Value = detail.JournalVoucherHeader.Status;
-                    worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.JVReason;
-                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
-                    worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CreatedBy;
+                    worksheet.Cells[row, 7].Value = detail.AccountNo;
+                    worksheet.Cells[row, 8].Value = detail.AccountName;
+                    worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.Status;
+                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.JVReason;
+                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
+                    worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
+                    worksheet.Cells[row, 13].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.Payee;
+                    worksheet.Cells[row, 14].Value = detail.JournalVoucherHeader.CreatedBy;
 
                     row++;
                 }
@@ -8598,7 +8605,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
                 worksheet.Column(3).Width = 30;
-                worksheet.Column(9).Width = 30;
+                worksheet.Column(10).Width = 30;
 
                 // Freeze panes at header row
                 worksheet.View.FreezePanes(headerRow + 1, 1);
@@ -8634,27 +8641,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-/*
- * TO INQUIRE FIELDS - Uncomment and map to correct properties:
- *
- * 1. BS # (Book Series/Batch Series) - detail.Header.BookSeries?
- * 2. TYPE - detail.Header.Type?
- * 3. COSTCENTERCD - detail.CostCenterCode?
- * 4. COST CENTERNAME - detail.CostCenterName?
- * 5. ACCTCD - detail.AccountCode?
- * 6. Customer No - detail.Header.CustomerNo?
- * 7. Station Name - detail.Header.StationName?
- * 8. Importation Code - detail.Header.ImportationCode?
- * 9. Payee - detail.Header.Payee?
- * 10. EWT Ref No. - detail.Header.EwtRefNo?
- * 11. Sub AcctCd - detail.SubAccountCode?
- * 12. Sub Acct Name - detail.SubAccountName?
- * 13. TIN No. - detail.Header.TinNo?
- *
- * Also verify:
- * - detail.DepartmentCode exists?
- * - Model properties: model.Port, model.Category
- */
 
         #endregion
     }
