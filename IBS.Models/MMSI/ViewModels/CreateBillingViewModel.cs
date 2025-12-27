@@ -23,7 +23,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public bool IsPrincipal { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 

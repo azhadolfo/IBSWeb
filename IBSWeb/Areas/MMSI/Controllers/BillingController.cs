@@ -392,7 +392,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var viewModel = BillingModelToCreateBillingVm(model);
             viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
             viewModel.UnbilledDispatchTickets = await GetEditTickets(viewModel.CustomerId, viewModel.MMSIBillingId ?? 0, cancellationToken);
-            viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
+            if(model.CustomerId != null)
+            {
+                viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
+            }
 
             viewModel.Terminals = await _unitOfWork.Terminal
                 .GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
@@ -784,7 +787,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpGet]
-        public async Task<List<SelectListItem>> GetPrincipals(string customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>?> GetPrincipals(string? customerId, CancellationToken cancellationToken)
         {
             var principals = await _unitOfWork.Principal
                 .GetAllAsync(t => t.CustomerId == int.Parse(customerId), cancellationToken);
