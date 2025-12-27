@@ -157,14 +157,14 @@
                     <span asp-validation-for="ValidityDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label for="document" class="form-label">Upload the proof of exemption documents.<span class="required">*</span></label>
-                    <input class="form-control form-control-sm" name="document" type="file" required>
+                    <label class="form-label">Upload the proof of exemption documents.<span class="required">*</span></label>
+                    <input class="form-control form-control-sm" name="document" type="file">
                     <span asp-validation-for="ProofOfExemptionFilePath" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group mb-3">
-                <label for="registration" class="form-label">Upload the proof of BIR registration</label>
-                <input class="form-control form-control-sm" name="registration" type='file'>
+                <label class="form-label">Upload the proof of BIR registration</label>
+                <input class="form-control form-control-sm" name="registration" type="file">
                 <span asp-validation-for="ProofOfRegistrationFilePath" class="text-danger"></span>
             </div>
 

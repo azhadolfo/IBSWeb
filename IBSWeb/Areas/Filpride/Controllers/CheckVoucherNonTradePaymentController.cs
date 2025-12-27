@@ -101,7 +101,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Payee?.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Reference?.ToLower().Contains(searchValue) == true ||
-                        s.Status.ToLower().Contains(searchValue)
+                        s.Status.ToLower().Contains(searchValue) ||
+                        s.Particulars?.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
                 }

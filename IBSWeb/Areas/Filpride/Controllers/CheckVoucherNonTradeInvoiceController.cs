@@ -129,7 +129,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.CheckVoucherHeader?.AmountPaid.ToString().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
                             s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
-                            s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
+                            s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                            s.CheckVoucherHeader?.Particulars?.ToLower().Contains(searchValue) == true
                         )
                         .ToList();
                 }
