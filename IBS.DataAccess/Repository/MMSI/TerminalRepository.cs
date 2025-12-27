@@ -158,7 +158,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSITerminalsSelectList(int portId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>?> GetMMSITerminalsSelectList(int? portId, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSITerminal> query = dbSet;
 
