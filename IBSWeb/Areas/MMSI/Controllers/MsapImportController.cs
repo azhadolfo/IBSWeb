@@ -97,9 +97,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
             var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
             var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
-            var dispatchTicketCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\dispatchTicketsTest.csv";
 
-            var billingCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\billings.csv";
+            var dispatchTicketCSVPath = "C:\\csv\\dispatch.CSV";
+            var billingCSVPath = "C:\\csv\\billing.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
