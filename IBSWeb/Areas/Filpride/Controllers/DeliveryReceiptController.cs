@@ -167,7 +167,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip!.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder!.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
-                        s.CreatedBy!.ToLower().Contains(searchValue)
+                        s.CreatedBy!.ToLower().Contains(searchValue) ||
+                        s.Freight.ToString().Contains(searchValue) ||
+                        s.HaulerName?.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
                 }
@@ -219,7 +221,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.CanceledBy,
                         dr.HasReceivingReport,
                         dr.AuthorityToLoad!.UppiAtlNo,
-                        dr.AuthorityToLoadNo
+                        dr.AuthorityToLoadNo,
+                        dr.Freight,
+                        dr.HaulerName
                     })
                     .ToList();
 
