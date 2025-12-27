@@ -80,5 +80,12 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool IsActive { get; set; }
 
+        public string GetFullName()
+        {
+            return string.Join(" ",
+                new[] { FirstName, MiddleName, LastName, Suffix }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+        }
+
     }
 }
