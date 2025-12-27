@@ -9,11 +9,11 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
-        Task<List<string>?> GetToBillDispatchTicketListAsync(string billingId, CancellationToken cancellationToken = default);
+        Task<List<string>?> GetToBillDispatchTicketListAsync(int billingId, CancellationToken cancellationToken = default);
 
-        Task<List<string>?> GetUniqueTugboatsListAsync(string billingId, CancellationToken cancellationToken = default);
+        Task<List<string>?> GetUniqueTugboatsListAsync(int billingId, CancellationToken cancellationToken = default);
 
-        Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(string billingId, CancellationToken cancellationToken = default);
+        Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken = default);
 

@@ -150,10 +150,11 @@ namespace IBS.Models.MMSI
 
         public string? VideoSignedUrl { get; set; }
 
-        public string? BillingId { get; set; }
-
-        [NotMapped]
+        public int? BillingId { get; set; }
+        [ForeignKey(nameof(BillingId))]
         public MMSIBilling? Billing { get; set; }
+
+        public string? BillingNumber { get; set; }
 
         #region ---Columns with Table relations---
 

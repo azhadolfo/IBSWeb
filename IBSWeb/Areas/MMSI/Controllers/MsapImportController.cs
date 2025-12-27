@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
             var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
 
-            var dispatchTicketCSVPath = "C:\\csv\\dispatch.CSV";
+            var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
             var billingCSVPath = "C:\\csv\\billing.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -533,8 +533,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             .Select(dt => new { dt.ServiceNumber, dt.ServiceId })
                             .ToListAsync(cancellationToken);
 
-                        var ibsCustomerList = await _dbContext.FilprideCustomers.Where(c => c.Company == "MMSI")
+                        var ibsCustomerList = await _dbContext.FilprideCustomers
+                            .Where(c => c.Company == "MMSI")
                             .AsNoTracking()
+                            .ToListAsync(cancellationToken);
+
+                        var existingBilling = await _dbContext.MMSIBillings
+                            .AsNoTracking()
+                            .Select(b => new { b.MMSIBillingNumber, b.MMSIBillingId })
                             .ToListAsync(cancellationToken);
 
                         #endregion -- Creating Identifier Variables --
@@ -594,7 +600,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             #region -- Assigning Values --
 
-                            newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
+                            newRecord.BillingId = existingBilling.FirstOrDefault(b => b.MMSIBillingNumber == record.number as string)?.MMSIBillingId;
+                            newRecord.BillingNumber = record.billnum == string.Empty ? null : record.billnum as string;
                             newRecord.DispatchNumber = record.number;
                             newRecord.Date = DateOnly.Parse(record.date);
                             newRecord.COSNumber = record.cosno == string.Empty ? null : record.cosno;
