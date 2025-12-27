@@ -8478,24 +8478,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(purchaseOrderList);
         }
 
-
-        public async Task<IActionResult> JournalVoucherReport()
+        [HttpGet]
+        public IActionResult JournalVoucherReport()
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            ViewModelBook viewmodel = new()
-            {
-                CommissioneeList = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims)
-            };
-            return View(viewmodel);
+            return View();
         }
 
         #region -- Generated Journal Voucher Report as Excel File --
 
+        [HttpPost]
         public async Task<IActionResult> GenerateJournalVoucherExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -8510,14 +8501,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var dateTo = model.DateTo;
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
+
                 if (companyClaims == null)
                 {
                     return BadRequest();
                 }
 
-
-
+                // Fetch journal voucher report data
                 var journalVoucherReport = await _unitOfWork.FilprideReport.GetJournalVoucherReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
                 if (journalVoucherReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -8528,14 +8520,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("JournalVoucherReport");
 
-
-
                 // Set report title
                 var reportTitle = worksheet.Cells["A1:B1"];
                 reportTitle.Merge = true;
                 reportTitle.Value = "JOURNAL VOUCHER REPORT";
                 reportTitle.Style.Font.Size = 13;
-
 
                 // Set filter information
                 worksheet.Cells["A2"].Value = "Date Range: ";
@@ -8549,19 +8538,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 int headerRow = 7;
 
                 worksheet.Cells[headerRow, 1].Value = "DATE";
-                worksheet.Cells[headerRow, 2].Value = "JVF #";
+                worksheet.Cells[headerRow, 2].Value = "JV #";
                 worksheet.Cells[headerRow, 3].Value = "PARTICULARS";
                 worksheet.Cells[headerRow, 4].Value = "DEBIT";
                 worksheet.Cells[headerRow, 5].Value = "CREDIT";
-                worksheet.Cells[headerRow, 6].Value = "ACCOUNTCD";
+                worksheet.Cells[headerRow, 6].Value = "ACCOUNT NUMBER";
                 worksheet.Cells[headerRow, 7].Value = "ACCOUNT NAME";
                 worksheet.Cells[headerRow, 8].Value = "JV STATUS";
                 worksheet.Cells[headerRow, 9].Value = "JV REASON";
-                worksheet.Cells[headerRow, 10].Value = "Check No";
-                worksheet.Cells[headerRow, 11].Value = "CV No.";
+                worksheet.Cells[headerRow, 10].Value = "CHECK NO";
+                worksheet.Cells[headerRow, 11].Value = "CV #";
                 worksheet.Cells[headerRow, 12].Value = "PAYEE";
-                worksheet.Cells[headerRow, 13].Value = "Prepared By";
-
+                worksheet.Cells[headerRow, 13].Value = "PREPARED BY";
 
                 // Align all cells left
                 worksheet.Cells[worksheet.Dimension.Address].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
@@ -8583,9 +8571,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-
-
-
 
                 // Populate the data rows
                 int row = headerRow + 1;
@@ -8614,16 +8599,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-
                 // Append the total of credit and debit
                 worksheet.Cells[row, 3].Value = "TOTAL:";
-                worksheet.Cells[row, 4].Formula = $"SUM(D{headerRow + 1}:D{row - 1})"; // Adjust formula range
+                worksheet.Cells[row, 4].Value = journalVoucherReport.Sum(jv => jv.Debit);
                 worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 5].Formula = $"SUM(E{headerRow + 1}:E{row - 1})"; // Adjust formula range
+                worksheet.Cells[row, 5].Value = journalVoucherReport.Sum(jv => jv.Credit);
                 worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
 
                 // Apply the specified styling to the total row
-                using (var range = worksheet.Cells[row, 1, row, 13]) // Assuming 13 columns for the total row
+                using (var range = worksheet.Cells[row, 1, row, 13])
                 {
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     range.Style.Font.Bold = true;
@@ -8634,11 +8618,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
 
-
-
-
-
-
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
                 worksheet.Column(3).Width = 60;
@@ -8646,10 +8625,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Freeze panes at particulars and
                 worksheet.View.FreezePanes(headerRow + 1, 3);
-
-
-
-
 
                 #region -- Audit Trail --
 
