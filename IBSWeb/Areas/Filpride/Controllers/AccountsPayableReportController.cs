@@ -8531,8 +8531,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
                 // Set report title
-                var reportTitle = worksheet.Cells["A1"];
+                var reportTitle = worksheet.Cells["A1:B1"];
+                reportTitle.Merge = true;
                 reportTitle.Value = "JOURNAL VOUCHER REPORT";
+                reportTitle.Style.Font.Size = 13;
 
 
                 // Set filter information
@@ -8543,60 +8545,95 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A4"].Value = "Company: ";
                 worksheet.Cells["B4"].Value = await GetCompanyClaimAsync();
 
-
                 // Set column headers (Row 7)
                 int headerRow = 7;
 
                 worksheet.Cells[headerRow, 1].Value = "DATE";
                 worksheet.Cells[headerRow, 2].Value = "JVF #";
                 worksheet.Cells[headerRow, 3].Value = "PARTICULARS";
-                worksheet.Cells[headerRow, 4].Value = "ACCOUNT ENTRIES";
-                worksheet.Cells[headerRow, 5].Value = "DEBIT";
-                worksheet.Cells[headerRow, 6].Value = "CREDIT";
-                worksheet.Cells[headerRow, 7].Value = "ACCOUNTCD";
-                worksheet.Cells[headerRow, 8].Value = "ACCOUNT NAME";
-                worksheet.Cells[headerRow, 9].Value = "JV STATUS";
-                worksheet.Cells[headerRow, 10].Value = "JV REASON";
-                worksheet.Cells[headerRow, 11].Value = "Check No";
-                worksheet.Cells[headerRow, 12].Value = "CV No.";
-                worksheet.Cells[headerRow, 13].Value = "PAYEE";
+                worksheet.Cells[headerRow, 4].Value = "DEBIT";
+                worksheet.Cells[headerRow, 5].Value = "CREDIT";
+                worksheet.Cells[headerRow, 6].Value = "ACCOUNTCD";
+                worksheet.Cells[headerRow, 7].Value = "ACCOUNT NAME";
+                worksheet.Cells[headerRow, 8].Value = "JV STATUS";
+                worksheet.Cells[headerRow, 9].Value = "JV REASON";
+                worksheet.Cells[headerRow, 10].Value = "Check No";
+                worksheet.Cells[headerRow, 11].Value = "CV No.";
+                worksheet.Cells[headerRow, 12].Value = "PAYEE";
+                worksheet.Cells[headerRow, 13].Value = "Prepared By";
 
-                worksheet.Cells[headerRow, 14].Value = "Prepared By";
 
-                // Apply styling to the header row
-                using (var range = worksheet.Cells[headerRow, 1, headerRow, 14])
+                // Align all cells left
+                worksheet.Cells[worksheet.Dimension.Address].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+                // Then Apply styling to the header row (only bold, border will be applied to the whole range later)
+                using (var range = worksheet.Cells[headerRow, 1, headerRow, 13])
                 {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Font.Bold = true;
-                    range.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
+
+                // Apply border to left, right of header
+                using (var range = worksheet.Cells[headerRow, 1, headerRow, 13])
+                {
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+
+
 
                 // Populate the data rows
                 int row = headerRow + 1;
                 string currencyFormat = "#,##0.00";
-                string dateFormat = "d-MMM-yy";
 
                 foreach (var detail in journalVoucherReport)
                 {
                     worksheet.Cells[row, 1].Value = detail.JournalVoucherHeader!.Date;
-                    worksheet.Cells[row, 1].Style.Numberformat.Format = dateFormat;
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 2].Value = detail.JournalVoucherHeader.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 3].Value = detail.JournalVoucherHeader.Particulars;
-                    worksheet.Cells[row, 4].Value = detail.AccountName;
-                    worksheet.Cells[row, 5].Value = detail.Debit;
+                    worksheet.Cells[row, 3].Style.WrapText = true;
+                    worksheet.Cells[row, 4].Value = detail.Debit;
+                    worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 5].Value = detail.Credit;
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 6].Value = detail.Credit;
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 7].Value = detail.AccountNo;
-                    worksheet.Cells[row, 8].Value = detail.AccountName;
-                    worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.Status;
-                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.JVReason;
-                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
-                    worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
-                    worksheet.Cells[row, 13].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.Payee;
-                    worksheet.Cells[row, 14].Value = detail.JournalVoucherHeader.CreatedBy;
+                    worksheet.Cells[row, 6].Value = detail.AccountNo;
+                    worksheet.Cells[row, 7].Value = detail.AccountName;
+                    worksheet.Cells[row, 8].Value = detail.JournalVoucherHeader.Status;
+                    worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.JVReason;
+                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
+                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
+                    worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.Payee;
+                    worksheet.Cells[row, 13].Value = detail.JournalVoucherHeader.CreatedBy;
 
                     row++;
                 }
+
+
+                // Append the total of credit and debit
+                worksheet.Cells[row, 3].Value = "TOTAL:";
+                worksheet.Cells[row, 4].Formula = $"SUM(D{headerRow + 1}:D{row - 1})"; // Adjust formula range
+                worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 5].Formula = $"SUM(E{headerRow + 1}:E{row - 1})"; // Adjust formula range
+                worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+
+                // Apply the specified styling to the total row
+                using (var range = worksheet.Cells[row, 1, row, 13]) // Assuming 13 columns for the total row
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+
 
 
 
@@ -8604,14 +8641,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
-                worksheet.Column(3).Width = 30;
-                worksheet.Column(10).Width = 30;
+                worksheet.Column(3).Width = 60;
+                worksheet.Column(9).Width = 30;
 
-                // Freeze panes at header row
-                worksheet.View.FreezePanes(headerRow + 1, 1);
+                // Freeze panes at particulars and
+                worksheet.View.FreezePanes(headerRow + 1, 3);
 
-                // Align all cells left
-                worksheet.Cells[worksheet.Dimension.Address].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+
+
 
                 #region -- Audit Trail --
 
