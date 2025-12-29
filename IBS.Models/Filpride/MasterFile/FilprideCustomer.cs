@@ -130,8 +130,6 @@ namespace IBS.Models.Filpride.MasterFile
 
         public int? CommissioneeId { get; set; }
 
-        public FilprideSupplier? Commissionee { get; set; }
-
         public decimal CommissionRate { get; set; }
 
         [NotMapped]

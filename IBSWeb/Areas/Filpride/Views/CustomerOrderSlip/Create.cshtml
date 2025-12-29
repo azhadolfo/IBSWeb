@@ -270,7 +270,7 @@
                                 $('input[name="CustomerType"]').val(data.customerType);
                                 $('select[name="Terms"]').val(data.terms).change();
                                 $('input[name="StationCode"]').val(data.stationCode);
-                                console.table(data);
+
                                 // If data has commisionee Id check the Yes radio button else No
                                 if(data.commissioneeId) {
                                     $('input[name="HasCommission"][value="true"]').prop('checked', true).trigger('change');
