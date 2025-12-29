@@ -3971,6 +3971,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return BadRequest();
             }
+            // Convert MonthYear to DateFrom and DateTo
+                if (model.MonthYear.HasValue)
+                {
+                    model.SetDateRangeFromMonthYear();
+                }
 
             if (!ModelState.IsValid)
             {
@@ -4287,6 +4292,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Please input date range";
@@ -4295,10 +4302,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+
+                // Convert MonthYear to DateFrom and DateTo
+                if (model.MonthYear.HasValue)
+                {
+                    model.SetDateRangeFromMonthYear();
+                }
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
+
+
+
                 if (companyClaims == null)
                 {
                     return BadRequest();
@@ -4328,7 +4344,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+
+                worksheet.Cells["B2"].Value = $"{model.MonthYear!.Value:MMMM yyyy}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 

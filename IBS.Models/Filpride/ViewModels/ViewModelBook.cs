@@ -12,6 +12,20 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Date To")]
         public DateOnly DateTo { get; set; }
 
+        // New property for Month/Year selection
+        [Display(Name = "Month and Year")]
+        public DateOnly? MonthYear { get; set; }
+
+        // Helper method to calculate date range from MonthYear
+        public void SetDateRangeFromMonthYear()
+        {
+            if (MonthYear.HasValue)
+            {
+                DateFrom = new DateOnly(MonthYear.Value.Year, MonthYear.Value.Month, 1);
+                DateTo = DateFrom.AddMonths(1).AddDays(-1);
+            }
+        }
+
         #region Filtering
 
         public List<SelectListItem>? SI { get; set; }
@@ -48,8 +62,6 @@ namespace IBS.Models.Filpride.ViewModels
         public DateOnly? Period { get; set; }
 
         #endregion
-
-
 
         #endregion
     }
