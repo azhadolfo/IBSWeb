@@ -54,13 +54,13 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<List<string>?> GetToBillDispatchTicketListAsync(string billingId, CancellationToken cancellationToken = default)
+        public async Task<List<string>?> GetToBillDispatchTicketListAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets.Where(t => t.BillingId == billingId)
                 .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<string>?> GetUniqueTugboatsListAsync(string billingId, CancellationToken cancellationToken = default)
+        public async Task<List<string>?> GetUniqueTugboatsListAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId)
@@ -69,7 +69,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(string billingId, CancellationToken cancellationToken = default)
+        public async Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId)
@@ -169,7 +169,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSIBilledTicketsById(int id, CancellationToken cancellationToken = default)
         {
             var dispatchTicketList = await _db.MMSIDispatchTickets
-                .Where(dt => dt.BillingId == id.ToString())
+                .Where(dt => dt.BillingId == id)
                 .OrderBy(dt => dt.DispatchNumber).Select(s => new SelectListItem
                 {
                     Value = s.DispatchTicketId.ToString(),

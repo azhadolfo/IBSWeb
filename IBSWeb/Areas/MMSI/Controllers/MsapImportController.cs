@@ -89,7 +89,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<string> ImportFromCSV(string field, CancellationToken cancellationToken = default)
         {
-            var customerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\customerDB(nullables).csv";
+            var customerCSVPath = "C:\\csv\\customer.CSV";
             var portCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\portDB.csv";
             var principalCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\principalDB(nullables)v2.csv";
             var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
@@ -97,9 +97,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
             var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
             var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
-            var dispatchTicketCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\dispatchTicketsTest.csv";
 
-            var billingCSVPath = "C:\\MSAP_To_IBS_Import\\data entries\\billings.csv";
+            var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
+            var billingCSVPath = "C:\\csv\\billingTest.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -533,8 +533,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             .Select(dt => new { dt.ServiceNumber, dt.ServiceId })
                             .ToListAsync(cancellationToken);
 
-                        var ibsCustomerList = await _dbContext.FilprideCustomers.Where(c => c.Company == "MMSI")
+                        var ibsCustomerList = await _dbContext.FilprideCustomers
+                            .Where(c => c.Company == "MMSI")
                             .AsNoTracking()
+                            .ToListAsync(cancellationToken);
+
+                        var existingBilling = await _dbContext.MMSIBillings
+                            .AsNoTracking()
+                            .Select(b => new { b.MMSIBillingNumber, b.MMSIBillingId })
                             .ToListAsync(cancellationToken);
 
                         #endregion -- Creating Identifier Variables --
@@ -594,7 +600,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             #region -- Assigning Values --
 
-                            newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
+                            newRecord.BillingId = existingBilling.FirstOrDefault(b => b.MMSIBillingNumber == record.number as string)?.MMSIBillingId;
+                            newRecord.BillingNumber = record.billnum == string.Empty ? null : record.billnum as string;
                             newRecord.DispatchNumber = record.number;
                             newRecord.Date = DateOnly.Parse(record.date);
                             newRecord.COSNumber = record.cosno == string.Empty ? null : record.cosno;
@@ -628,7 +635,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.TariffEditedBy = null;
                             newRecord.DispatchChargeType = record.perhour == "T" ? "Per hour" : "Per move";
                             newRecord.BAFChargeType = "Per move";
-                            newRecord.BillingId = record.billnum == string.Empty ? null : record.billnum;
                             newRecord.Status = record.billnum == string.Empty ? "For Billing" : "Billed";
 
 
@@ -688,27 +694,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
                     case "Billing":
                     {
-                        // Billing data structure
-                        // recid, 21
-                        // number, 1877
-                        // date, 11/3/2022
-                        // custno, 7
-                        // vesselnum. 14
-                        // portnum, 5
-                        // amount, 0
-                        // apothertug,0
-                        // vat, T | F
-                        // printed, T | F
-                        // entrydate, 10/13/2022 13:25
-                        // entryby, 2364
-                        // voyage, 279
-                        // dispatchamount, 0
-                        // bafamount, 0
-                        // collected, T | F
-                        // crnum,
-                        // undocumented, T | F
-                        // billto, 2366
-                        // terminal, 005
+                        using var reader0 = new StreamReader(customerCSVPath);
+                        using var csv0 = new CsvReader(reader0, CultureInfo.InvariantCulture);
+
+                        var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new
+                        {
+                            c.number,
+                            c.name,
+                            address = c.address1 == string.Empty ? "-" : $"{c.address1} {c.address2} {c.address3}"
+                        }).ToList();
 
                         using var reader = new StreamReader(billingCSVPath);
                         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -716,7 +710,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var records = csv.GetRecords<dynamic>().ToList();
                         var newRecords = new List<MMSIBilling>();
 
-                        var existingIdentifier = await _dbContext.MMSIBillings
+                        #region -- Identifier Variables --
+
+                            var existingIdentifier = await _dbContext.MMSIBillings
                             .AsNoTracking()
                             .Select(b => b.MMSIBillingNumber)
                             .ToListAsync(cancellationToken);
@@ -731,55 +727,89 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             .Select(p => new { p.PortNumber, p.PortId })
                             .ToListAsync(cancellationToken);
 
+                        var existingTerminals = await _dbContext.MMSITerminals
+                            .AsNoTracking()
+                            .Include(t => t.Port)
+                            .Select(p => new { p.TerminalNumber, p.TerminalId, p.Port!.PortNumber })
+                            .ToListAsync(cancellationToken);
+
                         var existingCustomers = await _dbContext.FilprideCustomers
                             .Where(c => c.Company == "MMSI")
                             .AsNoTracking()
                             .Select(c => new { c.CustomerId, c.CustomerName })
                             .ToListAsync(cancellationToken);
 
+                        var ibsCustomerList = await _dbContext.FilprideCustomers
+                            .Where(c => c.Company == "MMSI")
+                            .AsNoTracking()
+                            .ToListAsync(cancellationToken);
+
+                         #endregion -- Identifier Variables --
+
                         foreach (var record in records)
                         {
-
                             if (existingIdentifier.Contains(record.number))
                             {
                                 continue;
                             }
 
-
                             var originalVesselNum = record.vesselnum ?? string.Empty;
                             var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
                             var originalPortNum = record.portnum ?? string.Empty;
                             var paddedPortNum = int.Parse(originalPortNum).ToString("D3");
+                            var originalTerminalNum = record.terminal ?? string.Empty;
+                            var paddedTerminalNum = int.Parse(originalPortNum).ToString("D3");
 
                             MMSIBilling newRecord = new MMSIBilling();
 
-                            newRecord.MMSIBillingNumber = record.number;
+                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
+
+                            if (msapCustomer != null)
+                            {
+                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+
+                                if (customer != null)
+                                {
+                                    newRecord.CustomerId = customer.CustomerId;
+                                }
+
+                                newRecord.CustomerId = null;
+                            }
+
+                                newRecord.MMSIBillingNumber = record.number;
                             newRecord.Date = DateOnly.ParseExact(record.date, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                            newRecord.CustomerId = record.customer == string.Empty ? null : record.customer; // to check
+                            newRecord.CustomerId = record.custno == string.Empty ? null : record.custno; // to check
                             newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
                             newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                             newRecord.Amount = decimal.Parse(record.amount);
                             newRecord.IsUndocumented = record.undocumented == "T" ? true : false;
                             newRecord.ApOtherTug = decimal.Parse(record.apothertug);
-                            newRecord.CreatedDate = DateTime.ParseExact(
-                                record.entrydate,
-                                "MM/dd/yyyy  hh:mm:ss tt",
-                                CultureInfo.InvariantCulture,
-                                DateTimeStyles.None
-                                );
+                            newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "MM/dd/yyyy  hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None );
+                            newRecord.CreatedBy = record.entryby as string == string.Empty ? string.Empty : record.entryby;
+                            newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
+                            newRecord.Amount = decimal.Parse(record.dispatchamount) + decimal.Parse(record.bafamount);
+                            newRecord.CollectionNumber = record.crnum == string.Empty ? null : record.crnum;
+                            newRecord.IsUndocumented = record.undocumented == "T" ? true : false;
+                                newRecord.TerminalId = record.terminal == string.Empty ? null :
+                                    existingTerminals.Where(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum).FirstOrDefault()!.TerminalId;
 
+                            // custno, 7
+                            // vat, T | F, will depend on customer for vatability
+                            // printed, T | F, does not check
+                            // dispatchamount, 0, create field for this
+                            // bafamount, 0, create field for this
+                            // billto, 2366, what the
 
                             newRecords.Add(newRecord);
                         }
 
-
-
                         return "Billing import successful";
                     }
-                    default:
-                        return $"{field} field is invalid";
 
                     #endregion -- Data entries --
+
+                    default:
+                        return $"{field} field is invalid";
                 }
             }
             catch (Exception ex)

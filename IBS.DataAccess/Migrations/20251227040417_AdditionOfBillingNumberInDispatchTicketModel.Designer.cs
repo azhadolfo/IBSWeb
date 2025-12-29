@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251227040417_AdditionOfBillingNumberInDispatchTicketModel")]
+    partial class AdditionOfBillingNumberInDispatchTicketModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -5072,10 +5075,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("collection_id");
 
-                    b.Property<string>("CollectionNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("collection_number");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("text")
@@ -5118,7 +5117,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("mmsi_collection_id");
 
-                    b.Property<int?>("PortId")
+                    b.Property<int>("PortId")
                         .HasColumnType("integer")
                         .HasColumnName("port_id");
 
@@ -5131,11 +5130,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("status");
 
-                    b.Property<int?>("TerminalId")
+                    b.Property<int>("TerminalId")
                         .HasColumnType("integer")
                         .HasColumnName("terminal_id");
 
-                    b.Property<int?>("VesselId")
+                    b.Property<int>("VesselId")
                         .HasColumnType("integer")
                         .HasColumnName("vessel_id");
 
@@ -12122,6 +12121,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_ports_port_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPrincipal", "Principal")
@@ -12132,11 +12133,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_terminals_terminal_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_vessels_vessel_id");
 
                     b.Navigation("Customer");

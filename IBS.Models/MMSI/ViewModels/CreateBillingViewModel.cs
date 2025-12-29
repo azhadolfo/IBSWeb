@@ -23,7 +23,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public bool IsPrincipal { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
@@ -31,15 +31,15 @@ namespace IBS.Models.MMSI.ViewModels
         [ForeignKey(nameof(PrincipalId))]
         public MMSIPrincipal? Principal { get; set; }
 
-        public int VesselId { get; set; }
+        public int? VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public MMSIVessel? Vessel { get; set; }
 
-        public int PortId { get; set; }
+        public int? PortId { get; set; }
         [ForeignKey(nameof(PortId))]
         public MMSIPort? Port { get; set; }
 
-        public int TerminalId { get; set; }
+        public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
