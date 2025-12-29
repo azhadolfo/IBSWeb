@@ -1295,8 +1295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var customer = await _unitOfWork.FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
-            var customerSpecifics = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(c => c.CustomerId == id, cancellationToken);
+
             if (customer == null)
             {
                 return Json(null);
