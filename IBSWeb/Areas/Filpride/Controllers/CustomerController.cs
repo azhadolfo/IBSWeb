@@ -67,10 +67,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
             var model = new FilprideCustomer()
             {
+
                 PaymentTerms = await _unitOfWork.FilprideTerms
-                    .GetFilprideTermsListAsyncByCode(cancellationToken)
+                    .GetFilprideTermsListAsyncByCode(cancellationToken),
+                Commissionees = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
             };
             return View(model);
         }
@@ -145,12 +152,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (customer != null)
             {
                 customer.PaymentTerms = await _unitOfWork.FilprideTerms
                     .GetFilprideTermsListAsyncByCode(cancellationToken);
-
+                customer.Commissionees = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                 return View(customer);
             }
 

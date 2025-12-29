@@ -127,5 +127,14 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? PaymentTerms { get; set; }
+
+        public int? CommissioneeId { get; set; }
+
+        public FilprideSupplier? Commissionee { get; set; }
+
+        public decimal CommissionRate { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Commissionees { get; set; }
     }
 }
