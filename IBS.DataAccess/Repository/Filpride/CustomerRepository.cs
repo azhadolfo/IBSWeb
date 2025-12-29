@@ -80,6 +80,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.Type = model.Type;
             existingCustomer.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
             existingCustomer.StationCode = model.StationCode;
+            existingCustomer.CommissionRate = model.CommissionRate;
+            existingCustomer.CommissioneeId = model.CommissioneeId;
 
             if (_db.ChangeTracker.HasChanges())
             {

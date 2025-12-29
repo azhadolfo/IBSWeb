@@ -72,6 +72,21 @@
                     <label asp-for="BusinessStyle" class="ms-2"></label>
                     <span asp-validation-for="BusinessStyle" class="text-danger"></span>
                 </div>
+
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CommissionRate" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="CommissionRate" class="ms-2">Commission Rate</label>
+                    <span asp-validation-for="CommissionRate" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="control-label">Commissionee</label>
+                    <select asp-for="CommissioneeId" asp-items="@Model.Commissionees" class="form-select js-select2" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="CommissioneeId" class="text-danger"></span>
+                </div>
+                
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Cluster Area</label>
                     <select asp-for="ClusterCode" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
