@@ -18,13 +18,13 @@
         <form id="dynamicForm" method="post" target="_blank">
             <div class="row">
                 <div class="mb-3">
-                    <label asp-for="MonthYear" class="control-label"></label>
-                    <input type="month" asp-for="MonthYear" class="form-control"
+                    <label asp-for="AsOfMonthYear" class="control-label"></label>
+                    <input type="month" asp-for="AsOfMonthYear" class="form-control"
                            value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
                            required />
-                    <span asp-validation-for="MonthYear" class="text-danger"></span>
+                    <span asp-validation-for="AsOfMonthYear" class="text-danger"></span>
                     <div class="form-text text-muted">
-                        Select the month and year for the report. The report will include all transactions from the 1st to the last day of the selected month.
+                        Select the month and year. The report will show all transactions <strong>up to and including</strong> the last day of the selected month.
                     </div>
                 </div>
                 <div class="mb-3">

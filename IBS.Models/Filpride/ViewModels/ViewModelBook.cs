@@ -12,17 +12,19 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Date To")]
         public DateOnly DateTo { get; set; }
 
-        // New property for Month/Year selection
-        [Display(Name = "Month and Year")]
-        public DateOnly? MonthYear { get; set; }
+        // New property for "As of" date selection
+        [Display(Name = "As of (Month and Year)")]
+        public DateOnly? AsOfMonthYear { get; set; }
 
-        // Helper method to calculate date range from MonthYear
-        public void SetDateRangeFromMonthYear()
+        // Helper method to calculate "as of" date (last day of selected month)
+        public void SetAsOfDate()
         {
-            if (MonthYear.HasValue)
+            if (AsOfMonthYear.HasValue)
             {
-                DateFrom = new DateOnly(MonthYear.Value.Year, MonthYear.Value.Month, 1);
-                DateTo = DateFrom.AddMonths(1).AddDays(-1);
+                // Set DateTo to the last day of the selected month
+                var year = AsOfMonthYear.Value.Year;
+                var month = AsOfMonthYear.Value.Month;
+                DateTo = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
             }
         }
 
