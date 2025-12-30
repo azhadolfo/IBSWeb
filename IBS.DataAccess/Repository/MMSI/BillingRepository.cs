@@ -111,7 +111,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(int currentCustomerId, string type, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>?> GetMMSICustomersWithBillablesSelectList(int? currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _db.MMSIDispatchTickets
                 .Where(t => t.Status == "For Billing" || (currentCustomerId != 0 && t.CustomerId == currentCustomerId))

@@ -789,6 +789,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<List<SelectListItem>?> GetPrincipals(string? customerId, CancellationToken cancellationToken)
         {
+            if (customerId == null)
+            {
+                return null;
+            }
+
             var principals = await _unitOfWork.Principal
                 .GetAllAsync(t => t.CustomerId == int.Parse(customerId), cancellationToken);
 
