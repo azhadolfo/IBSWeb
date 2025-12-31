@@ -100,6 +100,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
             var billingCSVPath = "C:\\csv\\billingTest.CSV";
+            var collectionCSVPath = "C:\\csv\\billingTest.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -813,6 +814,72 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         return "Billing import successful";
+                    }
+                    case "Collection":
+                    {
+                        using var reader0 = new StreamReader(customerCSVPath);
+                        using var csv0 = new CsvReader(reader0, CultureInfo.InvariantCulture);
+
+                        var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new
+                        {
+                            c.number,
+                            c.name,
+                            address = c.address1 == string.Empty ? "-" : $"{c.address1} {c.address2} {c.address3}"
+                        }).ToList();
+
+                        using var reader = new StreamReader(collectionCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
+                        var records = csv.GetRecords<dynamic>().ToList();
+                        var newRecords = new List<MMSICollection>();
+
+                        #region -- Identifier Variables --
+
+                        var existingIdentifier = await _dbContext.MMSICollections
+                            .AsNoTracking()
+                            .Select(b => b.MMSICollectionNumber)
+                            .ToListAsync(cancellationToken);
+
+                        var ibsCustomerList = await _dbContext.FilprideCustomers
+                            .Where(c => c.Company == "MMSI")
+                            .AsNoTracking()
+                            .ToListAsync(cancellationToken);
+
+                         #endregion -- Identifier Variables --
+
+                        foreach (var record in records)
+                        {
+                            if (existingIdentifier.Contains(record.crnum))
+                            {
+                                continue;
+                            }
+
+                            MMSICollection newRecord = new MMSICollection();
+
+                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
+
+                            if (msapCustomer != null)
+                            {
+                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+                                newRecord.CustomerId = customer!.CustomerId;
+                            }
+
+                            newRecord.MMSICollectionNumber = record.crnum;
+                            newRecord.CheckNumber = record.checkno;
+                            newRecord.Status = "Create";
+                            newRecord.Date = DateOnly.ParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                            newRecord.CheckDate = DateOnly.ParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                            newRecord.DepositDate = DateOnly.ParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                            newRecord.Amount = decimal.Parse(record.amount);
+                            newRecord.EWT = decimal.Parse(record.n2307);
+                            newRecord.IsUndocumented = record.undocumented == "T";
+                            newRecord.CreatedBy = record.createdby;
+                            newRecord.CreatedDate = record.createddate;
+
+                            newRecords.Add(newRecord);
+                        }
+
+                        return "Collection import successful";
                     }
 
                     #endregion -- Data entries --
