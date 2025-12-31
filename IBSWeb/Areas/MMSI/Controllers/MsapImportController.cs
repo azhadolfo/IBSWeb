@@ -712,7 +712,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         #region -- Identifier Variables --
 
-                            var existingIdentifier = await _dbContext.MMSIBillings
+                        var existingIdentifier = await _dbContext.MMSIBillings
                             .AsNoTracking()
                             .Select(b => b.MMSIBillingNumber)
                             .ToListAsync(cancellationToken);
@@ -739,6 +739,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             .Select(c => new { c.CustomerId, c.CustomerName })
                             .ToListAsync(cancellationToken);
 
+                        var existingPrincipals = await _dbContext.MMSIPrincipals
+                            .AsNoTracking()
+                            .Select(p => new { p.PrincipalId, p.CustomerId, p.PrincipalNumber })
+                            .ToListAsync(cancellationToken);
+
+                        var existingCollection = await _dbContext.MMSICollections
+                            .AsNoTracking()
+                            .Select(c => new { c.MMSICollectionId, c.MMSICollectionNumber })
+                            .ToListAsync(cancellationToken);
+
                         var ibsCustomerList = await _dbContext.FilprideCustomers
                             .Where(c => c.Company == "MMSI")
                             .AsNoTracking()
@@ -758,7 +768,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             var originalPortNum = record.portnum ?? string.Empty;
                             var paddedPortNum = int.Parse(originalPortNum).ToString("D3");
                             var originalTerminalNum = record.terminal ?? string.Empty;
-                            var paddedTerminalNum = int.Parse(originalPortNum).ToString("D3");
+                            var paddedTerminalNum = int.Parse(originalTerminalNum).ToString("D3");
+                            var originalPrincipalNum = record.billto ?? string.Empty;
+                            var paddedPrincipalNum = int.Parse(originalPrincipalNum).ToString("D4");
 
                             MMSIBilling newRecord = new MMSIBilling();
 
@@ -776,29 +788,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 newRecord.CustomerId = null;
                             }
 
-                                newRecord.MMSIBillingNumber = record.number;
+                            newRecord.MMSIBillingNumber = record.number;
                             newRecord.Date = DateOnly.ParseExact(record.date, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                            newRecord.CustomerId = record.custno == string.Empty ? null : record.custno; // to check
                             newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
                             newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                             newRecord.Amount = decimal.Parse(record.amount);
-                            newRecord.IsUndocumented = record.undocumented == "T" ? true : false;
+                            newRecord.IsUndocumented = record.undocumented == "T";
                             newRecord.ApOtherTug = decimal.Parse(record.apothertug);
                             newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "MM/dd/yyyy  hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None );
                             newRecord.CreatedBy = record.entryby as string == string.Empty ? string.Empty : record.entryby;
                             newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
-                            newRecord.Amount = decimal.Parse(record.dispatchamount) + decimal.Parse(record.bafamount);
+                            newRecord.DispatchAmount = decimal.Parse(record.dispatchamount);
+                            newRecord.BAFAmount = decimal.Parse(record.bafamount);
+                            newRecord.CollectionId = existingCollection.FirstOrDefault(c => c.MMSICollectionNumber == record.crnum)!.MMSICollectionId;
                             newRecord.CollectionNumber = record.crnum == string.Empty ? null : record.crnum;
-                            newRecord.IsUndocumented = record.undocumented == "T" ? true : false;
-                                newRecord.TerminalId = record.terminal == string.Empty ? null :
-                                    existingTerminals.Where(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum).FirstOrDefault()!.TerminalId;
-
-                            // custno, 7
-                            // vat, T | F, will depend on customer for vatability
-                            // printed, T | F, does not check
-                            // dispatchamount, 0, create field for this
-                            // bafamount, 0, create field for this
-                            // billto, 2366, what the
+                            newRecord.IsUndocumented = record.undocumented == "T";
+                            newRecord.TerminalId = record.terminal == string.Empty ? null :
+                                existingTerminals.FirstOrDefault(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum)!.TerminalId;
+                            newRecord.IsVatable = record.vat == "T";
+                            newRecord.PrincipalId = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum)!.PrincipalId;
+                            newRecord.IsPrinted = record.printed == "T";
 
                             newRecords.Add(newRecord);
                         }

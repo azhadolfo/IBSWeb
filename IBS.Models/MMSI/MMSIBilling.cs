@@ -38,6 +38,10 @@ namespace IBS.Models.MMSI
         private string? _voyageNumber;
         public decimal Amount { get; set; }
 
+        public decimal DispatchAmount { get; set; }
+
+        public decimal BAFAmount { get; set; }
+
         public string CreatedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
@@ -71,6 +75,10 @@ namespace IBS.Models.MMSI
         public MMSITerminal? Terminal { get; set; }
 
         public decimal ApOtherTug { get; set; }
+
+        public bool IsVatable { get; set; }
+
+        public bool IsPrinted { get; set; }
 
         #region ---Address Lines---
 

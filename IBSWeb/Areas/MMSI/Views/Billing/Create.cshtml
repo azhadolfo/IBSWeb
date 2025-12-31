@@ -125,7 +125,7 @@
                         <div class="row">
                             <div class="col">
                                 <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio" checked>
-                                <label style="font-size: 20px;">
+                                <label style="font-size: 20px;" asp-for="BilledTo">
                                     Billed To Local
                                 </label>
                             </div>
@@ -134,7 +134,7 @@
                         <div class="row">
                             <div class="col">
                                 <input asp-for="BilledTo" class="isExempt" value="PRINCIPAL" type="radio">
-                                <label style="font-size: 20px;">
+                                <label style="font-size: 20px;" asp-for="BilledTo">
                                     Billed To Principal
                                 </label>
                             </div>

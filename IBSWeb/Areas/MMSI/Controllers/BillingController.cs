@@ -108,6 +108,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var model = CreateBillingVmToBillingModel(viewModel);
+
+                if (model.CustomerId == null)
+                {
+                    throw new InvalidOperationException("Customer is required.");
+                }
+
+                model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+
+                if (model.Customer == null)
+                {
+                    throw new InvalidOperationException("Customer not found.");
+                }
+
+                model.IsVatable = model.Customer.VatType == "Vatable";
                 model.Status = "For Collection";
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 var datetimeNow = DateTimeHelper.GetCurrentPhilippineTime();
@@ -436,6 +450,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
                     currentModel.ToBillDispatchTickets = idsOfBilledTickets;
 
+                    if (model.CustomerId == null)
+                    {
+                        throw new InvalidOperationException("Customer is required.");
+                    }
+
+                    model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+
+                    if (model.Customer == null)
+                    {
+                        throw new InvalidOperationException("Customer not found.");
+                    }
+
+                    model.IsVatable = model.Customer.VatType == "Vatable";
+
                     #region -- Changes
 
                     var changes = new List<string>();
@@ -472,7 +500,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (currentModel.BilledTo != model.BilledTo)
                     {
-                        changes.Add($"IsVatable: {currentModel.BilledTo} -> {model.BilledTo}");
+                        changes.Add($"BilledTo: {currentModel.BilledTo} -> {model.BilledTo}");
+                    }
+
+                    if (currentModel.IsVatable != model.IsVatable)
+                    {
+                        changes.Add($"IsVatable: {currentModel.IsVatable} -> {model.IsVatable}");
                     }
 
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x)
@@ -510,6 +543,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.VesselId = model.VesselId;
                     currentModel.BilledTo = model.BilledTo;
                     currentModel.Status = "For Collection";
+                    currentModel.IsVatable = model.IsVatable;
 
                     model.UnbilledDispatchTickets = await _unitOfWork.Billing
                         .GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
