@@ -100,7 +100,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
             var billingCSVPath = "C:\\csv\\billingTest.CSV";
-            var collectionCSVPath = "C:\\csv\\billingTest.CSV";
+
+            var collectionCSVPath = "C:\\csv\\collection.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
