@@ -100,7 +100,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
             var billingCSVPath = "C:\\csv\\billingTest.CSV";
-            var collectionCSVPath = "C:\\csv\\billingTest.CSV";
+
+            var collectionCSVPath = "C:\\csv\\collection.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -874,7 +875,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.EWT = decimal.Parse(record.n2307);
                             newRecord.IsUndocumented = record.undocumented == "T";
                             newRecord.CreatedBy = record.createdby;
-                            newRecord.CreatedDate = record.createddate;
+                            newRecord.CreatedDate = DateTime.ParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
                             newRecords.Add(newRecord);
                         }
