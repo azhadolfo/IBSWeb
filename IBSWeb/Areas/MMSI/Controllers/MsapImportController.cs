@@ -152,6 +152,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 case "60":
                                     newCustomer.CustomerTerms = "60D";
                                     break;
+                                default:
+                                    newCustomer.CustomerTerms = "COD";
+                                    break;
                             }
 
                             newCustomer.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync("Industrial", cancellationToken);
@@ -824,8 +827,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var msapCustomerRecords = csv0.GetRecords<dynamic>().Select(c => new
                         {
                             c.number,
-                            c.name,
-                            address = c.address1 == string.Empty ? "-" : $"{c.address1} {c.address2} {c.address3}"
+                            c.name
                         }).ToList();
 
                         using var reader = new StreamReader(collectionCSVPath);
@@ -857,11 +859,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                             MMSICollection newRecord = new MMSICollection();
 
-                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
+                            var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number as string == record.custno as string);
 
                             if (msapCustomer != null)
                             {
-                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+                                var customerName = msapCustomer.name as string;
+
+                                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName!.Trim());
                                 newRecord.CustomerId = customer!.CustomerId;
                             }
 
@@ -869,7 +873,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.CheckNumber = record.checkno;
                             newRecord.Status = "Create";
                             newRecord.Date = DateOnly.ParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                            newRecord.CheckDate = DateOnly.ParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                            newRecord.CheckDate = record.checkdate == "/  /" ? DateOnly.MinValue : DateOnly.ParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
                             newRecord.DepositDate = DateOnly.ParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture);
                             newRecord.Amount = decimal.Parse(record.amount);
                             newRecord.EWT = decimal.Parse(record.n2307);
@@ -878,15 +882,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             newRecord.CreatedDate = DateTime.ParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
                             newRecords.Add(newRecord);
+                            }
+
+                            await _dbContext.MMSICollections.AddRangeAsync(newRecords, cancellationToken);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                            await transaction.CommitAsync(cancellationToken);
+                            return $"Collection import successful, {newRecords.Count} new records";
                         }
 
-                        return "Collection import successful";
-                    }
+                        #endregion -- Data entries --
 
-                    #endregion -- Data entries --
-
-                    default:
-                        return $"{field} field is invalid";
+                        default:
+                            return $"{field} field is invalid";
                 }
             }
             catch (Exception ex)
