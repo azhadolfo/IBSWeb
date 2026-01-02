@@ -98,10 +98,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var terminalCSVPath = "C:\\csv\\terminal.csv";
                 var principalCSVPath = "C:\\csv\\principal.csv";
                 var serviceCSVPath = "C:\\csv\\services.csv";
-                var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
-                var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
-                var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
-                var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
+                var tugboatCSVPath = "C:\\csv\\tugboat.csv";
+                var tugboatOwnerCSVPath = "C:\\csv\\tugboatOwner.csv";
+                var tugMasterCSVPath = "C:\\csv\\tugMaster.csv";
+                var vesselCSVPath = "C:\\csv\\vessel.csv";
 
                 var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
                 var billingCSVPath = "C:\\csv\\billingTest.CSV";
@@ -562,14 +562,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             foreach (var record in records)
             {
-                if (existingIdentifier.Contains(record.number))
+                if (existingIdentifier.Contains(record.empno))
                 {
                     continue;
                 }
 
                 MMSITugMaster newRecord = new MMSITugMaster();
 
-                newRecord.TugMasterNumber = record.number;
+                newRecord.TugMasterNumber = record.empno;
                 newRecord.TugMasterName = record.name;
                 newRecord.IsActive = record.active == "T";
 
