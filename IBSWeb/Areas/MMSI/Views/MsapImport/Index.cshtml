@@ -33,7 +33,7 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllMaster">Select All</button>
                         </div>
                         <div class="border rounded p-3">
-                            @foreach (var option in new List<string> { "Customer", "Port", "Principal", "Service", "Tugboat", "TugMaster", "Vessel" })
+                            @foreach (var option in new List<string> { "Customer", "Port", "Terminal", "Principal", "Service", "Tugboat", "TugMaster", "Vessel" })
                             {
                                 <div class="form-check m-1">
                                     <input class="form-check-input master-checkbox" type="checkbox" value="@option" name="fieldList" id="@option">

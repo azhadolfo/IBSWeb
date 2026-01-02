@@ -91,6 +91,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var customerCSVPath = "C:\\csv\\customer.CSV";
             var portCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\portDB.csv";
+            var terminalCSVPath = "C:\\csv\\terminal.csv";
             var principalCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\principalDB(nullables)v2.csv";
             var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
             var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
@@ -100,7 +101,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
             var billingCSVPath = "C:\\csv\\billingTest.CSV";
-
             var collectionCSVPath = "C:\\csv\\collection.CSV";
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -216,6 +216,46 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         }
 
                         await _dbContext.MMSIPorts.AddRangeAsync(newRecords, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                        return $"{field} imported successfully, {newRecords.Count} new records";
+                    }
+                    case "Terminal":
+                    {
+                        var existingIdentifier = (await _dbContext.MMSITerminals.Include(t => t.Port).ToListAsync(cancellationToken))
+                            .Select(c => new { c.Port!.PortNumber, c.TerminalNumber}).ToList();
+
+                        var existingPorts = (await _dbContext.MMSIPorts.ToListAsync(cancellationToken))
+                            .Select(p => new { p.PortId, p.PortNumber}).ToList();
+
+                        var newRecords = new List<MMSITerminal>();
+                        using var reader = new StreamReader(terminalCSVPath);
+                        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                        var records = csv.GetRecords<dynamic>().ToList();
+
+                        foreach (var record in records)
+                        {
+                            string originalPortNumber = (record.number as string)!.Substring(0, 3);
+                            string paddedPortNumber = int.Parse(originalPortNumber).ToString("D3");
+                            string originalTerminalNumber = (record.number as string)!.Substring((record.number as string)!.Length - 3, 3);
+                            string paddedTerminalNumber = int.Parse(originalTerminalNumber).ToString("D3");
+
+                            // check if already in the database
+                            if (existingIdentifier.Contains(new { PortNumber = paddedPortNumber, TerminalNumber = paddedTerminalNumber }!))
+                            {
+                                continue;
+                            }
+
+                            MMSITerminal newRecord = new MMSITerminal();
+
+                            newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNumber)!.PortId;
+                            newRecord.TerminalName = record.name;
+                            newRecord.TerminalNumber = paddedTerminalNumber;
+
+                            newRecords.Add(newRecord);
+                        }
+
+                        await _dbContext.MMSITerminals.AddRangeAsync(newRecords, cancellationToken);
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         return $"{field} imported successfully, {newRecords.Count} new records";
