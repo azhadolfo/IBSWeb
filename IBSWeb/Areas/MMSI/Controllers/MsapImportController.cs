@@ -507,7 +507,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 newRecord.TugboatNumber = padded;
                 newRecord.TugboatName = record.name;
-                newRecord.IsCompanyOwned = record.companyowner == "T";
+                newRecord.IsCompanyOwned = record.companyowned == "T";
 
                 newRecords.Add(newRecord);
             }
