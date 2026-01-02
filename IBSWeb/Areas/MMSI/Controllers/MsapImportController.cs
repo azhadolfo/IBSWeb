@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var customerCSVPath = "C:\\csv\\customer.CSV";
                 var portCSVPath = "C:\\csv\\port.csv";
                 var terminalCSVPath = "C:\\csv\\terminal.csv";
-                var principalCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\principalDB(nullables)v2.csv";
+                var principalCSVPath = "C:\\csv\\principal.csv";
                 var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
                 var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
                 var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
@@ -348,7 +348,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<string> ImportMsapPrincipals(string principalCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSIPrincipals.ToListAsync(cancellationToken))
-                .Select(c => new { c.PrincipalNumber, c.PrincipalName}).ToList();
+                .Select(c => new { c.PrincipalNumber, c.PrincipalName, c.CustomerId}).ToList();
 
             var mmsiCustomers = await _unitOfWork.FilprideCustomer
                 .GetAllAsync(c => c.Company == "MMSI", cancellationToken);
@@ -379,6 +379,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     PrincipalNumber = padded,
                     PrincipalName = record.name as string ?? string.Empty,
+                    CustomerId = customersList.FirstOrDefault(c => c.CustomerNumber == int.Parse(record.agent).ToString("D4"))!.CustomerId
                 };
 
                 // check if already in the database
