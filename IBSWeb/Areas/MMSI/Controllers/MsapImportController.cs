@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var customerCSVPath = "C:\\csv\\customer.CSV";
-                var portCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\portDB.csv";
+                var portCSVPath = "C:\\csv\\port.csv";
                 var terminalCSVPath = "C:\\csv\\terminal.csv";
                 var principalCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\principalDB(nullables)v2.csv";
                 var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
@@ -283,7 +283,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             foreach (var record in records)
             {
-                string original = record.port_number ?? string.Empty;
+                string original = record.number ?? string.Empty;
                 string padded = int.Parse(original).ToString("D3");
 
                 // check if already in the database
@@ -295,8 +295,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 MMSIPort newRecord = new MMSIPort();
 
                 newRecord.PortNumber = padded;
-                newRecord.PortName = record.port_name;
-                newRecord.HasSBMA = record.has_sbma == "T";
+                newRecord.PortName = record.name;
 
                 newRecords.Add(newRecord);
             }
