@@ -97,7 +97,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var portCSVPath = "C:\\csv\\port.csv";
                 var terminalCSVPath = "C:\\csv\\terminal.csv";
                 var principalCSVPath = "C:\\csv\\principal.csv";
-                var serviceCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\servicesDB.csv";
+                var serviceCSVPath = "C:\\csv\\services.csv";
                 var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
                 var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
                 var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
@@ -463,7 +463,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 MMSIService newRecord = new MMSIService();
 
                 newRecord.ServiceNumber = padded;
-                newRecord.ServiceName = record.name;
+                newRecord.ServiceName = record.desc;
 
                 newRecords.Add(newRecord);
             }
