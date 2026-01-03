@@ -98,10 +98,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var terminalCSVPath = "C:\\csv\\terminal.csv";
                 var principalCSVPath = "C:\\csv\\principal.csv";
                 var serviceCSVPath = "C:\\csv\\services.csv";
-                var tugboatCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatDB.csv";
-                var tugboatOwnerCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugboatOwnerDBv2.csv";
-                var tugMasterCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\tugMasterDBv2.csv";
-                var vesselCSVPath = "C:\\MSAP_To_IBS_Import\\dbs(raw)\\vesselDB.csv";
+                var tugboatCSVPath = "C:\\csv\\tugboat.csv";
+                var tugboatOwnerCSVPath = "C:\\csv\\tugboatOwner.csv";
+                var tugMasterCSVPath = "C:\\csv\\tugMaster.csv";
+                var vesselCSVPath = "C:\\csv\\vessel.csv";
 
                 var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
                 var billingCSVPath = "C:\\csv\\billingTest.CSV";
@@ -196,6 +196,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 throw new InvalidOperationException(ex.Message);
             }
         }
+
+        #region -- Masterfiles --
 
         public async Task<string> ImportMsapCustomers(string customerCSVPath, CancellationToken cancellationToken)
         {
@@ -562,14 +564,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             foreach (var record in records)
             {
-                if (existingIdentifier.Contains(record.number))
+                if (existingIdentifier.Contains(record.empno))
                 {
                     continue;
                 }
 
                 MMSITugMaster newRecord = new MMSITugMaster();
 
-                newRecord.TugMasterNumber = record.number;
+                newRecord.TugMasterNumber = record.empno;
                 newRecord.TugMasterName = record.name;
                 newRecord.IsActive = record.active == "T";
 
@@ -614,6 +616,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             await _dbContext.SaveChangesAsync(cancellationToken);
             return $"Vessels imported successfully, {newRecords.Count} new records";
         }
+
+        #endregion -- Masterfiles --
 
         public async Task<string> ImportMsapDispatchTickets(string dispatchTicketCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
@@ -893,10 +897,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
                 var originalPortNum = record.portnum ?? string.Empty;
                 var paddedPortNum = int.Parse(originalPortNum).ToString("D3");
-                var originalTerminalNum = record.terminal ?? string.Empty;
-                var paddedTerminalNum = int.Parse(originalTerminalNum).ToString("D3");
-                var originalPrincipalNum = record.billto ?? string.Empty;
-                var paddedPrincipalNum = int.Parse(originalPrincipalNum).ToString("D4");
+                var originalTerminalNum = record.terminal;
+                string paddedTerminalNum = string.Empty;
+                if (originalTerminalNum != string.Empty)
+                {
+                    paddedTerminalNum = int.Parse(originalTerminalNum).ToString("D3");
+                }
+                var originalPrincipalNum = record.billto;
+                var paddedPrincipalNum = string.Empty;
+                if (originalPrincipalNum != string.Empty)
+                {
+                    paddedPrincipalNum = int.Parse(originalPrincipalNum).ToString("D4");
+                }
+                
 
                 MMSIBilling newRecord = new MMSIBilling();
 
@@ -915,25 +928,49 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 newRecord.MMSIBillingNumber = record.number;
-                newRecord.Date = DateOnly.ParseExact(record.date, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
                 newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
                 newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                 newRecord.Amount = decimal.Parse(record.amount);
                 newRecord.IsUndocumented = record.undocumented == "T";
                 newRecord.ApOtherTug = decimal.Parse(record.apothertug);
-                newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "MM/dd/yyyy  hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None );
+                newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "M/dd/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None );
                 newRecord.CreatedBy = record.entryby as string == string.Empty ? string.Empty : record.entryby;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
                 newRecord.DispatchAmount = decimal.Parse(record.dispatchamount);
                 newRecord.BAFAmount = decimal.Parse(record.bafamount);
-                newRecord.CollectionId = existingCollection.FirstOrDefault(c => c.MMSICollectionNumber == record.crnum)!.MMSICollectionId;
+
+                if (record.crnum != string.Empty)
+                {
+                    newRecord.CollectionId = existingCollection.FirstOrDefault(c => c.MMSICollectionNumber == record.crnum)!.MMSICollectionId;
+                    newRecord.Status = "Collected";
+                }
+                else
+                {
+                    newRecord.Status = "For Collection";
+                }
+
                 newRecord.CollectionNumber = record.crnum == string.Empty ? null : record.crnum;
                 newRecord.IsUndocumented = record.undocumented == "T";
-                newRecord.TerminalId = record.terminal == string.Empty ? null :
-                    existingTerminals.FirstOrDefault(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum)!.TerminalId;
+
+                if (originalTerminalNum != string.Empty)
+                {
+                    newRecord.TerminalId = existingTerminals.FirstOrDefault(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum)?.TerminalId;
+                }
+
                 newRecord.IsVatable = record.vat == "T";
-                newRecord.PrincipalId = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum)!.PrincipalId;
-                newRecord.IsPrinted = record.printed == "T";
+
+                if (originalPrincipalNum != string.Empty)
+                {
+                    newRecord.PrincipalId = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum && p.CustomerId == newRecord.CustomerId)!.PrincipalId;
+                    newRecord.BilledTo = "PRINCIPAL";
+                }
+                else
+                {
+                    newRecord.BilledTo = "LOCAL";
+                }
+
+                    newRecord.IsPrinted = record.printed == "T";
 
                 newRecords.Add(newRecord);
             }
