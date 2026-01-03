@@ -1,8 +1,6 @@
-using System.Globalization;
-using System.Security.Claims;
-using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Google.Protobuf.WellKnownTypes;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -16,6 +14,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quartz.Util;
+using System.Globalization;
+using System.Security.Claims;
+using System.Text;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -104,7 +105,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var vesselCSVPath = "C:\\csv\\vessel.csv";
 
                 var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
-                var billingCSVPath = "C:\\csv\\billingTest.CSV";
+                var billingCSVPath = "C:\\csv\\billing.CSV";
                 var collectionCSVPath = "C:\\csv\\collection.CSV";
 
                 string result;
@@ -895,21 +896,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var originalVesselNum = record.vesselnum ?? string.Empty;
                 var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
-                var originalPortNum = record.portnum ?? string.Empty;
-                var paddedPortNum = int.Parse(originalPortNum).ToString("D3");
-                var originalTerminalNum = record.terminal;
-                string paddedTerminalNum = string.Empty;
-                if (originalTerminalNum != string.Empty)
+
+                var originalPortNum = record.terminal;
+                var originalTerminalNum = string.Empty;
+                var paddedPortNum = string.Empty;
+                var paddedTerminalNum = string.Empty;
+
+                if (originalPortNum != string.Empty)
                 {
+                    originalPortNum = originalPortNum.Substring(0, 3);
+                    originalTerminalNum = originalPortNum.Substring(originalPortNum.Length - 3, 3);
+                    paddedPortNum = int.Parse(originalPortNum).ToString("D3");
                     paddedTerminalNum = int.Parse(originalTerminalNum).ToString("D3");
                 }
+
                 var originalPrincipalNum = record.billto;
+
                 var paddedPrincipalNum = string.Empty;
                 if (originalPrincipalNum != string.Empty)
                 {
                     paddedPrincipalNum = int.Parse(originalPrincipalNum).ToString("D4");
                 }
-                
 
                 MMSIBilling newRecord = new MMSIBilling();
 
@@ -917,24 +924,31 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (msapCustomer != null)
                 {
-                    var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+                    var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name);
 
                     if (customer != null)
                     {
                         newRecord.CustomerId = customer.CustomerId;
                     }
-
-                    newRecord.CustomerId = null;
+                    else
+                    {
+                        newRecord.CustomerId = null;
+                    }
                 }
 
                 newRecord.MMSIBillingNumber = record.number;
                 newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
                 newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
-                newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
+
+                if(originalPortNum != string.Empty)
+                {
+                    newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
+                }
+
                 newRecord.Amount = decimal.Parse(record.amount);
                 newRecord.IsUndocumented = record.undocumented == "T";
                 newRecord.ApOtherTug = decimal.Parse(record.apothertug);
-                newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "M/dd/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None );
+                newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "M/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None );
                 newRecord.CreatedBy = record.entryby as string == string.Empty ? string.Empty : record.entryby;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
                 newRecord.DispatchAmount = decimal.Parse(record.dispatchamount);
