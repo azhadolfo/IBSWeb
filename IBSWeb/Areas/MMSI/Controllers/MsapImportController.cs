@@ -637,6 +637,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var existingIdentifier = await _dbContext.MMSIDispatchTickets
                 .AsNoTracking()
                 .Select(dt => new { dt.DispatchNumber, dt.CreatedDate })
+                .OrderBy(dt => dt.DispatchNumber)
                 .ToListAsync(cancellationToken);
 
             var existingVessels = await _dbContext.MMSIVessels
@@ -671,7 +672,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var existingBilling = await _dbContext.MMSIBillings
                 .AsNoTracking()
-                .Select(b => new { b.MMSIBillingNumber, b.MMSIBillingId })
+                .Select(b => new { b.MMSIBillingNumber, b.MMSIBillingId, b.CustomerId })
                 .ToListAsync(cancellationToken);
 
             #endregion -- Creating Identifier Variables --
@@ -686,7 +687,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var comparableVariable = new
                 {
-                    DispatchNumber = record.number as string ?? "",
+                    DispatchNumber = (record.number as string)?.Trim() ?? "",
                     CreatedDate = DateTime.Parse((string)record.entrydate)
                 };
 
@@ -719,14 +720,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (msapCustomer != null)
                 {
-                    var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name && c.CustomerAddress == msapCustomer.address);
+                    var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName == msapCustomer.name);
 
+                    // use the customer file from msap as identifier between the customer number from dispatch and customer id from ibs
                     if (customer != null)
                     {
                         newRecord.CustomerId = customer.CustomerId;
                     }
-
-                    newRecord.CustomerId = null;
+                    // customer is null, will try to look for customer based on the tagged billing number
+                    else if (record.billnum != string.Empty)
+                    {
+                        newRecord.CustomerId = existingBilling.FirstOrDefault(b => b.MMSIBillingNumber == record.number as string)?.CustomerId;
+                    }
+                    else
+                    {
+                        newRecord.CustomerId = null;
+                    }
                 }
 
                 #region -- Assigning Values --
@@ -766,8 +775,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.TariffEditedBy = null;
                 newRecord.DispatchChargeType = record.perhour == "T" ? "Per hour" : "Per move";
                 newRecord.BAFChargeType = "Per move";
-                newRecord.Status = record.billnum == string.Empty ? "For Billing" : "Billed";
 
+                // if dispatch is approved, assume that it can be billed
+                if (record.approved == "T")
+                {
+                    // if already has billing number, mark as billed
+                    newRecord.Status = record.billnum == string.Empty ? "For Billing" : "Billed";
+                }
+                // if is not yet approved, mark as for tariff
+                else
+                {
+                    newRecord.Status = "For Tariff";
+                }
 
                 if (newRecord.DateLeft != null && newRecord.DateArrived != null && newRecord.TimeLeft != null && newRecord.TimeArrived != null)
                 {
