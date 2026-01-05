@@ -205,6 +205,15 @@ namespace IBS.DataAccess.Repository.MMSI
             var resultStrings = new List<string>();
             var currentString = "";
 
+            if (words == null)
+            {
+                model.AddressLine1 = string.Empty;
+                model.AddressLine2 = string.Empty;
+                model.AddressLine3 = string.Empty;
+                model.AddressLine4 = string.Empty;
+
+                return model;
+            }
             foreach (var word in words!)
             {
                 if (currentString.Length + word.Length + (currentString.Length > 0 ? 1 : 0) > 40)

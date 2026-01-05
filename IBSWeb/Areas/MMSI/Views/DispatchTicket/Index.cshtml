@@ -154,9 +154,15 @@
                     },
                     {"data": "service.serviceName"},
                     {
-                        "data": "terminal.port.portName",
-                        "render": function(data, type, row) {
-                            return `${row.terminal.port.portName} - ${row.terminal.terminalName}`;
+                        "data": null,
+                        "name": "terminal.port.portName",
+                        "render": function (data, type, row) {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+
+                            return portName || terminalName
+                                ? `${portName} - ${terminalName}`
+                                : "";
                         }
                     },
                     {"data": "tugboat.tugboatName"},
