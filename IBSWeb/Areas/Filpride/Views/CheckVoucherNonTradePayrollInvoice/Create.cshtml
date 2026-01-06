@@ -106,7 +106,7 @@
                         <button type="submit" class="btn btn-primary form-control">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayrollInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -205,7 +205,7 @@
             let multipleSupplierSelect = $("#MultipleSupplierId");
             
             $.ajax({
-                url: '@Url.Action("GetNonTradeSupplierSelectList", "CheckVoucherNonTradeInvoice")',
+                url: '@Url.Action("GetNonTradeSupplierSelectList", "CheckVoucherNonTradePayrollInvoice")',
                 type: "GET",
                 success: function (data) {
                     if (Array.isArray(data) && data.length > 0) {

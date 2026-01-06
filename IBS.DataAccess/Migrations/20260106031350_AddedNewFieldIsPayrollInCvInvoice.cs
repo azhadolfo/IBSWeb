@@ -1,0 +1,49 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace IBS.DataAccess.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddedNewFieldIsPayrollInCvInvoice : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "fk_filpride_customers_filpride_suppliers_commissionee_id",
+                table: "filpride_customers");
+
+            migrationBuilder.DropIndex(
+                name: "ix_filpride_customers_commissionee_id",
+                table: "filpride_customers");
+
+            migrationBuilder.AddColumn<bool>(
+                name: "is_payroll",
+                table: "filpride_check_voucher_headers",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "is_payroll",
+                table: "filpride_check_voucher_headers");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customers_commissionee_id",
+                table: "filpride_customers",
+                column: "commissionee_id");
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_filpride_customers_filpride_suppliers_commissionee_id",
+                table: "filpride_customers",
+                column: "commissionee_id",
+                principalTable: "filpride_suppliers",
+                principalColumn: "supplier_id");
+        }
+    }
+}
