@@ -576,7 +576,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return purchaseOrders;
         }
 
-        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default)
         {
             var salesInvoiceQuery = _db.FilprideSalesInvoices
                 .Where(x => x.Company == company
@@ -588,7 +588,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var salesInvoices = await salesInvoiceQuery
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
+                .Include(si => si.DeliveryReceipt)
+                .ThenInclude(dr => dr!.Hauler)
                 .Include(si => si.CustomerOrderSlip)
                 .ToListAsync(cancellationToken);
 
