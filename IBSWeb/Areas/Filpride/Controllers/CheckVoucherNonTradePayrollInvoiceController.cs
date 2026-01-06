@@ -242,6 +242,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var bir = await _unitOfWork.FilprideSupplier
                     .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
 
+                var payee = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierId == viewModel.SupplierId, cancellationToken)
+                    ?? throw new Exception("Payee not found");
+
                 var subAccounts = new[]
                 {
                     "202010200",
@@ -267,12 +271,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
                     Date = viewModel.TransactionDate,
-                    Payee = null,
-                    Address = "",
-                    Tin = "",
+                    Payee = payee.SupplierName,
+                    Address = payee.SupplierAddress,
+                    Tin = payee.SupplierTin,
                     PONo = [viewModel.PoNo ?? string.Empty],
                     SINo = [viewModel.SiNo ?? string.Empty],
-                    SupplierId = null,
+                    SupplierId = payee.SupplierId,
                     Particulars = viewModel.Particulars,
                     Total = viewModel.Total,
                     CreatedBy = GetUserFullName(),
@@ -419,7 +423,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PayrollAccountingEntries = payrollAccountingEntries,
                     ChartOfAccounts = coa,
                     Suppliers = suppliers,
-                    MinDate = minDate
+                    MinDate = minDate,
+                    SupplierId = existingHeaderModel.SupplierId,
                 };
 
                 return View(model);
@@ -481,6 +486,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var bir = await _unitOfWork.FilprideSupplier
                     .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
 
+                var payee = await _unitOfWork.FilprideSupplier
+                                .GetAsync(x => x.SupplierId == viewModel.SupplierId, cancellationToken)
+                            ?? throw new Exception("Payee not found");
+
                 var subAccounts = new[]
                 {
                     "202010200",
@@ -510,6 +519,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Particulars = viewModel.Particulars;
                 existingHeaderModel.Total = viewModel.Total;
                 existingHeaderModel.InvoiceAmount = apNonTradeTotal;
+                existingHeaderModel.SupplierId = payee.SupplierId;
+                existingHeaderModel.Payee = payee.SupplierName;
+                existingHeaderModel.Address = payee.SupplierAddress;
+                existingHeaderModel.Tin = payee.SupplierTin;
 
                 #endregion -- Update existing header --
 

@@ -32,6 +32,13 @@
                            min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Supplier<span class="required">*</span></label>
+                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 supplier" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
                 <div class="form-floating mb-3">
                     <textarea asp-for="PoNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
                     <label asp-for="PoNo" class="control-label ms-2">PO No</label>
