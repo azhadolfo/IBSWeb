@@ -69,5 +69,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<AccountingEntryViewModel>? AccountingEntries { get; set; }
 
         public DateTime MinDate { get; set; }
+
+        public List<PayrollAccountingEntryViewModel>? PayrollAccountingEntries { get; set; }
     }
 }

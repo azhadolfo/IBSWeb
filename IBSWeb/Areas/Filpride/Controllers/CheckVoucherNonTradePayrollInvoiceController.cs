@@ -5,6 +5,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -93,7 +94,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
                                   cvd.CheckVoucherHeader.IsPayroll &&
                                   cvd.SupplierId.HasValue &&
-                                  cvd.Credit > 0)
+                                  cvd.Amount > 0)
                     .Include(cvd => cvd.Supplier)
                     .Include(cvd => cvd.CheckVoucherHeader)
                     .ThenInclude(cvh => cvh!.Supplier)
@@ -229,14 +230,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Saving the default entries --
 
                 decimal apNonTradeTotal = 0m;
+                var sss = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("SOCIAL SECURITY SYSTEM"), cancellationToken);
 
-                for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
+                var philhealth = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("PHILIPPINE HEALTH INSURANCE CORPORATION"), cancellationToken);
+
+                var pagibig = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("HOME DEVELOPMENT MUTUAL FUND"), cancellationToken);
+
+                var bir = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
+
+                var subAccounts = new[]
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
-                    {
-                        apNonTradeTotal += viewModel.Credit[i];
-                    }
-                }
+                    "202010200",
+                    "201030540",
+                    "201030530",
+                    "201030520",
+                    "201030300"
+                };
+
+                var supplierMapping = new Dictionary<string, FilprideSupplier?>
+                {
+                    { "201030540", sss },
+                    { "201030530", philhealth },
+                    { "201030520", pagibig },
+                    { "201030300", bir }
+                };
+
+                apNonTradeTotal = viewModel.PayrollAccountingEntries!
+                    .Where(x => x.Credit > 0 && subAccounts.Contains(x.AccountNumber))
+                    .Sum(x => x.Credit);
 
                 FilprideCheckVoucherHeader checkVoucherHeader = new()
                 {
@@ -269,23 +294,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
 
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                foreach (var subAccount in viewModel.PayrollAccountingEntries!)
                 {
-                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    var isPayable = subAccounts.Contains(subAccount.AccountNumber);
+
+                    supplierMapping.TryGetValue(subAccount.AccountNumber, out var supplier);
+
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            Amount = viewModel.AccountTitle[i] == "AP-Non Trade Payable" ? viewModel.Credit[i] : 0m,
-                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
-                            IsUserSelected = true
-                        });
-                    }
+                        AccountNo = subAccount.AccountNumber,
+                        AccountName = subAccount.AccountTitle,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = subAccount.Debit,
+                        Credit = subAccount.Credit,
+                        Amount = isPayable ? subAccount.Credit : 0m,
+                        SupplierId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        IsUserSelected = true
+                    });
                 }
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
@@ -337,8 +363,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var existingHeaderModel =
-                    await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id,
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id,
                         cancellationToken);
 
                 if (existingHeaderModel == null)
@@ -356,13 +381,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Include(s => s.Supplier)
                     .OrderBy(s => s.CheckVoucherDetailId)
                     .ToListAsync(cancellationToken);
-
-                var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
-                var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
-                var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
-                var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
 
                 var companyClaims = await GetCompanyClaimAsync();
 
@@ -372,52 +393,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var coa = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                var suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-                var suppliers =
-                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-                var details = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .Include(s => s.Supplier)
-                    .Include(s => s.Employee)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                var payees = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .OrderBy(s => s.CheckVoucherDetailId)
-                    .Select(s => new
-                    {
-                        PayeeId = (int?)(s.SupplierId ?? s.EmployeeId ?? 0),
-                        PayeeName = s.SupplierId != null
-                            ? $"{s.Supplier!.SupplierCode} {s.Supplier.SupplierName}"
-                            : s.EmployeeId != null
-                            ? $"{s.Employee!.EmployeeNumber} {s.Employee.FirstName} {s.Employee.LastName}"
-                            : ""
-                    })
-                    .ToListAsync(cancellationToken);
-
-                var getSupplierId = payees.Select(p => p.PayeeId).ToArray();
-                var getPayeeName = payees.Select(p => p.PayeeName).ToArray();
+                // Convert existing details to PayrollAccountingEntries format
+                var payrollAccountingEntries = existingDetailsModel.Select(detail => new PayrollAccountingEntryViewModel
+                {
+                    AccountNumber = detail.AccountNo,
+                    AccountTitle = detail.AccountName,
+                    Debit = detail.Debit,
+                    Credit = detail.Credit,
+                    MultipleSupplierId = detail.SupplierId,
+                    MultipleSupplierCodeName = detail.Supplier != null
+                        ? $"{detail.Supplier.SupplierCode} {detail.Supplier.SupplierName}"
+                        : string.Empty
+                }).ToList();
 
                 CheckVoucherNonTradeInvoicingViewModel model = new()
                 {
-                    MultipleSupplierId = getSupplierId,
-                    SupplierAddress = details?.Supplier?.SupplierAddress,
-                    SupplierTinNo = details?.Supplier?.SupplierTin,
-                    Suppliers = suppliers,
-                    TransactionDate = existingHeaderModel.Date,
-                    Particulars = existingHeaderModel.Particulars!,
-                    Total = existingHeaderModel.Total,
-                    AccountNumber = accountNumbers,
-                    AccountTitle = accountTitles,
-                    Debit = debit,
-                    Credit = credit,
-                    ChartOfAccounts = coa,
                     CVId = existingHeaderModel.CheckVoucherHeaderId,
+                    TransactionDate = existingHeaderModel.Date,
                     PoNo = existingHeaderModel.PONo?.First(),
                     SiNo = existingHeaderModel.SINo?.First(),
-                    MinDate = minDate,
-                    SupplierNames = getPayeeName
+                    Total = existingHeaderModel.Total,
+                    Particulars = existingHeaderModel.Particulars!,
+                    PayrollAccountingEntries = payrollAccountingEntries,
+                    ChartOfAccounts = coa,
+                    Suppliers = suppliers,
+                    MinDate = minDate
                 };
 
                 return View(model);
@@ -455,7 +457,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                #region -- Saving the default entries --
+                #region -- Update existing header --
 
                 var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
                     .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
@@ -465,15 +467,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                // Calculate AP Non-Trade total from accounting entries
                 decimal apNonTradeTotal = 0m;
+                var sss = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("SOCIAL SECURITY SYSTEM"), cancellationToken);
 
-                for (int i = 0; i < viewModel.MultipleSupplierId!.Length; i++)
+                var philhealth = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("PHILIPPINE HEALTH INSURANCE CORPORATION"), cancellationToken);
+
+                var pagibig = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("HOME DEVELOPMENT MUTUAL FUND"), cancellationToken);
+
+                var bir = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
+
+                var subAccounts = new[]
                 {
-                    if (viewModel.AccountTitle[i] == "AP-Non Trade Payable" && viewModel.Credit[i] != 0)
-                    {
-                        apNonTradeTotal += viewModel.Credit[i];
-                    }
-                }
+                    "202010200",
+                    "201030540",
+                    "201030530",
+                    "201030520",
+                    "201030300"
+                };
+
+                var supplierMapping = new Dictionary<string, FilprideSupplier?>
+                {
+                    { "201030540", sss },
+                    { "201030530", philhealth },
+                    { "201030520", pagibig },
+                    { "201030300", bir }
+                };
+
+                apNonTradeTotal = viewModel.PayrollAccountingEntries!
+                    .Where(x => x.Credit > 0 && subAccounts.Contains(x.AccountNumber))
+                    .Sum(x => x.Credit);
 
                 existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -484,9 +511,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Total = viewModel.Total;
                 existingHeaderModel.InvoiceAmount = apNonTradeTotal;
 
-                #endregion -- Saving the default entries --
+                #endregion -- Update existing header --
 
-                #region -- cv invoiving details entry --
+                #region -- Update CV details entries --
 
                 var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                     .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
@@ -497,27 +524,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
 
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                foreach (var subAccount in viewModel.PayrollAccountingEntries!)
                 {
-                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    var isPayable = subAccounts.Contains(subAccount.AccountNumber);
+
+                    supplierMapping.TryGetValue(subAccount.AccountNumber, out var supplier);
+
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
-                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = viewModel.CVId,
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            Amount = viewModel.AccountTitle[i] == "AP-Non Trade Payable" ? viewModel.Credit[i] : 0m,
-                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
-                        });
-                    }
+                        AccountNo = subAccount.AccountNumber,
+                        AccountName = subAccount.AccountTitle,
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = viewModel.CVId,
+                        Debit = subAccount.Debit,
+                        Credit = subAccount.Credit,
+                        Amount = isPayable ? subAccount.Credit : 0m,
+                        SupplierId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        IsUserSelected = true
+                    });
                 }
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
-                #endregion -- cv invoiving details entry --
+                #endregion -- Update CV details entries --
 
                 #region -- Uploading file --
 
