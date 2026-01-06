@@ -294,9 +294,6 @@
                 // Format debit and credit values with commas and two decimal places
                 var formattedDebit = formatNumber(debit);
                 var formattedCredit = formatNumber(credit);
-
-                var multiplerSupplierId = `MultipleSupplierId[${i}]`;
-                var classDropdownSelect = "form-select js-select-custom w-100";
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
                                 <td>
@@ -393,60 +390,6 @@
             }
     </script>
     <script>
-        $("#AccountNo").change(function () {
-            var accountNumber = $(this).val();
-            if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
-                // Close the modal
-                $("#AddAccEntry").modal("hide");
-                Swal.fire({
-                    title: "Create Automatic Journal Entry",
-                    text: "Do you want to create an automatic journal entry?",
-                    icon: "question",
-                    showCancelButton: true,
-                    allowEscapeKey: false,
-                    allowOutsideClick: false,
-                    confirmButtonText: "Yes",
-                    cancelButtonText: "No",
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        return new Promise((resolve) => {
-                            Swal.fire({
-                                title: "Input Start Date and Number of Years",
-                                html:
-                                    "<input id='start-date' type='date' class='swal2-input' placeholder='Start Date'>" +
-                                    "<input id='num-years' type='number' class='swal2-input' placeholder='Number of Years'>",
-                                focusConfirm: false,
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                preConfirm: () => {
-                                    return [
-                                        $("#start-date").val(),
-                                        $("#num-years").val()
-                                    ];
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    resolve(result.value);
-                                }
-                            });
-                        });
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Result contains an array with the start date and number of years
-                        var startDate = result.value[0];
-                        var numYears = result.value[1];
-                        // Assign the values to hidden inputs in your form
-                        $("#StartDate").val(startDate);
-                        $("#NumberOfYears").val(numYears);
-                        // Close the modal
-                        $("#AddAccEntry").modal("show");
-                    }
-                });
-            }
-        });
-    </script>
-    <script>
         function validateDebitAndCredit(event) {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
@@ -454,7 +397,16 @@
             var errorMessage = "";
             var isValid = true;
             let hasValidSubaccount = false;
+            let hasAPNonTrade = false;
+            let hasAtLeastOneOptional = false;
             const rows = document.querySelectorAll("#accountingEntriesBody tr");
+            const requiredTitle = "AP-Non Trade Payable";
+            const optionalTitles = [
+                "PHIC Contribution Payable",
+                "Witholding Tax On Wages",
+                "SSS Contribution Payable",
+                "HDMF Contribution Payable"
+            ];
 
             for (const row of rows) {
                 const titleInput = row.querySelector("input[name='AccountTitle']");
@@ -465,9 +417,15 @@
                 const title = titleInput.value.trim();
                 const credit = parseFloat(creditInput.value.replace(/,/g, "")) || 0;
 
-                if (title === "AP-Non Trade Payable" && credit !== 0) {
-                    hasValidSubaccount = true;
+                if (title === requiredTitle && credit > 0) {
+                    hasAPNonTrade = true;
                 }
+
+                if (optionalTitles.includes(title) && credit > 0) {
+                    hasAtLeastOneOptional = true;
+                }
+
+                hasValidSubaccount = hasAPNonTrade && hasAtLeastOneOptional;
             }
 
             if ($("#balance-error-message").length === 0) {
@@ -484,7 +442,13 @@
                 errorMessage = "Total Amount should be equal to Total Debit and Credit.";
                 isValid = false;
             } else if (!hasValidSubaccount) {
-                errorMessage = "No AP-Nontrade Payable with credit detected.";
+                if (!hasAPNonTrade && !hasAtLeastOneOptional) {
+                    errorMessage = "Must include AP-Non Trade Payable and at least one of: PHIC, Witholding Tax, SSS, or HDMF Contribution Payable with credit.";
+                } else if (!hasAPNonTrade) {
+                    errorMessage = "Must include AP-Non Trade Payable with credit.";
+                } else if (!hasAtLeastOneOptional) {
+                    errorMessage = "Must include at least one of: PHIC, Witholding Tax, SSS, or HDMF Contribution Payable with credit.";
+                }
                 isValid = false;
             }
 
@@ -496,19 +460,6 @@
 
             return isValid;
         }
-    </script>
-    <script>
-        $(document).ready(function () {
-            // Initialize each select element with the class js-select-defaultExpense
-            $('.js-select-custom').each(function (index, select) {
-                $(select).select2({
-                    placeholder: "Select an option...",
-                    allowClear: true,
-                    width: '100%', // Ensures it fills the parent container width
-                    theme: 'classic',
-                });
-            });
-        });
     </script>
     <script>
         $("#AccountNo").on("change", seeIfNeedSupplier);
