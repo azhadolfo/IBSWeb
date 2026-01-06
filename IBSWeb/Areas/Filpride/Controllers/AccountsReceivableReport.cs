@@ -3971,6 +3971,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return BadRequest();
             }
+            // Convert AsOfMonthYear to DateTo
+            if (model.AsOfMonthYear.HasValue)
+            {
+                model.SetAsOfDate();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -4015,14 +4020,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     column.Item().Text(text =>
                                     {
-                                        text.Span("Date From: ").SemiBold();
-                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
-                                    });
-
-                                    column.Item().Text(text =>
-                                    {
-                                        text.Span("Date To: ").SemiBold();
-                                        text.Span(model.DateTo.ToString(SD.Date_Format));
+                                        text.Span("As of: ").SemiBold();
+                                        text.Span($"{model.AsOfMonthYear!.Value:MMMM yyyy}");
                                     });
                                 });
 
@@ -4287,6 +4286,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Please input date range";
@@ -4295,10 +4296,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+
+                // Convert AsOfMonthYear to DateTo
+                if (model.AsOfMonthYear.HasValue)
+                {
+                    model.SetAsOfDate();
+                }
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
+
+
+
                 if (companyClaims == null)
                 {
                     return BadRequest();
@@ -4324,11 +4334,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 mergedCells.Value = "AR PER CUSTOMER";
                 mergedCells.Style.Font.Size = 13;
 
-                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A2"].Value = "As of:";
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+
+                worksheet.Cells["B2"].Value = $"{model.AsOfMonthYear!.Value:MMMM yyyy}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
