@@ -3986,7 +3986,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
+                    .GetARPerCustomerReport(model.DateTo, companyClaims, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4315,7 +4315,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
+                    .GetARPerCustomerReport(model.DateTo, companyClaims, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
