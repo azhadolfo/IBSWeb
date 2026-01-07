@@ -206,5 +206,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal TaxPercent { get; set; }
+
+        public bool IsPayroll { get; set; }
     }
 }

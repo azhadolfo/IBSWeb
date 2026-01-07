@@ -749,8 +749,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .OrderBy(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                var isForTheBir = false;
-
                 foreach (var invoice in invoicingVoucher)
                 {
                     var cv = viewModel.PaymentDetails.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
@@ -774,9 +772,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     getCvDetails.AmountPaid += cv.AmountPaid;
-                    isForTheBir = getCvDetails.SupplierId == 133
-                                  && invoice.SupplierId != 133
-                                  && !getCvDetails.IsUserSelected; //BIR Supplier Id
                 }
 
                 #endregion
@@ -828,11 +823,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var cv in getCVs)
                 {
-                    if (isForTheBir)
-                    {
-                        continue;
-                    }
-
                     cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
                     cv.CheckVoucherHeaderInvoice.IsPaid = false;
                 }
@@ -863,11 +853,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var payment in updateMultipleInvoicingVoucher)
                 {
-                    if (isForTheBir)
-                    {
-                        continue;
-                    }
-
                     payment.CheckVoucherHeaderInvoice!.AmountPaid += payment.AmountPaid;
                     if (payment.CheckVoucherHeaderInvoice?.AmountPaid >= payment.CheckVoucherHeaderInvoice?.InvoiceAmount)
                     {
@@ -1113,8 +1098,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region--Get Check Voucher Invoicing
 
-                bool isForTheBir = false;
-
                 var invoicingVoucher = (await _unitOfWork.FilprideCheckVoucher
                         .GetAllAsync(cv => viewModel.MultipleCvId!.Contains(cv.CheckVoucherHeaderId), cancellationToken))
                     .OrderBy(cv => cv.CheckVoucherHeaderId)
@@ -1131,7 +1114,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var getCvDetails = await _dbContext.FilprideCheckVoucherDetails
                         .Where(i => cv.CVId == i.CheckVoucherHeaderId &&
-                                    i.SupplierId != null &&
                                     i.SupplierId == viewModel.MultipleSupplierId &&
                                     i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing) &&
                                     i.Amount > 0m)
@@ -1144,9 +1126,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     getCvDetails.AmountPaid += cv.AmountPaid;
-                    isForTheBir = getCvDetails.SupplierId == 133
-                                  && invoice.SupplierId != 133
-                                  && !getCvDetails.IsUserSelected; //BIR Supplier Id
                 }
 
                 #endregion
@@ -1232,17 +1211,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region--Update invoicing voucher
 
                 var updateMultipleInvoicingVoucher = await _dbContext.FilprideMultipleCheckVoucherPayments
-                    .Where(mcvp => viewModel.MultipleCvId!.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
+                    .Where(mcvp => viewModel.MultipleCvId!
+                        .Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
                     .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
                     .ToListAsync(cancellationToken);
 
                 foreach (var payment in updateMultipleInvoicingVoucher)
                 {
-                    if (isForTheBir)
-                    {
-                        continue;
-                    }
-
                     payment.CheckVoucherHeaderInvoice!.AmountPaid += payment.AmountPaid;
                     if (payment.CheckVoucherHeaderInvoice?.AmountPaid >= payment.CheckVoucherHeaderInvoice?.InvoiceAmount)
                     {
@@ -1256,9 +1231,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Check Voucher Details --
 
-                List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
+                List<FilprideCheckVoucherDetail> checkVoucherDetails = [];
 
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
                     if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                     {
@@ -1357,15 +1332,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvd =>
                         cvd.CheckVoucherHeader!.PostedBy != null &&
                         cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
-                        (
-                            (cvd.CheckVoucherHeader.SupplierId != null &&
-                             cvd.CheckVoucherHeader.SupplierId == supplierId &&
-                             !cvd.CheckVoucherHeader.IsPaid) ||
-                            (cvd.SupplierId != null &&
-                             cvd.SupplierId == supplierId &&
-                             cvd.Amount > cvd.AmountPaid &&
-                             cvd.AccountName == "AP-Non Trade Payable")
-                        ));
+                        !cvd.CheckVoucherHeader.IsPaid &&
+                        cvd.SupplierId == supplierId &&
+                        cvd.Amount > cvd.AmountPaid);
 
                 if (paymentId != null)
                 {
@@ -1377,7 +1346,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Include existing records in the query
                     query = query.Union(_dbContext.FilprideCheckVoucherDetails
                         .Include(cvd => cvd.CheckVoucherHeader)
-                        .Where(cvd => cvd.SupplierId == supplierId && existingInvoiceIds.Contains(cvd.CheckVoucherHeaderId)));
+                        .Where(cvd => cvd.SupplierId == supplierId
+                                      && existingInvoiceIds.Contains(cvd.CheckVoucherHeaderId)));
                 }
 
                 var checkVouchers = await query.ToListAsync(cancellationToken);
@@ -1416,11 +1386,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var invoices = await _dbContext.FilprideCheckVoucherDetails
-                .Include(i => i.Supplier)
                 .Include(i => i.CheckVoucherHeader)
                 .Where(i => cvId.Contains(i.CheckVoucherHeaderId) &&
                             i.SupplierId == supplierId &&
-                            i.AccountName == "AP-Non Trade Payable")
+                            i.Amount > 0)
                 .ToListAsync(cancellationToken);
 
             // Get the first CV's particulars
@@ -1438,14 +1407,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CvId = invoice.CheckVoucherHeaderId,
                     CvNumber = invoice.TransactionNo,
-                    Balance = invoice.Credit,
+                    Balance = invoice.Amount,
                 });
             }
 
 
             foreach (var invoice in groupedInvoices)
             {
-                var balance = invoice.Sum(i => i.Credit);
+                var balance = invoice.Sum(i => i.Amount);
                 journalEntries.Add(new
                 {
                     AccountNumber = invoice.First().AccountNo,
