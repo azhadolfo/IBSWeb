@@ -366,6 +366,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
                 var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
                 var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                var bir = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
 
                 foreach (var accountEntry in viewModel.AccountingEntries!)
                 {
@@ -444,6 +446,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                         Debit = 0,
                         Credit = apNontradeAmount,
+                        Amount = apNontradeAmount,
                         SupplierId = checkVoucherHeader.SupplierId
                     });
                 }
@@ -459,7 +462,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -474,7 +477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -489,7 +492,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -504,7 +507,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -746,6 +749,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
                 var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
                 var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                var bir = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"), cancellationToken);
 
                 foreach (var accountEntry in viewModel.AccountingEntries!)
                 {
@@ -823,6 +828,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                         Debit = 0,
                         Credit = apNontradeAmount,
+                        Amount = apNontradeAmount,
                         SupplierId = existingModel.SupplierId
                     });
                 }
@@ -838,7 +844,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -853,7 +859,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -868,7 +874,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
@@ -883,7 +889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
-                        SupplierId = 133
+                        SupplierId = bir!.SupplierId
                     });
                 }
 
