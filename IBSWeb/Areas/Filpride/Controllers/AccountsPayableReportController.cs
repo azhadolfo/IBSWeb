@@ -703,7 +703,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var header in cvTradeHeaderReport)
                 {
-                    foreach (var details in header.Details!.OrderBy(d => d.Debit))
+                    foreach (var details in header.Details!
+                                 .Where(x => !x.IsDisplayEntry)
+                                 .OrderByDescending(d => d.Debit))
                     {
                         var subAccountName = details.Supplier?.SupplierName
                                              ?? details.Customer?.CustomerName
