@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var tugMasterCSVPath = "C:\\csv\\tugMaster.csv";
                 var vesselCSVPath = "C:\\csv\\vessel.csv";
 
-                var dispatchTicketCSVPath = "C:\\csv\\dispatchTest.CSV";
+                var dispatchTicketCSVPath = "C:\\csv\\dispatch.CSV";
                 var billingCSVPath = "C:\\csv\\billing.CSV";
                 var collectionCSVPath = "C:\\csv\\collection.CSV";
 
