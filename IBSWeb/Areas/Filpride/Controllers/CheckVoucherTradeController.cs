@@ -1266,7 +1266,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var ledgers = new List<FilprideGeneralLedgerBook>();
                 foreach (var details in modelDetails.Where(x => !x.IsDisplayEntry))
                 {
-                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo)
+                                  ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+
                     ledgers.Add(
                             new FilprideGeneralLedgerBook
                             {
@@ -1281,13 +1283,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = modelHeader.Company,
                                 CreatedBy = modelHeader.PostedBy,
                                 CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                BankAccountId = details.BankId,
-                                BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
-                                SupplierId = details.SupplierId,
-                                SupplierName = details.Supplier?.SupplierName,
+                                ///TODO resolve this and align to current GL design
+                                // BankAccountId = details.BankId,
+                                // BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
+                                // SupplierId = details.SupplierId,
+                                // SupplierName = details.Supplier?.SupplierName,
                                 ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
+
                 }
 
                 if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))

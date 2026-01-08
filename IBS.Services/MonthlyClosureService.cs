@@ -263,7 +263,6 @@ namespace IBS.Services
                     .Where(gl =>
                         gl.Date.Month == previousMonth.Month &&
                         gl.Date.Year == previousMonth.Year &&
-                        gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
                         gl.Company == "Filpride") // TODO Make this dynamic later on
                     .ToListAsync(cancellationToken);
 

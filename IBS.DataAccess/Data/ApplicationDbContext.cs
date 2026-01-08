@@ -1099,34 +1099,9 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideGeneralLedgerBook>(gl =>
             {
-                gl.HasOne(gl => gl.Supplier)
-                .WithMany()
-                .HasForeignKey(gl => gl.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.Customer)
-                .WithMany()
-                .HasForeignKey(gl => gl.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.BankAccount)
-                .WithMany()
-                .HasForeignKey(gl => gl.BankAccountId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.Employee)
-                    .WithMany()
-                    .HasForeignKey(gl => gl.EmployeeId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 gl.HasOne(gl => gl.Account)
                     .WithMany()
                     .HasForeignKey(gl => gl.AccountId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.CompanyModel)
-                    .WithMany()
-                    .HasForeignKey(gl => gl.CompanyId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

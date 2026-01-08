@@ -104,7 +104,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -350,7 +349,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -607,7 +605,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -808,7 +805,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -992,7 +988,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= model.DateFrom &&
                         gl.Date <= model.DateTo &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -1003,7 +998,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < model.DateFrom &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -1217,7 +1211,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= dateFrom &&
                         gl.Date <= dateTo &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -1228,7 +1221,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < dateFrom &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -1442,7 +1434,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -1722,7 +1713,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 

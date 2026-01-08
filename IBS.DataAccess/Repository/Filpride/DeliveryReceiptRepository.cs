@@ -3,7 +3,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -295,8 +294,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = arTradeCwtAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = deliveryReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
                     });
                 }
@@ -314,8 +313,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = arTradeCwvAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = deliveryReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
                     });
                 }
@@ -331,10 +330,15 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = netOfEwtAmount,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.PostedBy,
-                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
-                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName,
+                    CreatedBy = deliveryReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SubAccountType = SubAccountType.Customer,
+                    SubAccountId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
+                        ? deliveryReceipt.CustomerId
+                        : null,
+                    SubAccountName = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
+                        ? deliveryReceipt.CustomerOrderSlip.CustomerName
+                        : null,
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -349,8 +353,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = netOfVatAmount,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.PostedBy,
-                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = deliveryReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -365,8 +369,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = vatAmount,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.PostedBy,
-                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = deliveryReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -387,8 +391,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = cogsNetOfVat,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.PostedBy,
-                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = deliveryReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -403,8 +407,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = cogsNetOfVat,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.PostedBy,
-                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = deliveryReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -432,8 +436,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = freightNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
 
@@ -452,8 +456,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = freightVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
                     }
@@ -476,8 +480,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = eccNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
 
@@ -496,8 +500,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = eccVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
                     }
@@ -525,10 +529,11 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = totalFreightNetOfEwt,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        SupplierId = deliveryReceipt.HaulerId,
-                        SupplierName = deliveryReceipt.HaulerName,
+                        CreatedBy = deliveryReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = deliveryReceipt.HaulerId,
+                        SubAccountName = deliveryReceipt.HaulerName,
                         ModuleType = nameof(ModuleType.Sales)
                     });
 
@@ -545,8 +550,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = totalFreightEwtAmount,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
                     }
@@ -576,8 +581,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = commissionGrossAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = deliveryReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
                     });
 
@@ -592,10 +597,11 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = commissionNetOfEwt,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.PostedBy,
-                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
+                        CreatedBy = deliveryReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = deliveryReceipt.CommissioneeId,
+                        SubAccountName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
                         ModuleType = nameof(ModuleType.Sales)
                     });
 
@@ -612,8 +618,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedBy = deliveryReceipt.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
                         });
                     }
@@ -775,8 +781,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder.SupplierId,
-                    SupplierName = dr.PurchaseOrder.SupplierName
+                    SubAccountType = SubAccountType.Supplier,
+                    SubAccountId = dr.PurchaseOrder.SupplierId,
+                    SubAccountName = dr.PurchaseOrder.SupplierName
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -867,8 +874,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder.SupplierId,
-                    SupplierName = dr.PurchaseOrder.SupplierName
+                    SubAccountType = SubAccountType.Supplier,
+                    SubAccountId = dr.PurchaseOrder.SupplierId,
+                    SubAccountName = dr.PurchaseOrder.SupplierName
                 });
 
                 journalBooks.Add(new FilprideJournalBook
@@ -1041,8 +1049,13 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
-                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName,
+                    SubAccountType = SubAccountType.Customer,
+                    SubAccountId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
+                        ? deliveryReceipt.CustomerId
+                        : null,
+                    SubAccountName = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
+                        ? deliveryReceipt.CustomerOrderSlip.CustomerName
+                        : null,
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -1155,8 +1168,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = deliveryReceipt.CommissioneeId,
-                    SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
+                    SubAccountType = SubAccountType.Supplier,
+                    SubAccountId = deliveryReceipt.CommissioneeId,
+                    SubAccountName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
                     ModuleType = nameof(ModuleType.Sales)
                 });
 
@@ -1280,8 +1294,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = deliveryReceipt.HaulerId,
-                    SupplierName = deliveryReceipt.HaulerName,
+                    SubAccountType = SubAccountType.Supplier,
+                    SubAccountId = deliveryReceipt.HaulerId,
+                    SubAccountName = deliveryReceipt.HaulerName,
                     ModuleType = nameof(ModuleType.Sales)
                 });
 

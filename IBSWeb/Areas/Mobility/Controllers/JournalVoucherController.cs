@@ -416,7 +416,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                         Debit = details.Debit,
                                         Credit = details.Credit,
                                         Company = nameof(Mobility),
-                                        CreatedBy = modelHeader.CreatedBy,
+                                        CreatedBy = modelHeader.CreatedBy!,
                                         CreatedDate = modelHeader.CreatedDate
                                     }
                                 );

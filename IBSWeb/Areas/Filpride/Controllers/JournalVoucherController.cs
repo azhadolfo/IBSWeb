@@ -396,8 +396,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = details.Debit,
                             Credit = details.Credit,
                             Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
+                            CreatedBy = modelHeader.CreatedBy!,
+                            CreatedDate = modelHeader.CreatedDate,
                         }
                     );
                 }
