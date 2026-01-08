@@ -705,7 +705,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     foreach (var details in header.Details!
                                  .Where(x => !x.IsDisplayEntry)
-                                 .OrderBy(d => d.Debit))
+                                 .OrderByDescending(d => d.Debit))
                     {
                         var subAccountName = details.Supplier?.SupplierName
                                              ?? details.Customer?.CustomerName
