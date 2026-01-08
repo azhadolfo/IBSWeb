@@ -157,6 +157,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -168,7 +170,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Reference").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Description").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Title").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account No").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Sub-Account").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Debit").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Credit").SemiBold();
                                 });
@@ -182,7 +186,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Reference);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Description);
-                                    table.Cell().Border(0.5f).Padding(3).Text($"{record.AccountNo} {record.AccountTitle}");
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountTitle);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SubAccountName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Debit != 0 ? record.Debit < 0 ? $"({Math.Abs(record.Debit).ToString(SD.Two_Decimal_Format)})" : record.Debit.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Debit < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Credit != 0 ? record.Credit < 0 ? $"({Math.Abs(record.Credit).ToString(SD.Two_Decimal_Format)})" : record.Credit.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Credit < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -192,7 +198,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalDebit != 0 ? totalDebit < 0 ? $"({Math.Abs(totalDebit).ToString(SD.Two_Decimal_Format)})" : totalDebit.ToString(SD.Two_Decimal_Format) : null).SemiBold().FontColor(totalDebit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCredit != 0 ? totalCredit < 0 ? $"({Math.Abs(totalCredit).ToString(SD.Two_Decimal_Format)})" : totalCredit.ToString(SD.Two_Decimal_Format) : null).SemiBold().FontColor(totalCredit < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -299,7 +305,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["I7"].Value = "Posted By";
 
                     // Apply styling to the header row
-                    using (var range = worksheet.Cells["A7:H7"])
+                    using (var range = worksheet.Cells["A7:I7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -327,8 +333,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper();
 
                         worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
                         row++;
                     }
@@ -496,8 +502,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -568,7 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     #region -- Sub Total
 
-                                        table.Cell().ColumnSpan(7).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text($"Total {grouped.Key}").SemiBold();
+                                        table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text($"Total {grouped.Key}").SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(debit.ToString(SD.Two_Decimal_Format)).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(credit.ToString(SD.Two_Decimal_Format)).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(balance.ToString(SD.Two_Decimal_Format)).SemiBold();
@@ -588,7 +592,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(7).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTAL:").Bold();
+                                table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTAL:").Bold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(debit != 0 ? debit < 0 ? $"({Math.Abs(debit).ToString(SD.Two_Decimal_Format)})" : debit.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(debit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(credit != 0 ? credit < 0 ? $"({Math.Abs(credit).ToString(SD.Two_Decimal_Format)})" : credit.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(credit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(balance != 0 ? balance < 0 ? $"({Math.Abs(balance).ToString(SD.Two_Decimal_Format)})" : balance.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(balance < 0 ? Colors.Red.Medium : Colors.Black);
@@ -761,7 +765,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
-                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    using (var range = worksheet.Cells[row, 1, row, 8])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
