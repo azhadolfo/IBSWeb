@@ -78,11 +78,6 @@ namespace IBS.DataAccess.Migrations
                 name: "ix_filpride_general_ledger_books_sub_account",
                 table: "filpride_general_ledger_books",
                 columns: new[] { "sub_account_type", "sub_account_id" });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_filpride_general_ledger_books_sub_account_code",
-                table: "filpride_general_ledger_books",
-                column: "sub_account_code");
         }
 
         /// <inheritdoc />

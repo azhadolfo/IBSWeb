@@ -1,7 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
@@ -14,6 +13,8 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, string userName, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default);
+
+        Task ReJournalPurchaseEntry(FilprideReceivingReport model, CancellationToken cancellationToken = default);
 
         Task VoidReceivingReportAsync(int receivingReportId, string currentUser, CancellationToken cancellationToken = default);
 

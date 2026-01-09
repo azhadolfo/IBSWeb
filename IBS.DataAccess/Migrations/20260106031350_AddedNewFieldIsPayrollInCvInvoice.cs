@@ -24,6 +24,20 @@ namespace IBS.DataAccess.Migrations
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
+
+            // Update the record
+            migrationBuilder.Sql(@"
+                update public.filpride_check_voucher_headers
+                set is_payroll = true
+                where supplier_id is null and cv_Type = 'Invoicing';
+            ");
+
+            // To update null payee
+            migrationBuilder.Sql(@"
+                update public.filpride_check_voucher_headers
+                set payee = 'FILPRIDE RESOURCES, INC.'
+                where payee is null;
+            ");
         }
 
         /// <inheritdoc />
