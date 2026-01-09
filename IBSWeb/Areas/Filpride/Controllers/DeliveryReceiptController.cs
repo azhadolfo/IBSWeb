@@ -1401,5 +1401,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalSales(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var drs = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(x =>
+                            x.VoidedBy == null &&
+                            x.CanceledDate == null &&
+                            x.DeliveredDate.HasValue &&
+                            x.DeliveredDate.Value.Month == month &&
+                            x.DeliveredDate.Value.Year == year,
+                        cancellationToken);
+
+                if (!drs.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var dr in drs
+                             .OrderBy(x => x.DeliveredDate))
+                {
+                    #region--Inventory Recording
+
+                    await _unitOfWork.FilprideInventory.AddSalesToInventoryAsync(dr, cancellationToken);
+
+                    #endregion
+
+                    await _unitOfWork.FilprideDeliveryReceipt.PostAsync(dr, cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = drs.Count() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
     }
 }

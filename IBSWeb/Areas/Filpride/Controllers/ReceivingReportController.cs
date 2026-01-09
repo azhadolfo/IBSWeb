@@ -1023,9 +1023,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var receivingReports = await _unitOfWork.FilprideReceivingReport
                     .GetAllAsync(x =>
-                        x.Status == nameof(Status.Posted)
-                        && x.Date.Month == month
-                        && x.Date.Year == year,
+                        x.Status == nameof(Status.Posted) &&
+                        x.Date.Month == month &&
+                        x.Date.Year == year,
                         cancellationToken);
 
                 if (!receivingReports.Any())
@@ -1033,7 +1033,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return Json(new { sucess = true, message = "No records were returned." });
                 }
 
-                foreach (var receivingReport in receivingReports)
+                foreach (var receivingReport in receivingReports
+                             .OrderBy(x => x.Date))
                 {
                     await _unitOfWork.FilprideReceivingReport
                         .ReJournalPurchaseEntry(receivingReport, cancellationToken);

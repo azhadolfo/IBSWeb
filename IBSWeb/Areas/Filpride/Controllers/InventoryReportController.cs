@@ -409,7 +409,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var firstEntry = group
                         .OrderBy(e => e.Date).ThenBy(x => x.Particular)
-                        .ThenBy(x => x.Reference).FirstOrDefault();
+                        .ThenBy(x => x.Reference)
+                        .FirstOrDefault();
 
                     if (firstEntry != null)
                     {
@@ -562,15 +563,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Calculate averages
-                var grandTotalInventoryBalance = grandTotalPurchasesQty != 0 && grandTotalSalesQty != 0
+                var grandTotalInventoryBalance = grandTotalPurchasesQty > 0 || grandTotalSalesQty > 0
                     ? grandTotalPurchasesQty-grandTotalSalesQty : 0m;
-                var grandTotalTotalBalance = grandTotalPurchasesAmt != 0 && grandTotalSalesAmt != 0
+                var grandTotalTotalBalance = grandTotalPurchasesAmt > 0 || grandTotalSalesAmt > 0
                     ? grandTotalPurchasesAmt-grandTotalSalesAmt : 0m;
-                var grandTotalAverageCost = grandTotalInventoryBalance != 0 && grandTotalTotalBalance != 0
+                var grandTotalAverageCost = grandTotalInventoryBalance > 0 || grandTotalTotalBalance > 0
                     ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
-                var grandTotalPurchasesAverageCost = grandTotalPurchasesQty != 0 && grandTotalPurchasesAmt != 0
+                var grandTotalPurchasesAverageCost = grandTotalPurchasesQty > 0 && grandTotalPurchasesAmt > 0
                     ? grandTotalPurchasesAmt / grandTotalPurchasesQty : 0m;
-                var grandTotalSalesAverageCost = grandTotalSalesQty != 0 && grandTotalSalesAmt != 0
+                var grandTotalSalesAverageCost = grandTotalSalesQty > 0 || grandTotalSalesAmt > 0
                     ? grandTotalSalesAmt / grandTotalSalesQty : 0m;
 
                 // Title cell
