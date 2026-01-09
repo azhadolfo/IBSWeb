@@ -5,8 +5,8 @@ using IBS.Models.Filpride.Integrated;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {

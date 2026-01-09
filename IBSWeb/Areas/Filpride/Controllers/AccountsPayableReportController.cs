@@ -12,10 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -445,11 +445,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                       cvd.CheckVoucherHeader.Date <= dateTo)
                         .Include(cvd => cvd.CheckVoucherHeader)
                         .ThenInclude(cvh => cvh!.Supplier)
-                        .Include(cvd => cvd.Employee)
-                        .Include(cvd => cvd.Supplier)
-                        .Include(cvd => cvd.BankAccount)
-                        .Include(cvd => cvd.Company)
-                        .Include(cvd => cvd.Customer)
                         .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
                         .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
                         .ThenByDescending(cvd => cvd.Debit)
@@ -513,12 +508,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var inv in nonTradeInvoiceReport)
                 {
-                    var subAccountName = inv.Supplier?.SupplierName
-                                         ?? inv.Customer?.CustomerName
-                                         ?? inv.Employee?.GetFullName()
-                                         ?? inv.Company?.CompanyName
-                                         ?? inv.BankAccount?.AccountName
-                                         ?? string.Empty;
                     col = 1;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
@@ -530,7 +519,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
-                    worksheet.Cells[row, col].Value = subAccountName.ToUpper(); col++;
+                    worksheet.Cells[row, col].Value = inv.SubAccountName; col++;
                     worksheet.Cells[row, col].Value = inv.Debit; col++;
                     worksheet.Cells[row, col].Value = inv.Credit; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
@@ -617,15 +606,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             cvh.Date >= dateFrom &&
                             cvh.Date <= dateTo)
                         .Include(cvh => cvh.Details!)
-                        .ThenInclude(cvd => cvd.Supplier)
-                        .Include(cvh => cvh.Details!)
-                        .ThenInclude(cvd => cvd.Employee)
-                        .Include(cvh => cvh.Details!)
-                        .ThenInclude(cvd => cvd.BankAccount)
-                        .Include(cvh => cvh.Details!)
-                        .ThenInclude(cvd => cvd.Customer)
-                        .Include(cvh => cvh.Details!)
-                        .ThenInclude(cvd => cvd.Company)
                         .Include(cvh => cvh.Supplier)
                         .OrderBy(cvh => cvh.Date)
                         .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
@@ -707,13 +687,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                  .Where(x => !x.IsDisplayEntry)
                                  .OrderByDescending(d => d.Debit))
                     {
-                        var subAccountName = details.Supplier?.SupplierName
-                                             ?? details.Customer?.CustomerName
-                                             ?? details.Employee?.GetFullName()
-                                             ?? details.Company?.CompanyName
-                                             ?? details.BankAccount?.AccountName
-                                             ?? string.Empty;
-
                         col = 1;
                         worksheet.Cells[row, col].Value = header.Date.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
@@ -760,7 +733,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var rr = deliveryReceipts.FirstOrDefault(r => r.DeliveryReceiptId == cvTradeRr.DocumentId);
                                         if (rr != null)
                                         {
-                                            rrListOfString.Add(rr.DeliveryReceiptNo!);
+                                            rrListOfString.Add(rr.DeliveryReceiptNo);
                                         }
                                     }
                                 }
@@ -780,7 +753,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         worksheet.Cells[row, col].Value = details.AccountNo; col++;
                         worksheet.Cells[row, col].Value = details.AccountName; col++;
-                        worksheet.Cells[row, col].Value = subAccountName.ToUpper(); col++;
+                        worksheet.Cells[row, col].Value = details.SubAccountName; col++;
                         worksheet.Cells[row, col].Value = details.Debit; col++;
                         worksheet.Cells[row, col].Value = details.Credit; col++;
                         worksheet.Cells[row, col].Value = header.Status;

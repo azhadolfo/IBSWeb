@@ -3,8 +3,8 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.Models.Bienes;
 using IBS.Models.Bienes.ViewModels;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 

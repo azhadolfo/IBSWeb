@@ -1,11 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -101,12 +101,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var generalLedgerBooks = await _db
                 .FilprideGeneralLedgerBooks
                 .Where(i => i.Company == company && i.Date >= dateFrom && i.Date <= dateTo && i.IsPosted)
-                .Include(i => i.BankAccount)
-                .Include(i => i.Customer)
-                .Include(i => i.Supplier)
                 .Include(i => i.Account)
-                .Include(i => i.Employee)
-                .Include(i => i.CompanyModel)
                 .OrderBy(i => i.Date)
                 .ThenBy(i => i.Reference)
                 .ThenByDescending(i => i.Debit)

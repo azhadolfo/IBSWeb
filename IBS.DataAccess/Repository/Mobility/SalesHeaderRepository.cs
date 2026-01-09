@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
 using CsvHelper;
+using IBS.Models.Enums;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Mobility

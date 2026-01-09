@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -407,8 +407,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        CustomerId = model.CustomerId,
-                        CustomerName = model.CustomerName,
+                        SubAccountType = SubAccountType.Customer,
+                        SubAccountId = model.CustomerId,
+                        SubAccountName = model.CustomerName,
                         ModuleType = nameof(ModuleType.Sales)
                     }
                 );
@@ -1005,17 +1006,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     IsPosted = true,
                     Company = originalEntry.Company,
-                    BankAccountId = originalEntry.BankAccountId,
-                    CustomerId = originalEntry.CustomerId,
-                    SupplierId = originalEntry.SupplierId,
                     AccountId = originalEntry.AccountId,
-                    EmployeeId = originalEntry.EmployeeId,
-                    CompanyId = originalEntry.CompanyId,
-                    BankAccountName = originalEntry.BankAccountName,
-                    CompanyName = originalEntry.CompanyName,
-                    CustomerName = originalEntry.CustomerName,
-                    EmployeeName = originalEntry.EmployeeName,
-                    SupplierName = originalEntry.SupplierName,
+                    SubAccountType = originalEntry.SubAccountType,
+                    SubAccountId = originalEntry.SubAccountId,
+                    SubAccountName = originalEntry.SubAccountName,
                     ModuleType = originalEntry.ModuleType,
                 };
 

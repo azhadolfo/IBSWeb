@@ -4,13 +4,13 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Status = IBS.Utility.Enums.Status;
+using Status = IBS.Models.Enums.Status;
 
 namespace IBS.DataAccess.Repository.Mobility
 {

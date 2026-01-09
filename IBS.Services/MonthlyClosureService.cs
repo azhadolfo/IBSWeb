@@ -2,10 +2,10 @@ using Google.Apis.Drive.v3.Data;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -263,7 +263,6 @@ namespace IBS.Services
                     .Where(gl =>
                         gl.Date.Month == previousMonth.Month &&
                         gl.Date.Year == previousMonth.Year &&
-                        gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
                         gl.Company == "Filpride") // TODO Make this dynamic later on
                     .ToListAsync(cancellationToken);
 

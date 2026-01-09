@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -396,8 +396,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = details.Debit,
                             Credit = details.Credit,
                             Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
+                            CreatedBy = modelHeader.CreatedBy!,
+                            CreatedDate = modelHeader.CreatedDate,
                         }
                     );
                 }
@@ -1170,7 +1170,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet6.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
                     worksheet6.Cells[cvdRow, 8].Value = item.Amount;
                     worksheet6.Cells[cvdRow, 9].Value = item.AmountPaid;
-                    worksheet6.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet6.Cells[cvdRow, 10].Value = item.SubAccountId;
                     worksheet6.Cells[cvdRow, 11].Value = item.EwtPercent;
                     worksheet6.Cells[cvdRow, 12].Value = item.IsUserSelected;
                     worksheet6.Cells[cvdRow, 13].Value = item.IsVatable;

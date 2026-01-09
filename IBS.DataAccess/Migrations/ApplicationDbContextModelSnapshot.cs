@@ -440,33 +440,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_paid");
 
-                    b.Property<int?>("BankId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bank_id");
-
                     b.Property<int>("CheckVoucherHeaderId")
                         .HasColumnType("integer")
                         .HasColumnName("check_voucher_header_id");
-
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("company_id");
 
                     b.Property<decimal>("Credit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("employee_id");
 
                     b.Property<decimal>("EwtPercent")
                         .HasColumnType("numeric(18,4)")
@@ -484,9 +468,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_vatable");
 
-                    b.Property<int?>("SupplierId")
+                    b.Property<int?>("SubAccountId")
                         .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
+                        .HasColumnName("sub_account_id");
+
+                    b.Property<string>("SubAccountName")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("sub_account_name");
+
+                    b.Property<int?>("SubAccountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("sub_account_type");
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
@@ -497,23 +489,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CheckVoucherDetailId")
                         .HasName("pk_filpride_check_voucher_details");
 
-                    b.HasIndex("BankId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_bank_id");
-
                     b.HasIndex("CheckVoucherHeaderId")
                         .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
-
-                    b.HasIndex("CompanyId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_company_id");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_customer_id");
-
-                    b.HasIndex("EmployeeId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_employee_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
 
                     b.ToTable("filpride_check_voucher_details", (string)null);
                 });
@@ -2644,7 +2621,7 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("GeneralLedgerBookId"));
 
-                    b.Property<int?>("AccountId")
+                    b.Property<int>("AccountId")
                         .HasColumnType("integer")
                         .HasColumnName("account_id");
 
@@ -2658,28 +2635,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("account_title");
 
-                    b.Property<int?>("BankAccountId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bank_account_id");
-
-                    b.Property<string>("BankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("company");
 
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("company_id");
-
-                    b.Property<string>("CompanyName")
-                        .HasColumnType("text")
-                        .HasColumnName("company_name");
-
                     b.Property<string>("CreatedBy")
+                        .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("created_by");
 
@@ -2690,14 +2652,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Credit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit");
-
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
@@ -2711,14 +2665,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("employee_id");
-
-                    b.Property<string>("EmployeeName")
-                        .HasColumnType("text")
-                        .HasColumnName("employee_name");
 
                     b.Property<bool>("IsPosted")
                         .HasColumnType("boolean")
@@ -2734,34 +2680,23 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("reference");
 
-                    b.Property<int?>("SupplierId")
+                    b.Property<int?>("SubAccountId")
                         .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
+                        .HasColumnName("sub_account_id");
 
-                    b.Property<string>("SupplierName")
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
+                    b.Property<string>("SubAccountName")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("sub_account_name");
+
+                    b.Property<int?>("SubAccountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("sub_account_type");
 
                     b.HasKey("GeneralLedgerBookId")
                         .HasName("pk_filpride_general_ledger_books");
 
                     b.HasIndex("AccountId")
                         .HasDatabaseName("ix_filpride_general_ledger_books_account_id");
-
-                    b.HasIndex("BankAccountId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_bank_account_id");
-
-                    b.HasIndex("CompanyId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_company_id");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_customer_id");
-
-                    b.HasIndex("EmployeeId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_employee_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_supplier_id");
 
                     b.ToTable("filpride_general_ledger_books", (string)null);
                 });
@@ -11439,11 +11374,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherDetail", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_bank_accounts_bank_");
-
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany("Details")
                         .HasForeignKey("CheckVoucherHeaderId")
@@ -11451,37 +11381,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
 
-                    b.HasOne("IBS.Models.MasterFile.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_companies_company_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_customers_customer_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideEmployee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_employees_employee_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
-
-                    b.Navigation("BankAccount");
-
                     b.Navigation("CheckVoucherHeader");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
@@ -11777,49 +11677,10 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("fk_filpride_general_ledger_books_filpride_chart_of_accounts_ac");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankAccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_filpride_bank_accounts_bank_a");
-
-                    b.HasOne("IBS.Models.MasterFile.Company", "CompanyModel")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_companies_company_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_filpride_customers_customer_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideEmployee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_filpride_employees_employee_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_filpride_suppliers_supplier_id");
-
                     b.Navigation("Account");
-
-                    b.Navigation("BankAccount");
-
-                    b.Navigation("CompanyModel");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideInventory", b =>

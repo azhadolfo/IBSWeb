@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using IBS.Utility.Enums;
+using IBS.Models.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Bienes.ViewModels

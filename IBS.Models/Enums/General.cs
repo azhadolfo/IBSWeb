@@ -1,4 +1,4 @@
-namespace IBS.Utility.Enums
+namespace IBS.Models.Enums
 {
     public enum CustomerType
     {
@@ -119,6 +119,15 @@ namespace IBS.Utility.Enums
         JournalVoucher,
         DebitMemo,
         CreditMemo,
+    }
+
+    public enum SubAccountType
+    {
+        Customer = 1,
+        Supplier = 2,
+        Employee = 3,
+        BankAccount = 4,
+        Company = 5
     }
 
 }

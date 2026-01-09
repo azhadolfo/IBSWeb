@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.AccountsPayable

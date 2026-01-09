@@ -6,7 +6,6 @@ using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

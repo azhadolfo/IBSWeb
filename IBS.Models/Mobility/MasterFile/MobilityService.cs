@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Mobility.MasterFile
@@ -53,7 +52,8 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         public string StationCode { get; set; } = string.Empty;
     }

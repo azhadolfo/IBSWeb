@@ -3,6 +3,7 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
@@ -10,7 +11,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -93,9 +93,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims &&
                                   cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
                                   cvd.CheckVoucherHeader.IsPayroll &&
-                                  cvd.SupplierId.HasValue &&
+                                  cvd.SubAccountId.HasValue &&
                                   cvd.Amount > 0)
-                    .Include(cvd => cvd.Supplier)
                     .Include(cvd => cvd.CheckVoucherHeader)
                     .ThenInclude(cvh => cvh!.Supplier)
                     .ToListAsync(cancellationToken);
@@ -109,7 +108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(s =>
                             s.TransactionNo.ToLower().Contains(searchValue) ||
                             s.CheckVoucherHeader!.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                            s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                            s.SubAccountName?.ToLower().Contains(searchValue) == true ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.AmountPaid.ToString().Contains(searchValue) ||
                             (s.Amount - s.AmountPaid).ToString().Contains(searchValue) ||
@@ -135,8 +134,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.TransactionNo,
                         x.CheckVoucherHeader!.Date,
-                        Payee = x.Supplier!.SupplierName,
-                        x.SupplierId,
+                        Payee = x.SubAccountName,
+                        x.SubAccountId,
                         x.Amount,
                         x.AmountPaid,
                         x.CheckVoucherHeader!.Status,
@@ -313,7 +312,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = subAccount.Debit,
                         Credit = subAccount.Credit,
                         Amount = isPayable ? subAccount.Credit : 0m,
-                        SupplierId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        SubAccountName = supplier?.SupplierName ?? subAccount.MultipleSupplierCodeName?.Split(" ")[1],
                         IsUserSelected = true
                     });
                 }
@@ -385,7 +386,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .Include(s => s.Supplier)
                     .OrderBy(s => s.CheckVoucherDetailId)
                     .ToListAsync(cancellationToken);
 
@@ -406,10 +406,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountTitle = detail.AccountName,
                     Debit = detail.Debit,
                     Credit = detail.Credit,
-                    MultipleSupplierId = detail.SupplierId,
-                    MultipleSupplierCodeName = detail.Supplier != null
-                        ? $"{detail.Supplier.SupplierCode} {detail.Supplier.SupplierName}"
-                        : string.Empty
+                    MultipleSupplierId = detail.SubAccountId,
+                    MultipleSupplierCodeName = detail.SubAccountName
                 }).ToList();
 
                 CheckVoucherNonTradeInvoicingViewModel model = new()
@@ -552,7 +550,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = subAccount.Debit,
                         Credit = subAccount.Credit,
                         Amount = isPayable ? subAccount.Credit : 0m,
-                        SupplierId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = supplier?.SupplierId ?? subAccount.MultipleSupplierId,
+                        SubAccountName = supplier?.SupplierName ?? subAccount.MultipleSupplierCodeName,
                         IsUserSelected = true
                     });
                 }
@@ -796,11 +796,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var details = await _dbContext.FilprideCheckVoucherDetails
-                .Include(cvd => cvd.Supplier)
-                .Include(cvd => cvd.BankAccount)
-                .Include(cvd => cvd.Company)
-                .Include(cvd => cvd.Customer)
-                .Include(cvd => cvd.Employee)
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
@@ -853,9 +848,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
-                .Include(cvd => cvd.Customer)
-                .Include(cvd => cvd.Employee)
-                .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -893,16 +885,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = modelHeader.Company,
                                 CreatedBy = modelHeader.PostedBy,
                                 CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                BankAccountId = details.BankId,
-                                BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccountNumber} {modelHeader.BankAccountName}" : null,
-                                SupplierId = details.SupplierId,
-                                SupplierName = modelHeader.SupplierName,
-                                CustomerId = details.CustomerId,
-                                CustomerName = details.Customer?.CustomerName,
-                                CompanyId = details.CompanyId,
-                                CompanyName = details.Company?.CompanyName,
-                                EmployeeId = details.EmployeeId,
-                                EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
+                                SubAccountType = details.SubAccountType,
+                                SubAccountId = details.SubAccountId,
+                                SubAccountName = details.SubAccountName,
                                 ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );

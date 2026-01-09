@@ -49,16 +49,4 @@
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Update="Areas\Filpride\Views\_ViewImports.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="Areas\Filpride\Views\_ViewStart.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
-
 </Project>

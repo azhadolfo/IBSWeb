@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride.Integrated
 {
