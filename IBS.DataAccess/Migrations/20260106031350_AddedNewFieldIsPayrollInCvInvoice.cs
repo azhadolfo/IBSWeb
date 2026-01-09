@@ -38,6 +38,15 @@ namespace IBS.DataAccess.Migrations
                 set payee = 'FILPRIDE RESOURCES, INC.'
                 where payee is null;
             ");
+
+            // To update null payee
+            migrationBuilder.Sql(@"
+                update public.filpride_check_voucher_details
+                set amount = credit
+                where transaction_no like 'INV%'
+	                and account_no = '202010200'
+	                and credit > 0 and amount = 0;
+            ");
         }
 
         /// <inheritdoc />
