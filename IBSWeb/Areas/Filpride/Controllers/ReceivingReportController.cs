@@ -1013,5 +1013,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(rrIds);
         }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalPurchase(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var receivingReports = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(x =>
+                        x.Status == nameof(Status.Posted)
+                        && x.Date.Month == month
+                        && x.Date.Year == year,
+                        cancellationToken);
+
+                if (!receivingReports.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var receivingReport in receivingReports)
+                {
+                    await _unitOfWork.FilprideReceivingReport
+                        .ReJournalPurchaseEntry(receivingReport, cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = receivingReports.Count() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
     }
 }
