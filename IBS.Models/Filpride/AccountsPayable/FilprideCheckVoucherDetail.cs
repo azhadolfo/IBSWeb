@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -37,11 +38,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(CheckVoucherHeaderId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
-        public int? SupplierId { get; set; }
-
-        [ForeignKey(nameof(SupplierId))]
-        public FilprideSupplier? Supplier { get; set; }
-
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
@@ -55,26 +51,23 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsUserSelected { get; set; }
 
-        public int? BankId { get; set; }
-
-        public int? CompanyId { get; set; }
-
-        public int? CustomerId { get; set; }
-
-        public int? EmployeeId { get; set; }
-
-        [ForeignKey(nameof(BankId))]
-        public FilprideBankAccount? BankAccount { get; set; }
-
-        [ForeignKey(nameof(CompanyId))]
-        public Company? Company { get; set; }
-
-        [ForeignKey(nameof(CustomerId))]
-        public FilprideCustomer? Customer { get; set; }
-
-        [ForeignKey(nameof(EmployeeId))]
-        public FilprideEmployee? Employee { get; set; }
+        // public int? BankId { get; set; }
+        //
+        // public int? CompanyId { get; set; }
+        //
+        // public int? CustomerId { get; set; }
+        //
+        // public int? EmployeeId { get; set; }
+        //
+        //public int? SupplierId { get; set; }
 
         public bool IsDisplayEntry { get; set; }
+
+        public SubAccountType? SubAccountType { get; set; }
+
+        public int? SubAccountId { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string? SubAccountName { get; set; }
     }
 }

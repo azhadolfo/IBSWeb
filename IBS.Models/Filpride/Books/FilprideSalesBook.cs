@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Books
 {
@@ -67,7 +65,8 @@ namespace IBS.Models.Filpride.Books
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [Display(Name = "Due Date")]
         [Column(TypeName = "date")]

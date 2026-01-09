@@ -1,10 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.Models;
+using IBS.Models.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
-using IBS.Utility.Enums;
 
 namespace IBS.Services
 {

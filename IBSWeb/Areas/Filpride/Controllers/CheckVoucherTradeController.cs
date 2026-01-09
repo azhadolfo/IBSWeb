@@ -3,13 +3,13 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -34,18 +34,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ICloudStorageService _cloudStorageService;
 
         private readonly ILogger<CheckVoucherTradeController> _logger;
+        private readonly ISubAccountResolver _subAccountResolver;
 
         public CheckVoucherTradeController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             ICloudStorageService cloudStorageService,
-            ILogger<CheckVoucherTradeController> logger)
+            ILogger<CheckVoucherTradeController> logger,
+            ISubAccountResolver subAccountResolver)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+            _subAccountResolver = subAccountResolver;
         }
 
         private string GetUserFullName()
@@ -344,23 +347,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --CV Details Entry
 
                 var cvDetails = new List<FilprideCheckVoucherDetail>();
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
-                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
                     {
-                        cvDetails.Add(
-                            new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                                SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 1 ? viewModel.BankId : null,
-                            });
+                        continue;
                     }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName = null;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            SubAccountType = subAccountType,
+                            SubAccountId = subAccountId,
+                            SubAccountName = subAccountName,
+                        });
                 }
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
@@ -444,7 +468,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = 0.00m,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        SupplierId = viewModel.SupplierId,
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = viewModel.SupplierId,
+                        SubAccountName = supplier.SupplierName,
                         IsDisplayEntry = true
                     });
 
@@ -487,7 +513,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = netOfEwt,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        BankId = viewModel.BankId,
+                        SubAccountType = SubAccountType.BankAccount,
+                        SubAccountId = viewModel.BankId,
+                        SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                         IsDisplayEntry = true
                     });
 
@@ -784,42 +812,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                #region --CV Details Entry
-
-                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .ToListAsync(cancellationToken);
-
-                _dbContext.RemoveRange(existingDetailsModel);
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                var details = new List<FilprideCheckVoucherDetail>();
-
-                var cashInBank = 0m;
-                for (var i = 0; i < viewModel.AccountTitle.Length; i++)
-                {
-                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
-                    {
-                        continue;
-                    }
-
-                    cashInBank = viewModel.Credit[1];
-
-                    details.Add(new FilprideCheckVoucherDetail
-                    {
-                        AccountNo = viewModel.AccountNumber[i],
-                        AccountName = viewModel.AccountTitle[i],
-                        Debit = viewModel.Debit[i],
-                        Credit = viewModel.Credit[i],
-                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                        CheckVoucherHeaderId = viewModel.CVId,
-                        SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 1 ? viewModel.BankId : null,
-                    });
-                }
-
-                #endregion --CV Details Entry
-
                 #region --Saving the default entries
 
                 #region -- Get Supplier
@@ -846,6 +838,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
+                var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.PONo = viewModel.POSeries;
                 existingHeaderModel.SupplierId = viewModel.SupplierId;
@@ -868,6 +861,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.TaxType = supplier.TaxType;
 
                 #endregion --Saving the default entries
+
+                #region --CV Details Entry
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var details = new List<FilprideCheckVoucherDetail>();
+                for (var i = 0; i < viewModel.AccountTitle.Length; i++)
+                {
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
+                    {
+                        continue;
+                    }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    details.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = viewModel.AccountNumber[i],
+                        AccountName = viewModel.AccountTitle[i],
+                        Debit = viewModel.Debit[i],
+                        Credit = viewModel.Credit[i],
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = viewModel.CVId,
+                        SubAccountType = subAccountType,
+                        SubAccountId = subAccountId,
+                        SubAccountName = subAccountName,
+                    });
+                }
+
+                #endregion --CV Details Entry
 
                 #region -- Partial payment of RR's
 
@@ -972,7 +1016,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = 0.00m,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            SupplierId = viewModel.SupplierId,
+                            SubAccountType = SubAccountType.Supplier,
+                            SubAccountId = viewModel.SupplierId,
+                            SubAccountName = supplier.SupplierName,
                             IsDisplayEntry = true
                         });
 
@@ -1015,7 +1061,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = netOfEwt,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            BankId = viewModel.BankId,
+                            SubAccountType = SubAccountType.BankAccount,
+                            SubAccountId = viewModel.BankId,
+                            SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                             IsDisplayEntry = true
                         });
                     }
@@ -1081,11 +1129,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var details = await _dbContext.FilprideCheckVoucherDetails
-                .Include(cvd => cvd.Supplier)
-                .Include(cvd => cvd.BankAccount)
-                .Include(cvd => cvd.Company)
-                .Include(cvd => cvd.Customer)
-                .Include(cvd => cvd.Employee)
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
@@ -1185,9 +1228,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
-                .Include(cvd => cvd.Supplier)
-                .Include(cvd => cvd.BankAccount)
+            var modelDetails = await _dbContext.FilprideCheckVoucherDetails
+                .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1283,11 +1325,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = modelHeader.Company,
                                 CreatedBy = modelHeader.PostedBy,
                                 CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                ///TODO resolve this and align to current GL design
-                                // BankAccountId = details.BankId,
-                                // BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
-                                // SupplierId = details.SupplierId,
-                                // SupplierName = details.Supplier?.SupplierName,
+                                SubAccountType = details.SubAccountType,
+                                SubAccountId = details.SubAccountId,
+                                SubAccountName = details.SubAccountName,
                                 ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
@@ -1999,7 +2039,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
                     worksheet2.Cells[cvdRow, 8].Value = item.Amount;
                     worksheet2.Cells[cvdRow, 9].Value = item.AmountPaid;
-                    worksheet2.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet2.Cells[cvdRow, 10].Value = item.SubAccountId;
                     worksheet2.Cells[cvdRow, 11].Value = item.EwtPercent;
                     worksheet2.Cells[cvdRow, 12].Value = item.IsUserSelected;
                     worksheet2.Cells[cvdRow, 13].Value = item.IsVatable;
@@ -2027,7 +2067,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
                     worksheet2.Cells[cvdRow, 8].Value = item.Amount;
                     worksheet2.Cells[cvdRow, 9].Value = item.AmountPaid;
-                    worksheet2.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet2.Cells[cvdRow, 10].Value = item.SubAccountId;
                     worksheet2.Cells[cvdRow, 11].Value = item.EwtPercent;
                     worksheet2.Cells[cvdRow, 12].Value = item.IsUserSelected;
                     worksheet2.Cells[cvdRow, 13].Value = item.IsVatable;
@@ -2339,23 +2379,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --CV Details Entry
 
                 var cvDetails = new List<FilprideCheckVoucherDetail>();
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
-                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
                     {
-                        cvDetails.Add(
-                            new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                                SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 1 ? viewModel.BankId : null,
-                            });
+                        continue;
                     }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            SubAccountType = subAccountType,
+                            SubAccountId = subAccountId,
+                            SubAccountName = subAccountName,
+                        });
                 }
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
@@ -2406,7 +2467,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = 0.00m,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        SupplierId = viewModel.SupplierId,
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = viewModel.SupplierId,
+                        SubAccountName = supplier.SupplierName,
                         IsDisplayEntry = true
                     });
 
@@ -2449,7 +2512,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = netOfEwt,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        BankId = viewModel.BankId,
+                        SubAccountType = SubAccountType.BankAccount,
+                        SubAccountId = viewModel.BankId,
+                        SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                         IsDisplayEntry = true
                     });
 
@@ -2686,23 +2751,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --CV Details Entry
 
                 var cvDetails = new List<FilprideCheckVoucherDetail>();
-                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
-                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
                     {
-                        cvDetails.Add(
-                            new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                                SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 1 ? viewModel.BankId : null,
-                            });
+                        continue;
                     }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    cvDetails.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            SubAccountType = subAccountType,
+                            SubAccountId = subAccountId,
+                            SubAccountName = subAccountName,
+                        });
                 }
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
@@ -2753,7 +2839,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = 0.00m,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        SupplierId = viewModel.SupplierId,
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = viewModel.SupplierId,
+                        SubAccountName = supplier.SupplierName,
                         IsDisplayEntry = true
                     });
 
@@ -2796,7 +2884,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = netOfEwt,
                         TransactionNo = cvh.CheckVoucherHeaderNo,
                         CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                        BankId = viewModel.BankId,
+                        SubAccountType = SubAccountType.BankAccount,
+                        SubAccountId = viewModel.BankId,
+                        SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                         IsDisplayEntry = true
                     });
 
@@ -3099,39 +3189,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                #region --CV Details Entry
-
-                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .ToListAsync(cancellationToken);
-
-                _dbContext.RemoveRange(existingDetailsModel);
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                var details = new List<FilprideCheckVoucherDetail>();
-
-                var cashInBank = 0m;
-                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                {
-                    cashInBank = viewModel.Credit[1];
-
-                    details.Add(new FilprideCheckVoucherDetail
-                    {
-                        AccountNo = viewModel.AccountNumber[i],
-                        AccountName = viewModel.AccountTitle[i],
-                        Debit = viewModel.Debit[i],
-                        Credit = viewModel.Credit[i],
-                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                        CheckVoucherHeaderId = viewModel.CvId,
-                        SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 1 ? viewModel.BankId : null,
-                    });
-                }
-
-                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
-
-                #endregion --CV Details Entry
-
                 #region --Saving the default entries
 
                 #region -- Get Supplier
@@ -3158,6 +3215,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
+                var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.SupplierId = viewModel.SupplierId;
                 existingHeaderModel.Particulars = viewModel.Particulars;
@@ -3180,6 +3238,61 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
+
+                #region --CV Details Entry
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var details = new List<FilprideCheckVoucherDetail>();
+
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
+                    {
+                        continue;
+                    }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            SubAccountType = subAccountType,
+                            SubAccountId = subAccountId,
+                            SubAccountName = subAccountName,
+                        });
+                }
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion --CV Details Entry
 
                 #region -- Additional details entry
 
@@ -3231,7 +3344,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = 0.00m,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            SupplierId = viewModel.SupplierId,
+                            SubAccountType = SubAccountType.Supplier,
+                            SubAccountId = viewModel.SupplierId,
+                            SubAccountName = supplier.SupplierName,
                             IsDisplayEntry = true
                         });
 
@@ -3274,7 +3389,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = netOfEwt,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            BankId = viewModel.BankId,
+                            SubAccountType = SubAccountType.BankAccount,
+                            SubAccountId = viewModel.BankId,
+                            SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                             IsDisplayEntry = true
                         });
                     }
@@ -3480,39 +3597,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                #region --CV Details Entry
-
-                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                    .ToListAsync(cancellationToken);
-
-                _dbContext.RemoveRange(existingDetailsModel);
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                var details = new List<FilprideCheckVoucherDetail>();
-
-                var cashInBank = 0m;
-                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                {
-                    cashInBank = viewModel.Credit[1];
-
-                    details.Add(new FilprideCheckVoucherDetail
-                    {
-                        AccountNo = viewModel.AccountNumber[i],
-                        AccountName = viewModel.AccountTitle[i],
-                        Debit = viewModel.Debit[i],
-                        Credit = viewModel.Credit[i],
-                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                        CheckVoucherHeaderId = viewModel.CvId,
-                        SupplierId = i == 0 ? viewModel.SupplierId : null,
-                        BankId = i == 1 ? viewModel.BankId : null,
-                    });
-                }
-
-                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
-
-                #endregion --CV Details Entry
-
                 #region --Saving the default entries
 
                 #region -- Get Supplier
@@ -3539,6 +3623,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
+                var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.SupplierId = viewModel.SupplierId;
                 existingHeaderModel.Total = cashInBank;
@@ -3561,6 +3646,61 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.TaxPercent = supplier.WithholdingTaxPercent ?? 0m;
 
                 #endregion --Saving the default entries
+
+                #region --CV Details Entry
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var details = new List<FilprideCheckVoucherDetail>();
+
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
+                    {
+                        continue;
+                    }
+
+                    SubAccountType? subAccountType;
+                    int? subAccountId;
+                    string? subAccountName = null;
+
+                    if (viewModel.AccountTitle[i].Contains("Cash in Bank"))
+                    {
+                        subAccountType = SubAccountType.BankAccount;
+                        subAccountId = viewModel.BankId!;
+                        subAccountName = $"{bank.AccountNo} {bank.AccountName}";
+
+                    }
+                    else
+                    {
+                        subAccountType = SubAccountType.Supplier;
+                        subAccountId = viewModel.SupplierId;
+                        subAccountName = supplier.SupplierName;
+                    }
+
+                    details.Add(
+                        new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            SubAccountType = subAccountType,
+                            SubAccountId = subAccountId,
+                            SubAccountName = subAccountName,
+                        });
+                }
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion --CV Details Entry
 
                 #region -- Additional details entry
 
@@ -3612,7 +3752,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = 0.00m,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            SupplierId = viewModel.SupplierId,
+                            SubAccountType = SubAccountType.Supplier,
+                            SubAccountId = viewModel.SupplierId,
+                            SubAccountName = supplier.SupplierName,
                             IsDisplayEntry = true
                         });
 
@@ -3655,7 +3797,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = netOfEwt,
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                            BankId = viewModel.BankId,
+                            SubAccountType = SubAccountType.BankAccount,
+                            SubAccountId = viewModel.BankId,
+                            SubAccountName = $"{bank.AccountNo} {bank.AccountName}",
                             IsDisplayEntry = true
                         });
                     }

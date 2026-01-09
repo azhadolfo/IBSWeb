@@ -1,4 +1,4 @@
-namespace IBS.Utility.Enums
+namespace IBS.Models.Enums
 {
     public enum PurchaseTypeEnum
     {

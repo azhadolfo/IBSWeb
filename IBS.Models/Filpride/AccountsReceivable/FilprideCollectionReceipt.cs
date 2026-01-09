@@ -194,7 +194,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public DateOnly[]? MultipleTransactionDate { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         [StringLength(13)]
         public string? Type { get; set; }

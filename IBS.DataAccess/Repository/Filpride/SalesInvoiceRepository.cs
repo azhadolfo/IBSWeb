@@ -3,9 +3,9 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {

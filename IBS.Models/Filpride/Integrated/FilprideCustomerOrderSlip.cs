@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -224,7 +223,8 @@ namespace IBS.Models.Filpride.Integrated
         public string? CreatedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [StringLength(100)]
         public string? EditedBy { get; set; }

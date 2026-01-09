@@ -5,8 +5,8 @@ using IBS.Models.Mobility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Mobility

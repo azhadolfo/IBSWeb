@@ -133,7 +133,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int ReceivingReportId { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         #region Enhancing
 

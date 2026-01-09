@@ -91,7 +91,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         public bool IsPrinted { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         public string? Type { get; set; }
     }

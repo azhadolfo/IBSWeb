@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
-using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models.Bienes
 {
@@ -101,7 +100,8 @@ namespace IBS.Models.Bienes
         public string CreatedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [Column(TypeName = "varchar(100)")]
         public string? PostedBy { get; set; }

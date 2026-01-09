@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using IBS.DataAccess.Data;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

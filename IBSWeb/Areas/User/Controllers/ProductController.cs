@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.User.Controllers

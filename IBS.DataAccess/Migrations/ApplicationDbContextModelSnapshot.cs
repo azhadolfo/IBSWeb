@@ -440,33 +440,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_paid");
 
-                    b.Property<int?>("BankId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bank_id");
-
                     b.Property<int>("CheckVoucherHeaderId")
                         .HasColumnType("integer")
                         .HasColumnName("check_voucher_header_id");
-
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("company_id");
 
                     b.Property<decimal>("Credit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("employee_id");
 
                     b.Property<decimal>("EwtPercent")
                         .HasColumnType("numeric(18,4)")
@@ -484,9 +468,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_vatable");
 
-                    b.Property<int?>("SupplierId")
+                    b.Property<int?>("SubAccountId")
                         .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
+                        .HasColumnName("sub_account_id");
+
+                    b.Property<string>("SubAccountName")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("sub_account_name");
+
+                    b.Property<int?>("SubAccountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("sub_account_type");
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
@@ -497,23 +489,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CheckVoucherDetailId")
                         .HasName("pk_filpride_check_voucher_details");
 
-                    b.HasIndex("BankId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_bank_id");
-
                     b.HasIndex("CheckVoucherHeaderId")
                         .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
-
-                    b.HasIndex("CompanyId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_company_id");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_customer_id");
-
-                    b.HasIndex("EmployeeId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_employee_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
 
                     b.ToTable("filpride_check_voucher_details", (string)null);
                 });
@@ -2711,7 +2688,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("sub_account_name");
 
-                    b.Property<int>("SubAccountType")
+                    b.Property<int?>("SubAccountType")
                         .HasColumnType("integer")
                         .HasColumnName("sub_account_type");
 
@@ -11397,11 +11374,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherDetail", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_bank_accounts_bank_");
-
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany("Details")
                         .HasForeignKey("CheckVoucherHeaderId")
@@ -11409,37 +11381,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
 
-                    b.HasOne("IBS.Models.MasterFile.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_companies_company_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_customers_customer_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideEmployee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_employees_employee_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
-
-                    b.Navigation("BankAccount");
-
                     b.Navigation("CheckVoucherHeader");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>

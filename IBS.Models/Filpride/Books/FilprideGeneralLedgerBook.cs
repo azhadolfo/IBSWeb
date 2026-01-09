@@ -1,10 +1,7 @@
 using IBS.Models.Filpride.MasterFile;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.MasterFile;
-using IBS.Utility;
-using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
+using IBS.Models.Enums;
 
 namespace IBS.Models.Filpride.Books
 {
@@ -44,7 +41,8 @@ namespace IBS.Models.Filpride.Books
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         public bool IsPosted { get; set; } = true;
 

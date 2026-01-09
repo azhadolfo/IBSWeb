@@ -106,7 +106,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsPrinted { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         #region--SUB PO
 

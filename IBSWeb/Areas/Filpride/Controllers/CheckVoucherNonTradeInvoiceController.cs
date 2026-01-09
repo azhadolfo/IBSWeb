@@ -5,6 +5,7 @@ using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
@@ -12,7 +13,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -41,12 +41,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ICacheService _cacheService;
 
+        private readonly ISubAccountResolver _subAccountResolver;
+
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             ICloudStorageService cloudStorageService,
             ILogger<CheckVoucherNonTradeInvoiceController> logger,
-            ICacheService cacheService)
+            ICacheService cacheService,
+            ISubAccountResolver subAccountResolver)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
@@ -54,6 +57,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _cloudStorageService = cloudStorageService;
             _logger = logger;
             _cacheService = cacheService;
+            _subAccountResolver = subAccountResolver;
         }
 
         private string GetUserFullName()
@@ -375,6 +379,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var accountNo = parts[0];
                     var accountName = parts[1];
 
+                    var (subAccountType, subAccountId) = SubAccountHelper.DetermineCvSubAccount(
+                        accountEntry.CustomerMasterFileId,
+                        accountEntry.SupplierMasterFileId,
+                        accountEntry.EmployeeMasterFileId,
+                        accountEntry.BankMasterFileId,
+                        accountEntry.CompanyMasterFileId
+                    );
+
+                    string? subAccountName = null;
+
+                    if (subAccountType.HasValue && subAccountId.HasValue)
+                    {
+                        var subAccountInfo = await _subAccountResolver.ResolveAsync(
+                            subAccountType.Value,
+                            subAccountId.Value,
+                            cancellationToken
+                        );
+
+                        if (subAccountInfo != null)
+                        {
+                            subAccountName = subAccountInfo.Name;
+                        }
+                    }
+
                     checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                     {
                         AccountNo = accountNo,
@@ -383,17 +411,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                         Debit = accountEntry.NetOfVatAmount,
                         Credit = 0,
-                        IsVatable = accountEntry.VatAmount > 0,
+                        IsVatable = accountEntry.Vatable,
                         EwtPercent = accountEntry.TaxPercentage,
                         IsUserSelected = true,
-                        BankId = accountEntry.BankMasterFileId,
-                        CompanyId = accountEntry.CompanyMasterFileId,
-                        EmployeeId = accountEntry.EmployeeMasterFileId,
-                        CustomerId = accountEntry.CustomerMasterFileId,
-                        SupplierId = accountEntry.SupplierMasterFileId,
+                        SubAccountType = subAccountType,
+                        SubAccountId = subAccountId,
+                        SubAccountName = subAccountName,
                     });
 
-                    if (accountEntry.VatAmount > 0)
+                    if (accountEntry.Vatable)
                     {
                         vatAmount += accountEntry.VatAmount;
                     }
@@ -447,7 +473,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = apNontradeAmount,
                         Amount = apNontradeAmount,
-                        SupplierId = checkVoucherHeader.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = checkVoucherHeader.SupplierId,
+                        SubAccountName = checkVoucherHeader.SupplierName,
                     });
                 }
 
@@ -462,7 +490,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -477,7 +507,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -492,7 +524,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -507,7 +541,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -614,10 +650,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             details.IsVatable ? Math.Round(details.Debit * 1.12m, 2) : Math.Round(details.Debit, 2),
                         Vatable = details.IsVatable,
                         TaxPercentage = details.EwtPercent,
-                        BankMasterFileId = details.BankId,
-                        CompanyMasterFileId = details.CompanyId,
-                        EmployeeMasterFileId = details.EmployeeId,
-                        CustomerMasterFileId = details.CustomerId,
+                        BankMasterFileId = details.SubAccountType == SubAccountType.BankAccount
+                            ? details.SubAccountId
+                            : null,
+                        CompanyMasterFileId = details.SubAccountType == SubAccountType.Company
+                            ? details.SubAccountId
+                            : null,
+                        EmployeeMasterFileId = details.SubAccountType == SubAccountType.Employee
+                            ? details.SubAccountId
+                            : null,
+                        CustomerMasterFileId = details.SubAccountType == SubAccountType.Customer
+                            ? details.SubAccountId
+                            : null,
+                        SupplierMasterFileId = details.SubAccountType == SubAccountType.Supplier
+                            ? details.SubAccountId
+                            : null,
                     });
                 }
 
@@ -691,37 +738,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Total = viewModel.Total;
                 existingModel.SupplierName = supplier.SupplierName;
 
-                //For automation purposes
-                if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                {
-                    existingModel.StartDate = viewModel.StartDate;
-                    existingModel.EndDate = existingModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                    existingModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                    // Identify the account with a number that starts with '10201'
-                    decimal? amount = null;
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                        {
-                            amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                            break;
-                        }
-                    }
-
-                    if (amount.HasValue)
-                    {
-                        existingModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
-                    }
-                }
-                else
-                {
-                    existingModel.StartDate = null;
-                    existingModel.EndDate = null;
-                    existingModel.NumberOfMonths = 0;
-                    existingModel.AmountPerMonth = 0;
-                }
-
                 #endregion --Saving the default entries
 
                 #region --CV Details Entry
@@ -758,6 +774,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var accountNo = parts[0];
                     var accountName = parts[1];
 
+                    var (subAccountType, subAccountId) = SubAccountHelper.DetermineCvSubAccount(
+                        accountEntry.CustomerMasterFileId,
+                        accountEntry.SupplierMasterFileId,
+                        accountEntry.EmployeeMasterFileId,
+                        accountEntry.BankMasterFileId,
+                        accountEntry.CompanyMasterFileId
+                    );
+
+                    string? subAccountName = null;
+
+                    if (subAccountType.HasValue && subAccountId.HasValue)
+                    {
+                        var subAccountInfo = await _subAccountResolver.ResolveAsync(
+                            subAccountType.Value,
+                            subAccountId.Value,
+                            cancellationToken
+                        );
+
+                        if (subAccountInfo != null)
+                        {
+                            subAccountName = subAccountInfo.Name;
+                        }
+                    }
+
                     checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                     {
                         AccountNo = accountNo,
@@ -769,10 +809,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         IsVatable = accountEntry.Vatable,
                         EwtPercent = accountEntry.TaxPercentage,
                         IsUserSelected = true,
-                        BankId = accountEntry.BankMasterFileId,
-                        CompanyId = accountEntry.CompanyMasterFileId,
-                        EmployeeId = accountEntry.EmployeeMasterFileId,
-                        CustomerId = accountEntry.CustomerMasterFileId,
+                        SubAccountType = subAccountType,
+                        SubAccountId = subAccountId,
+                        SubAccountName = subAccountName,
                     });
 
                     if (accountEntry.Vatable)
@@ -829,7 +868,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = apNontradeAmount,
                         Amount = apNontradeAmount,
-                        SupplierId = existingModel.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = existingModel.SupplierId,
+                        SubAccountName = existingModel.SupplierName,
                     });
                 }
 
@@ -844,7 +885,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -859,7 +902,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -874,7 +919,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -889,7 +936,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = 0,
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
-                        SupplierId = bir!.SupplierId
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId =  bir!.SupplierId,
+                        SubAccountName = bir.SupplierName,
                     });
                 }
 
@@ -951,11 +1000,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var details = await _dbContext.FilprideCheckVoucherDetails
-                .Include(cvd => cvd.Supplier)
-                .Include(cvd => cvd.BankAccount)
-                .Include(cvd => cvd.Company)
-                .Include(cvd => cvd.Customer)
-                .Include(cvd => cvd.Employee)
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
@@ -1004,9 +1048,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
-                .Include(cvd => cvd.Customer)
-                .Include(cvd => cvd.Employee)
-                .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1045,17 +1086,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = modelHeader.Company,
                                 CreatedBy = modelHeader.PostedBy,
                                 CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                ///TODO resolve this and align to current GL design
-                                // BankAccountId = details.BankId,
-                                // BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccountNumber} {modelHeader.BankAccountName}" : null,
-                                // SupplierId = details.SupplierId,
-                                // SupplierName = modelHeader.SupplierName,
-                                // CustomerId = details.CustomerId,
-                                // CustomerName = details.Customer?.CustomerName,
-                                // CompanyId = details.CompanyId,
-                                // CompanyName = details.Company?.CompanyName,
-                                // EmployeeId = details.EmployeeId,
-                                // EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
+                                SubAccountType = details.SubAccountType,
+                                SubAccountId = details.SubAccountId,
+                                SubAccountName = details.SubAccountName,
                                 ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );

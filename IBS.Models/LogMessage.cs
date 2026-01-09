@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models
 {
@@ -14,7 +12,7 @@ namespace IBS.Models
         [Column(TypeName = "timestamp without time zone")]
         public DateTime TimeStamp { get; set; }
 
-        //Severity level: Information, Warning, Error and etc.
+        //Severity level: Information, Warning, Error, etc.
         public string LogLevel { get; set; }
 
         //Name where the log comes
@@ -26,7 +24,8 @@ namespace IBS.Models
 
         public LogMessage(string logLevel, string loggerName, string message)
         {
-            TimeStamp = DateTimeHelper.GetCurrentPhilippineTime();
+            TimeStamp = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
             LogLevel = logLevel;
             LoggerName = loggerName;
             Message = message;

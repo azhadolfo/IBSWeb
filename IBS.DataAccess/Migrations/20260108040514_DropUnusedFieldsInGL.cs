@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-migrationBuilder.DropForeignKey(
+            migrationBuilder.DropForeignKey(
                 name: "fk_filpride_general_ledger_books_companies_company_id",
                 table: "filpride_general_ledger_books");
 

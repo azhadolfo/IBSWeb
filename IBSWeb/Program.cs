@@ -62,6 +62,7 @@ builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
 builder.Services.AddScoped<IMonthlyClosureService, MonthlyClosureService>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 
 // SignalR
 builder.Services.AddSignalR();

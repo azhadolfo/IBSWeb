@@ -103,7 +103,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "date")]
         public DateOnly? ReceivedDate { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         public string? Type { get; set; }
     }
