@@ -14,10 +14,10 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default);
 
-        Task ReJournalPurchaseEntry(FilprideReceivingReport model, CancellationToken cancellationToken = default);
-
         Task VoidReceivingReportAsync(int receivingReportId, string currentUser, CancellationToken cancellationToken = default);
 
         Task CreateEntriesForUpdatingCost(FilprideReceivingReport model, decimal difference, string userName, CancellationToken cancellationToken = default);
+
+        Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
     }
 }

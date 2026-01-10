@@ -573,6 +573,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
 
+                await _unitOfWork.FilprideReceivingReport.UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId,
+                    model.QuantityReceived, cancellationToken);;
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Receiving Report has been posted.";
                 return RedirectToAction(nameof(Print), new { id });
@@ -1037,7 +1040,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              .OrderBy(x => x.Date))
                 {
                     await _unitOfWork.FilprideReceivingReport
-                        .ReJournalPurchaseEntry(receivingReport, cancellationToken);
+                        .PostAsync(receivingReport, cancellationToken);
                 }
 
                 await transaction.CommitAsync(cancellationToken);

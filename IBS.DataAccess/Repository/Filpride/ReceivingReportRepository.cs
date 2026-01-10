@@ -121,7 +121,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await _db.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        public async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
@@ -417,8 +417,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
-            await UpdatePoAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
-
             #region --Purchase Book Recording
 
             FilpridePurchaseBook purchaseBook = new()
@@ -668,175 +666,6 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.AddRangeAsync(ledgers, cancellationToken);
 
             #endregion --General Ledger Recording
-
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task ReJournalPurchaseEntry(FilprideReceivingReport model, CancellationToken cancellationToken = default)
-        {
-            #region --General Ledger Recording
-
-            var ledgers = new List<FilprideGeneralLedgerBook>();
-
-            var netOfVatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
-                ? ComputeNetOfVat(model.Amount)
-                : model.Amount;
-            var vatAmount = model.PurchaseOrder.VatType == SD.VatType_Vatable
-                ? ComputeVatAmount(netOfVatAmount)
-                : 0m;
-            var ewtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax
-                ? ComputeEwtAmount(netOfVatAmount, model.TaxPercentage)
-                : 0m;
-
-            var supplierTaxTitle = model.PurchaseOrder.Supplier!.WithholdingTaxTitle?.Split(" ", 2);
-
-            if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
-            {
-                var advancesVoucher = await _db.FilprideCheckVoucherDetails
-                    .Include(cv => cv.CheckVoucherHeader)
-                    .FirstOrDefaultAsync(cv =>
-                        cv.CheckVoucherHeader!.SupplierId == model.PurchaseOrder.SupplierId &&
-                        cv.CheckVoucherHeader.IsAdvances &&
-                        cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
-                        cv.AccountName.Contains("Expanded Withholding Tax") &&
-                        cv.Credit > cv.AmountPaid,
-                        cancellationToken);
-
-                if (advancesVoucher != null)
-                {
-                    var affectedEwt = Math.Min(advancesVoucher.Credit, ewtAmount);
-                    ewtAmount -= affectedEwt;
-                    advancesVoucher.AmountPaid += affectedEwt;
-                }
-            }
-
-            var netOfEwtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax
-                ? ComputeNetOfEwt(model.Amount, ewtAmount)
-                : model.Amount;
-
-            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product!.ProductCode);
-            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200")
-                                ?? throw new ArgumentException("Account title '101060200' not found.");
-            var ewtAccountNo = supplierTaxTitle?.FirstOrDefault();
-            var ewtTitle = accountTitlesDto.FirstOrDefault(c => c.AccountNumber == ewtAccountNo);
-            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100")
-                               ?? throw new ArgumentException("Account title '202010100' not found.");
-            var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo)
-                                 ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
-
-            ledgers.Add(new FilprideGeneralLedgerBook
-            {
-                Date = model.Date,
-                Reference = model.ReceivingReportNo!,
-                Description = "Receipt of Goods",
-                AccountId = inventoryTitle.AccountId,
-                AccountNo = inventoryTitle.AccountNumber,
-                AccountTitle = inventoryTitle.AccountName,
-                Debit = netOfVatAmount,
-                Credit = 0,
-                CreatedBy = model.PostedBy!,
-                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
-                ModuleType = nameof(ModuleType.Purchase)
-            });
-
-            if (vatAmount > 0)
-            {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo!,
-                    Description = "Receipt of Goods",
-                    AccountId = vatInputTitle.AccountId,
-                    AccountNo = vatInputTitle.AccountNumber,
-                    AccountTitle = vatInputTitle.AccountName,
-                    Debit = vatAmount,
-                    Credit = 0,
-                    CreatedBy = model.PostedBy!,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
-                    ModuleType = nameof(ModuleType.Purchase)
-                });
-            }
-
-            ledgers.Add(new FilprideGeneralLedgerBook
-            {
-                Date = model.Date,
-                Reference = model.ReceivingReportNo!,
-                Description = "Receipt of Goods",
-                AccountId = apTradeTitle.AccountId,
-                AccountNo = apTradeTitle.AccountNumber,
-                AccountTitle = apTradeTitle.AccountName,
-                Debit = 0,
-                Credit = netOfEwtAmount,
-                CreatedBy = model.PostedBy!,
-                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
-                SubAccountType = SubAccountType.Supplier,
-                SubAccountId = model.PurchaseOrder.SupplierId,
-                SubAccountName = model.PurchaseOrder.SupplierName,
-                ModuleType = nameof(ModuleType.Purchase)
-            });
-
-            if (ewtAmount > 0)
-            {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo!,
-                    Description = "Receipt of Goods",
-                    AccountId = ewtTitle!.AccountId,
-                    AccountNo = ewtTitle.AccountNumber,
-                    AccountTitle = ewtTitle.AccountName,
-                    Debit = 0,
-                    Credit = ewtAmount,
-                    CreatedBy = model.PostedBy!,
-                    CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
-                    ModuleType = nameof(ModuleType.Purchase)
-                });
-            }
-
-            if (!IsJournalEntriesBalanced(ledgers))
-            {
-                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-            }
-
-            await _db.AddRangeAsync(ledgers, cancellationToken);
-
-            #endregion --General Ledger Recording
-
-            #region--Inventory Recording
-
-            var unitOfWork = new UnitOfWork(_db);
-
-            await unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
-
-            #endregion
-
-            #region --Purchase Book Recording
-
-            FilpridePurchaseBook purchaseBook = new()
-            {
-                Date = model.Date,
-                SupplierName = model.PurchaseOrder.SupplierName,
-                SupplierTin = model.PurchaseOrder.SupplierTin,
-                SupplierAddress = model.PurchaseOrder.SupplierAddress,
-                DocumentNo = model.ReceivingReportNo!,
-                Description = model.PurchaseOrder.ProductName,
-                Amount = model.Amount,
-                VatAmount = vatAmount,
-                WhtAmount = ewtAmount,
-                NetPurchases = netOfVatAmount,
-                CreatedBy = model.CreatedBy,
-                PONo = model.PurchaseOrder.PurchaseOrderNo!,
-                DueDate = model.DueDate,
-                Company = model.Company
-            };
-
-            await _db.AddAsync(purchaseBook, cancellationToken);
-            #endregion --Purchase Book Recording
 
             await _db.SaveChangesAsync(cancellationToken);
         }

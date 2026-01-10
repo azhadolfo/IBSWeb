@@ -444,7 +444,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var ledgers = new List<FilprideGeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100")
+                                  ?? throw new ArgumentException("Account title '101010100' not found.");
             string description = "";
 
             var customerName = collectionReceipt.SalesInvoiceId != null
