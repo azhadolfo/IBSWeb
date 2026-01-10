@@ -4,6 +4,7 @@ using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.Books;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -106,6 +107,47 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task PostAsync(FilprideJournalVoucherHeader header,
+            IEnumerable<FilprideJournalVoucherDetail> details,
+            CancellationToken cancellationToken = default)
+        {
+            #region --General Ledger Book Recording(GL)--
+
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+
+            foreach (var detail in details)
+            {
+                var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo) ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = header.Date,
+                        Reference = header.JournalVoucherHeaderNo!,
+                        Description = header.Particulars,
+                        AccountId = account.AccountId,
+                        AccountNo = account.AccountNumber,
+                        AccountTitle = account.AccountName,
+                        Debit = detail.Debit,
+                        Credit = detail.Credit,
+                        Company = header.Company,
+                        CreatedBy = header.CreatedBy!,
+                        CreatedDate = header.CreatedDate,
+                    }
+                );
+            }
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            #endregion --General Ledger Book Recording(GL)--
         }
     }
 }

@@ -376,40 +376,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                #region --General Ledger Book Recording(GL)--
-
-                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                var ledgers = new List<FilprideGeneralLedgerBook>();
-
-                foreach (var details in modelDetails)
-                {
-                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                    ledgers.Add(
-                        new FilprideGeneralLedgerBook
-                        {
-                            Date = modelHeader.Date,
-                            Reference = modelHeader.JournalVoucherHeaderNo!,
-                            Description = modelHeader.Particulars,
-                            AccountId = account.AccountId,
-                            AccountNo = account.AccountNumber,
-                            AccountTitle = account.AccountName,
-                            Debit = details.Debit,
-                            Credit = details.Credit,
-                            Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy!,
-                            CreatedDate = modelHeader.CreatedDate,
-                        }
-                    );
-                }
-
-                if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
-                {
-                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                }
-
-                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                #endregion --General Ledger Book Recording(GL)--
+                await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Journal Book Recording(JV)--
 
@@ -1301,6 +1268,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
 
             return Json(jvIds);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalJv(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var jvs = await _dbContext.FilprideJournalVoucherHeaders
+                    .Include(x => x.Details)
+                    .Where(x =>
+                        x.PostedBy != null &&
+                        x.Date.Month == month &&
+                        x.Date.Year == year)
+                    .ToListAsync(cancellationToken);
+
+                if (!jvs.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var jv in jvs
+                             .OrderBy(x => x.Date))
+                {
+                    await _unitOfWork.FilprideJournalVoucher.PostAsync(jv,
+                        jv.Details!,
+                        cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = jvs.Count });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
+            }
         }
     }
 }
