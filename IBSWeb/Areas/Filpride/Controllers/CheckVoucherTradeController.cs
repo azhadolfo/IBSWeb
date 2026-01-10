@@ -1229,7 +1229,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
+                .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId && !cvd.IsDisplayEntry)
                 .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1302,46 +1302,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                #region --General Ledger Book Recording(CV)--
-
-                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                var ledgers = new List<FilprideGeneralLedgerBook>();
-                foreach (var details in modelDetails.Where(x => !x.IsDisplayEntry))
-                {
-                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo)
-                                  ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-
-                    ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = modelHeader.Date,
-                                Reference = modelHeader.CheckVoucherHeaderNo!,
-                                Description = modelHeader.Particulars!,
-                                AccountId = account.AccountId,
-                                AccountNo = account.AccountNumber,
-                                AccountTitle = account.AccountName,
-                                Debit = details.Debit,
-                                Credit = details.Credit,
-                                Company = modelHeader.Company,
-                                CreatedBy = modelHeader.PostedBy,
-                                CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                SubAccountType = details.SubAccountType,
-                                SubAccountId = details.SubAccountId,
-                                SubAccountName = details.SubAccountName,
-                                ModuleType = nameof(ModuleType.Disbursement)
-                            }
-                        );
-
-                }
-
-                if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
-                {
-                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                }
-
-                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                #endregion --General Ledger Book Recording(CV)--
+                await _unitOfWork.FilprideCheckVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Disbursement Book Recording(CV)--
 
@@ -4003,6 +3964,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalPayment(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var cvs = await _dbContext.FilprideCheckVoucherHeaders
+                    .Include(x => x.Details)
+                    .Where(x =>
+                        x.PostedBy != null &&
+                        x.Date.Month == month &&
+                        x.Date.Year == year)
+                    .ToListAsync(cancellationToken);
+
+                if (!cvs.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var cv in cvs
+                             .OrderBy(x => x.Date))
+                {
+                    await _unitOfWork.FilprideCheckVoucher.PostAsync(cv,
+                        cv.Details!.Where(x => !x.IsDisplayEntry),
+                        cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = cvs.Count });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
             }
         }
     }

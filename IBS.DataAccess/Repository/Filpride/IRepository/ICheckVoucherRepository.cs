@@ -14,5 +14,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task UpdateInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default);
 
         Task UpdateMultipleInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default);
+
+        Task PostAsync(FilprideCheckVoucherHeader header, IEnumerable<FilprideCheckVoucherDetail> details, CancellationToken cancellationToken = default);
     }
 }

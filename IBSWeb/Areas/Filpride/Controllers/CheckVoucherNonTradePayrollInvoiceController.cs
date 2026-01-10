@@ -847,7 +847,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
+                .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId && !cvd.IsDisplayEntry)
                 .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -864,43 +864,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
-                #region --General Ledger Book Recording(CV)--
-
-                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                var ledgers = new List<FilprideGeneralLedgerBook>();
-                foreach (var details in modelDetails)
-                {
-                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                    ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = modelHeader.Date,
-                                Reference = modelHeader.CheckVoucherHeaderNo!,
-                                Description = modelHeader.Particulars!,
-                                AccountId = account.AccountId,
-                                AccountNo = account.AccountNumber,
-                                AccountTitle = account.AccountName,
-                                Debit = details.Debit,
-                                Credit = details.Credit,
-                                Company = modelHeader.Company,
-                                CreatedBy = modelHeader.PostedBy,
-                                CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                SubAccountType = details.SubAccountType,
-                                SubAccountId = details.SubAccountId,
-                                SubAccountName = details.SubAccountName,
-                                ModuleType = nameof(ModuleType.Disbursement)
-                            }
-                        );
-                }
-
-                if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
-                {
-                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                }
-
-                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                #endregion --General Ledger Book Recording(CV)--
+                await _unitOfWork.FilprideCheckVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording
 
