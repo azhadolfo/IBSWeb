@@ -42,9 +42,9 @@ namespace IBS.Services
             {
                 var isMonthAlreadyLocked = await _unitOfWork.IsPeriodPostedAsync(monthDate, cancellationToken);
 
-                if (isMonthAlreadyLocked)
+                if (!isMonthAlreadyLocked)
                 {
-                    throw new InvalidOperationException($"{monthDate:MMMM yyyy} is already locked.");
+                    throw new InvalidOperationException($"{monthDate:MMMM yyyy} is not locked.");
                 }
 
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
@@ -65,17 +65,6 @@ namespace IBS.Services
                 await RecordNotUpdatedSales(monthDate, cancellationToken);
                 await RecordNotUpdatedPurchases(monthDate, cancellationToken);
 
-                var postedPeriod = new PostedPeriod
-                {
-                    Company = company,
-                    Month = monthDate.Month,
-                    Year = monthDate.Year,
-                    IsPosted = true,
-                    PostedBy = user,
-                    PostedOn = DateTimeHelper.GetCurrentPhilippineTime()
-                };
-
-                await _dbContext.PostedPeriods.AddAsync(postedPeriod, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -168,6 +157,7 @@ namespace IBS.Services
 
                 foreach (var cv in disbursementsWithoutDcrDate)
                 {
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                     var ledgers = new List<FilprideGeneralLedgerBook>();
                     var journalBooks = new List<FilprideJournalBook>();
 
@@ -175,20 +165,27 @@ namespace IBS.Services
                         .Where(cvd => cvd.CheckVoucherHeaderId == cv.CheckVoucherHeaderId)
                         .ToListAsync(cancellationToken);
 
-                    foreach (var cvDetails in details)
+                    foreach (var detail in details)
                     {
+                        var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
+                                      ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountNo = cvDetails.AccountNo,
-                            AccountTitle = cvDetails.AccountName,
-                            Debit = cvDetails.Credit,
-                            Credit = cvDetails.Debit,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = detail.Credit,
+                            Credit = detail.Debit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountName = detail.SubAccountName,
                         });
 
                         ledgers.Add(new FilprideGeneralLedgerBook
@@ -196,10 +193,27 @@ namespace IBS.Services
                             Date = previousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountNo = cvDetails.AccountNo,
-                            AccountTitle = cvDetails.AccountName,
-                            Debit = cvDetails.Debit,
-                            Credit = cvDetails.Credit,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountName = detail.SubAccountName,
+                        });
+
+                        journalBooks.Add(new FilprideJournalBook
+                        {
+                            Date = endOfPreviousMonth,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
+                            AccountTitle = $"{account.AccountNumber} {account.AccountName}",
+                            Debit = detail.Credit,
+                            Credit = detail.Debit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
@@ -210,22 +224,9 @@ namespace IBS.Services
                             Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
-                            Debit = cvDetails.Credit,
-                            Credit = cvDetails.Debit,
-                            Company = cv.Company,
-                            CreatedBy = "SYSTEM GENERATED",
-                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                        });
-
-                        journalBooks.Add(new FilprideJournalBook
-                        {
-                            Date = endOfPreviousMonth,
-                            Reference = cv.CheckVoucherHeaderNo!,
-                            Description = cv.Particulars!,
-                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
-                            Debit = cvDetails.Debit,
-                            Credit = cvDetails.Credit,
+                            AccountTitle = $"{account.AccountNumber} {account.AccountName}",
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
