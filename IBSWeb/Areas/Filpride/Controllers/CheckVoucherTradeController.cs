@@ -3031,6 +3031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return new
                     {
                         Id = dr.DeliveryReceiptId,
+                        dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)

@@ -50,7 +50,7 @@
                         <table>
                             <thead class="sticky-top bg-white">
                             <tr>
-                                <th colspan="5" class="text-center py-3">
+                                <th colspan="6" class="text-center py-3">
                                     <span>DR LIST</span>
                                     <span class="selected-dr-count ms-2 px-2 py-1 rounded-pill" style="display: none; background: linear-gradient(135deg, #5a9a9a, #4a8a8a); color: white; font-size: 0.75rem; vertical-align: middle;">
                                         <span id="selectedCount">0</span> selected
@@ -60,6 +60,7 @@
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
+                                <th>OTC DR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -269,6 +270,7 @@
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
+                                            <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" readonly style="${display}" value="${amountPaid}"></td>
@@ -287,9 +289,10 @@
 
                     const totalRow = $(`
                 <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                    <td colspan="7" class="pt-1"></td>
+                    <td colspan="6" class="pt-1"></td>
                 </tr>
                 <tr class="sticky-bottom bg-white">
+                    <td ></td>
                     <td ></td>
                     <td class="fw-bold text-end p-2">Grand Total:</td>
                     <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
