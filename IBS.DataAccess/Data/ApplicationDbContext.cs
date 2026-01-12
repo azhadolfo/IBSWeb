@@ -152,6 +152,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilpridePurchaseLockedRecordsQueue> FilpridePurchaseLockedRecordsQueues { get; set; }
 
+        public DbSet<FilprideGLPeriodBalance> FilprideGlPeriodBalances { get; set; }
+
+        public DbSet<FilprideGLSubAccountBalance> FilprideGlSubAccountBalances { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
