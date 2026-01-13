@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260112032205_AddedTableForGlPeriod")]
+    [Migration("20260113010840_AddedTableForGlPeriod")]
     partial class AddedTableForGlPeriod
     {
         /// <inheritdoc />
@@ -11860,26 +11860,26 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideGLPeriodBalance", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", "FilprideChartOfAccount")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", "Account")
                         .WithMany("Balances")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_gl_period_balances_filpride_chart_of_accounts_acco");
 
-                    b.Navigation("FilprideChartOfAccount");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideGLSubAccountBalance", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", "FilprideChartOfAccount")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", "Account")
                         .WithMany("SubAccountBalances")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_gl_sub_account_balances_filpride_chart_of_accounts");
 
-                    b.Navigation("FilprideChartOfAccount");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseLockedRecordsQueue", b =>

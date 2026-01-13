@@ -845,6 +845,22 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<FilprideGLPeriodBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.Balances)
+                    .HasForeignKey(a => a.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideGLSubAccountBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.SubAccountBalances)
+                    .HasForeignKey(a => a.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             #endregion
 
             #region -- Accounts Receivable --

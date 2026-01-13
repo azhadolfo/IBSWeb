@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Migrations
                         column: x => x.account_id,
                         principalTable: "filpride_chart_of_accounts",
                         principalColumn: "account_id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -69,7 +69,7 @@ namespace IBS.DataAccess.Migrations
                         column: x => x.account_id,
                         principalTable: "filpride_chart_of_accounts",
                         principalColumn: "account_id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

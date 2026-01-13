@@ -13,7 +13,7 @@ namespace IBS.Models.Filpride
         public int AccountId { get; set; }
 
         [ForeignKey(nameof(AccountId))]
-        public FilprideChartOfAccount FilprideChartOfAccount { get; set; }
+        public FilprideChartOfAccount Account { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly PeriodStartDate { get; set; }
