@@ -615,8 +615,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(jvd => jvd.JournalVoucherHeader)
                 .ThenInclude(jvh => jvh!.CheckVoucherHeader)
                 .Where(x => x.JournalVoucherHeader!.Company == company
-                            && x.JournalVoucherHeader!.CheckVoucherHeader!.Date >= dateFrom
-                            && x.JournalVoucherHeader!.CheckVoucherHeader!.Date <= dateTo)
+                            && x.JournalVoucherHeader.Date >= dateFrom
+                            && x.JournalVoucherHeader.Date <= dateTo)
                 .OrderBy(jvd => jvd.JournalVoucherHeader!.Date)
                 .ToListAsync(cancellationToken);
 
