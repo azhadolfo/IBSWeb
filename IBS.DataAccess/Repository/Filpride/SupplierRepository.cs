@@ -48,8 +48,16 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<bool> IsTinNoExistAsync(string tin, string branch, string category, string company, CancellationToken cancellationToken = default)
         {
+            if (tin == "000-000-000-00000")
+                return false;
+
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierTin == tin && s.Branch == branch && s.Category == category, cancellationToken);
+                .AnyAsync(s =>
+                    s.Company == company &&
+                    s.SupplierTin == tin &&
+                    s.Branch == branch &&
+                    s.Category == category,
+                    cancellationToken);
         }
 
         public async Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default)

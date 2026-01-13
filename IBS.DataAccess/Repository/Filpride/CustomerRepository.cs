@@ -49,8 +49,14 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
         {
+            if (tin == "000-000-000-00000")
+                return false;
+
             return await _db.FilprideCustomers
-                .AnyAsync(c => c.Company == company && c.CustomerTin == tin, cancellationToken);
+                .AnyAsync(c =>
+                    c.Company == company &&
+                    c.CustomerTin == tin,
+                    cancellationToken);
         }
 
         public async Task UpdateAsync(FilprideCustomer model, CancellationToken cancellationToken = default)

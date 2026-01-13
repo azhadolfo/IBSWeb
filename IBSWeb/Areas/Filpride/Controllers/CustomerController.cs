@@ -102,9 +102,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.PaymentTerms = await _unitOfWork.FilprideTerms
                 .GetFilprideTermsListAsyncByCode(cancellationToken);
 
-            //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
-
-            bool isTinExist = false;
+            var isTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
             if (isTinExist)
             {
