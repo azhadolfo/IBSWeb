@@ -33,13 +33,6 @@ namespace IBS.Models.Filpride.MasterFile
         // Change Parent to an int? (nullable) for FK reference
         public int? ParentAccountId { get; set; }
 
-        // Navigation property for Parent Account
-        [ForeignKey(nameof(ParentAccountId))]
-        public virtual FilprideChartOfAccount? ParentAccount { get; set; }
-
-        // Navigation property for Child Accounts
-        public virtual ICollection<FilprideChartOfAccount> Children { get; set; } = new List<FilprideChartOfAccount>();
-
         [NotMapped]
         public List<SelectListItem>? Main { get; set; }
 
@@ -62,12 +55,29 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool HasChildren { get; set; }
 
+        [StringLength(20)]
+        public string FinancialStatementType { get; set; }
+
         // Select List
+
+        #region Select List
 
         [NotMapped]
         public List<SelectListItem>? Accounts { get; set; }
 
-        [StringLength(20)]
-        public string FinancialStatementType { get; set; }
+        #endregion
+
+        #region Navigation Properties
+
+        [ForeignKey(nameof(ParentAccountId))]
+        public virtual FilprideChartOfAccount? ParentAccount { get; set; }
+
+        public virtual ICollection<FilprideChartOfAccount> Children { get; set; } = new List<FilprideChartOfAccount>();
+
+        public ICollection<FilprideGLPeriodBalance> Balances { get; set; } =  new List<FilprideGLPeriodBalance>();
+
+        public ICollection<FilprideGLSubAccountBalance> SubAccountBalances { get; set; } = new List<FilprideGLSubAccountBalance>();
+
+        #endregion
     }
 }

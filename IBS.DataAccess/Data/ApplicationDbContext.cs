@@ -152,6 +152,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilpridePurchaseLockedRecordsQueue> FilpridePurchaseLockedRecordsQueues { get; set; }
 
+        public DbSet<FilprideGLPeriodBalance> FilprideGlPeriodBalances { get; set; }
+
+        public DbSet<FilprideGLSubAccountBalance> FilprideGlSubAccountBalances { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -838,6 +842,22 @@ namespace IBS.DataAccess.Data
                 p.HasOne(p => p.Supplier)
                     .WithMany()
                     .HasForeignKey(p => p.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideGLPeriodBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.Balances)
+                    .HasForeignKey(a => a.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideGLSubAccountBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.SubAccountBalances)
+                    .HasForeignKey(a => a.AccountId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
