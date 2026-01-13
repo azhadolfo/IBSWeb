@@ -559,13 +559,13 @@ namespace IBS.Services
 
                 _logger.LogInformation(
                     "Recorded GL balances for period {PeriodMonth} and company {Company}: {AccountCount} accounts, {SubAccountCount} sub-accounts.",
-                    periodMonth, company, glBalances.Count, subAccountBalances.Count);
+                    periodMonth.ToString("yyyy-MM-dd"), company, glBalances.Count, subAccountBalances.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
                     "An error occurred while recording the GL balance for period {PeriodMonth} and company {Company}.",
-                    periodMonth, company);
+                    periodMonth.ToString("yyyy-MM-dd"), company);
                 throw;
             }
         }
