@@ -110,8 +110,12 @@
                                             <input name="PayrollAccountingEntries[@i].Credit" value="@Model.PayrollAccountingEntries[i].Credit.ToString("N4")" style="border:none" class="w-100 money editable-amount" oninput="updateTotalDebitAndCredit()" />
                                         </td>
                                         <td>
-                                            <input value="@Model.PayrollAccountingEntries[i].MultipleSupplierCodeName" style="border:none" class="w-100" readonly />
-                                            <input name="PayrollAccountingEntries[@i].MultipleSupplierId" type="hidden" value="@Model.PayrollAccountingEntries[i].MultipleSupplierId"/>
+                                            <input name="PayrollAccountingEntries[@i].MultipleSupplierCodeName"
+                                                   value="@Model.PayrollAccountingEntries[i].MultipleSupplierCodeName" 
+                                                   style="border:none" class="w-100" readonly />
+                                            <input name="PayrollAccountingEntries[@i].MultipleSupplierId" 
+                                                   type="hidden" 
+                                                   value="@Model.PayrollAccountingEntries[i].MultipleSupplierId"/>
                                         </td>
                                         <td>
                                             <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
@@ -279,7 +283,7 @@
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
-            var multipleSupplierId = safeVal("#MultipleSupplierId") !== "" ? safeVal("#MultipleSupplierId") : null;
+            var multipleSupplierId = safeVal("#MultipleSupplierId");
             var multipleSupplierCodeName = safeText("#MultipleSupplierId option:selected");
             var category = safeVal("#Category");
 
@@ -418,16 +422,8 @@
             var errorMessage = "";
             var isValid = true;
             let hasValidSubaccount = false;
-            let hasAPNonTrade = false;
-            let hasAtLeastOneOptional = false;
             const rows = document.querySelectorAll("#accountingEntriesBody tr");
             const requiredTitle = "AP-Non Trade Payable";
-            const optionalTitles = [
-                "PHIC Contribution Payable",
-                "Witholding Tax On Wages",
-                "SSS Contribution Payable",
-                "HDMF Contribution Payable"
-            ];
 
             for (const row of rows) {
                 const titleInput = row.querySelector("input[name*='AccountTitle']");
@@ -439,14 +435,8 @@
                 const credit = parseFloat(creditInput.value.replace(/,/g, "")) || 0;
                 
                 if (title === requiredTitle && credit > 0) {
-                    hasAPNonTrade = true;
+                    hasValidSubaccount = true;
                 }
-                
-                if (optionalTitles.includes(title) && credit > 0) {
-                    hasAtLeastOneOptional = true;
-                }
-                
-                hasValidSubaccount = hasAPNonTrade && hasAtLeastOneOptional;
             }
 
             if ($("#balance-error-message").length === 0) {
@@ -463,13 +453,7 @@
                 errorMessage = "Total Amount should be equal to Total Debit and Credit.";
                 isValid = false;
             } else if (!hasValidSubaccount) {
-                if (!hasAPNonTrade && !hasAtLeastOneOptional) {
-                    errorMessage = "Must include AP-Non Trade Payable and at least one of: PHIC, Witholding Tax, SSS, or HDMF Contribution Payable with credit.";
-                } else if (!hasAPNonTrade) {
-                    errorMessage = "Must include AP-Non Trade Payable with credit.";
-                } else if (!hasAtLeastOneOptional) {
-                    errorMessage = "Must include at least one of: PHIC, Witholding Tax, SSS, or HDMF Contribution Payable with credit.";
-                }
+                errorMessage = "Must include AP-Non Trade Payable with credit.";
                 isValid = false;
             }
 
