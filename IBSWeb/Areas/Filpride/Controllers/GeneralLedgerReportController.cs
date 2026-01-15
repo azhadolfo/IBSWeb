@@ -651,13 +651,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             try
             {
-                var chartOfAccount = await _unitOfWork.FilprideChartOfAccount
-                    .GetAsync(coa => coa.AccountNumber == model.AccountNo, cancellationToken);
+                var selectedAccountNo = model.AccountNo?
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault();
+
+                var selectedAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(coa => selectedAccountNo != null && coa.AccountNumber == selectedAccountNo, cancellationToken);
 
                 var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
                     .Where(g =>
                         g.Date >= dateFrom && g.Date <= dateTo &&
-                        (model.AccountNo == null || g.AccountNo == model.AccountNo) &&
+                        (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
                         g.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -666,6 +670,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
                 }
+
+                // Load all chart of accounts into dictionary for better performance
+                var accountNumbers = generalLedgerByAccountNo
+                    .Select(g => g.AccountNo)
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .Distinct()
+                    .ToList();
+
+                var accounts = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(a => accountNumbers.Contains(a.AccountNumber!), cancellationToken);
+
+                var accountDictionary = accounts
+                    .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
+                    .ToDictionary(a => a.AccountNumber!, a => a);
+
+                // Get beginning balances from GL Period Balance for all accounts
+                var previousPeriodEndDate = dateFrom.AddDays(-1);
+                var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
+                    .Include(g => g.Account)
+                    .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
+                                 pb.PeriodEndDate == previousPeriodEndDate)
+                    .ToListAsync(cancellationToken);
+
+                var beginningBalanceDictionary = glPeriodBalances
+                    .Where(pb => !string.IsNullOrEmpty(pb.Account.AccountNumber))
+                    .ToDictionary(pb => pb.Account.AccountNumber!, pb => pb.EndingBalance);
 
                 // Create the Excel package
                 using var package = new ExcelPackage();
@@ -682,9 +712,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Account No:";
                 worksheet.Cells["A4"].Value = "Account Name:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-                worksheet.Cells["B3"].Value = $"{chartOfAccount}";
-                worksheet.Cells["B4"].Value = $"{chartOfAccount?.AccountNumber}";
+                worksheet.Cells["B2"].Value = $"{dateFrom:yyyy-MM-dd} - {dateTo:yyyy-MM-dd}";
+                worksheet.Cells["B3"].Value = $"{selectedAccount?.AccountNumber}";
+                worksheet.Cells["B4"].Value = $"{selectedAccount?.AccountName}";
 
                 worksheet.Cells["A7"].Value = "Date";
                 worksheet.Cells["B7"].Value = "Particular";
@@ -707,33 +737,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int row = 8;
-                decimal balance;
                 string currencyFormat = "#,##0.00";
-                decimal debit;
-                decimal credit;
-                foreach (var grouped in generalLedgerByAccountNo.OrderBy(g => g.AccountNo).GroupBy(g => g.AccountTitle))
+                decimal totalDebit = 0;
+                decimal totalCredit = 0;
+                decimal finalBalance = 0;
+
+                // Dictionary to track running balance per account
+                var accountBalances = new Dictionary<string, decimal>();
+
+                foreach (var grouped in generalLedgerByAccountNo
+                    .Where(g => !string.IsNullOrEmpty(g.AccountNo))
+                    .OrderBy(g => g.AccountNo)
+                    .GroupBy(g => g.AccountNo!))
                 {
-                    balance = 0;
+                    var accountNo = grouped.Key;
+
+                    // Get beginning balance for this specific account
+                    decimal accountBeginningBalance = beginningBalanceDictionary.ContainsKey(accountNo)
+                        ? beginningBalanceDictionary[accountNo]
+                        : 0;
+
+                    // Initialize running balance for this account
+                    accountBalances[accountNo] = accountBeginningBalance;
+
+                    // Get account details from dictionary
+                    var account = accountDictionary.ContainsKey(accountNo)
+                        ? accountDictionary[accountNo]
+                        : null;
+
+                    bool isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
+
+                    // Add beginning balance row for this account
+                    worksheet.Cells[row, 2].Value = "Beginning Balance";
+                    worksheet.Cells[row, 3].Value = accountNo;
+                    worksheet.Cells[row, 4].Value = account?.AccountName;
+                    worksheet.Cells[row, 8].Value = accountBeginningBalance;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+
+                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    {
+                        range.Style.Font.Italic = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(242, 242, 242));
+                    }
+
+                    row++;
+
+                    decimal groupDebit = 0;
+                    decimal groupCredit = 0;
 
                     foreach (var journal in grouped.OrderBy(g => g.Date))
                     {
-                        var account = await _unitOfWork.FilprideChartOfAccount
-                            .GetAsync(a => a.AccountNumber == journal.AccountNo, cancellationToken);
-
-                        if (balance != 0)
+                        // Update running balance for this account
+                        if (isDebitAccount)
                         {
-                            if (account?.NormalBalance == nameof(NormalBalance.Debit))
-                            {
-                                balance += journal.Debit - journal.Credit;
-                            }
-                            else
-                            {
-                                balance -= journal.Debit - journal.Credit;
-                            }
+                            accountBalances[accountNo] += journal.Debit - journal.Credit;
                         }
                         else
                         {
-                            balance = journal.Debit > 0 ? journal.Debit : journal.Credit;
+                            accountBalances[accountNo] += journal.Credit - journal.Debit;
                         }
 
                         worksheet.Cells[row, 1].Value = journal.Date.ToString("dd-MMM-yyyy");
@@ -743,23 +805,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 5].Value = journal.SubAccountName;
                         worksheet.Cells[row, 6].Value = journal.Debit;
                         worksheet.Cells[row, 7].Value = journal.Credit;
-                        worksheet.Cells[row, 8].Value = balance;
+                        worksheet.Cells[row, 8].Value = accountBalances[accountNo];
 
                         worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
+                        groupDebit += journal.Debit;
+                        groupCredit += journal.Credit;
+
                         row++;
                     }
 
-                    debit = grouped.Sum(j => j.Debit);
-                    credit = grouped.Sum(j => j.Credit);
-                    balance = debit - credit;
-
-                    worksheet.Cells[row, 5].Value = "Total " + grouped.Key;
-                    worksheet.Cells[row, 6].Value = debit;
-                    worksheet.Cells[row, 7].Value = credit;
-                    worksheet.Cells[row, 8].Value = balance;
+                    // Subtotal for this account
+                    worksheet.Cells[row, 5].Value = "Total " + account?.AccountName;
+                    worksheet.Cells[row, 6].Value = groupDebit;
+                    worksheet.Cells[row, 7].Value = groupCredit;
+                    worksheet.Cells[row, 8].Value = accountBalances[accountNo];
 
                     worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
@@ -772,25 +834,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                     }
 
+                    totalDebit += groupDebit;
+                    totalCredit += groupCredit;
+                    finalBalance += accountBalances[accountNo];
+
                     row++;
                 }
 
+                // Grand total
                 using (var range = worksheet.Cells[row, 6, row, 8])
                 {
                     range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
-
-                debit = generalLedgerByAccountNo.Sum(j => j.Debit);
-                credit = generalLedgerByAccountNo.Sum(j => j.Credit);
-                balance = debit - credit;
 
                 worksheet.Cells[row, 5].Value = "Total";
                 worksheet.Cells[row, 5].Style.Font.Bold = true;
-                worksheet.Cells[row, 6].Value = debit;
-                worksheet.Cells[row, 7].Value = credit;
-                worksheet.Cells[row, 8].Value = balance;
+                worksheet.Cells[row, 6].Value = totalDebit;
+                worksheet.Cells[row, 7].Value = totalCredit;
+                worksheet.Cells[row, 8].Value = finalBalance;
 
                 worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
@@ -819,7 +882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
             }
-}
+        }
 
         #endregion
 
