@@ -405,10 +405,10 @@
                 $(this).attr('data-index', index);
                 
                 // Update all input names with the new index
-                $(this).find('input[name^="AccountingEntries"]').each(function() {
+                $(this).find('input[name^="PayrollAccountingEntries"]').each(function() {
                     var name = $(this).attr('name');
                     var fieldName = name.substring(name.indexOf('].') + 2);
-                    $(this).attr('name', 'AccountingEntries[' + index + '].' + fieldName);
+                    $(this).attr('name', 'PayrollAccountingEntries[' + index + '].' + fieldName);
                 });
             });
         }
