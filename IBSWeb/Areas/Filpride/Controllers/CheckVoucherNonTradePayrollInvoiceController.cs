@@ -251,7 +251,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "201030540",
                     "201030530",
                     "201030520",
-                    "201030300"
+                    "201030300",
+                    "201030250",
+                    "201030240",
+                    "201030230",
+                    "201030210",
+                    "201030220"
                 };
 
                 var supplierMapping = new Dictionary<string, FilprideSupplier?>
@@ -259,7 +264,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     { "201030540", sss },
                     { "201030530", philhealth },
                     { "201030520", pagibig },
-                    { "201030300", bir }
+                    { "201030300", bir },
+                    { "201030250", bir },
+                    { "201030240", bir },
+                    { "201030230", bir },
+                    { "201030210", bir },
+                    { "201030220", bir }
                 };
 
                 apNonTradeTotal = viewModel.PayrollAccountingEntries!
@@ -516,7 +526,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "201030540",
                     "201030530",
                     "201030520",
-                    "201030300"
+                    "201030300",
+                    "201030250",
+                    "201030240",
+                    "201030230",
+                    "201030210",
+                    "201030220"
                 };
 
                 var supplierMapping = new Dictionary<string, FilprideSupplier?>
@@ -524,7 +539,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     { "201030540", sss },
                     { "201030530", philhealth },
                     { "201030520", pagibig },
-                    { "201030300", bir }
+                    { "201030300", bir },
+                    { "201030250", bir },
+                    { "201030240", bir },
+                    { "201030230", bir },
+                    { "201030210", bir },
+                    { "201030220", bir }
                 };
 
                 apNonTradeTotal = viewModel.PayrollAccountingEntries!
