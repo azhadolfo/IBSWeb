@@ -494,7 +494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cvDetails.Add(
                         new FilprideCheckVoucherDetail
                         {
-                            AccountNo = getWithholdingTaxTitle!.AccountNumber ?? string.Empty,
+                            AccountNo = getWithholdingTaxTitle!.AccountNumber!,
                             AccountName = getWithholdingTaxTitle.AccountName,
                             Debit = 0.00m,
                             Credit = ewt,
@@ -966,9 +966,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional details entry
 
+                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ',2) ?? [];
+
                 var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
-                    .FirstOrDefaultAsync(x => x. AccountName
-                        .Contains($"Expanded Withholding Tax {existingHeaderModel.TaxPercent * 100:N0}%"), cancellationToken);
+                    .FirstOrDefaultAsync(x => x.AccountNumber == ewtTitle.FirstOrDefault(), cancellationToken);
 
                 foreach (var cv in details.OrderBy(x => x.CheckVoucherDetailId))
                 {
@@ -1042,7 +1043,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             details.Add(
                             new FilprideCheckVoucherDetail
                             {
-                                AccountNo = getWithholdingTaxTitle!.AccountNumber ?? string.Empty,
+                                AccountNo = getWithholdingTaxTitle!.AccountNumber!,
                                 AccountName = getWithholdingTaxTitle.AccountName,
                                 Debit = 0.00m,
                                 Credit = ewt,
