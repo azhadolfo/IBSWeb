@@ -115,17 +115,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
             string company, 
             CancellationToken cancellationToken)
         {
-            var customers = await _dbContext.FilprideCustomers
-                .Where(c => c.Company == company)
-                .OrderBy(c => c.CustomerCode)
-                .ToListAsync(cancellationToken);
+            // Fetch customers
+            var customersEnumerable = await _unitOfWork.FilprideCustomer.GetAllAsync(
+                filter: c => c.Company == company,
+                cancellationToken: cancellationToken);
+
+            var customers = customersEnumerable.ToList();
 
             if (!customers.Any())
             {
                 return (null, string.Empty);
             }
 
-            var columns = new List<ColumnDefinition>
+            // Fetch all customer IDs for this company
+            var customerIds = customers.Select(c => c.CustomerId).ToList();
+
+            // Fetch branches separately
+            var branches = await _dbContext.FilprideCustomerBranches
+                .Include(b => b.Customer)
+                .Where(b => customerIds.Contains(b.CustomerId))
+                .ToListAsync(cancellationToken);
+
+            // Create Excel package
+            using var package = new ExcelPackage();
+
+            // ===== WORKSHEET 1: Customer Master File =====
+            var customerColumns = new List<ColumnDefinition>
             {
                 new() { Header = "CUSTOMER CODE", ValueSelector = c => ((FilprideCustomer)c).CustomerCode ?? "" },
                 new() { Header = "CUSTOMER NAME", ValueSelector = c => ((FilprideCustomer)c).CustomerName },
@@ -134,89 +149,127 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "BUSINESS STYLE", ValueSelector = c => ((FilprideCustomer)c).BusinessStyle ?? "" },
                 new() { Header = "ZIP CODE", ValueSelector = c => ((FilprideCustomer)c).ZipCode ?? "" },
                 new()
-                {
-                    Header = "CREDIT LIMIT",
-                    ValueSelector = c => ((FilprideCustomer)c).CreditLimit,
-                    NumberFormat = "#,##0.0000",
-                    Alignment = ExcelHorizontalAlignment.Right
-                },
-                new()
-                {
-                    Header = "CREDIT LIMIT AS OF TODAY",
-                    ValueSelector = c => ((FilprideCustomer)c).CreditLimitAsOfToday,
-                    NumberFormat = "#,##0.0000",
-                    Alignment = ExcelHorizontalAlignment.Right
-                },
-                new() { Header = "HAS BRANCH", ValueSelector = c => ((FilprideCustomer)c).HasBranch ? "Yes" : "No" },
-                new() { Header = "HAS MULTIPLE TERMS", ValueSelector = c => ((FilprideCustomer)c).HasMultipleTerms ? "Yes" : "No" },
-                new() { Header = "STATION CODE", ValueSelector = c => ((FilprideCustomer)c).StationCode ?? "" },
-                new() { Header = "TYPE", ValueSelector = c => ((FilprideCustomer)c).Type },
-                new()
-                {
-                    Header = "COMMISSION RATE",
-                    ValueSelector = c => ((FilprideCustomer)c).CommissionRate,
-                    NumberFormat = "0.00%",
-                    Alignment = ExcelHorizontalAlignment.Right
-                },
-                new() { Header = "IS ACTIVE", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
-                new()
-                {
-                    Header = "CREATED DATE",
-                    ValueSelector = c => ((FilprideCustomer)c).CreatedDate,
-                    NumberFormat = "MMM/dd/yyyy"
-                },
-                new() { Header = "CREATED BY", ValueSelector = c => ((FilprideCustomer)c).CreatedBy ?? "" },
-                new()
-                {
-                    Header = "EDITED DATE",
-                    ValueSelector = c => ((FilprideCustomer)c).EditedDate,
-                    NumberFormat = "MMM/dd/yyyy"
-                },
-                new() { Header = "EDITED BY", ValueSelector = c => ((FilprideCustomer)c).EditedBy ?? "" }
+            {
+                Header = "CREDIT LIMIT",
+                ValueSelector = c => ((FilprideCustomer)c).CreditLimit,
+                NumberFormat = "#,##0.0000",
+                Alignment = ExcelHorizontalAlignment.Right
+            },
+            new()
+            {
+                Header = "CREDIT LIMIT AS OF TODAY",
+                ValueSelector = c => ((FilprideCustomer)c).CreditLimitAsOfToday,
+                NumberFormat = "#,##0.0000",
+                Alignment = ExcelHorizontalAlignment.Right
+            },
+            new() { Header = "HAS BRANCH", ValueSelector = c => ((FilprideCustomer)c).HasBranch ? "Yes" : "No" },
+            new() { Header = "HAS MULTIPLE TERMS", ValueSelector = c => ((FilprideCustomer)c).HasMultipleTerms ? "Yes" : "No" },
+            new() { Header = "STATION CODE", ValueSelector = c => ((FilprideCustomer)c).StationCode ?? "" },
+            new() { Header = "TYPE", ValueSelector = c => ((FilprideCustomer)c).Type },
+            new()
+            {
+                Header = "COMMISSION RATE",
+                ValueSelector = c => ((FilprideCustomer)c).CommissionRate,
+                NumberFormat = "0.00%",
+                Alignment = ExcelHorizontalAlignment.Right
+            },
+            new() { Header = "IS ACTIVE", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
+            new()
+            {
+                Header = "CREATED DATE",
+                ValueSelector = c => ((FilprideCustomer)c).CreatedDate,
+                NumberFormat = "MMM/dd/yyyy"
+            },
+            new() { Header = "CREATED BY", ValueSelector = c => ((FilprideCustomer)c).CreatedBy ?? "" },
+            new()
+            {
+                Header = "EDITED DATE",
+                ValueSelector = c => ((FilprideCustomer)c).EditedDate,
+                NumberFormat = "MMM/dd/yyyy"
+            },
+            new() { Header = "EDITED BY", ValueSelector = c => ((FilprideCustomer)c).EditedBy ?? "" }
             };
 
-            var customWidths = new Dictionary<string, double>
+            var customerWidths = new Dictionary<string, double>
             {
                 { "CUSTOMER NAME", 40 },
                 { "CUSTOMER ADDRESS", 50 },
                 { "BUSINESS STYLE", 30 }
             };
 
-            return await BuildExcelFile(
+            // Build customer worksheet
+            BuildWorksheet(
+                package,
                 customers,
-                "Customer Master File",
-                "Customer_MasterFile",
+                "CustomerMasterFile",
+                "CUSTOMER MASTER FILE",
                 extractedBy,
                 company,
-                columns,
-                customWidths,
-                2,
-                cancellationToken
+                customerColumns,
+                customerWidths,
+                2
             );
+
+            // ===== WORKSHEET 2: Customer Branches =====
+            if (branches.Any())
+            {
+                var branchColumns = new List<ColumnDefinition>
+                {
+                    new() { Header = "BRANCH NAME", ValueSelector = b => ((FilprideCustomerBranch)b).BranchName },
+                    new() { Header = "CUSTOMER NAME", ValueSelector = b => ((FilprideCustomerBranch)b).Customer?.CustomerName},
+                    new() { Header = "BRANCH ADDRESS", ValueSelector = b => ((FilprideCustomerBranch)b).BranchAddress, WrapText = true },
+                };
+
+                var branchWidths = new Dictionary<string, double>
+                {
+                    { "BRANCH NAME", 30 },
+                    { "CUSTOMER NAME", 30 },
+                    { "BRANCH ADDRESS", 50 }
+                };
+
+                BuildWorksheet(
+                    package,
+                    branches.Cast<object>().ToList(),
+                    "CustomerBranches",
+                    "CUSTOMER BRANCHES",
+                    extractedBy,
+                    company,
+                    branchColumns,
+                    branchWidths,
+                    2
+                );
+            }
+
+            // Save and return
+            var fileName = $"Customer_MasterFile_{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}.xlsx";
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream, cancellationToken);
+            stream.Position = 0;
+
+            return (stream, fileName);
         }
 
         #endregion
 
         #region -- Core Excel Building Logic --
 
-        private async Task<(MemoryStream stream, string fileName)> BuildExcelFile<T>(
+        private void BuildWorksheet<T>(
+            ExcelPackage package,
             List<T> data,
+            string worksheetName,
             string reportTitle,
-            string fileNamePrefix,
             string extractedBy,
             string company,
             List<ColumnDefinition> columns,
             Dictionary<string, double>? customColumnWidths,
-            int freezeAtColumn,
-            CancellationToken cancellationToken) where T : class
+            int freezeAtColumn) where T : class
         {
-            using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add(reportTitle.Replace(" ", ""));
+            var worksheet = package.Workbook.Worksheets.Add(worksheetName);
 
             // Set report title
             var titleRange = worksheet.Cells["A1:B1"];
             titleRange.Merge = true;
-            titleRange.Value = reportTitle.ToUpper();
+            titleRange.Value = reportTitle;
             titleRange.Style.Font.Size = 13;
             titleRange.Style.Font.Bold = true;
 
@@ -308,6 +361,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
             }
+        }
+
+        private async Task<(MemoryStream stream, string fileName)> BuildExcelFile<T>(
+            List<T> data,
+            string reportTitle,
+            string fileNamePrefix,
+            string extractedBy,
+            string company,
+            List<ColumnDefinition> columns,
+            Dictionary<string, double>? customColumnWidths,
+            int freezeAtColumn,
+            CancellationToken cancellationToken) where T : class
+        {
+            using var package = new ExcelPackage();
+
+            BuildWorksheet(
+                package,
+                data,
+                reportTitle.Replace(" ", ""),
+                reportTitle.ToUpper(),
+                extractedBy,
+                company,
+                columns,
+                customColumnWidths,
+                freezeAtColumn
+            );
 
             var fileName = $"{fileNamePrefix}_{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}.xlsx";
             var stream = new MemoryStream();
