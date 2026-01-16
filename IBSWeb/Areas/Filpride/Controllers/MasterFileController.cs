@@ -76,6 +76,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var result = masterFileType.ToLower() switch
                 {
                     "customer" => await GenerateCustomerExcel(extractedBy, companyClaims, cancellationToken),
+                    "supplier" => await GenerateSupplierExcel(extractedBy, companyClaims, cancellationToken),
+                    "bankaccount" => await GenerateBankAccountExcel(extractedBy, companyClaims, cancellationToken),
                     _ => throw new ArgumentException($"Invalid master file type: {masterFileType}")
                 };
 
@@ -201,7 +203,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             BuildWorksheet(
                 package,
                 customers,
-                "CustomerMasterFile",
+                "Customer",
                 "CUSTOMER MASTER FILE",
                 extractedBy,
                 company,
@@ -230,7 +232,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 BuildWorksheet(
                     package,
                     branches.Cast<object>().ToList(),
-                    "CustomerBranches",
+                    "Branches",
                     "CUSTOMER BRANCHES",
                     extractedBy,
                     company,
@@ -250,6 +252,117 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        #region -- Supplier Master File --
+
+        private async Task<(MemoryStream? stream, string fileName)> GenerateSupplierExcel(
+                   string extractedBy,
+                   string company,
+                   CancellationToken cancellationToken)
+        {
+            var suppliers = await _dbContext.FilprideSuppliers
+                .Where(s => s.Company == company)
+                .OrderBy(s => s.SupplierCode)
+                .ToListAsync(cancellationToken);
+
+            if (!suppliers.Any())
+            {
+                return (null, string.Empty);
+            }
+
+            var columns = new List<ColumnDefinition>
+            {
+                new() { Header = "SUPPLIER CODE", ValueSelector = s => ((FilprideSupplier)s).SupplierCode ?? "" },
+                new() { Header = "SUPPLIER NAME", ValueSelector = s => ((FilprideSupplier)s).SupplierName },
+                new() { Header = "SUPPLIER ADDRESS", ValueSelector = s => ((FilprideSupplier)s).SupplierAddress, WrapText = true },
+                new() { Header = "TIN NO", ValueSelector = s => ((FilprideSupplier)s).SupplierTin },
+                new() { Header = "SUPPLIER TERMS", ValueSelector = s => ((FilprideSupplier)s).SupplierTerms },
+                // new() { Header = "VAT TYPE", ValueSelector = s => ((FilprideSupplier)s).VatType },
+                // new() { Header = "IS ACTIVE", ValueSelector = s => ((FilprideSupplier)s).IsActive ? "Active" : "Inactive" },
+                new() { Header = "CATEGORY", ValueSelector = s => ((FilprideSupplier)s).Category },
+                new() { Header = "PERCENT", ValueSelector = s => ((FilprideSupplier)s).WithholdingTaxPercent },
+                new()
+                {
+                    Header = "CREATED DATE",
+                    ValueSelector = s => ((FilprideSupplier)s).CreatedDate,
+                    NumberFormat = "MMM/dd/yyyy"
+                },
+                new() { Header = "CREATED BY", ValueSelector = s => ((FilprideSupplier)s).CreatedBy ?? "" },
+                new()
+                {
+                    Header = "EDITED DATE",
+                    ValueSelector = s => ((FilprideSupplier)s).EditedDate,
+                    NumberFormat = "MMM/dd/yyyy"
+                },
+                new() { Header = "EDITED BY", ValueSelector = s => ((FilprideSupplier)s).EditedBy ?? "" }
+            };
+
+            var customWidths = new Dictionary<string, double>
+            {
+                { "SUPPLIER NAME", 40 },
+                { "SUPPLIER ADDRESS", 50 }
+            };
+
+            return await BuildExcelFile(
+                suppliers,
+                "Supplier",
+                "Supplier_MasterFile",
+                extractedBy,
+                company,
+                columns,
+                customWidths,
+                2,
+                cancellationToken
+            );
+        }
+        #endregion
+
+        #region -- Bank Account Master File --
+        private async Task<(MemoryStream? stream, string fileName)> GenerateBankAccountExcel(
+            string extractedBy,
+            string company,
+            CancellationToken cancellationToken)
+        {
+            var bankAccounts = await _dbContext.FilprideBankAccounts
+                .Where(b => b.Company == company)
+                .ToListAsync(cancellationToken);
+
+            if (!bankAccounts.Any())
+            {
+                return (null, string.Empty);
+            }
+
+            var columns = new List<ColumnDefinition>
+            {
+                new() { Header = "ACCOUNT NO", ValueSelector = b => ((FilprideBankAccount)b).AccountNo },
+                new() { Header = "ACCOUNT NAME", ValueSelector = b => ((FilprideBankAccount)b).AccountName },
+                new() { Header = "BANK", ValueSelector = b => ((FilprideBankAccount)b).Bank },
+                new() { Header = "BRANCH", ValueSelector = b => ((FilprideBankAccount)b).Branch },
+                new() { Header = "CREATED DATE", ValueSelector = b => ((FilprideBankAccount)b).CreatedDate, NumberFormat = "MMM/dd/yyyy" },
+                new() { Header = "CREATED BY", ValueSelector = b => ((FilprideBankAccount)b).CreatedBy ?? "" },
+            };
+    
+            var customWidths = new Dictionary<string, double>
+            {
+                { "ACCOUNT NAME", 40 },
+                { "BRANCH", 40 }
+            };
+
+            return await BuildExcelFile(
+                bankAccounts,
+                "Bank Account",
+                "BankAccount_MasterFile",
+                extractedBy,
+                company,
+                columns,
+                customWidths,
+                2,
+                cancellationToken
+            );
+        }
+        
+        #endregion
+
 
         #region -- Core Excel Building Logic --
 
