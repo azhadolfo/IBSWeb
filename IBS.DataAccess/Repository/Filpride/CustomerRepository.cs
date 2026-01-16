@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -112,6 +113,27 @@ namespace IBS.DataAccess.Repository.Filpride
                     Text = b.BranchName
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public override async Task<FilprideCustomer?> GetAsync(Expression<Func<FilprideCustomer, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                    .Include(c => c.Commissionee)
+                    .FirstOrDefaultAsync(cancellationToken);
+        }
+
+
+        public override async Task<IEnumerable<FilprideCustomer>> GetAllAsync(Expression<Func<FilprideCustomer, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideCustomer> query = dbSet
+                .Include(dr => dr.Commissionee);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

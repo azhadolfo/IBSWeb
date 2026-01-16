@@ -93,7 +93,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrail = new(
                     extractedBy,
                     $"Generate {masterFileType} master file excel",
-                    $"{masterFileType} Master File",
+                    $"{masterFileType}",
                     companyClaims
                 );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
@@ -148,7 +148,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 new() { Header = "CUSTOMER CODE", ValueSelector = c => ((FilprideCustomer)c).CustomerCode ?? "" },
                 new() { Header = "CUSTOMER NAME", ValueSelector = c => ((FilprideCustomer)c).CustomerName },
-                new() { Header = "CUSTOMER ADDRESS", ValueSelector = c => ((FilprideCustomer)c).CustomerAddress, WrapText = true },
+                new() { Header = "CUSTOMER ADDRESS", ValueSelector = c => ((FilprideCustomer)c).CustomerAddress },
                 new() { Header = "TIN NO", ValueSelector = c => ((FilprideCustomer)c).CustomerTin },
                 new() { Header = "BUSINESS STYLE", ValueSelector = c => ((FilprideCustomer)c).BusinessStyle ?? "" },
                 new() { Header = "ZIP CODE", ValueSelector = c => ((FilprideCustomer)c).ZipCode ?? "" },
@@ -156,49 +156,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Header = "CREDIT LIMIT",
                 ValueSelector = c => ((FilprideCustomer)c).CreditLimit,
-                NumberFormat = "#,##0.0000",
+                NumberFormat = "#,##0.00",
                 Alignment = ExcelHorizontalAlignment.Right
             },
             new()
             {
                 Header = "CREDIT LIMIT AS OF TODAY",
                 ValueSelector = c => ((FilprideCustomer)c).CreditLimitAsOfToday,
-                NumberFormat = "#,##0.0000",
+                NumberFormat = "#,##0.00",
                 Alignment = ExcelHorizontalAlignment.Right
             },
-            new() { Header = "HAS BRANCH", ValueSelector = c => ((FilprideCustomer)c).HasBranch ? "Yes" : "No" },
-            new() { Header = "HAS MULTIPLE TERMS", ValueSelector = c => ((FilprideCustomer)c).HasMultipleTerms ? "Yes" : "No" },
             new() { Header = "STATION CODE", ValueSelector = c => ((FilprideCustomer)c).StationCode ?? "" },
             new() { Header = "TYPE", ValueSelector = c => ((FilprideCustomer)c).Type },
-            new()
-            {
-                Header = "COMMISSION RATE",
-                ValueSelector = c => ((FilprideCustomer)c).CommissionRate,
-                NumberFormat = "0.00%",
-                Alignment = ExcelHorizontalAlignment.Right
-            },
+            new() { Header = "COMMISION RATE", ValueSelector = c => ((FilprideCustomer)c).CommissionRate },
+            new() { Header = "COMMISIONEE", ValueSelector = c => ((FilprideCustomer)c).Commissionee},
+
+
             new() { Header = "IS ACTIVE", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
-            new()
-            {
-                Header = "CREATED DATE",
-                ValueSelector = c => ((FilprideCustomer)c).CreatedDate,
-                NumberFormat = "MMM/dd/yyyy"
-            },
-            new() { Header = "CREATED BY", ValueSelector = c => ((FilprideCustomer)c).CreatedBy ?? "" },
-            new()
-            {
-                Header = "EDITED DATE",
-                ValueSelector = c => ((FilprideCustomer)c).EditedDate,
-                NumberFormat = "MMM/dd/yyyy"
-            },
-            new() { Header = "EDITED BY", ValueSelector = c => ((FilprideCustomer)c).EditedBy ?? "" }
             };
 
             var customerWidths = new Dictionary<string, double>
-            {
-                { "CUSTOMER NAME", 40 },
-                { "CUSTOMER ADDRESS", 50 },
-                { "BUSINESS STYLE", 30 }
+            {   
+                { "CUSTOMER CODE", 20 },
+                { "CUSTOMER NAME", 70 },
+                { "CUSTOMER ADDRESS", 100 },
+                { "BUSINESS STYLE", 50 }
             };
 
             // Build customer worksheet
@@ -219,16 +201,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var branchColumns = new List<ColumnDefinition>
                 {
-                    new() { Header = "BRANCH NAME", ValueSelector = b => ((FilprideCustomerBranch)b).BranchName },
                     new() { Header = "CUSTOMER NAME", ValueSelector = b => ((FilprideCustomerBranch)b).Customer?.CustomerName},
-                    new() { Header = "BRANCH ADDRESS", ValueSelector = b => ((FilprideCustomerBranch)b).BranchAddress, WrapText = true },
+                    new() { Header = "BRANCH NAME", ValueSelector = b => ((FilprideCustomerBranch)b).BranchName },
+                    new() { Header = "BRANCH ADDRESS", ValueSelector = b => ((FilprideCustomerBranch)b).BranchAddress  },
                 };
 
                 var branchWidths = new Dictionary<string, double>
                 {
-                    { "BRANCH NAME", 30 },
                     { "CUSTOMER NAME", 30 },
-                    { "BRANCH ADDRESS", 50 }
+                    { "BRANCH NAME", 30 },
+                    { "BRANCH ADDRESS", 100 }
                 };
 
                 BuildWorksheet(
@@ -276,33 +258,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 new() { Header = "SUPPLIER CODE", ValueSelector = s => ((FilprideSupplier)s).SupplierCode ?? "" },
                 new() { Header = "SUPPLIER NAME", ValueSelector = s => ((FilprideSupplier)s).SupplierName },
-                new() { Header = "SUPPLIER ADDRESS", ValueSelector = s => ((FilprideSupplier)s).SupplierAddress, WrapText = true },
+                new() { Header = "SUPPLIER ADDRESS", ValueSelector = s => ((FilprideSupplier)s).SupplierAddress },
+                new() { Header = "ZIP CODE", ValueSelector = s => ((FilprideSupplier)s).ZipCode },
+                new() { Header = "BRANCH", ValueSelector = s => ((FilprideSupplier)s).Branch },
                 new() { Header = "TIN NO", ValueSelector = s => ((FilprideSupplier)s).SupplierTin },
                 new() { Header = "SUPPLIER TERMS", ValueSelector = s => ((FilprideSupplier)s).SupplierTerms },
-                // new() { Header = "VAT TYPE", ValueSelector = s => ((FilprideSupplier)s).VatType },
-                // new() { Header = "IS ACTIVE", ValueSelector = s => ((FilprideSupplier)s).IsActive ? "Active" : "Inactive" },
+                new() { Header = "VATABLE", ValueSelector = s => ((FilprideSupplier)s).VatType },
+                new() { Header = "TAXABLE", ValueSelector = s => ((FilprideSupplier)s).TaxType },
                 new() { Header = "CATEGORY", ValueSelector = s => ((FilprideSupplier)s).Category },
-                new() { Header = "PERCENT", ValueSelector = s => ((FilprideSupplier)s).WithholdingTaxPercent },
-                new()
-                {
-                    Header = "CREATED DATE",
-                    ValueSelector = s => ((FilprideSupplier)s).CreatedDate,
-                    NumberFormat = "MMM/dd/yyyy"
-                },
-                new() { Header = "CREATED BY", ValueSelector = s => ((FilprideSupplier)s).CreatedBy ?? "" },
-                new()
-                {
-                    Header = "EDITED DATE",
-                    ValueSelector = s => ((FilprideSupplier)s).EditedDate,
-                    NumberFormat = "MMM/dd/yyyy"
-                },
-                new() { Header = "EDITED BY", ValueSelector = s => ((FilprideSupplier)s).EditedBy ?? "" }
+                new() { Header = "PERCENT", ValueSelector = s => ((FilprideSupplier)s).WithholdingTaxPercent * 100 },
             };
 
             var customWidths = new Dictionary<string, double>
             {
-                { "SUPPLIER NAME", 40 },
-                { "SUPPLIER ADDRESS", 50 }
+                { "SUPPLIER NAME", 60 },
+                { "SUPPLIER ADDRESS", 120 }
+
             };
 
             return await BuildExcelFile(
@@ -340,14 +311,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "ACCOUNT NAME", ValueSelector = b => ((FilprideBankAccount)b).AccountName },
                 new() { Header = "BANK", ValueSelector = b => ((FilprideBankAccount)b).Bank },
                 new() { Header = "BRANCH", ValueSelector = b => ((FilprideBankAccount)b).Branch },
-                new() { Header = "CREATED DATE", ValueSelector = b => ((FilprideBankAccount)b).CreatedDate, NumberFormat = "MMM/dd/yyyy" },
-                new() { Header = "CREATED BY", ValueSelector = b => ((FilprideBankAccount)b).CreatedBy ?? "" },
             };
     
             var customWidths = new Dictionary<string, double>
             {
                 { "ACCOUNT NAME", 40 },
-                { "BRANCH", 40 }
+                { "BRANCH", 80 }
             };
 
             return await BuildExcelFile(
@@ -385,8 +354,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "SERVICE NO", ValueSelector = s => ((FilprideService)s).ServiceNo },
                 new() { Header = "SERVICE NAME", ValueSelector = s => ((FilprideService)s).Name },
                 new() { Header = "PERCENT", ValueSelector = s => ((FilprideService)s).Percent},
-                new() { Header = "CREATED DATE", ValueSelector = s => ((FilprideService)s).CreatedDate, NumberFormat = "MMM/dd/yyyy" },
-                new() { Header = "CREATED BY", ValueSelector = s => ((FilprideService)s).CreatedBy ?? "" },
             };
 
             var customWidths = new Dictionary<string, double>
@@ -429,9 +396,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 new() { Header = "EMPLOYEE NO", ValueSelector = e => ((FilprideEmployee)e).EmployeeNumber },
                 new() { Header = "FIRST NAME", ValueSelector = e => ((FilprideEmployee)e).FirstName },
+                new() { Header = "MIDDLE NAME", ValueSelector = e => ((FilprideEmployee)e).MiddleName },
                 new() { Header = "LAST NAME", ValueSelector = e => ((FilprideEmployee)e).LastName },
                 new() { Header = "ADDRESS", ValueSelector = e => ((FilprideEmployee)e).Address },
-                new() { Header = "BIRTH DATE", ValueSelector = e => ((FilprideEmployee)e).BirthDate, NumberFormat = "MMM/dd/yyyy" },
+                new() { Header = "BIRTH DATE", ValueSelector = e => ((FilprideEmployee)e).BirthDate, NumberFormat = "mm/dd/yyyy" },
                 new() { Header = "TEL NO", ValueSelector = e => ((FilprideEmployee)e).TelNo },
                 new() { Header = "SSS NO", ValueSelector = e => ((FilprideEmployee)e).SssNo },
                 new() { Header = "TIN NO", ValueSelector = e => ((FilprideEmployee)e).TinNo },
@@ -439,17 +407,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "PAGIBIG NO", ValueSelector = e => ((FilprideEmployee)e).PagibigNo },
                 new() { Header = "COMPANY", ValueSelector = e => ((FilprideEmployee)e).Company },
                 new() { Header = "DEPARTMENT", ValueSelector = e => ((FilprideEmployee)e).Department },
-                new() { Header = "DATE HIRED", ValueSelector = e => ((FilprideEmployee)e).DateHired, NumberFormat = "MMM/dd/yyyy" },
-                new() { Header = "DATE RESIGNED", ValueSelector = e => ((FilprideEmployee)e).DateResigned, NumberFormat = "MMM/dd/yyyy" },
+                new() { Header = "DATE HIRED", ValueSelector = e => ((FilprideEmployee)e).DateHired, NumberFormat = "mm/dd/yyyy" },
+                new() { Header = "DATE RESIGNED", ValueSelector = e => ((FilprideEmployee)e).DateResigned?.ToDateTime(TimeOnly.MinValue), NumberFormat = "mm/dd/yyyy" },
                 new() { Header = "POSITION", ValueSelector = e => ((FilprideEmployee)e).Position },
                 new() { Header = "IS MANAGERIAL", ValueSelector = e => ((FilprideEmployee)e).IsManagerial ? "Yes" : "No" },
                 new() { Header = "SUPERVISOR", ValueSelector = e => ((FilprideEmployee)e).Supervisor },
-                // new() { Header = "STATUS", ValueSelector = e => ((FilprideEmployee)e).Status },
             };
 
             var customWidths = new Dictionary<string, double>
             {
                 { "SERVICE NAME", 30 },
+                { "ADDRESS", 100},
+                { "PHILHEALTH NO", 40 },
             };
 
             return await BuildExcelFile(
@@ -486,6 +455,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var titleRange = worksheet.Cells["A1:B1"];
             titleRange.Merge = true;
             titleRange.Value = reportTitle;
+            titleRange.Merge = true;
             titleRange.Style.Font.Size = 13;
             titleRange.Style.Font.Bold = true;
 
@@ -496,7 +466,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["B3"].Value = company;
             worksheet.Cells["A4"].Value = "Date Generated: ";
             worksheet.Cells["B4"].Value = DateTimeHelper.GetCurrentPhilippineTime();
-            worksheet.Cells["B4"].Style.Numberformat.Format = "MMM/dd/yyyy hh:mm:ss AM/PM";
+            worksheet.Cells["B4"].Style.Numberformat.Format = "mm/dd/yyyy";
+            worksheet.Cells["B4"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
 
             // Set column headers (Row 6)
             int headerRow = 6;
@@ -535,11 +506,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (!string.IsNullOrEmpty(columnDef.NumberFormat))
                     {
                         cell.Style.Numberformat.Format = columnDef.NumberFormat;
-                    }
-
-                    if (columnDef.WrapText)
-                    {
-                        cell.Style.WrapText = true;
                     }
 
                     cell.Style.HorizontalAlignment = columnDef.Alignment;
