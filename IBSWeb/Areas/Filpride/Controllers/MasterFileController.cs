@@ -78,6 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "customer" => await GenerateCustomerExcel(extractedBy, companyClaims, cancellationToken),
                     "supplier" => await GenerateSupplierExcel(extractedBy, companyClaims, cancellationToken),
                     "bankaccount" => await GenerateBankAccountExcel(extractedBy, companyClaims, cancellationToken),
+                    "service" => await GenerateServiceExcel(extractedBy, companyClaims, cancellationToken),
                     _ => throw new ArgumentException($"Invalid master file type: {masterFileType}")
                 };
 
@@ -361,6 +362,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
             );
         }
         
+        #endregion
+
+        #region -- Service Master File --
+        private async Task<(MemoryStream? stream, string fileName)> GenerateServiceExcel(
+            string extractedBy,
+            string company,
+            CancellationToken cancellationToken)
+        {
+            var services = await _dbContext.FilprideServices
+                .Where(s => s.Company == company)
+                .OrderBy(s => s.ServiceId)
+                .ToListAsync(cancellationToken);
+
+            if (!services.Any())
+            {
+                return (null, string.Empty);
+            }
+
+            var columns = new List<ColumnDefinition>
+            {
+                new() { Header = "SERVICE NO", ValueSelector = s => ((FilprideService)s).ServiceNo },
+                new() { Header = "SERVICE NAME", ValueSelector = s => ((FilprideService)s).Name },
+                new() { Header = "PERCENT", ValueSelector = s => ((FilprideService)s).Percent},
+                new() { Header = "CREATED DATE", ValueSelector = s => ((FilprideService)s).CreatedDate, NumberFormat = "MMM/dd/yyyy" },
+                new() { Header = "CREATED BY", ValueSelector = s => ((FilprideService)s).CreatedBy ?? "" },
+            };
+
+            var customWidths = new Dictionary<string, double>
+            {
+                { "SERVICE NAME", 30 },
+            };
+
+            return await BuildExcelFile(
+                services,
+                "Service",
+                "Service_MasterFile",
+                extractedBy,
+                company,
+                columns,
+                customWidths,
+                2,
+                cancellationToken
+            );
+        }
+
+
         #endregion
 
 
