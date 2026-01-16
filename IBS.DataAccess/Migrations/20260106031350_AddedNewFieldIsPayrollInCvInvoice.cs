@@ -47,17 +47,6 @@ namespace IBS.DataAccess.Migrations
 	                and account_no = '202010200'
 	                and credit > 0 and amount = 0;
             ");
-
-            // To update actual payee for payroll
-            migrationBuilder.Sql(@"
-                UPDATE filpride_check_voucher_headers AS header
-                SET payee = details.sub_account_name
-                FROM public.filpride_check_voucher_details AS details
-                WHERE details.check_voucher_header_id = header.check_voucher_header_id
-                  AND details.account_no = '202010200'
-                  AND header.is_payroll = TRUE
-                  AND details.credit > 0;
-            ");
         }
 
         /// <inheritdoc />
