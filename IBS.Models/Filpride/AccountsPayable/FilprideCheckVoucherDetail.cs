@@ -51,16 +51,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsUserSelected { get; set; }
 
-        // public int? BankId { get; set; }
-        //
-        // public int? CompanyId { get; set; }
-        //
-        // public int? CustomerId { get; set; }
-        //
-        // public int? EmployeeId { get; set; }
-        //
-        //public int? SupplierId { get; set; }
-
         public bool IsDisplayEntry { get; set; }
 
         public SubAccountType? SubAccountType { get; set; }
