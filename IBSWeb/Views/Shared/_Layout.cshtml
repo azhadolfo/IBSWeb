@@ -1065,6 +1065,37 @@
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PaymentTerms" asp-action="Index">Payment Terms</a>
                                         </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item dropend">
+                                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Master File
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Customer" })"> Customer </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="GenerateSupplierMasterFile" asp-action="Index">Supplier</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="GenerateBankAccountMasterFile" asp-action="Index">Bank Account</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="GenerateServiceMasterFile" asp-action="Index">Service</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="GenerateEmployeeMasterFile" asp-action="Index">Employee</a>
+                                                </li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             }
