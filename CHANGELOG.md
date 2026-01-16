@@ -6,6 +6,19 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.5] - 2026-01-16
+### Added
+- Added default commissionee and commission rate to the customer file
+
+### Changed
+- Modified the date parameter needed when generating AR Per Customer.
+- Revised the payroll invoice.
+
+### Fixed
+- Moved the otc fuel sales report to path correctly.
+
+---
+
 ## [v1.2.4] - 2025-12-16
 ### Changed
 - Modified the configuration of notification.js to low the cost of GCP.
@@ -77,11 +90,5 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 ---
 
 ## [Unreleased]
-
-### Added
-- Added default commissionee and commission rate to customer master file
-
-### Changed
-- Modified the date parameter needed when generating AR Per Customer.
 
 
