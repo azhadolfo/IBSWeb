@@ -256,7 +256,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                modelHeader.Status = nameof(CheckVoucherPaymentStatus.Posted);
+                modelHeader.Status = !modelHeader.IsAdvances && modelHeader.EmployeeId == null
+                    ? nameof(CheckVoucherPaymentStatus.Posted)
+                    : nameof(CheckVoucherPaymentStatus.Unliquidated);
 
                 await _unitOfWork.FilprideCheckVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
@@ -2337,6 +2339,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Any(cv => cv.CheckNo == checkNo);
 
             return Json(exists);
+        }
+
+        public async Task<IActionResult> LiquidateAdvances(int id, DateOnly? liquidateDate, CancellationToken cancellationToken)
+        {
+            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Liquidated);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Liquidate check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been liquidated.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to liquidate check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Liquidated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
     }
