@@ -156,9 +156,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims &&
-                            c.CvType == nameof(CVType.Payment) &&
-                            c.PostedBy != null) ///TODO in the future show only the cleared payment
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -186,7 +188,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -574,9 +580,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Credit = credit,
                     CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                         .OrderBy(c => c.CheckVoucherHeaderId)
-                        .Where(c => c.Company == companyClaims &&
-                                    c.CvType == nameof(CVType.Payment) &&
-                                    c.PostedBy != null)
+                        .Where(c =>
+                            c.Company == companyClaims &&
+                            c.IsAdvances &&
+                            c.EmployeeId != null &&
+                            c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
                         .Select(cvh => new SelectListItem
                         {
                             Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -608,7 +616,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                .OrderBy(c => c.CheckVoucherHeaderId)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
+                .Select(cvh => new SelectListItem
+                {
+                    Value = cvh.CheckVoucherHeaderId.ToString(),
+                    Text = cvh.CheckVoucherHeaderNo
+                })
+                .ToListAsync(cancellationToken);
+            viewModel.MinDate =  await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
 
             try
             {
