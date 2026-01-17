@@ -1065,6 +1065,37 @@
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PaymentTerms" asp-action="Index">Payment Terms</a>
                                         </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item dropend">
+                                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Master File
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Customer" })"> Customer </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Supplier" })">Supplier</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "BankAccount" })">Bank Account</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Service" })">Service</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Employee" })">Employee</a>
+                                                </li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             }

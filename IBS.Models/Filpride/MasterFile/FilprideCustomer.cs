@@ -134,5 +134,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? Commissionees { get; set; }
+
+        public FilprideSupplier? Commissionee { get; set; }
     }
 }
