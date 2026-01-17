@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.6] - 2025-01-17
+### Added
+- Implement the subaccount in journal voucher.
+
+---
+
 ## [v1.2.5] - 2026-01-16
 ### Added
 - Added default commissionee and commission rate to the customer file
