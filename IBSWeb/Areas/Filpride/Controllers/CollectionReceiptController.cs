@@ -2976,10 +2976,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                foreach (var cr in records.GroupBy(x => x.CustomerName))
+                foreach (var cr in records.GroupBy(x => new {x.ReferenceNo, x.CustomerName}))
                 {
                     var existingCustomer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(si => si.CustomerName == cr.Key.Trim(), cancellationToken);
+                        .GetAsync(si => si.CustomerName == cr.Key.CustomerName.Trim(), cancellationToken);
 
                     if (existingCustomer == null)
                     {
