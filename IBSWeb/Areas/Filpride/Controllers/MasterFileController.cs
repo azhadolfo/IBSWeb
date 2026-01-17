@@ -18,7 +18,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
     public class MasterFileController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -116,8 +115,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #region -- Customer Master File --
 
         private async Task<(MemoryStream? stream, string fileName)> GenerateCustomerExcel(
-            string extractedBy, 
-            string company, 
+            string extractedBy,
+            string company,
             CancellationToken cancellationToken)
         {
             // Fetch customers
@@ -174,7 +173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             };
 
             var customerWidths = new Dictionary<string, double>
-            {   
+            {
                 { "CUSTOMER CODE", 20 },
                 { "CUSTOMER NAME", 70 },
                 { "CUSTOMER ADDRESS", 100 },
@@ -313,7 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "BANK", ValueSelector = b => ((FilprideBankAccount)b).Bank },
                 new() { Header = "BRANCH", ValueSelector = b => ((FilprideBankAccount)b).Branch },
             };
-    
+
             var customWidths = new Dictionary<string, double>
             {
                 { "ACCOUNT NAME", 40 },
@@ -332,7 +331,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cancellationToken
             );
         }
-        
+
         #endregion
 
         #region -- Service Master File --
@@ -344,7 +343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var services = await _unitOfWork.FilprideService.GetAllAsync(
                 cancellationToken: cancellationToken);
             var servicesList = services.ToList();
-                
+
             if (!services.Any())
             {
                 return (null, string.Empty);
@@ -386,7 +385,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var employees = await _unitOfWork.FilprideEmployee.GetAllAsync(
                 cancellationToken: cancellationToken);
-                
+
             if (!employees.Any())
             {
                 return (null, string.Empty);
