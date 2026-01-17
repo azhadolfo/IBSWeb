@@ -135,6 +135,9 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = header.Company,
                         CreatedBy = header.CreatedBy!,
                         CreatedDate = header.CreatedDate,
+                        SubAccountType = detail.SubAccountType,
+                        SubAccountId = detail.SubAccountId,
+                        SubAccountName = detail.SubAccountName,
                     }
                 );
             }
@@ -145,9 +148,35 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
 
             #endregion --General Ledger Book Recording(GL)--
+
+            #region --Journal Book Recording(JV)--
+
+            var journalBook = new List<FilprideJournalBook>();
+            foreach (var detail in details)
+            {
+                journalBook.Add(
+                    new FilprideJournalBook
+                    {
+                        Date = header.Date,
+                        Reference = header.JournalVoucherHeaderNo!,
+                        Description = header.Particulars,
+                        AccountTitle = detail.AccountNo + " " + detail.AccountName,
+                        Debit = detail.Debit,
+                        Credit = detail.Credit,
+                        Company = header.Company,
+                        CreatedBy = header.CreatedBy,
+                        CreatedDate = header.CreatedDate
+                    }
+                );
+            }
+
+            await _db.FilprideJournalBooks.AddRangeAsync(journalBook, cancellationToken);
+
+            #endregion --Journal Book Recording(JV)--
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -237,22 +237,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region Details
 
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(x => x.CheckVoucherHeaderId == model.CVId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {model.CVId} not found");
+
                 var cvDetails = new List<FilprideJournalVoucherDetail>();
                 for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
                     var currentAccountNumber = viewModel.AccountNumber[i];
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
-                        .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
+                                           .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {currentAccountNumber} not found");
+
+                    var isAdvances = accountTitle.AccountName.Contains("Advances to Officers and Employees");
 
                     cvDetails.Add(
                         new FilprideJournalVoucherDetail
                         {
                             AccountNo = currentAccountNumber,
-                            AccountName = accountTitle!.AccountName,
+                            AccountName = accountTitle.AccountName,
                             TransactionNo = generateJvNo,
                             JournalVoucherHeaderId = model.JournalVoucherHeaderId,
                             Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i]
+                            Credit = viewModel.Credit[i],
+                            SubAccountType = isAdvances ? SubAccountType.Employee : null,
+                            SubAccountId = isAdvances ? cv.EmployeeId : null,
+                            SubAccountName = isAdvances ? cv.Payee : null,
                         }
                     );
                 }
@@ -389,31 +399,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.Status = nameof(Status.Posted);
 
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
-
-                #region --Journal Book Recording(JV)--
-
-                var journalBook = new List<FilprideJournalBook>();
-                foreach (var details in modelDetails)
-                {
-                    journalBook.Add(
-                        new FilprideJournalBook
-                        {
-                            Date = modelHeader.Date,
-                            Reference = modelHeader.JournalVoucherHeaderNo!,
-                            Description = modelHeader.Particulars,
-                            AccountTitle = details.AccountNo + " " + details.AccountName,
-                            Debit = details.Debit,
-                            Credit = details.Credit,
-                            Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBook, cancellationToken);
-
-                #endregion --Journal Book Recording(JV)--
 
                 #region --Audit Trail Recording
 
@@ -674,29 +659,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region Details
 
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                             .GetAsync(x => x.CheckVoucherHeaderId == existingHeaderModel.CVId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {existingHeaderModel.CVId} not found");
+
                 var cvDetails = new List<FilprideJournalVoucherDetail>();
                 for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
                     var currentAccountNumber = viewModel.AccountNumber[i];
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
-                        .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
+                                           .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {currentAccountNumber} not found");
+
+                    var isAdvances = accountTitle.AccountName.Contains("Advances to Officers and Employees");
 
                     cvDetails.Add(
                         new FilprideJournalVoucherDetail
                         {
                             AccountNo = currentAccountNumber,
-                            AccountName = accountTitle!.AccountName,
+                            AccountName = accountTitle.AccountName,
                             TransactionNo = existingHeaderModel.JournalVoucherHeaderNo!,
                             JournalVoucherHeaderId = existingHeaderModel.JournalVoucherHeaderId,
                             Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i]
+                            Credit = viewModel.Credit[i],
+                            SubAccountType = isAdvances ? SubAccountType.Employee : null,
+                            SubAccountId = isAdvances ? cv.EmployeeId : null,
+                            SubAccountName = isAdvances ? cv.Payee : null,
                         }
                     );
                 }
 
-                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
-
                 #endregion
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
 
                 #region --Audit Trail Recording
 
