@@ -5,6 +5,8 @@ namespace IBS.Models.Enums
         ForPosting,
         Posted,
         Canceled,
-        Voided
+        Voided,
+        Liquidated,
+        Unliquidated
     }
 }
