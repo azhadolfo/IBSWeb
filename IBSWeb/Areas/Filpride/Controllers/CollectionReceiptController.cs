@@ -1,3 +1,4 @@
+using System.Globalization;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -12,6 +13,7 @@ using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.Models.Enums;
+using CsvHelper;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -2833,6 +2835,125 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+        public async Task<IActionResult> UploadCsvForSingleInvoice(CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                throw new ArgumentException("Company claims not found!");
+            }
+
+            using var reader = new StreamReader(@"C:\Users\Administrator\Downloads\test2.csv");
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<UploadCsvForSingleInvoiceViewModel>();
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                foreach (var record in records)
+                {
+                    var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(si => si.SalesInvoiceNo == record.SalesInvoiceNo.Trim(), cancellationToken);
+
+                    if (existingSalesInvoice == null)
+                    {
+                        throw new ArgumentException("Sales invoice not found!");
+                    }
+
+                    var existingCustomer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(si => si.CustomerName == record.CustomerName.Trim(), cancellationToken);
+
+                    if (existingCustomer == null)
+                    {
+                        throw new ArgumentException("Customer not found!");
+                    }
+
+                    var total = record.CashAmount + record.CheckAmount + record.ManagersCheckAmount +
+                                record.EWT + record.WVAT;
+                    if (total == 0)
+                    {
+                        throw new ArgumentException(
+                            $"Please input at least one type form of payment {existingSalesInvoice.SalesInvoiceNo}");
+                    }
+
+                    var random = new Random();
+
+                    // Working hours: 8:30 AM to 7:00 PM
+                    var start = new TimeSpan(8, 30, 0);
+                    var end   = new TimeSpan(19, 0, 0);
+
+                    // Compute random time inside the range
+                    var range = end - start;
+                    var randomTime = start + TimeSpan.FromTicks((long)(range.Ticks * random.NextDouble()));
+
+                    #region --Saving default value
+
+                    var model = new FilprideCollectionReceipt
+                    {
+                        CollectionReceiptNo = string.Empty,
+                        SalesInvoiceId = existingSalesInvoice.SalesInvoiceId,
+                        SINo = existingSalesInvoice.SalesInvoiceNo,
+                        CustomerId = existingCustomer.CustomerId,
+                        TransactionDate = record.TransactionDate,
+                        ReferenceNo = record.ReferenceNo,
+                        Remarks = record.Remarks,
+                        CashAmount = record.CashAmount,
+                        CheckDate = record.CheckDate,
+                        CheckNo = record.CheckNo,
+                        CheckBank = record.CheckBank,
+                        CheckBranch = record.CheckBranch,
+                        CheckAmount = record.CheckAmount,
+                        ManagersCheckDate = record.ManagersCheckDate,
+                        ManagersCheckNo = record.ManagersCheckNo,
+                        ManagersCheckBank = record.ManagersCheckBank,
+                        ManagersCheckBranch = record.ManagersCheckBranch,
+                        ManagersCheckAmount = record.ManagersCheckAmount,
+                        EWT = record.EWT,
+                        WVAT = record.WVAT,
+                        Total = total,
+                        CreatedBy = "JAMES MATTHEW B. CASTILLEJO",
+                        CreatedDate = record.TransactionDate.ToDateTime(TimeOnly.FromTimeSpan(randomTime)),
+                        Company = companyClaims,
+                        Type = record.Type,
+                        BatchNumber = record.BatchNumber
+                    };
+
+                    await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                    var details = new FilprideCollectionReceiptDetail
+                    {
+                        CollectionReceiptId = model.CollectionReceiptId,
+                        CollectionReceiptNo = model.CollectionReceiptNo,
+                        InvoiceDate = DateOnly.FromDateTime(existingSalesInvoice.CreatedDate),
+                        InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
+                        Amount = model.Total
+                    };
+
+                    await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
+
+                    #endregion --Saving default value
+
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(existingSalesInvoice.SalesInvoiceId,
+                        model.Total, cancellationToken);
+                }
+
+                TempData["success"] = "Collection receipt created successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to create sales invoice single collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
