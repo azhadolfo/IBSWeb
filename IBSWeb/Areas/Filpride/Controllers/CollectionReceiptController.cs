@@ -3084,6 +3084,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
                             Amount = record.SiAmount
                         });
+
+                        await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(existingSalesInvoice.SalesInvoiceId,
+                            record.SiAmount, cancellationToken);
                     }
 
                     model.MultipleSIId = invoiceId.ToArray();
@@ -3092,9 +3095,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.MultipleTransactionDate = invoiceTranDate.ToArray();
 
                     await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
-
-                    await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(model.MultipleSI!,
-                        model.SIMultipleAmount!, cancellationToken);
 
                     #endregion --Saving default value
 
