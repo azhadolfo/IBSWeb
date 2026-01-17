@@ -2878,6 +2878,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             $"Please input at least one type form of payment {existingSalesInvoice.SalesInvoiceNo}");
                     }
 
+                    if (total > existingSalesInvoice.Balance)
+                    {
+                        throw new ArgumentException("Total payment amount cannot exceed the balance");
+                    }
+
                     var random = new Random();
 
                     // Working hours: 8:30 AM to 7:00 PM
@@ -2995,7 +3000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (total == 0)
                     {
                         throw new ArgumentException(
-                            $"Please input at least one type form of payment");
+                            "Please input at least one type form of payment");
                     }
 
                     var random = new Random();
@@ -3059,6 +3064,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (existingSalesInvoice == null)
                         {
                             throw new InvalidOperationException("Sales Invoice not found");
+                        }
+
+                        if (record.SiAmount > existingSalesInvoice.Balance)
+                        {
+                            throw new ArgumentException("Total payment amount cannot exceed the balance");
                         }
 
                         invoiceId.Add(existingSalesInvoice.SalesInvoiceId);
