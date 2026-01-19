@@ -502,6 +502,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -717,15 +718,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B4"].Value = $"{selectedAccount?.AccountName}";
 
                 worksheet.Cells["A7"].Value = "Date";
-                worksheet.Cells["B7"].Value = "Particular";
-                worksheet.Cells["C7"].Value = "Account No";
-                worksheet.Cells["D7"].Value = "Account Name";
-                worksheet.Cells["E7"].Value = "Sub-Account";
-                worksheet.Cells["F7"].Value = "Debit";
-                worksheet.Cells["G7"].Value = "Credit";
-                worksheet.Cells["H7"].Value = "Balance";
+                worksheet.Cells["B7"].Value = "Reference";
+                worksheet.Cells["C7"].Value = "Particular";
+                worksheet.Cells["D7"].Value = "Account No";
+                worksheet.Cells["E7"].Value = "Account Name";
+                worksheet.Cells["F7"].Value = "Sub-Account";
+                worksheet.Cells["G7"].Value = "Debit";
+                worksheet.Cells["H7"].Value = "Credit";
+                worksheet.Cells["I7"].Value = "Balance";
 
-                using (var range = worksheet.Cells["A7:H7"])
+                using (var range = worksheet.Cells["A7:I7"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -768,13 +770,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     bool isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
 
                     // Add beginning balance row for this account
-                    worksheet.Cells[row, 2].Value = "Beginning Balance";
-                    worksheet.Cells[row, 3].Value = accountNo;
-                    worksheet.Cells[row, 4].Value = account?.AccountName;
-                    worksheet.Cells[row, 8].Value = accountBeginningBalance;
-                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 3].Value = "Beginning Balance";
+                    worksheet.Cells[row, 4].Value = accountNo;
+                    worksheet.Cells[row, 5].Value = account?.AccountName;
+                    worksheet.Cells[row, 9].Value = accountBeginningBalance;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
 
-                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    using (var range = worksheet.Cells[row, 1, row, 9])
                     {
                         range.Style.Font.Italic = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -799,17 +801,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         worksheet.Cells[row, 1].Value = journal.Date.ToString("dd-MMM-yyyy");
-                        worksheet.Cells[row, 2].Value = journal.Description;
-                        worksheet.Cells[row, 3].Value = journal.AccountNo;
-                        worksheet.Cells[row, 4].Value = journal.AccountTitle;
-                        worksheet.Cells[row, 5].Value = journal.SubAccountName;
-                        worksheet.Cells[row, 6].Value = journal.Debit;
-                        worksheet.Cells[row, 7].Value = journal.Credit;
-                        worksheet.Cells[row, 8].Value = accountBalances[accountNo];
+                        worksheet.Cells[row, 2].Value = journal.Reference;
+                        worksheet.Cells[row, 3].Value = journal.Description;
+                        worksheet.Cells[row, 4].Value = journal.AccountNo;
+                        worksheet.Cells[row, 5].Value = journal.AccountTitle;
+                        worksheet.Cells[row, 6].Value = journal.SubAccountName;
+                        worksheet.Cells[row, 7].Value = journal.Debit;
+                        worksheet.Cells[row, 8].Value = journal.Credit;
+                        worksheet.Cells[row, 9].Value = accountBalances[accountNo];
 
-                        worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
 
                         groupDebit += journal.Debit;
                         groupCredit += journal.Credit;
@@ -818,16 +821,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     // Subtotal for this account
-                    worksheet.Cells[row, 5].Value = "Total " + account?.AccountName;
-                    worksheet.Cells[row, 6].Value = groupDebit;
-                    worksheet.Cells[row, 7].Value = groupCredit;
-                    worksheet.Cells[row, 8].Value = accountBalances[accountNo];
+                    worksheet.Cells[row, 6].Value = "Total " + account?.AccountName;
+                    worksheet.Cells[row, 7].Value = groupDebit;
+                    worksheet.Cells[row, 8].Value = groupCredit;
+                    worksheet.Cells[row, 9].Value = accountBalances[accountNo];
 
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
 
-                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    using (var range = worksheet.Cells[row, 1, row, 9])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -842,22 +845,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Grand total
-                using (var range = worksheet.Cells[row, 6, row, 8])
+                using (var range = worksheet.Cells[row, 6, row, 9])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
 
-                worksheet.Cells[row, 5].Value = "Total";
-                worksheet.Cells[row, 5].Style.Font.Bold = true;
-                worksheet.Cells[row, 6].Value = totalDebit;
-                worksheet.Cells[row, 7].Value = totalCredit;
-                worksheet.Cells[row, 8].Value = finalBalance;
+                worksheet.Cells[row, 6].Value = "Total";
+                worksheet.Cells[row, 6].Style.Font.Bold = true;
+                worksheet.Cells[row, 7].Value = totalDebit;
+                worksheet.Cells[row, 8].Value = totalCredit;
+                worksheet.Cells[row, 9].Value = finalBalance;
 
-                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
