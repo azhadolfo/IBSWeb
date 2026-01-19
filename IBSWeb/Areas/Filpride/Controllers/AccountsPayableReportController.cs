@@ -1639,12 +1639,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["AF7"].Value = "OTC DR#.";
                     purchaseReportWorksheet.Cells["AG7"].Value = "IS PO#";
                     purchaseReportWorksheet.Cells["AH7"].Value = "IS RR#";
+                    purchaseReportWorksheet.Cells["AI7"].Value = "TERMS";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:AH7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AI7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -1756,6 +1757,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 32].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
                         purchaseReportWorksheet.Cells[row, 33].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
                         purchaseReportWorksheet.Cells[row, 34].Value = pr.OldRRNo; // IS RR =========
+                        purchaseReportWorksheet.Cells[row, 35].Value = pr.PurchaseOrder?.Terms;
 
                         #endregion -- Assign Values to Cells --
 
