@@ -470,11 +470,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 worksheet.Cells[row, 4].Value = levelFour.AccountName;
                                 var levelFourBalance = generalLedgers
-                                    .Where(gl =>
-                                        gl.AccountNo == levelFour.AccountNumber)
-                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                                        gl.Debit - gl.Credit :
-                                        gl.Credit - gl.Debit);
+                                    .Where(gl => gl.AccountNo == levelFour.AccountNumber)
+                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit)
+                                        ? gl.Debit - gl.Credit
+                                        : gl.Credit - gl.Debit);
                                 worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
                                 subTotal += levelFourBalance;
                                 row++;
@@ -483,12 +482,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     worksheet.Cells[row, 5].Value = levelFive.AccountName;
                                     var levelFiveBalance = generalLedgers
-                                        .Where(gl =>
-                                            gl.AccountNo == levelFour.AccountNumber)
-                                        .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                                            gl.Debit - gl.Credit :
-                                            gl.Credit - gl.Debit);
+                                        .Where(gl => gl.AccountNo == levelFive.AccountNumber)
+                                        .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit)
+                                            ? gl.Debit - gl.Credit
+                                            : gl.Credit - gl.Debit);
                                     worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
+                                    subTotal += levelFiveBalance;
                                     row++;
                                 }
                             }
@@ -896,17 +895,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 2].Value = gl.Key.AccountName;
                     if (gl.First().Account.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
                     {
-                        worksheet.Cells[row, 3].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                            g.Debit - g.Credit :
-                            g.Credit - g.Debit);
+                        worksheet.Cells[row, 3].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit)
+                            ? g.Debit - g.Credit
+                            : g.Credit - g.Debit);
                         worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 3].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
                     else
                     {
-                        worksheet.Cells[row, 4].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                            g.Debit - g.Credit :
-                            g.Credit - g.Debit);
+                        worksheet.Cells[row, 4].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit)
+                            ? g.Debit - g.Credit
+                            : g.Credit - g.Debit);
                         worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 4].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
