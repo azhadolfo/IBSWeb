@@ -1197,9 +1197,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var currentLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date >= dateFrom &&
                         gl.Date <= dateTo &&
@@ -1208,9 +1205,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var priorLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < dateFrom &&
                         gl.Company == companyClaims)
@@ -1308,10 +1302,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var account in chartOfAccounts)
                 {
-                    decimal beginningDr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
-                    decimal beginningCr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
-                    decimal currentDr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
-                    decimal currentCr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
+                    var beginningDr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
+                    var beginningCr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
+                    var currentDr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
+                    var currentCr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
 
                     worksheet.Cells[row, 1].Value = account.AccountNumber;
                     worksheet.Cells[row, 2].Value = account.AccountName;
@@ -1326,8 +1320,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 8].Value = currentCr != 0 ? currentCr : null;
                     totalcurrentCr += currentCr;
 
-                    decimal endingDr = beginningDr + currentDr - beginningCr - currentCr;
-                    decimal endingCr = beginningCr + currentCr - beginningDr - currentDr;
+                    var endingDr = beginningDr + currentDr - beginningCr - currentCr;
+                    var endingCr = beginningCr + currentCr - beginningDr - currentDr;
 
                     worksheet.Cells[row, 9].Value = endingDr != 0 ? endingDr : null;
                     totalEndingDr += endingDr;
@@ -1342,19 +1336,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Value = "TOTALS";
                 worksheet.Cells[row, 5].Value = totalBeginningDr;
                 worksheet.Cells[row, 6].Value = totalBeginningCr;
-                decimal beginningGrandTotal = totalBeginningDr - totalBeginningCr;
+                var beginningGrandTotal = totalBeginningDr - totalBeginningCr;
                 worksheet.Cells[row + 1, 6].Value = beginningGrandTotal != 0 ? beginningGrandTotal : null;
 
 
                 worksheet.Cells[row, 7].Value = totalcurrentDr;
                 worksheet.Cells[row, 8].Value = totalcurrentCr;
-                decimal currentGrandTotal = totalcurrentDr - totalcurrentCr;
+                var currentGrandTotal = totalcurrentDr - totalcurrentCr;
                 worksheet.Cells[row + 1, 8].Value = currentGrandTotal != 0 ? currentGrandTotal : null;
 
 
                 worksheet.Cells[row, 9].Value = totalEndingDr;
                 worksheet.Cells[row, 10].Value = totalEndingCr;
-                decimal endingGrandTotal = totalEndingDr - totalEndingCr;
+                var endingGrandTotal = totalEndingDr - totalEndingCr;
                 worksheet.Cells[row + 1, 10].Value = endingGrandTotal != 0 ? endingGrandTotal : null;
 
                 // Auto-fit columns for better readability
