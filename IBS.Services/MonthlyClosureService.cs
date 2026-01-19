@@ -203,10 +203,8 @@ namespace IBS.Services
             try
             {
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
+                    .Include(gl => gl.Account)
+                    .ThenInclude(filprideChartOfAccount => filprideChartOfAccount.ParentAccount) // Level 4
                     .Where(gl =>
                         gl.Date.Month == periodMonth.Month &&
                         gl.Date.Year == periodMonth.Year &&
@@ -218,7 +216,7 @@ namespace IBS.Services
                     return;
                 }
 
-                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Debit))
+                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Credit))
                 {
                     throw new InvalidOperationException($"GL balance mismatch. " +
                                                         $"Debit:{generalLedgers.Sum(g => g.Debit):N4}, " +
@@ -243,25 +241,26 @@ namespace IBS.Services
                 decimal nibit = 0;
                 foreach (var account in groupByLevelOne)
                 {
-                    if (nibit == 0)
+                    var accountBalance = account.Sum(a =>
+                        a.Account.NormalBalance == nameof(NormalBalance.Debit)
+                            ? a.Debit - a.Credit
+                            : a.Credit - a.Debit);
+
+                    if (account.Key.AccountNumber!.StartsWith("4") || account.Key.AccountNumber!.StartsWith("601"))
                     {
-                        nibit += account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                            a.Debit - a.Credit :
-                            a.Credit - a.Debit);
-
-                        continue;
+                        nibit += accountBalance;
                     }
-
-                    nibit -= account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                        a.Debit - a.Credit :
-                        a.Credit - a.Debit);
+                    else
+                    {
+                        nibit -= accountBalance;
+                    }
                 }
 
                 var nibitForThePeriod = new FilprideMonthlyNibit
                 {
                     Month = periodMonth.Month,
                     Year = periodMonth.Year,
-                    Company = "Filpride", // TODO Make this dynamic soon
+                    Company = company,
                     NetIncome = nibit,
                     PriorPeriodAdjustment = generalLedgers
                         .Where(g => g.AccountTitle.Contains("Prior Period"))

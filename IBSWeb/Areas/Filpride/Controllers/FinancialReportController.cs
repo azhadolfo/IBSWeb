@@ -343,9 +343,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
@@ -1707,9 +1704,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
                         gl.Company == companyClaims)
@@ -1717,8 +1711,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
                     .Include(coa => coa.Children)
-                    .OrderBy(coa => coa.AccountNumber)
                     .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
+                    .OrderBy(coa => coa.AccountNumber)
                     .ToListAsync(cancellationToken);
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
@@ -1829,21 +1823,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 2].Value = levelTwo.AccountName;
                         row++;
 
-                        foreach (var levelThree in levelTwo.Children)
+                        foreach (var levelThree in levelTwo.Children.OrderBy(l => l.AccountNumber))
                         {
                             worksheet.Cells[row, 3].Value = levelThree.AccountName;
                             row++;
 
-                            foreach (var levelFour in levelThree.Children)
+                            foreach (var levelFour in levelThree.Children.OrderBy(l => l.AccountNumber))
                             {
                                 if (levelFour.AccountName.Contains("Retained Earnings"))
                                 {
                                     worksheet.Cells[row, 4].Value = "Retained Earnings Beg";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance : null;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.BeginningBalance != 0
+                                        ? nibitForThePeriod.BeginningBalance
+                                        : null;
                                     row++;
 
                                     worksheet.Cells[row, 4].Value = "Net Income for the Period";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome : null;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.NetIncome != 0
+                                        ? nibitForThePeriod.NetIncome
+                                        : null;
 
                                     row++;
                                     continue;
@@ -1853,11 +1851,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (levelFour.AccountName.Contains("Prior Period"))
                                 {
                                     worksheet.Cells[row, 4].Value = levelFour.AccountName;
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment : null;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0
+                                        ? nibitForThePeriod.PriorPeriodAdjustment
+                                        : null;
                                     row++;
 
                                     worksheet.Cells[row, 2].Value = "Retained Earnings End";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance : null;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.EndingBalance != 0
+                                        ? nibitForThePeriod.EndingBalance
+                                        : null;
 
                                     subTotal += nibitForThePeriod.EndingBalance;
                                     row++;
@@ -1867,25 +1869,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 worksheet.Cells[row, 4].Value = levelFour.AccountName;
                                 var levelFourBalance = generalLedgers
-                                    .Where(gl =>
-                                        gl.AccountNo == levelFour.AccountNumber)
-                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                                        gl.Debit - gl.Credit :
-                                        gl.Credit - gl.Debit);
+                                    .Where(gl => gl.AccountNo == levelFour.AccountNumber)
+                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit)
+                                        ? gl.Debit - gl.Credit
+                                        : gl.Credit - gl.Debit);
                                 worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
                                 subTotal += levelFourBalance;
                                 row++;
 
-                                foreach (var levelFive in levelFour.Children)
+                                foreach (var levelFive in levelFour.Children.OrderBy(l => l.AccountNumber))
                                 {
                                     worksheet.Cells[row, 5].Value = levelFive.AccountName;
                                     var levelFiveBalance = generalLedgers
-                                        .Where(gl =>
-                                            gl.AccountNo == levelFive.AccountNumber)
+                                        .Where(gl => gl.AccountNo == levelFive.AccountNumber)
                                         .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
                                             gl.Debit - gl.Credit :
                                             gl.Credit - gl.Debit);
                                     worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
+                                    subTotal += levelFiveBalance;
                                     row++;
                                 }
                             }
