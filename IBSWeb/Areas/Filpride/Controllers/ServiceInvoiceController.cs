@@ -808,6 +808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var reversalEntry = new FilprideGeneralLedgerBook
                 {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                     Reference = originalEntry.Reference,
                     AccountNo = originalEntry.AccountNo,
                     AccountTitle = originalEntry.AccountTitle,

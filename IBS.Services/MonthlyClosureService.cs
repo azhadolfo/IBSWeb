@@ -132,6 +132,7 @@ namespace IBS.Services
                             SubAccountId = detail.SubAccountId,
                             SubAccountType = detail.SubAccountType,
                             SubAccountName = detail.SubAccountName,
+                            ModuleType = nameof(ModuleType.Disbursement)
                         });
 
                         ledgers.Add(new FilprideGeneralLedgerBook
@@ -150,6 +151,7 @@ namespace IBS.Services
                             SubAccountId = detail.SubAccountId,
                             SubAccountType = detail.SubAccountType,
                             SubAccountName = detail.SubAccountName,
+                            ModuleType = nameof(ModuleType.Disbursement)
                         });
 
                         journalBooks.Add(new FilprideJournalBook
