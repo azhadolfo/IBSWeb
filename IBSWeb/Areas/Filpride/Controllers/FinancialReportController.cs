@@ -1180,7 +1180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        #region -- Trial Balance Report Excel File --
+        #region -- Generate Trial Balance Report Excel File --
 
         public async Task<IActionResult> TrialBalanceReport(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1320,8 +1320,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 8].Value = currentCr != 0 ? currentCr : null;
                     totalcurrentCr += currentCr;
 
-                    var endingDr = beginningDr + currentDr - beginningCr - currentCr;
-                    var endingCr = beginningCr + currentCr - beginningDr - currentDr;
+                    var endingDr = beginningDr + currentDr - currentCr;
+                    var endingCr = beginningCr + currentCr - currentDr;
 
                     worksheet.Cells[row, 9].Value = endingDr != 0 ? endingDr : null;
                     totalEndingDr += endingDr;
@@ -1332,24 +1332,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                row += 3;
+                row++;
                 worksheet.Cells[row, 2].Value = "TOTALS";
                 worksheet.Cells[row, 5].Value = totalBeginningDr;
                 worksheet.Cells[row, 6].Value = totalBeginningCr;
-                var beginningGrandTotal = totalBeginningDr - totalBeginningCr;
-                worksheet.Cells[row + 1, 6].Value = beginningGrandTotal != 0 ? beginningGrandTotal : null;
-
 
                 worksheet.Cells[row, 7].Value = totalcurrentDr;
                 worksheet.Cells[row, 8].Value = totalcurrentCr;
-                var currentGrandTotal = totalcurrentDr - totalcurrentCr;
-                worksheet.Cells[row + 1, 8].Value = currentGrandTotal != 0 ? currentGrandTotal : null;
-
 
                 worksheet.Cells[row, 9].Value = totalEndingDr;
                 worksheet.Cells[row, 10].Value = totalEndingCr;
-                var endingGrandTotal = totalEndingDr - totalEndingCr;
-                worksheet.Cells[row + 1, 10].Value = endingGrandTotal != 0 ? endingGrandTotal : null;
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
