@@ -1195,26 +1195,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var currentLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(gl => gl.Account) // Level 4
-                    .Where(gl =>
-                        gl.Date >= dateFrom &&
-                        gl.Date <= dateTo &&
-                        gl.Company == companyClaims)
-                    .ToListAsync(cancellationToken);
-
-                var priorLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(gl => gl.Account) // Level 4
-                    .Where(gl =>
-                        gl.Date < dateFrom &&
-                        gl.Company == companyClaims)
+                var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
+                    .Include(g => g.Account)
+                    .Where(pb =>
+                        pb.PeriodStartDate >= dateFrom &&
+                        pb.PeriodEndDate <= dateTo &&
+                        pb.Company == companyClaims)
+                    .OrderBy(pb => pb.Account.AccountNumber)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
                     .OrderBy(coa => coa.AccountNumber)
                     .ToListAsync(cancellationToken);
 
-                if (!currentLedgers.Any() || !priorLedgers.Any())
+                if (!glPeriodBalances.Any())
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(TrialBalanceReport));
@@ -1245,39 +1239,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["B3"].Value = "TRIAL BALANCE";
                 worksheet.Cells["B3"].Style.HorizontalAlignment = alignmentCenter;
-                worksheet.Cells["B4"].Value =
-                    $"For the Period {dateFrom.ToString("MMM dd")} to {dateTo.ToString("MMM dd, yyyy")}";
+                worksheet.Cells["B4"].Value = $"For the Period {dateFrom.ToString("MMM dd")} to {dateTo.ToString("MMM dd, yyyy")}";
                 worksheet.Cells["B4"].Style.HorizontalAlignment = alignmentCenter;
 
                 worksheet.Cells["A7"].Value = "ACCOUNT NUMBER";
                 worksheet.Cells["B7"].Value = "ACCOUNT NAME";
                 worksheet.Cells["C7"].Value = "NORMAL BALANCE";
                 worksheet.Cells["D7"].Value = "LEVEL";
+                worksheet.Cells["E7"].Value = "BEGINNING BALANCES";
 
-                var mergedCellBegBal = worksheet.Cells["E6:F6"];
-                mergedCellBegBal.Merge = true;
-                mergedCellBegBal.Value = "BEG BALANCES";
-                mergedCellBegBal.Style.HorizontalAlignment = alignmentCenter;
-
-                var mergedCellTransForThePeriod = worksheet.Cells["G6:H6"];
+                var mergedCellTransForThePeriod = worksheet.Cells["F6:G6"];
                 mergedCellTransForThePeriod.Merge = true;
                 mergedCellTransForThePeriod.Value = "TRANSACTIONS FOR THE PERIOD";
                 mergedCellTransForThePeriod.Style.HorizontalAlignment = alignmentCenter;
 
-                var mergedCellEndBal = worksheet.Cells["I6:J6"];
-                mergedCellEndBal.Merge = true;
-                mergedCellEndBal.Value = "ENDING BALANCES";
-                mergedCellEndBal.Style.HorizontalAlignment = alignmentCenter;
+                worksheet.Cells["H7"].Value = "ENDING BALANCES";
 
-                worksheet.Cells["E7"].Value = "DR";
-                worksheet.Cells["F7"].Value = "CR";
-                worksheet.Cells["G7"].Value = "DR";
-                worksheet.Cells["H7"].Value = "CR";
-                worksheet.Cells["I7"].Value = "DR";
-                worksheet.Cells["J7"].Value = "CR";
+                worksheet.Cells["F7"].Value = "DR";
+                worksheet.Cells["G7"].Value = "CR";
 
                 // Apply styling to the header row
-                using (var range = worksheet.Cells["A7:J7"])
+                using (var range = worksheet.Cells["A7:H7"])
                 {
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Font.Bold = true;
@@ -1289,66 +1271,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                worksheet.Cells["E:J"].Style.Numberformat.Format = "#,##0.00_);[Red](#,##0.00)";
+                worksheet.Cells["E:H"].Style.Numberformat.Format = "#,##0.00_);[Red](#,##0.00)";
 
-                int row = 8;
-                decimal totalBeginningDr = 0;
-                decimal totalBeginningCr = 0;
-                decimal totalcurrentDr = 0;
-                decimal totalcurrentCr = 0;
-                decimal totalEndingDr = 0;
-                decimal totalEndingCr = 0;
+                var row = 8;
+                decimal totalBeginning = 0;
+                decimal totalCurrentDr = 0;
+                decimal totalCurrentCr = 0;
+                decimal totalEnding = 0;
 
 
                 foreach (var account in chartOfAccounts)
                 {
-                    var beginningDr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
-                    var beginningCr = priorLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
-                    var currentDr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Debit);
-                    var currentCr = currentLedgers.Where(p => p.AccountNo == account.AccountNumber).Sum(p => p.Credit);
+                    var accountBalance = glPeriodBalances.FirstOrDefault(x => x.AccountId == account.AccountId);
+                    var beginningBalance = accountBalance?.BeginningBalance ?? 0;
+                    var endingBalance = accountBalance?.EndingBalance ?? 0;
+                    var currentDr = accountBalance?.DebitTotal ?? 0;
+                    var currentCr = accountBalance?.CreditTotal ?? 0;
 
                     worksheet.Cells[row, 1].Value = account.AccountNumber;
                     worksheet.Cells[row, 2].Value = account.AccountName;
                     worksheet.Cells[row, 3].Value = account.NormalBalance;
                     worksheet.Cells[row, 4].Value = account.Level;
-                    worksheet.Cells[row, 5].Value = beginningDr != 0 ? beginningDr : null;
-                    totalBeginningDr += beginningDr;
-                    worksheet.Cells[row, 6].Value = beginningCr != 0 ? beginningCr : null;
-                    totalBeginningCr += beginningCr;
-                    worksheet.Cells[row, 7].Value = currentDr != 0 ? currentDr : null;
-                    totalcurrentDr += currentDr;
-                    worksheet.Cells[row, 8].Value = currentCr != 0 ? currentCr : null;
-                    totalcurrentCr += currentCr;
-
-                    var endingDr = beginningDr + currentDr - currentCr;
-                    var endingCr = beginningCr + currentCr - currentDr;
-
-                    worksheet.Cells[row, 9].Value = endingDr != 0 ? endingDr : null;
-                    totalEndingDr += endingDr;
-                    worksheet.Cells[row, 10].Value = endingCr != 0 ? endingCr : null;
-                    totalEndingCr += endingCr;
-
-
+                    worksheet.Cells[row, 5].Value = beginningBalance != 0 ? beginningBalance : null;
+                    totalBeginning += beginningBalance;
+                    worksheet.Cells[row, 6].Value = currentDr != 0 ? currentDr : null;
+                    totalCurrentDr += currentDr;
+                    worksheet.Cells[row, 7].Value = currentCr != 0 ? currentCr : null;
+                    totalCurrentCr += currentCr;
+                    worksheet.Cells[row, 8].Value = endingBalance != 0 ? endingBalance : null;
+                    totalEnding += endingBalance;
                     row++;
                 }
 
                 row++;
                 worksheet.Cells[row, 2].Value = "TOTALS";
-                worksheet.Cells[row, 5].Value = totalBeginningDr;
-                worksheet.Cells[row, 6].Value = totalBeginningCr;
-
-                worksheet.Cells[row, 7].Value = totalcurrentDr;
-                worksheet.Cells[row, 8].Value = totalcurrentCr;
-
-                worksheet.Cells[row, 9].Value = totalEndingDr;
-                worksheet.Cells[row, 10].Value = totalEndingCr;
+                worksheet.Cells[row, 5].Value = totalBeginning;
+                worksheet.Cells[row, 6].Value = totalCurrentDr;
+                worksheet.Cells[row, 7].Value = totalCurrentCr;
+                worksheet.Cells[row, 8].Value = totalEnding;
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 1);
 
-                using (var range = worksheet.Cells[row, 5, row, 10])
+                using (var range = worksheet.Cells[row, 5, row, 8])
                 {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 

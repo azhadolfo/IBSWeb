@@ -47,5 +47,8 @@ namespace IBS.Models.Filpride
 
         public bool IsClosed { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
+        public string Company { get; set; }
+
     }
 }

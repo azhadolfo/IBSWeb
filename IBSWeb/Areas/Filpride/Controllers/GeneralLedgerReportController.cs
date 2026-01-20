@@ -689,7 +689,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
                     .Include(g => g.Account)
                     .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
-                                 pb.PeriodEndDate == previousPeriodEndDate)
+                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
                 var beginningBalanceDictionary = glPeriodBalances

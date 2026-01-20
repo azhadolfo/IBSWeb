@@ -50,5 +50,8 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? ClosedAt { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string Company { get; set; }
     }
 }
