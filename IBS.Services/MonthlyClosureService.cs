@@ -390,7 +390,6 @@ namespace IBS.Services
             {
                 var periodEnd = periodMonth.AddMonths(1).AddDays(-1);
 
-                // Fetch GL entries with sub-account information
                 var glEntries = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(x => x.Account)
                     .Where(x =>
@@ -404,7 +403,6 @@ namespace IBS.Services
                     return;
                 }
 
-                // Group by account (for main account balances)
                 var glGroupedByAccount = glEntries
                     .GroupBy(x => x.AccountId)
                     .Select(g => new
@@ -416,7 +414,6 @@ namespace IBS.Services
                     })
                     .ToList();
 
-                // Group by account + sub-account (for sub-account balances)
                 var glGroupedBySubAccount = glEntries
                     .Where(x => x.SubAccountId.HasValue && x.SubAccountType.HasValue)
                     .GroupBy(x => new
@@ -441,7 +438,6 @@ namespace IBS.Services
                 var accountIds = glGroupedByAccount.Select(x => x.AccountId).ToList();
                 var closedAt = DateTimeHelper.GetCurrentPhilippineTime();
 
-                // === PROCESS MAIN ACCOUNT BALANCES ===
                 var beginningBalancesDict = await _dbContext.FilprideGlPeriodBalances
                     .Where(x => accountIds.Contains(x.AccountId) && x.PeriodEndDate < periodEnd)
                     .GroupBy(x => x.AccountId)
@@ -482,16 +478,10 @@ namespace IBS.Services
                     });
                 }
 
-                // === PROCESS SUB-ACCOUNT BALANCES ===
                 var subAccountBalances = new List<FilprideGLSubAccountBalance>();
 
                 if (glGroupedBySubAccount.Any())
                 {
-                    // Get beginning balances for sub-accounts
-                    var subAccountKeys = glGroupedBySubAccount
-                        .Select(x => new { x.AccountId, x.SubAccountId, x.SubAccountType })
-                        .ToList();
-
                     var subAccountBeginningBalances = await _dbContext.FilprideGlSubAccountBalances
                         .Where(x => accountIds.Contains(x.AccountId) && x.PeriodEndDate < periodEnd)
                         .ToListAsync(cancellationToken);
@@ -543,7 +533,6 @@ namespace IBS.Services
                     }
                 }
 
-                // Batch insert all balances
                 if (glBalances.Any())
                 {
                     await _dbContext.FilprideGlPeriodBalances.AddRangeAsync(glBalances, cancellationToken);

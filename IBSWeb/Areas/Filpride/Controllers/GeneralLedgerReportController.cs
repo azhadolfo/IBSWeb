@@ -672,7 +672,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
                 }
 
-                // Load all chart of accounts into dictionary for better performance
                 var accountNumbers = generalLedgerByAccountNo
                     .Select(g => g.AccountNo)
                     .Where(a => !string.IsNullOrEmpty(a))
@@ -686,7 +685,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
                     .ToDictionary(a => a.AccountNumber!, a => a);
 
-                // Get beginning balances from GL Period Balance for all accounts
                 var previousPeriodEndDate = dateFrom.AddDays(-1);
                 var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
                     .Include(g => g.Account)
@@ -698,12 +696,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(pb => !string.IsNullOrEmpty(pb.Account.AccountNumber))
                     .ToDictionary(pb => pb.Account.AccountNumber!, pb => pb.EndingBalance);
 
-                // Create the Excel package
                 using var package = new ExcelPackage();
-                // Add a new worksheet to the Excel package
                 var worksheet = package.Workbook.Worksheets.Add("GeneralLedger");
 
-                // Set the column headers
                 var mergedCells = worksheet.Cells["A1:C1"];
                 mergedCells.Merge = true;
                 mergedCells.Value = "GENERAL LEDGER BY ACCOUNT NUMBER";
@@ -744,7 +739,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal totalCredit = 0;
                 decimal finalBalance = 0;
 
-                // Dictionary to track running balance per account
                 var accountBalances = new Dictionary<string, decimal>();
 
                 foreach (var grouped in generalLedgerByAccountNo
@@ -754,20 +748,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountNo = grouped.Key;
 
-                    // Get beginning balance for this specific account
-                    decimal accountBeginningBalance = beginningBalanceDictionary.ContainsKey(accountNo)
-                        ? beginningBalanceDictionary[accountNo]
-                        : 0;
+                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(accountNo, 0m);
 
                     // Initialize running balance for this account
                     accountBalances[accountNo] = accountBeginningBalance;
 
                     // Get account details from dictionary
-                    var account = accountDictionary.ContainsKey(accountNo)
-                        ? accountDictionary[accountNo]
+                    var account = accountDictionary.TryGetValue(accountNo, out var value)
+                        ? value
                         : null;
 
-                    bool isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
+                    var isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
 
                     // Add beginning balance row for this account
                     worksheet.Cells[row, 3].Value = "Beginning Balance";
@@ -790,7 +781,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var journal in grouped.OrderBy(g => g.Date))
                     {
-                        // Update running balance for this account
                         if (isDebitAccount)
                         {
                             accountBalances[accountNo] += journal.Debit - journal.Credit;
