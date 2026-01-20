@@ -704,3 +704,7 @@ body.loading {
     font-size: 0.7rem;
     padding: 0.25em 0.4em;
 }
+
+.dt-input {
+    margin-right: .5rem;
+}
