@@ -168,7 +168,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             new() { Header = "STATION CODE", ValueSelector = c => ((FilprideCustomer)c).StationCode ?? "" },
             new() { Header = "TYPE", ValueSelector = c => ((FilprideCustomer)c).Type },
             new() { Header = "COMMISION RATE", ValueSelector = c => ((FilprideCustomer)c).CommissionRate },
-            new() { Header = "COMMISIONEE", ValueSelector = c => ((FilprideCustomer)c).Commissionee},
+            new() { Header = "COMMISIONEE", ValueSelector = c => ((FilprideCustomer)c).Commissionee?.SupplierName ?? ""},
             new() { Header = "IS ACTIVE", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
             };
 
