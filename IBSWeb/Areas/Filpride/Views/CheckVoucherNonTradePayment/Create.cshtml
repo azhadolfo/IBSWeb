@@ -238,9 +238,9 @@
                                         // Add row to table
                                         var cvRow = `<tr>
                                                         <td class="text-center">${cv.cvNumber}</td>
-                                                        <td class="text-center">${formatNumber(cv.balance)}</td>
+                                                        <td class="text-center">${formatNumberToFour(cv.balance)}</td>
                                                         <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
-                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${cv.balance}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${formatNumberToFour(cv.balance)}" />
                                                     </tr>`;
                                         $(".cvAmountList").append(cvRow);
                                     });
@@ -252,16 +252,16 @@
                                     var newRow = `<tr>
                                             <td><input type="text" name="AccountNumber" value="${entry.accountNumber}" class="w-100" style='border:none' readonly /></td>
                                             <td><input name='AccountTitle' value='${entry.accountTitle}' class="w-100" style='border:none' readonly /></td>
-                                            <td><input name="Debit" value='${formatNumber(entry.debit)}' class="w-100 debit" style='border:none' readonly /></td>
-                                            <td><input name="Credit" value='${formatNumber(entry.credit)}' class="w-100 credit" style='border:none' readonly /></td>
+                                            <td><input name="Debit" value='${formatNumberToFour(entry.debit)}' class="w-100 debit" style='border:none' readonly /></td>
+                                            <td><input name="Credit" value='${formatNumberToFour(entry.credit)}' class="w-100 credit" style='border:none' readonly /></td>
                                         </tr>`;
                                     $("#accountingEntriesBody").append(newRow);
                                 });
 
                                 // Update the total debit and credit
-                                $(".totalDebit").text(formatNumber(data.totalDebit));
-                                $(".totalCredit").text(formatNumber(data.totalCredit));
-                                $("#Total").val(formatNumber(data.totalCredit));
+                                $(".totalDebit").text(formatNumberToFour(data.totalDebit));
+                                $(".totalCredit").text(formatNumberToFour(data.totalCredit));
+                                $("#Total").val(formatNumberToFour(data.totalCredit));
                                 
                                 validateDebitAndCredit();
                             }
