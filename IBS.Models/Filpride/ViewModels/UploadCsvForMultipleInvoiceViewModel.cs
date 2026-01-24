@@ -1,6 +1,6 @@
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class UploadCsvForSingleInvoiceViewModel
+    public class UploadCsvForMultipleInvoiceViewModel
     {
         public string CustomerName { get; set; }
 
@@ -43,5 +43,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string BatchNumber { get; set; }
 
         public string Type { get; set; }
+
+        public decimal SiAmount { get; set; }
     }
 }
