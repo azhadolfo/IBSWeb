@@ -319,17 +319,17 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Fetch all delivery receipts within the date range
-            var seviceInvoices = await _db.FilprideServiceInvoices
+            var serviceInvoices = await _db.FilprideServiceInvoices
                 .Where(dr => dr.Company == company &&
-                             DateOnly.FromDateTime(dr.CreatedDate) >= dateFrom &&
-                             DateOnly.FromDateTime(dr.CreatedDate) <= dateTo &&
+                             dr.Period >= dateFrom &&
+                             dr.Period  <= dateTo &&
                              dr.Status == nameof(Status.Posted))
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Service)
-                .OrderBy(p => p.CreatedDate)
+                .OrderBy(p => p.ServiceInvoiceNo)
                 .ToListAsync(cancellationToken);
 
-            return seviceInvoices;
+            return serviceInvoices;
         }
 
         public async Task<List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
