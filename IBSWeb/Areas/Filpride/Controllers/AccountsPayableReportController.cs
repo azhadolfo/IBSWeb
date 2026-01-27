@@ -8491,7 +8491,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Fetch journal voucher report data
-                var journalVoucherReport = await _unitOfWork.FilprideReport.GetJournalVoucherReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var journalVoucherReport = await _unitOfWork.FilprideReport
+                    .GetJournalVoucherReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
                 if (journalVoucherReport.Count == 0)
                 {
@@ -8574,8 +8575,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = detail.AccountName;
                     worksheet.Cells[row, 8].Value = detail.JournalVoucherHeader.Status;
                     worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.JVReason;
-                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
-                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
+                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
+                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
                     worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.Payee;
                     worksheet.Cells[row, 13].Value = detail.JournalVoucherHeader.CreatedBy;
 
