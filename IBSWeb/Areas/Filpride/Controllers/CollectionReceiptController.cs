@@ -2874,7 +2874,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var model = new List<FilprideCollectionReceipt>();
                 var details = new List<FilprideCollectionReceiptDetail>();
 
-                foreach (var record in records)
+                foreach (var record in records.OrderBy(x => x.TransactionDate))
                 {
                     existingSalesInvoice.TryGetValue(record.SalesInvoiceNo.Trim(), out var getSalesInvoice);
 
@@ -2894,7 +2894,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (total > getSalesInvoice.Balance)
                     {
-                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, $"Total payment amount: {total} cannot exceed the balance{getSalesInvoice.Balance}"));
+                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, $"Total payment amount: {total} cannot exceed the balance: {getSalesInvoice.Balance}"));
                         continue;
                     }
 
@@ -3021,15 +3021,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             using var reader = new StreamReader(@"C:\Users\Administrator\Downloads\MULTI-INVOICE-AUGUST-2024-NOVEMBER-2025_1.csv");
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             var records = csv.GetRecords<UploadCsvForMultipleInvoiceViewModel>().ToList();
-            var customerList = records
-                .Select(x => x.CustomerName.Trim())
-                .Distinct()
-                .ToList();
-            var getCustomers = _dbContext.FilprideCustomers
-                .Where(x => customerList.Contains(x.CustomerName.Trim()))
-                .GroupBy(x => x.CustomerName.Trim())
-                .Select(x => x.First())
-                .ToDictionary(x => x.CustomerName.Trim(), x => x.CustomerId);
 
             var salesInvoiceNo = records.Select(x => x.SalesInvoiceNo.Trim()).Distinct().ToList();
 
@@ -3048,18 +3039,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var timer = Stopwatch.StartNew();
             try
             {
-                foreach (var cr in records.GroupBy(x => new {x.CustomerName, x.ReferenceNo}))
+                foreach (var cr in records.GroupBy(x => x.ReferenceNo))
                 {
-                    getCustomers.TryGetValue(cr.Select(x => x.CustomerName).FirstOrDefault()?.Trim() ?? String.Empty,
-                        out var customerId);
-
-                    if (customerId == 0)
-                    {
-                        listOfNeedToCorrect.Add((cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
-                            cr.Select(x => x.ReferenceNo).FirstOrDefault(), "Customer Id not found!"));
-                        continue;
-                    }
-
                     var total = cr.Select(x => x.CashAmount).FirstOrDefault()
                                 + cr.Select(x => x.CheckAmount).FirstOrDefault()
                                 + cr.Select(x => x.ManagersCheckAmount).FirstOrDefault()
@@ -3092,6 +3073,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var invoiceNos = new List<string>();
                     var invoiceAmounts = new List<decimal>();
                     var invoiceTranDate = new List<DateOnly>();
+                    var customerId = 0;
 
                     foreach (var record in cr)
                     {
@@ -3108,12 +3090,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             skipOuter = true;
                             break;
                         }
+                        if (getSalesInvoice.CustomerId == 0)
+                        {
+                            listOfNeedToCorrect.Add((cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
+                                cr.Select(x => x.ReferenceNo).FirstOrDefault(), "Customer Id not found!"));
+                            continue;
+                        }
                         if (record.SiAmount > getSalesInvoice.Balance)
                         {
                             listOfNeedToCorrect.Add((
                                 cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
                                 cr.Select(x => x.ReferenceNo).FirstOrDefault(),
-                                "Total payment amount cannot exceed the balance"
+                                $"Total payment amount: {record.SiAmount} cannot exceed the balance: {getSalesInvoice.Balance}"
                             ));
 
                             skipOuter = true;
@@ -3144,6 +3132,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 getSalesInvoice.PaymentStatus = "OverPaid";
                             }
                         }
+
+                        customerId = getSalesInvoice.CustomerId;
                     }
 
                     if (skipOuter)
