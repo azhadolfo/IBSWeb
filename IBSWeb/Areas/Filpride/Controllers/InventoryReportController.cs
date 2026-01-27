@@ -249,9 +249,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     grandTotalTotalBalance += subTotalTotalBalance;
                                 }
 
-                                var grandTotalAverageCost = grandTotalInventoryBalance != 0 && grandTotalTotalBalance != 0 ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
-
-                                table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                            var grandTotalAverageCost = grandTotalInventoryBalance != 0
+                                ? grandTotalTotalBalance / grandTotalInventoryBalance
+                                : 0m;
+                            table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Grand Total").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalInventoryBalance != 0 ? grandTotalInventoryBalance < 0 ? $"({Math.Abs(grandTotalInventoryBalance).ToString(SD.Two_Decimal_Format)})" : grandTotalInventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalInventoryBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalAverageCost != 0 ? grandTotalAverageCost < 0 ? $"({Math.Abs(grandTotalAverageCost).ToString(SD.Four_Decimal_Format)})" : grandTotalAverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(grandTotalAverageCost < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
@@ -564,15 +565,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Calculate averages
                 var grandTotalInventoryBalance = grandTotalPurchasesQty > 0 || grandTotalSalesQty > 0
-                    ? grandTotalPurchasesQty-grandTotalSalesQty : 0m;
+                    ? grandTotalPurchasesQty - grandTotalSalesQty
+                    : 0m;
                 var grandTotalTotalBalance = grandTotalPurchasesAmt > 0 || grandTotalSalesAmt > 0
-                    ? grandTotalPurchasesAmt-grandTotalSalesAmt : 0m;
-                var grandTotalAverageCost = grandTotalInventoryBalance > 0 || grandTotalTotalBalance > 0
-                    ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
-                var grandTotalPurchasesAverageCost = grandTotalPurchasesQty > 0 && grandTotalPurchasesAmt > 0
-                    ? grandTotalPurchasesAmt / grandTotalPurchasesQty : 0m;
-                var grandTotalSalesAverageCost = grandTotalSalesQty > 0 || grandTotalSalesAmt > 0
-                    ? grandTotalSalesAmt / grandTotalSalesQty : 0m;
+                    ? grandTotalPurchasesAmt - grandTotalSalesAmt
+                    : 0m;
+                var grandTotalAverageCost = grandTotalInventoryBalance != 0
+                    ? grandTotalTotalBalance / grandTotalInventoryBalance
+                    : 0m;
+                var grandTotalPurchasesAverageCost = grandTotalPurchasesQty != 0
+                    ? grandTotalPurchasesAmt / grandTotalPurchasesQty
+                    : 0m;
+                var grandTotalSalesAverageCost = grandTotalSalesQty != 0
+                    ? grandTotalSalesAmt / grandTotalSalesQty
+                    : 0m;
 
                 // Title cell
                 worksheet.Cells[currentRow, 1, currentRow, 3].Merge = true;
