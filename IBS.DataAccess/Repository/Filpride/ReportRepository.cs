@@ -608,6 +608,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             && x.JournalVoucherHeader.Date >= dateFrom
                             && x.JournalVoucherHeader.Date <= dateTo)
                 .OrderBy(jvd => jvd.JournalVoucherHeader!.Date)
+                .OrderBy(jvd => jvd.JournalVoucherHeader!.JournalVoucherHeaderNo)
                 .ToListAsync(cancellationToken);
 
 

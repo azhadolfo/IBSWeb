@@ -477,7 +477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(x => x.AppointedSupplier!)
                     .ThenInclude(x => x.PurchaseOrder!)
                     .ThenInclude(x => x.Supplier)
-                    .Where(x => x.CustomerOrderSlipId == id)
+                    .Where(x => x.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
                     .Select(a => new SelectListItem
                     {
                         Value = a.AppointedSupplier!.PurchaseOrderId.ToString(),
