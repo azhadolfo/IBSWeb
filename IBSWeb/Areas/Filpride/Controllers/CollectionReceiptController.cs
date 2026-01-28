@@ -3303,7 +3303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     if (type == nameof(DocumentType.Undocumented))
                     {
-                        record.CollectionReceiptNo = $"CR{incrementedDigit:D9}";
+                        record.CollectionReceiptNo = $"CRU{incrementedDigit:D9}";
                         incrementedDigit++;
                     }
 
