@@ -2905,37 +2905,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 gmReportWorksheet.Cells["A7"].Value = "RR DATE";
                 gmReportWorksheet.Cells["B7"].Value = "SUPPLIER NAME";
-                gmReportWorksheet.Cells["C7"].Value = "SUPPLIER TERMS";
-                gmReportWorksheet.Cells["D7"].Value = "PO NO.";
-                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE RR";
-                gmReportWorksheet.Cells["F7"].Value = "FILPRIDE DR";
-                gmReportWorksheet.Cells["G7"].Value = "CUSTOMER NAME";
-                gmReportWorksheet.Cells["H7"].Value = "PRODUCT NAME";
-                gmReportWorksheet.Cells["I7"].Value = "ACCOUNT SPECIALIST";
-                gmReportWorksheet.Cells["J7"].Value = "HAULER NAME";
-                gmReportWorksheet.Cells["K7"].Value = "COMMISSIONEE";
-                gmReportWorksheet.Cells["L7"].Value = "VOLUME";
-                gmReportWorksheet.Cells["M7"].Value = "COS PRICE";
-                gmReportWorksheet.Cells["N7"].Value = "SALES G. VAT";
-                gmReportWorksheet.Cells["O7"].Value = "SALES N. VAT";
-                gmReportWorksheet.Cells["P7"].Value = "CPL G. VAT";
-                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES G. VAT";
-                gmReportWorksheet.Cells["R7"].Value = "PURCHASES N.VAT";
-                gmReportWorksheet.Cells["S7"].Value = "GM/LITER";
-                gmReportWorksheet.Cells["T7"].Value = "GM AMOUNT";
-                gmReportWorksheet.Cells["U7"].Value = "FREIGHT CHARGE";
-                gmReportWorksheet.Cells["V7"].Value = "FC AMOUNT";
-                gmReportWorksheet.Cells["W7"].Value = "FC N.VAT";
-                gmReportWorksheet.Cells["X7"].Value = "COMMISSION/LITER";
-                gmReportWorksheet.Cells["Y7"].Value = "COMMISSION AMOUNT";
-                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN/LIT";
-                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT";
+                gmReportWorksheet.Cells["C7"].Value = "PO NO.";
+                gmReportWorksheet.Cells["D7"].Value = "FILPRIDE RR";
+                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE DR";
+                gmReportWorksheet.Cells["F7"].Value = "CUSTOMER NAME";
+                gmReportWorksheet.Cells["G7"].Value = "PRODUCT NAME";
+                gmReportWorksheet.Cells["H7"].Value = "ACCOUNT SPECIALIST";
+                gmReportWorksheet.Cells["I7"].Value = "HAULER NAME";
+                gmReportWorksheet.Cells["J7"].Value = "COMMISSIONEE";
+                gmReportWorksheet.Cells["K7"].Value = "VOLUME";
+                gmReportWorksheet.Cells["L7"].Value = "COS PRICE";
+                gmReportWorksheet.Cells["M7"].Value = "SALES G. VAT";
+                gmReportWorksheet.Cells["N7"].Value = "SALES N. VAT";
+                gmReportWorksheet.Cells["O7"].Value = "CPL G. VAT";
+                gmReportWorksheet.Cells["P7"].Value = "PURCHASES G. VAT";
+                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES N.VAT";
+                gmReportWorksheet.Cells["R7"].Value = "GM/LITER";
+                gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT";
+                gmReportWorksheet.Cells["T7"].Value = "FREIGHT CHARGE";
+                gmReportWorksheet.Cells["U7"].Value = "FC AMOUNT";
+                gmReportWorksheet.Cells["V7"].Value = "FC N.VAT";
+                gmReportWorksheet.Cells["W7"].Value = "COMMISSION/LITER";
+                gmReportWorksheet.Cells["X7"].Value = "COMMISSION AMOUNT";
+                gmReportWorksheet.Cells["Y7"].Value = "NET MARGIN/LIT";
+                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN AMOUNT";
 
                 #endregion
 
                 #region -- Apply styling to the header row --
 
-                    using (var range = gmReportWorksheet.Cells["A7:AA7"])
+                    using (var range = gmReportWorksheet.Cells["A7:Z7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -2998,31 +2997,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     gmReportWorksheet.Cells[row, 1].Value = dr.DeliveredDate;
                     gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
-                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.Terms;
-                    gmReportWorksheet.Cells[row, 4].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                    gmReportWorksheet.Cells[row, 5].Value = rr?.ReceivingReportNo;
-                    gmReportWorksheet.Cells[row, 6].Value = dr.DeliveryReceiptNo;
-                    gmReportWorksheet.Cells[row, 7].Value = dr.CustomerOrderSlip.CustomerName;
-                    gmReportWorksheet.Cells[row, 8].Value = dr.PurchaseOrder.ProductName;
-                    gmReportWorksheet.Cells[row, 9].Value = dr.CustomerOrderSlip.AccountSpecialist;
-                    gmReportWorksheet.Cells[row, 10].Value = dr.HaulerName;
-                    gmReportWorksheet.Cells[row, 11].Value = dr.CustomerOrderSlip.CommissioneeName;
-                    gmReportWorksheet.Cells[row, 12].Value = volume;
-                    gmReportWorksheet.Cells[row, 13].Value = cosPricePerLiter;
-                    gmReportWorksheet.Cells[row, 14].Value = salesAmount;
-                    gmReportWorksheet.Cells[row, 15].Value = netSales;
-                    gmReportWorksheet.Cells[row, 16].Value = costPerLiter;
-                    gmReportWorksheet.Cells[row, 17].Value = costAmount;
-                    gmReportWorksheet.Cells[row, 18].Value = netPurchases;
-                    gmReportWorksheet.Cells[row, 19].Value = gmPerLiter;
-                    gmReportWorksheet.Cells[row, 20].Value = gmAmount;
-                    gmReportWorksheet.Cells[row, 21].Value = freightCharge;
-                    gmReportWorksheet.Cells[row, 22].Value = freightChargeAmount;
-                    gmReportWorksheet.Cells[row, 23].Value = freightChargeNet;
-                    gmReportWorksheet.Cells[row, 24].Value = commissionPerLiter;
-                    gmReportWorksheet.Cells[row, 25].Value = commissionAmount;
-                    gmReportWorksheet.Cells[row, 26].Value = netMarginPerLiter;
-                    gmReportWorksheet.Cells[row, 27].Value = netMarginAmount;
+                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 4].Value = rr?.ReceivingReportNo;
+                    gmReportWorksheet.Cells[row, 5].Value = dr.DeliveryReceiptNo;
+                    gmReportWorksheet.Cells[row, 6].Value = dr.CustomerOrderSlip.CustomerName;
+                    gmReportWorksheet.Cells[row, 7].Value = dr.PurchaseOrder.ProductName;
+                    gmReportWorksheet.Cells[row, 8].Value = dr.CustomerOrderSlip.AccountSpecialist;
+                    gmReportWorksheet.Cells[row, 9].Value = dr.HaulerName;
+                    gmReportWorksheet.Cells[row, 10].Value = dr.CustomerOrderSlip.CommissioneeName;
+                    gmReportWorksheet.Cells[row, 11].Value = volume;
+                    gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
+                    gmReportWorksheet.Cells[row, 13].Value = salesAmount;
+                    gmReportWorksheet.Cells[row, 14].Value = netSales;
+                    gmReportWorksheet.Cells[row, 15].Value = costPerLiter;
+                    gmReportWorksheet.Cells[row, 16].Value = costAmount;
+                    gmReportWorksheet.Cells[row, 17].Value = netPurchases;
+                    gmReportWorksheet.Cells[row, 18].Value = gmPerLiter;
+                    gmReportWorksheet.Cells[row, 19].Value = gmAmount;
+                    gmReportWorksheet.Cells[row, 20].Value = freightCharge;
+                    gmReportWorksheet.Cells[row, 21].Value = freightChargeAmount;
+                    gmReportWorksheet.Cells[row, 22].Value = freightChargeNet;
+                    gmReportWorksheet.Cells[row, 23].Value = commissionPerLiter;
+                    gmReportWorksheet.Cells[row, 24].Value = commissionAmount;
+                    gmReportWorksheet.Cells[row, 25].Value = netMarginPerLiter;
+                    gmReportWorksheet.Cells[row, 26].Value = netMarginAmount;
 
                     #endregion -- Assign Values to Cells --
 
@@ -3059,52 +3057,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
                 gmReportWorksheet.Cells[row, 10].Value = "Total: ";
-                gmReportWorksheet.Cells[row, 12].Value = totalVolume;
-                gmReportWorksheet.Cells[row, 13].Value = totalCosPrice;
-                gmReportWorksheet.Cells[row, 14].Value = totalSalesAmount;
-                gmReportWorksheet.Cells[row, 15].Value = totalNetSales;
-                gmReportWorksheet.Cells[row, 16].Value = totalCostPerLiter;
-                gmReportWorksheet.Cells[row, 17].Value = totalCostAmount;
-                gmReportWorksheet.Cells[row, 18].Value = totalNetPurchases;
-                gmReportWorksheet.Cells[row, 19].Value = totalGmPerLiter;
-                gmReportWorksheet.Cells[row, 20].Value = totalGmAmount;
-                gmReportWorksheet.Cells[row, 21].Value = totalFreightCharge;
-                gmReportWorksheet.Cells[row, 22].Value = totalFcAmount;
-                gmReportWorksheet.Cells[row, 23].Value = totalFcNet;
-                gmReportWorksheet.Cells[row, 24].Value = totalCommissionPerLiter;
-                gmReportWorksheet.Cells[row, 25].Value = totalCommissionAmount;
-                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginPerLiter;
-                gmReportWorksheet.Cells[row, 27].Value = totalNetMarginAmount;
+                gmReportWorksheet.Cells[row, 11].Value = totalVolume;
+                gmReportWorksheet.Cells[row, 12].Value = totalCosPrice;
+                gmReportWorksheet.Cells[row, 13].Value = totalSalesAmount;
+                gmReportWorksheet.Cells[row, 14].Value = totalNetSales;
+                gmReportWorksheet.Cells[row, 15].Value = totalCostPerLiter;
+                gmReportWorksheet.Cells[row, 16].Value = totalCostAmount;
+                gmReportWorksheet.Cells[row, 17].Value = totalNetPurchases;
+                gmReportWorksheet.Cells[row, 18].Value = totalGmPerLiter;
+                gmReportWorksheet.Cells[row, 19].Value = totalGmAmount;
+                gmReportWorksheet.Cells[row, 20].Value = totalFreightCharge;
+                gmReportWorksheet.Cells[row, 21].Value = totalFcAmount;
+                gmReportWorksheet.Cells[row, 22].Value = totalFcNet;
+                gmReportWorksheet.Cells[row, 23].Value = totalCommissionPerLiter;
+                gmReportWorksheet.Cells[row, 24].Value = totalCommissionAmount;
+                gmReportWorksheet.Cells[row, 25].Value = totalNetMarginPerLiter;
+                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginAmount;
 
-                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(11).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Column(14).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Column(17).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Column(22).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(27).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
                 // Apply style to subtotal rows
                 // color to whole row
-                using (var range = gmReportWorksheet.Cells[row, 1, row, 27])
+                using (var range = gmReportWorksheet.Cells[row, 1, row, 26])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
-                using (var range = gmReportWorksheet.Cells[row, 10, row, 27])
+                using (var range = gmReportWorksheet.Cells[row, 10, row, 26])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
