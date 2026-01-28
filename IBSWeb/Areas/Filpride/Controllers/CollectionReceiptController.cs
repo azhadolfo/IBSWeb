@@ -24,6 +24,7 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -2850,7 +2851,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             using var reader = new StreamReader(@"C:\Users\Administrator\Downloads\SINGLE-INVOICE-AUGUST-2024-NOVEMBER-2025_1.csv");
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            var records = csv.GetRecords<UploadCsvForSingleInvoiceViewModel>().ToList();
+            var records = csv.GetRecords<UploadCsvForSingleInvoiceViewModel>().OrderBy(x => x.TransactionDate).ToList();
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -2870,17 +2871,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException("No sales invoice found");
                 }
 
-                List<(string salesInvoiceNo, string OrNumber, string problem)> listOfNeedToCorrect = new();
+                List<(string salesInvoiceNo, string OrNumber, string problem, string customerName, DateOnly transactionDate)> listOfNeedToCorrect = new();
                 var model = new List<FilprideCollectionReceipt>();
                 var details = new List<FilprideCollectionReceiptDetail>();
 
-                foreach (var record in records.OrderBy(x => x.TransactionDate))
+                foreach (var record in records)
                 {
                     existingSalesInvoice.TryGetValue(record.SalesInvoiceNo.Trim(), out var getSalesInvoice);
 
                     if (getSalesInvoice == null)
                     {
-                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, "Sales Invoice not found"));
+                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, "Sales Invoice not found", record.CustomerName, record.TransactionDate));
                         continue;
                     }
 
@@ -2888,13 +2889,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 record.EWT + record.WVAT;
                     if (total == 0)
                     {
-                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, "Please input at least one type form of payment"));
+                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, "Please input at least one type form of payment", record.CustomerName, record.TransactionDate));
                         continue;
                     }
 
                     if (total > getSalesInvoice.Balance)
                     {
-                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, $"Total payment amount: {total} cannot exceed the balance: {getSalesInvoice.Balance}"));
+                        listOfNeedToCorrect.Add((record.SalesInvoiceNo, record.ReferenceNo, $"Total payment amount: {total} cannot exceed the balance: {getSalesInvoice.Balance}", record.CustomerName, record.TransactionDate));
                         continue;
                     }
 
@@ -2990,7 +2991,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 fileContent.AppendLine($"{"Sales Invoice No", -17}\t{"OR Number", -12}\t{"Problem"}");
                 foreach (var record in listOfNeedToCorrect)
                 {
-                    fileContent.AppendLine($"{record.salesInvoiceNo, -17}\t{record.OrNumber, -12}\t{record.problem}");
+                    fileContent.AppendLine($"{record.salesInvoiceNo}\t{record.OrNumber}\t{record.problem}\t{record.customerName}\t{record.transactionDate}");
                 }
                 // Convert the content to a byte array
                 var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -3030,7 +3031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(x => x.First())
                 .ToDictionaryAsync(x => x.SalesInvoiceNo!, cancellationToken);
 
-            List<(string? salesInvoiceNo, string? OrNumber, string problem)> listOfNeedToCorrect = new();
+            List<(string? salesInvoiceNo, string? OrNumber, string problem, string? customerName, DateOnly transactionDate)> listOfNeedToCorrect = new();
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var model = new List<FilprideCollectionReceipt>();
@@ -3051,7 +3052,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         listOfNeedToCorrect.Add((cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
                             cr.Select(x => x.ReferenceNo).FirstOrDefault(),
-                            "Please input at least one type form of payment"));
+                            "Please input at least one type form of payment", cr.Select(x => x.CustomerName).FirstOrDefault(), cr.Select(x => x.TransactionDate).FirstOrDefault()));
                         continue;
                     }
 
@@ -3084,7 +3085,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             listOfNeedToCorrect.Add((
                                 cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
                                 cr.Select(x => x.ReferenceNo).FirstOrDefault(),
-                                "Sales Invoice not found"
+                                "Sales Invoice not found", record.CustomerName, record.TransactionDate
                             ));
 
                             skipOuter = true;
@@ -3093,7 +3094,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (getSalesInvoice.CustomerId == 0)
                         {
                             listOfNeedToCorrect.Add((cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
-                                cr.Select(x => x.ReferenceNo).FirstOrDefault(), "Customer Id not found!"));
+                                cr.Select(x => x.ReferenceNo).FirstOrDefault(),
+                                "Customer Id not found!", record.CustomerName, record.TransactionDate));
                             continue;
                         }
                         if (record.SiAmount > getSalesInvoice.Balance)
@@ -3102,6 +3104,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 cr.Select(x => x.SalesInvoiceNo).FirstOrDefault(),
                                 cr.Select(x => x.ReferenceNo).FirstOrDefault(),
                                 $"Total payment amount: {record.SiAmount} cannot exceed the balance: {getSalesInvoice.Balance}"
+                                , record.CustomerName, record.TransactionDate
                             ));
 
                             skipOuter = true;
@@ -3217,7 +3220,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 fileContent.AppendLine($"{"Sales Invoice No",-17}\t{"OR Number",-12}\t{"Problem"}");
                 foreach (var record in listOfNeedToCorrect)
                 {
-                    fileContent.AppendLine($"{record.salesInvoiceNo,-17}\t{record.OrNumber,-12}\t{record.problem}");
+                    fileContent.AppendLine($"{record.salesInvoiceNo}\t{record.OrNumber}\t{record.problem}\t{record.customerName}\t{record.transactionDate}");
                 }
 
                 // Convert the content to a byte array
@@ -3230,6 +3233,96 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex,
                     "Failed to create sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> GenerateCollectionSeriesNumber(CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var collectionReceipts = await _dbContext.FilprideCollectionReceipts
+                    .Include(cr => cr.SalesInvoice)
+                    .Include(cr => cr.ReceiptDetails)
+                    .Where(x => x.Company == companyClaims)
+                    .OrderBy(x => x.TransactionDate)
+                    .ToListAsync(cancellationToken);
+
+                var invoiceNumbers = collectionReceipts
+                    .Where(x => x.ReceiptDetails != null)
+                    .SelectMany(x => x.ReceiptDetails!)
+                    .Select(x => x.InvoiceNo)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .ToHashSet();
+
+                var salesInvoiceDictionary = await _dbContext.FilprideSalesInvoices
+                    .Where(x => invoiceNumbers.Contains(x.SalesInvoiceNo!))
+                    .GroupBy(x => x.SalesInvoiceNo)
+                    .Select(x => x.First())
+                    .ToDictionaryAsync(x => x.SalesInvoiceNo!, cancellationToken);
+
+                var incrementedNumber = 1;
+                var incrementedDigit = 1;
+
+                foreach (var record in collectionReceipts)
+                {
+                    var firstInvoiceNo = record.ReceiptDetails?
+                        .Select(x => x.InvoiceNo)
+                        .FirstOrDefault();
+
+                    var type = "";
+                    if (!string.IsNullOrWhiteSpace(firstInvoiceNo))
+                    {
+                        salesInvoiceDictionary.TryGetValue(firstInvoiceNo, out var getSalesInvoice);
+
+                        type = getSalesInvoice?.Type ?? record.SalesInvoice?.Type;
+                    }
+
+                    if (type == null)
+                    {
+                        throw new InvalidOperationException($"Cannot determine invoice type for CR Id {record.CollectionReceiptId}");
+                    }
+
+                    if (type == nameof(DocumentType.Documented))
+                    {
+                        record.CollectionReceiptNo = $"CR{incrementedNumber:D10}";
+                        incrementedNumber++;
+                    }
+                    if (type == nameof(DocumentType.Undocumented))
+                    {
+                        record.CollectionReceiptNo = $"CR{incrementedDigit:D9}";
+                        incrementedDigit++;
+                    }
+
+                    if (record.ReceiptDetails != null)
+                    {
+                        foreach (var details in record.ReceiptDetails)
+                        {
+                            details.CollectionReceiptNo = record.CollectionReceiptNo!;
+                        }
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to generate series number in collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
