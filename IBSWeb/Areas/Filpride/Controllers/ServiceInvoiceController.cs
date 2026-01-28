@@ -10,6 +10,7 @@ using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -315,7 +316,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.ServiceName == "TRANSACTION FEE")
                 {
-                    await ReverseTheDrEntries(model.DeliveryReceipt!.DeliveryReceiptNo, model.Company,
+                    await ReverseTheDrEntries(model.DeliveryReceipt!, model.Company,
                         cancellationToken);
                 }
 
@@ -795,10 +796,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task ReverseTheDrEntries(string drNo, string company, CancellationToken cancellationToken)
+        private async Task ReverseTheDrEntries(FilprideDeliveryReceipt dr, string company, CancellationToken cancellationToken)
         {
+            var relatedRrNo = (await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(x => x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken))?
+                .ReceivingReportNo;
+
             var originalEntries = await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == drNo
+                .Where(x => x.Reference == dr.DeliveryReceiptNo || x.Reference == relatedRrNo
                             && x.Company == company)
                 .ToListAsync(cancellationToken);
 
@@ -889,6 +894,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              .OrderBy(x => x.Period))
                 {
                     await _unitOfWork.FilprideServiceInvoice.PostAsync(service, cancellationToken);
+
+                    if (service.ServiceName == "TRANSACTION FEE")
+                    {
+                        await ReverseTheDrEntries(service.DeliveryReceipt!, service.Company,
+                            cancellationToken);
+                    }
                 }
 
                 await transaction.CommitAsync(cancellationToken);
