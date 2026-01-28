@@ -1021,7 +1021,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(DispatchReport));
             }
 
-            if (viewModel.DateFrom == default || viewModel.DateTo == default && viewModel.ReportType == "InTransit")
+            if ((viewModel.DateFrom == default || viewModel.DateTo == default) && viewModel.ReportType == "InTransit") // Fix Missing Dates
             {
                 TempData["warning"] = "Please enter a valid Date From and To";
                 return RedirectToAction(nameof(DispatchReport));
@@ -1061,7 +1061,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     filter = i => i.Company == companyClaims
                                   && i.Date >= viewModel.DateFrom
                                   && i.Date <= viewModel.DateTo
-                                  && (i.DeliveredDate == null || i.DeliveredDate > viewModel.DateTo)
                                   && i.CanceledBy == null
                                   && i.VoidedBy == null;
                 }
@@ -1137,7 +1136,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion
 
                 worksheet.Cells["S9"].Value = "RR NO.";
-                worksheet.Cells["T9"].Value = "COST.";
+                worksheet.Cells["T9"].Value = "UNIT COST.";
                 worksheet.Cells["U9"].Value = "SUPPLIER'S SI";
                 worksheet.Cells["V9"].Value = "SUPPLIER'S WC";
 
@@ -1150,15 +1149,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells["W9"].Value = "LIFTING DATE";
                     worksheet.Cells["X9"].Value = "LIFTING QUANTITY";
+                    worksheet.Cells["Y9"].Value = "TOTAL AMOUNT";
                 }
 
 
                 int currentRow = 10;
-                string headerColumn = "X9";
-                int grandTotalColumn = 24;
+                string headerColumn = viewModel.ReportType == "Delivered" ? "X9" : "Y9";
+                int grandTotalColumn = viewModel.ReportType == "Delivered" ? 24 : 25; 
                 decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
                 decimal totalLiftedQuantity = 0;
+                decimal grandTotalAmount = 0;
 
                 foreach (var dr in deliveryReceipts)
                 {
@@ -1166,6 +1167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var freightCharge = dr.Freight;
                     var ecc = dr.ECC;
                     var totalFreightAmount = dr.FreightAmount;
+                    var totalAmount = dr.TotalAmount;
                     var liftedQuantity = 0m;
                     receivingReports.TryGetValue(dr.DeliveryReceiptId, out var rr);
 
@@ -1215,6 +1217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 worksheet.Cells[currentRow, 23].Style.Numberformat.Format = "MMM/dd/yyyy";
                                 worksheet.Cells[currentRow, 24].Value = liftedQuantity;
                                 worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Cells[currentRow, 25].Value = totalAmount;
                             }
                         }
 
@@ -1224,6 +1227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     grandTotalQuantity += quantity;
                     grandSumOfTotalFreightAmount += totalFreightAmount;
                     totalLiftedQuantity += liftedQuantity;
+                    grandTotalAmount += totalAmount; 
                 }
 
                 // Grand Total row
@@ -1241,10 +1245,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
                     worksheet.Cells[currentRow, 16].Value = grandSumOfTotalFreightAmount;
 
-                    if (totalLiftedQuantity != 0)
+                    if (viewModel.ReportType != "Delivered" && totalLiftedQuantity != 0)
                     {
                         worksheet.Cells[currentRow, 24].Value = totalLiftedQuantity;
                         worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    if (viewModel.ReportType != "Delivered" && grandTotalAmount != 0)
+                    {
+                        worksheet.Cells[currentRow, 25].Value = grandTotalAmount;
+                        worksheet.Cells[currentRow, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
                 }
 
