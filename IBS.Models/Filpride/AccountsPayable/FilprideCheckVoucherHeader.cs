@@ -208,5 +208,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public decimal TaxPercent { get; set; }
 
         public bool IsPayroll { get; set; }
+
+        public DateOnly? LiquidationDate { get; set; }
     }
 }
