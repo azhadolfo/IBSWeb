@@ -1149,13 +1149,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells["W9"].Value = "LIFTING DATE";
                     worksheet.Cells["X9"].Value = "LIFTING QUANTITY";
-                    worksheet.Cells["Y9"].Value = "TOTAL COST";
                 }
+                worksheet.Cells["Y9"].Value = "TOTAL COST";
 
 
                 int currentRow = 10;
-                string headerColumn = viewModel.ReportType == "Delivered" ? "X9" : "Y9";
-                int grandTotalColumn = viewModel.ReportType == "Delivered" ? 24 : 25; 
+                string headerColumn = "Y9";
+                int grandTotalColumn = 25; 
                 decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
                 decimal totalLiftedQuantity = 0;
@@ -1217,9 +1217,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 worksheet.Cells[currentRow, 23].Style.Numberformat.Format = "MMM/dd/yyyy";
                                 worksheet.Cells[currentRow, 24].Value = liftedQuantity;
                                 worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                worksheet.Cells[currentRow, 25].Value = totalAmount;
                             }
                         }
+                        worksheet.Cells[currentRow, 25].Value = totalAmount;
 
                         currentRow++;
                     }
@@ -1250,7 +1250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[currentRow, 24].Value = totalLiftedQuantity;
                         worksheet.Cells[currentRow, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    if (viewModel.ReportType != "Delivered" && grandTotalAmount != 0)
+                    if (grandTotalAmount != 0)
                     {
                         worksheet.Cells[currentRow, 25].Value = grandTotalAmount;
                         worksheet.Cells[currentRow, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
