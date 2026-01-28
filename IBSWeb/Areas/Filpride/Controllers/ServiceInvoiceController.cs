@@ -440,7 +440,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     dr.HasAlreadyInvoiced = false;
                     dr.Status = nameof(DRStatus.ForInvoicing);
 
-                    await RevertTheReversalOfDrEntries(dr.DeliveryReceiptNo, dr.Company, cancellationToken);
+                    await RevertTheReversalOfDrEntries(dr, dr.Company, cancellationToken);
                 }
 
                 await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
@@ -786,10 +786,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(result);
         }
 
-        private async Task RevertTheReversalOfDrEntries(string previousDrNo, string company, CancellationToken cancellationToken)
+        private async Task RevertTheReversalOfDrEntries(FilprideDeliveryReceipt dr, string company, CancellationToken cancellationToken)
         {
+            var relatedRrNo = (await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(x => x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken))?
+                .ReceivingReportNo;
+
             await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == previousDrNo
+                .Where(x => (x.Reference == dr.DeliveryReceiptNo || (relatedRrNo != null && x.Reference == relatedRrNo))
                             && x.Company == company && x.Description.StartsWith("Reversal"))
                 .ExecuteDeleteAsync(cancellationToken);
 
