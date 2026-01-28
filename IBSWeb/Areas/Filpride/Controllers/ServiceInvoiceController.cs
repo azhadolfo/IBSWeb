@@ -803,7 +803,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ReceivingReportNo;
 
             var originalEntries = await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == dr.DeliveryReceiptNo || x.Reference == relatedRrNo
+                .Where(x => (x.Reference == dr.DeliveryReceiptNo || x.Reference == relatedRrNo)
                             && x.Company == company)
                 .ToListAsync(cancellationToken);
 
