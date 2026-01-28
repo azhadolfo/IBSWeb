@@ -1149,7 +1149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells["W9"].Value = "LIFTING DATE";
                     worksheet.Cells["X9"].Value = "LIFTING QUANTITY";
-                    worksheet.Cells["Y9"].Value = "TOTAL AMOUNT";
+                    worksheet.Cells["Y9"].Value = "TOTAL COST";
                 }
 
 
