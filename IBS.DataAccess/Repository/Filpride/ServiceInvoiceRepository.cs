@@ -102,7 +102,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideServiceInvoice> query = dbSet
                 .Include(s => s.Customer)
-                .Include(s => s.Service);
+                .Include(s => s.Service)
+                .Include(s => s.DeliveryReceipt);
 
             if (filter != null)
             {
