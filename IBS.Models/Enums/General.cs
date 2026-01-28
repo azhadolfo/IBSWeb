@@ -104,6 +104,7 @@ namespace IBS.Models.Enums
         DebitMemo,
         CreditMemo,
         Collection,
+        Journal
     }
 
     public enum Module

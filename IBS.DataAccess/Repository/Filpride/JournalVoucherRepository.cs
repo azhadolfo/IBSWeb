@@ -138,6 +138,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         SubAccountType = detail.SubAccountType,
                         SubAccountId = detail.SubAccountId,
                         SubAccountName = detail.SubAccountName,
+                        ModuleType = nameof(ModuleType.Journal)
                     }
                 );
             }

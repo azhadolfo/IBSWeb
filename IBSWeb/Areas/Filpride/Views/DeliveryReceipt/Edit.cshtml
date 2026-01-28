@@ -236,13 +236,15 @@
             // Check if has receiving report
             var hasReceivingReport = @Model.HasReceivingReport.ToString().ToLower();
             
-            // Initial load for editing
             var initialCustomerId = '@Model.CustomerId';
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
             var initialCosId = '@Model.CustomerOrderSlipId';
             var currentVolume = parseNumber($('input[name="Volume"]').val());
             var initialPoId = '@Model.PurchaseOrderId';
             var initialAtlId = '@Model.ATLId';
+            
+            var selectedPoId = initialPoId;
+            var selectedAtlId = initialAtlId;
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
@@ -289,7 +291,7 @@
                     $.ajax({
                         url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
                         type: "GET",
-                        data: { 
+                        data: {
                             id: cosId,
                             initialPoId: initialPoId,
                             initialAtlId: initialAtlId,
@@ -325,7 +327,7 @@
                                     $('input[name="ECC"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
-                                
+
                                 $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
                                 $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
 
@@ -338,7 +340,7 @@
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="Product"]').val(formatNumber(data.product));
                                 $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
-                                
+
                                 if (isInitialLoad && currentVolume) {
                                     $('input[name="Volume"]').val(currentVolume);
                                 } else {
@@ -354,6 +356,10 @@
 
                                 if (data.purchaseOrders && data.purchaseOrders.length > 0) {
                                     $poSelect.append('<option value="">Select po</option>');
+                                    
+                                    var poToSelect = isInitialLoad ? initialPoId : selectedPoId;
+                                    var atlToSelect = isInitialLoad ? initialAtlId : selectedAtlId;
+
                                     $.each(data.purchaseOrders, function(index, item) {
                                         const formattedOption =
                                             'PO: ' + item.purchaseOrderNo + ' | ' +
@@ -368,13 +374,18 @@
                                             'data-atl-id': item.atlId || '',
                                             'data-atl-no': item.atlNo || ''
                                         });
+                                        
+                                        var matchesPO = String(item.purchaseOrderId) === String(poToSelect);
+                                        var matchesATL = String(item.atlId || '') === String(atlToSelect || '');
 
-                                        if (item.isCurrentlySelected) {
+                                        if (matchesPO && matchesATL) {
                                             option.prop('selected', true);
                                         }
 
                                         $poSelect.append(option);
                                     });
+                                    
+                                    updateATLFields();
                                 } else {
                                     $poSelect.append('<option value="">No purchase orders available</option>');
                                 }
@@ -389,6 +400,15 @@
                 }
             }
 
+            // Helper function to update ATL fields
+            function updateATLFields() {
+                var $selectedOption = $('select[name="PurchaseOrderId"]').find('option:selected');
+                var atlId = $selectedOption.data('atl-id') || '';
+                var atlNo = $selectedOption.data('atl-no') || '';
+                $('input[name="ATLId"]').val(atlId);
+                $('input[name="ATLNo"]').val(atlNo);
+            }
+
             // Event handler for customer change - only if not hasReceivingReport
             if (!hasReceivingReport) {
                 $('select[name="CustomerId"]').on('change', function () {
@@ -397,7 +417,8 @@
                         currentVolume = 0;
                         initialHaulerId = null;
                         initialFreight = null;
-                        initialPoId = null;
+                        selectedPoId = null; 
+                        selectedAtlId = null;
                     }
                     loadCustomerDetails(customerId);
                 });
@@ -412,18 +433,22 @@
                 });
             }
 
-            // When Purchase Order selection changes, set max volume
+            // When Purchase Order selection changes
             $('select[name="PurchaseOrderId"]').on('change', function() {
+                selectedPoId = $(this).val();
+
                 var $selectedOption = $(this).find('option:selected');
                 var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
                 var atlId = $selectedOption.data('atl-id') || '';
                 var atlNo = $selectedOption.data('atl-no') || '';
+                
+                selectedAtlId = atlId;
 
                 $('input[name="ATLId"]').val(atlId);
                 $('input[name="ATLNo"]').val(atlNo);
 
                 // Set max volume to unserved quantity
-                if (unservedQuantity > 0) {
+                if (unservedQuantity > 0 && !hasReceivingReport) {
                     $('input[name="Volume"]').attr('max', unservedQuantity);
                     $('input[name="Volume"]').val(unservedQuantity);
                     calculateTotalAmount();
@@ -504,7 +529,7 @@
             $('input[name="ManualDrNo"]').on('blur', function() {
                 var manualDrNo = $(this).val();
                 var drId = $('input[name="DeliveryReceiptId"]').val();
-                
+
                 if (manualDrNo) {
                     $.ajax({
                         url: '@Url.Action("CheckManualDrNoExists", "DeliveryReceipt", new { area = "Filpride" })',
@@ -512,7 +537,7 @@
                         data: { manualDrNo: manualDrNo, drId: drId },
                         success: function(exists) {
                             const submitButton = $('button[type="submit"]');
-                            
+
                             if (exists) {
                                 // Display error message if the ManualDrNo already exists
                                 alert("Manual DR# already exists. Please enter a different number.");
@@ -525,13 +550,13 @@
 
                                 // Disable the submit button
                                 submitButton.prop('disabled', true);
-                                
+
                             } else {
                                 // Clear any error styling/messages
                                 $('input[name="ManualDrNo"]').removeClass('is-invalid');
                                 $('.manual-dr-exists').remove();
 
-                                submitButton.prop('disabled', false)
+                                submitButton.prop('disabled', false);
                             }
                         },
                         error: function(xhr, status, error) {

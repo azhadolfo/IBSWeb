@@ -26,8 +26,8 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">
                     <label class="control-label">Type<span class="required">*</span></label>
-                    <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
-                        <option value="" selected disabled>Select PO type</option>
+                    <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
+                        <option value="" selected disabled>Select type</option>
                         @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
                         {
                             <option value="@documentType">@documentType.ToString()</option>

@@ -4950,7 +4950,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                var fileName = $"Service_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var fileName = $"Service_Invoice_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;

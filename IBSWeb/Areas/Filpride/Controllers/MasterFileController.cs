@@ -151,6 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "TIN NO", ValueSelector = c => ((FilprideCustomer)c).CustomerTin },
                 new() { Header = "BUSINESS STYLE", ValueSelector = c => ((FilprideCustomer)c).BusinessStyle ?? "" },
                 new() { Header = "ZIP CODE", ValueSelector = c => ((FilprideCustomer)c).ZipCode ?? "" },
+                new() { Header = "CREDIT TERM", ValueSelector = c => ((FilprideCustomer)c).CustomerTerms },
                 new()
             {
                 Header = "CREDIT LIMIT",
@@ -167,9 +168,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             },
             new() { Header = "STATION CODE", ValueSelector = c => ((FilprideCustomer)c).StationCode ?? "" },
             new() { Header = "TYPE", ValueSelector = c => ((FilprideCustomer)c).Type },
-            new() { Header = "COMMISION RATE", ValueSelector = c => ((FilprideCustomer)c).CommissionRate },
-            new() { Header = "COMMISIONEE", ValueSelector = c => ((FilprideCustomer)c).Commissionee},
-            new() { Header = "IS ACTIVE", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
+            new() { Header = "DEFAULT COMMISION RATE", ValueSelector = c => ((FilprideCustomer)c).CommissionRate },
+            new() { Header = "DEFAULT COMMISIONEE", ValueSelector = c => ((FilprideCustomer)c).Commissionee?.SupplierName ?? ""},
+            new() { Header = "STATUS", ValueSelector = c => ((FilprideCustomer)c).IsActive ? "Active" : "Inactive" },
             };
 
             var customerWidths = new Dictionary<string, double>
@@ -260,11 +261,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 new() { Header = "ZIP CODE", ValueSelector = s => ((FilprideSupplier)s).ZipCode },
                 new() { Header = "BRANCH", ValueSelector = s => ((FilprideSupplier)s).Branch },
                 new() { Header = "TIN NO", ValueSelector = s => ((FilprideSupplier)s).SupplierTin },
-                new() { Header = "SUPPLIER TERMS", ValueSelector = s => ((FilprideSupplier)s).SupplierTerms },
+                new() { Header = "CREDIT TERMS", ValueSelector = s => ((FilprideSupplier)s).SupplierTerms },
                 new() { Header = "VATABLE", ValueSelector = s => ((FilprideSupplier)s).VatType },
                 new() { Header = "TAXABLE", ValueSelector = s => ((FilprideSupplier)s).TaxType },
                 new() { Header = "CATEGORY", ValueSelector = s => ((FilprideSupplier)s).Category },
-                new() { Header = "PERCENT", ValueSelector = s => ((FilprideSupplier)s).WithholdingTaxPercent * 100 },
+                new() { Header = "EWT RATE", ValueSelector = s => ((FilprideSupplier)s).WithholdingTaxPercent * 100 }
             };
 
             var customWidths = new Dictionary<string, double>
