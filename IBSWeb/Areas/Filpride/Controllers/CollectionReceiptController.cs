@@ -118,6 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(c => c.ReceiptDetails)
                     .Include(c => c.Customer)
                     .Where(c => c.Company == companyClaims)
+                    .OrderBy(x => x.CollectionReceiptNo)
                     .ToListAsync(cancellationToken);
 
                 switch (invoiceType)
