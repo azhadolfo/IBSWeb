@@ -1220,6 +1220,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         }
                         worksheet.Cells[currentRow, 25].Value = totalAmount;
+                        worksheet.Cells[currentRow, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                         currentRow++;
                     }
