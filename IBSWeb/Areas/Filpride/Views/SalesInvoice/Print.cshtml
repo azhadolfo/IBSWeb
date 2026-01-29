@@ -10,12 +10,13 @@
     
     var customerType = Model.CustomerOrderSlip?.CustomerType ?? Model.Customer!.CustomerType;
     var customerName = Model.CustomerOrderSlip?.CustomerName ?? Model.Customer!.CustomerName;
-    var customerAddress = Model.CustomerOrderSlip?.CustomerAddress ?? Model.Customer!.CustomerAddress;
-    var customerTin = Model.CustomerOrderSlip?.CustomerTin ?? Model.Customer!.CustomerTin;
+    var customerAddress = Model.CustomerAddress;
+    var customerTin = Model.CustomerTin;
     var customerBusinessStyle = Model.CustomerOrderSlip?.BusinessStyle ?? Model.Customer!.BusinessStyle;
     var customerVatType = Model.CustomerOrderSlip?.VatType ?? Model.Customer!.VatType;
     var hasEwt = Model.CustomerOrderSlip?.HasEWT ?? Model.Customer!.WithHoldingTax;
     var hasWvat = Model.CustomerOrderSlip?.HasWVAT ?? Model.Customer!.WithHoldingVat;
+    var productName = Model.CustomerOrderSlip?.ProductName ?? Model.Product!.ProductName;
     
     decimal netDiscount = Model.Amount - Model.Discount;
     decimal netOfVatAmount = customerVatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
@@ -131,7 +132,7 @@
             </tr>
 
             <tr style="height:80px;">
-                <td>@Html.DisplayFor(model => model.CustomerOrderSlip!.ProductName)</td>
+                <td>@Html.DisplayFor(model => productName)</td>
                 <td>@Html.DisplayFor(model => model.Product!.ProductUnit)</td>
                 <td>@Model.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.UnitPrice.ToString(SD.Four_Decimal_Format)</td>

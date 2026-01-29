@@ -668,7 +668,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, CancellationToken cancellationToken = default)
         {
             for (var i = 0; i < siNo.Length; i++)
             {
@@ -677,13 +677,13 @@ namespace IBS.DataAccess.Repository.Filpride
                     .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken)
                                    ?? throw new NullReferenceException("SalesInvoice not found");
 
-                var amountPaid = salesInvoice.AmountPaid + paidAmount[i] + offsetAmount;
+                var amountPaid = salesInvoice.AmountPaid + paidAmount[i];
 
                 if (!salesInvoice.IsPaid)
                 {
                     decimal netDiscount = salesInvoice.Amount - salesInvoice.Discount;
 
-                    salesInvoice.AmountPaid += salesInvoice.Amount >= amountPaid ? paidAmount[i] + offsetAmount : paidAmount[i];
+                    salesInvoice.AmountPaid += paidAmount[i];
 
                     salesInvoice.Balance = netDiscount - salesInvoice.AmountPaid;
 
@@ -697,14 +697,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         salesInvoice.IsPaid = true;
                         salesInvoice.PaymentStatus = "OverPaid";
                     }
-                }
-                else
-                {
-                    continue;
-                }
-                if (salesInvoice.Amount >= amountPaid)
-                {
-                    offsetAmount = 0;
                 }
             }
         }
