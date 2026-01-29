@@ -978,8 +978,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generate General Ledger Journal Voucher Report Due To Updating Selling Unit Cost as Excel File
+        #region -- Generate General Ledger Journal Voucher Report Due To Updating Selling Price as Excel File
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> JournalVoucherSellingPriceReportExcel(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
@@ -1082,7 +1083,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = gl.SubAccountName;
                     worksheet.Cells[row, 7].Value = gl.Debit;
                     worksheet.Cells[row, 8].Value = gl.Credit;
-                    worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper();
+                    worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper() ?? string.Empty;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
@@ -1153,6 +1154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> JournalVoucherUnitCostReportExcel(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
