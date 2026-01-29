@@ -2,7 +2,7 @@
 @model IBS.Models.Filpride.ViewModels.ViewModelBook
 
 @{
-    ViewData["Title"] = "General Ledger Jv Due to Updating Unit Cost";
+    ViewData["Title"] = "General Ledger JV Due to Updating Unit Cost";
 }
 
 <div class="card shadow border-0 mt-4">
@@ -27,9 +27,6 @@
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneralLedgerBookReport')"><i class="bi bi-printer"></i> Generate</button>
-                    </div>
                     <div class="col-6 col-md-3">
                         <button type="button" class="btn btn-primary form-control" onclick="submitForm('JournalVoucherUnitCostReportExcel')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>

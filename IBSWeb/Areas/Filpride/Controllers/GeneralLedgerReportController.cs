@@ -1029,12 +1029,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
 
                 // Add a new worksheet to the Excel package
-                var worksheet = package.Workbook.Worksheets.Add("JV Updating Selling Price");
+                var worksheet = package.Workbook.Worksheets.Add("JV Due to Updating Selling Price");
 
                 // Set the column headers
                 var mergedCells = worksheet.Cells["A1:C1"];
                 mergedCells.Merge = true;
-                mergedCells.Value = "GENERAL LEDGER BOOK - UPDATING SELLING PRICE";
+                mergedCells.Value = "JV DUE TO UPDATING SELLING PRICE";
                 mergedCells.Style.Font.Size = 13;
                 mergedCells.Style.Font.Bold = true;
 
@@ -1202,12 +1202,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
 
                 // Add a new worksheet to the Excel package
-                var worksheet = package.Workbook.Worksheets.Add("JV Updating Unit Cost");
+                var worksheet = package.Workbook.Worksheets.Add("JV Due to Updating Unit Cost");
 
                 // Set the column headers
                 var mergedCells = worksheet.Cells["A1:C1"];
                 mergedCells.Merge = true;
-                mergedCells.Value = "GENERAL LEDGER BOOK - UPDATING UNIT COST";
+                mergedCells.Value = "JV DUE TO UPDATING UNIT COST";
                 mergedCells.Style.Font.Size = 13;
                 mergedCells.Style.Font.Bold = true;
 
