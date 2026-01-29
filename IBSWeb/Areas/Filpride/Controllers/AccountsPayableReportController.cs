@@ -450,6 +450,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ThenByDescending(cvd => cvd.Debit)
                         .ToListAsync(cancellationToken);
 
+                var nonTradeNos = nonTradeInvoiceReport
+                    .Select(x => x.TransactionNo)
+                    .ToList();
+
+                var payments = await _dbContext.FilprideCheckVoucherHeaders
+                    .AsNoTracking()
+                    .Where(x => x.Reference != null && nonTradeNos.Contains(x.Reference) && x.Company == companyClaims)
+                    .Select(x => new {
+                        x.Reference,
+                        x.CheckVoucherHeaderNo,
+                        x.DcrDate
+                    })
+                    .ToListAsync(cancellationToken);
+
+                var paymentDict = payments
+                    .GroupBy(x => x.Reference)
+                    .ToDictionary(g => g.Key!, g => g.First());
+
                 if (nonTradeInvoiceReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -475,11 +493,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
-                int row = 6;
-                int col = 1;
+                var row = 6;
+                var col = 1;
 
                 worksheet.Cells[row, col].Value = "DATE"; col++;
-                worksheet.Cells[row, col].Value = "INV No."; col++;
+                worksheet.Cells[row, col].Value = "INV NO."; col++;
+                worksheet.Cells[row, col].Value = "CV PAYMENT"; col++;
+                worksheet.Cells[row, col].Value = "DCR"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
@@ -490,7 +510,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
                 worksheet.Cells[row, col].Value = "STATUS";
 
-                using (var range = worksheet.Cells[row, 1, row, 11])
+                using (var range = worksheet.Cells[row, 1, row, col])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -508,25 +528,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var inv in nonTradeInvoiceReport)
                 {
+                    var paymentInfo = paymentDict.GetValueOrDefault(inv.TransactionNo);
                     col = 1;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue);
+                    worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy"; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee;
+                    worksheet.Cells[row, col].Value = paymentInfo?.CheckVoucherHeaderNo ?? ""; col++;
+                    if (paymentInfo?.DcrDate.HasValue == true)
+                    {
+                        worksheet.Cells[row, col].Value = paymentInfo.DcrDate.Value.ToDateTime(TimeOnly.MinValue);
+                        worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    }
                     col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
-                    worksheet.Cells[row, col].Style.WrapText = true;
-                    col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
+                    worksheet.Cells[row, col].Style.WrapText = true; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
                     worksheet.Cells[row, col].Value = inv.SubAccountName; col++;
-                    worksheet.Cells[row, col].Value = inv.Debit; col++;
-                    worksheet.Cells[row, col].Value = inv.Credit; col++;
+                    worksheet.Cells[row, col].Value = inv.Debit;
+                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
+                    worksheet.Cells[row, col].Value = inv.Credit;
+                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
-
-                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -534,17 +559,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 8].Value = "TOTAL: ";
-                worksheet.Cells[row, 9].Value = totalDebit;
-                worksheet.Cells[row, 10].Value = totalCredit;
+                worksheet.Cells[row, 10].Value = "TOTAL: ";
+                worksheet.Cells[row, 11].Value = totalDebit;
+                worksheet.Cells[row, 12].Value = totalCredit;
 
-                using (var range = worksheet.Cells[row, 1, row, 11])
+                using (var range = worksheet.Cells[row, 1, row, col])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 8, row, 11])
+                using (var range = worksheet.Cells[row, 8, row, col])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
@@ -568,7 +593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to generate cleared disbursement report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                _logger.LogError(ex, "Failed to generate non trade invoice report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(NonTradeInvoiceReport));
             }
@@ -2905,36 +2930,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 gmReportWorksheet.Cells["A7"].Value = "RR DATE";
                 gmReportWorksheet.Cells["B7"].Value = "SUPPLIER NAME";
-                gmReportWorksheet.Cells["C7"].Value = "PO NO.";
-                gmReportWorksheet.Cells["D7"].Value = "FILPRIDE RR";
-                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE DR";
-                gmReportWorksheet.Cells["F7"].Value = "CUSTOMER NAME";
-                gmReportWorksheet.Cells["G7"].Value = "PRODUCT NAME";
-                gmReportWorksheet.Cells["H7"].Value = "ACCOUNT SPECIALIST";
-                gmReportWorksheet.Cells["I7"].Value = "HAULER NAME";
-                gmReportWorksheet.Cells["J7"].Value = "COMMISSIONEE";
-                gmReportWorksheet.Cells["K7"].Value = "VOLUME";
-                gmReportWorksheet.Cells["L7"].Value = "COS PRICE";
-                gmReportWorksheet.Cells["M7"].Value = "SALES G. VAT";
-                gmReportWorksheet.Cells["N7"].Value = "SALES N. VAT";
-                gmReportWorksheet.Cells["O7"].Value = "CPL G. VAT";
-                gmReportWorksheet.Cells["P7"].Value = "PURCHASES G. VAT";
-                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES N.VAT";
-                gmReportWorksheet.Cells["R7"].Value = "GM/LITER";
-                gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT";
-                gmReportWorksheet.Cells["T7"].Value = "FREIGHT CHARGE";
-                gmReportWorksheet.Cells["U7"].Value = "FC AMOUNT";
-                gmReportWorksheet.Cells["V7"].Value = "FC N.VAT";
-                gmReportWorksheet.Cells["W7"].Value = "COMMISSION/LITER";
-                gmReportWorksheet.Cells["X7"].Value = "COMMISSION AMOUNT";
-                gmReportWorksheet.Cells["Y7"].Value = "NET MARGIN/LIT";
-                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN AMOUNT";
+                gmReportWorksheet.Cells["C7"].Value = "SUPPLIER TERMS";
+                gmReportWorksheet.Cells["D7"].Value = "PO NO.";
+                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE RR";
+                gmReportWorksheet.Cells["F7"].Value = "FILPRIDE DR";
+                gmReportWorksheet.Cells["G7"].Value = "CUSTOMER NAME";
+                gmReportWorksheet.Cells["H7"].Value = "PRODUCT NAME";
+                gmReportWorksheet.Cells["I7"].Value = "ACCOUNT SPECIALIST";
+                gmReportWorksheet.Cells["J7"].Value = "HAULER NAME";
+                gmReportWorksheet.Cells["K7"].Value = "COMMISSIONEE";
+                gmReportWorksheet.Cells["L7"].Value = "VOLUME";
+                gmReportWorksheet.Cells["M7"].Value = "COS PRICE";
+                gmReportWorksheet.Cells["N7"].Value = "SALES G. VAT";
+                gmReportWorksheet.Cells["O7"].Value = "SALES N. VAT";
+                gmReportWorksheet.Cells["P7"].Value = "CPL G. VAT";
+                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES G. VAT";
+                gmReportWorksheet.Cells["R7"].Value = "PURCHASES N.VAT";
+                gmReportWorksheet.Cells["S7"].Value = "GM/LITER";
+                gmReportWorksheet.Cells["T7"].Value = "GM AMOUNT";
+                gmReportWorksheet.Cells["U7"].Value = "FREIGHT CHARGE";
+                gmReportWorksheet.Cells["V7"].Value = "FC AMOUNT";
+                gmReportWorksheet.Cells["W7"].Value = "FC N.VAT";
+                gmReportWorksheet.Cells["X7"].Value = "COMMISSION/LITER";
+                gmReportWorksheet.Cells["Y7"].Value = "COMMISSION AMOUNT";
+                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN/LIT";
+                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT";
 
                 #endregion
 
                 #region -- Apply styling to the header row --
 
-                    using (var range = gmReportWorksheet.Cells["A7:Z7"])
+                    using (var range = gmReportWorksheet.Cells["A7:AA7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -2997,30 +3023,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     gmReportWorksheet.Cells[row, 1].Value = dr.DeliveredDate;
                     gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
-                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                    gmReportWorksheet.Cells[row, 4].Value = rr?.ReceivingReportNo;
-                    gmReportWorksheet.Cells[row, 5].Value = dr.DeliveryReceiptNo;
-                    gmReportWorksheet.Cells[row, 6].Value = dr.CustomerOrderSlip.CustomerName;
-                    gmReportWorksheet.Cells[row, 7].Value = dr.PurchaseOrder.ProductName;
-                    gmReportWorksheet.Cells[row, 8].Value = dr.CustomerOrderSlip.AccountSpecialist;
-                    gmReportWorksheet.Cells[row, 9].Value = dr.HaulerName;
-                    gmReportWorksheet.Cells[row, 10].Value = dr.CustomerOrderSlip.CommissioneeName;
-                    gmReportWorksheet.Cells[row, 11].Value = volume;
-                    gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
-                    gmReportWorksheet.Cells[row, 13].Value = salesAmount;
-                    gmReportWorksheet.Cells[row, 14].Value = netSales;
-                    gmReportWorksheet.Cells[row, 15].Value = costPerLiter;
-                    gmReportWorksheet.Cells[row, 16].Value = costAmount;
-                    gmReportWorksheet.Cells[row, 17].Value = netPurchases;
-                    gmReportWorksheet.Cells[row, 18].Value = gmPerLiter;
-                    gmReportWorksheet.Cells[row, 19].Value = gmAmount;
-                    gmReportWorksheet.Cells[row, 20].Value = freightCharge;
-                    gmReportWorksheet.Cells[row, 21].Value = freightChargeAmount;
-                    gmReportWorksheet.Cells[row, 22].Value = freightChargeNet;
-                    gmReportWorksheet.Cells[row, 23].Value = commissionPerLiter;
-                    gmReportWorksheet.Cells[row, 24].Value = commissionAmount;
-                    gmReportWorksheet.Cells[row, 25].Value = netMarginPerLiter;
-                    gmReportWorksheet.Cells[row, 26].Value = netMarginAmount;
+                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.Terms;
+                    gmReportWorksheet.Cells[row, 4].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 5].Value = rr?.ReceivingReportNo;
+                    gmReportWorksheet.Cells[row, 6].Value = dr.DeliveryReceiptNo;
+                    gmReportWorksheet.Cells[row, 7].Value = dr.CustomerOrderSlip.CustomerName;
+                    gmReportWorksheet.Cells[row, 8].Value = dr.PurchaseOrder.ProductName;
+                    gmReportWorksheet.Cells[row, 9].Value = dr.CustomerOrderSlip.AccountSpecialist;
+                    gmReportWorksheet.Cells[row, 10].Value = dr.HaulerName;
+                    gmReportWorksheet.Cells[row, 11].Value = dr.CustomerOrderSlip.CommissioneeName;
+                    gmReportWorksheet.Cells[row, 12].Value = volume;
+                    gmReportWorksheet.Cells[row, 13].Value = cosPricePerLiter;
+                    gmReportWorksheet.Cells[row, 14].Value = salesAmount;
+                    gmReportWorksheet.Cells[row, 15].Value = netSales;
+                    gmReportWorksheet.Cells[row, 16].Value = costPerLiter;
+                    gmReportWorksheet.Cells[row, 17].Value = costAmount;
+                    gmReportWorksheet.Cells[row, 18].Value = netPurchases;
+                    gmReportWorksheet.Cells[row, 19].Value = gmPerLiter;
+                    gmReportWorksheet.Cells[row, 20].Value = gmAmount;
+                    gmReportWorksheet.Cells[row, 21].Value = freightCharge;
+                    gmReportWorksheet.Cells[row, 22].Value = freightChargeAmount;
+                    gmReportWorksheet.Cells[row, 23].Value = freightChargeNet;
+                    gmReportWorksheet.Cells[row, 24].Value = commissionPerLiter;
+                    gmReportWorksheet.Cells[row, 25].Value = commissionAmount;
+                    gmReportWorksheet.Cells[row, 26].Value = netMarginPerLiter;
+                    gmReportWorksheet.Cells[row, 27].Value = netMarginAmount;
 
                     #endregion -- Assign Values to Cells --
 
@@ -3057,52 +3084,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
                 gmReportWorksheet.Cells[row, 10].Value = "Total: ";
-                gmReportWorksheet.Cells[row, 11].Value = totalVolume;
-                gmReportWorksheet.Cells[row, 12].Value = totalCosPrice;
-                gmReportWorksheet.Cells[row, 13].Value = totalSalesAmount;
-                gmReportWorksheet.Cells[row, 14].Value = totalNetSales;
-                gmReportWorksheet.Cells[row, 15].Value = totalCostPerLiter;
-                gmReportWorksheet.Cells[row, 16].Value = totalCostAmount;
-                gmReportWorksheet.Cells[row, 17].Value = totalNetPurchases;
-                gmReportWorksheet.Cells[row, 18].Value = totalGmPerLiter;
-                gmReportWorksheet.Cells[row, 19].Value = totalGmAmount;
-                gmReportWorksheet.Cells[row, 20].Value = totalFreightCharge;
-                gmReportWorksheet.Cells[row, 21].Value = totalFcAmount;
-                gmReportWorksheet.Cells[row, 22].Value = totalFcNet;
-                gmReportWorksheet.Cells[row, 23].Value = totalCommissionPerLiter;
-                gmReportWorksheet.Cells[row, 24].Value = totalCommissionAmount;
-                gmReportWorksheet.Cells[row, 25].Value = totalNetMarginPerLiter;
-                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginAmount;
+                gmReportWorksheet.Cells[row, 12].Value = totalVolume;
+                gmReportWorksheet.Cells[row, 13].Value = totalCosPrice;
+                gmReportWorksheet.Cells[row, 14].Value = totalSalesAmount;
+                gmReportWorksheet.Cells[row, 15].Value = totalNetSales;
+                gmReportWorksheet.Cells[row, 16].Value = totalCostPerLiter;
+                gmReportWorksheet.Cells[row, 17].Value = totalCostAmount;
+                gmReportWorksheet.Cells[row, 18].Value = totalNetPurchases;
+                gmReportWorksheet.Cells[row, 19].Value = totalGmPerLiter;
+                gmReportWorksheet.Cells[row, 20].Value = totalGmAmount;
+                gmReportWorksheet.Cells[row, 21].Value = totalFreightCharge;
+                gmReportWorksheet.Cells[row, 22].Value = totalFcAmount;
+                gmReportWorksheet.Cells[row, 23].Value = totalFcNet;
+                gmReportWorksheet.Cells[row, 24].Value = totalCommissionPerLiter;
+                gmReportWorksheet.Cells[row, 25].Value = totalCommissionAmount;
+                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginPerLiter;
+                gmReportWorksheet.Cells[row, 27].Value = totalNetMarginAmount;
 
-                gmReportWorksheet.Column(11).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(14).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(17).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(22).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(27).Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
                 // Apply style to subtotal rows
                 // color to whole row
-                using (var range = gmReportWorksheet.Cells[row, 1, row, 26])
+                using (var range = gmReportWorksheet.Cells[row, 1, row, 27])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
-                using (var range = gmReportWorksheet.Cells[row, 10, row, 26])
+                using (var range = gmReportWorksheet.Cells[row, 10, row, 27])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border

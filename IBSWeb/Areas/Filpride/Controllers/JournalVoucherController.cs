@@ -89,7 +89,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.JournalVoucherHeaderNo!.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.References?.Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.CheckVoucherHeaderNo!.Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) == true ||
                         s.Particulars.ToLower().Contains(searchValue) ||
                         s.CRNo?.ToLower().Contains(searchValue) == true ||
                         s.JVReason.ToLower().ToString().Contains(searchValue) ||

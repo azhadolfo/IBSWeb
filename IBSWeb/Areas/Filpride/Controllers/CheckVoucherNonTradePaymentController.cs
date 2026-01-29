@@ -2356,6 +2356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Liquidated);
+                existingHeaderModel.LiquidationDate = liquidateDate;
 
                 #region --Audit Trail Recording
 
