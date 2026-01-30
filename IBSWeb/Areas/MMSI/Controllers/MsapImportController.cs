@@ -27,11 +27,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<BillingController> _logger;
+        private readonly ILogger<MsapImportController> _logger;
         private readonly IUserAccessService _userAccessService;
 
         public MsapImportController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
-            ILogger<BillingController> logger, IUserAccessService userAccessService)
+            ILogger<MsapImportController> logger, IUserAccessService userAccessService)
         {
             _userManager = userManager;
             _dbContext = dbContext;
@@ -43,7 +43,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
-                   ?? User.Identity?.Name!;
+                    ?? User.Identity?.Name
+                    ?? "Unknown";
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -395,8 +396,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
             foreach (var record in records)
             {
                 string original = record.number ?? string.Empty;
-                var padded = int.Parse(original).ToString("D4");
-                 var paddedCustomerNumber = int.Parse(record.agent).ToString("D4");
+                if (!int.TryParse(original, out var principalNum))
+                {
+                    continue;
+                }
+                var padded = principalNum.ToString("D4");
+
+                var agentStr = record.agent as string ?? string.Empty;
+                if (!int.TryParse(agentStr, out var agentNum))
+                {
+                    continue;
+                }
+                var paddedCustomerNumber = agentNum.ToString("D4");
                 var agent = customersList.FirstOrDefault(c => c.CustomerNumber == paddedCustomerNumber);
                 if (agent == null)
                 {
@@ -729,9 +740,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var originalVesselNum = record.vesselnum ?? string.Empty;
                 var originalTugboatNum = record.tugnum ?? string.Empty;
                 var originalServiceNum = record.srvctype ?? string.Empty;
-                var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
-                var paddedTugboatNum = int.Parse(originalTugboatNum).ToString("D3");
-                var paddedServiceNum = int.Parse(originalServiceNum).ToString("D3");
+                static string PadNumber(string? value, int width)
+                {
+                    return int.TryParse(value, out var n)
+                        ? n.ToString($"D{width}")
+                        : string.Empty;
+                }
+
+                var paddedVesselNum  = PadNumber(record.vesselnum, 4);
+                var paddedTugboatNum = PadNumber(record.tugnum, 3);
+                var paddedServiceNum = PadNumber(record.srvctype, 3);
+
 
                 // get customer from msap that replicates the record's customer number
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == record.custno);
@@ -852,7 +871,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #endregion -- Assigning Values --
 
                 newRecords.Add(newRecord);
-                _dbContext.MMSIDispatchTickets.Add(newRecord);
+                // _dbContext.MMSIDispatchTickets.Add(newRecord); Fix Duplicated Entries
             }
 
             await _dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
@@ -1090,10 +1109,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (msapCustomer != null)
                 {
                     var customerName = msapCustomer.name as string;
-
-                    var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName!.Trim());
-                    if (customer == null)
+                    if (string.IsNullOrWhiteSpace(customerName))
                     {
+                        continue;
+                    }
+                        var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName.Trim());
+
+                        if (customer == null)
+                        {
                         continue; // or set to null with a warning
                     }
                     newRecord.CustomerId = customer.CustomerId;
