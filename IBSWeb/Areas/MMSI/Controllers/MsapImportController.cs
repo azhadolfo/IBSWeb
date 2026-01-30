@@ -66,6 +66,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(List<string> fieldList)
         {
             try
