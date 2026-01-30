@@ -376,7 +376,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 var poPrice = await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)deliveryReceipt.PurchaseOrderId!, cancellationToken);
                 var cogsGrossAmount = poPrice * deliveryReceipt.Quantity;
-                var cogsNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                var cogsNetOfVat = deliveryReceipt.PurchaseOrder.VatType == SD.VatType_Vatable
                     ? ComputeNetOfVat(cogsGrossAmount)
                     : cogsGrossAmount;
 
