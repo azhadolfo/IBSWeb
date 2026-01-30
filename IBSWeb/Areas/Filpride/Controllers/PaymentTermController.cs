@@ -1,29 +1,27 @@
+using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Services.Attributes;
-using IBS.Utility.Constants;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    public class PaymentTermsController : Controller
+    public class PaymentTermController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SupplierController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
 
-        public PaymentTermsController(IUnitOfWork unitOfWork,
+        public PaymentTermController(IUnitOfWork unitOfWork,
             ILogger<SupplierController> logger,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext)

@@ -1,7 +1,7 @@
 @model FilprideTerms
 
 @{
-    ViewData["Title"] = "Terms - Edit";
+    ViewData["Title"] = "Terms - Create";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -19,14 +19,18 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input asp-for="TermsCode" type="hidden"/>
             
+            <div class="form-floating mb-3" id="tradeList">
+                <input asp-for="TermsCode" class="form-control " placeholder="" />
+                <label asp-for="TermsCode" class="control-label">Terms Code<span class="required">*</span></label>
+                <span asp-validation-for="TermsCode" class="text-danger"></span>
+            </div>
             <div class="form-floating mb-3">
                 <input asp-for="NumberOfDays" class="form-control " placeholder="" />
-                <label asp-for="NumberOfDays" class="control-label" >Number of Days<span class="required">*</span></label>
+                <label asp-for="NumberOfDays" class="control-label">Number of Days<span class="required">*</span></label>
                 <span asp-validation-for="NumberOfDays" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
@@ -37,10 +41,10 @@
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
-                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                    <button type="submit" class="btn btn-primary form-control">Create</button>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a asp-area="Filpride" asp-controller="PaymentTerms" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    <a asp-area="Filpride" asp-controller="PaymentTerm" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                 </div>
             </div>
         </form>
