@@ -740,7 +740,7 @@ namespace IBS.DataAccess.Repository
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
+                    Text = $"({s.AccountType}) {s.AccountNumber} {s.AccountName}"
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -753,7 +753,7 @@ namespace IBS.DataAccess.Repository
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
-                    Text = s.AccountNumber + " " + s.AccountName
+                    Text = $"({s.AccountType}) {s.AccountNumber} {s.AccountName}"
                 })
                 .ToListAsync(cancellationToken);
         }

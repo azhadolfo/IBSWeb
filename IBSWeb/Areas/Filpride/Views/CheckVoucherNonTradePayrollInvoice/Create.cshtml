@@ -280,7 +280,8 @@
         function saveAccountingEntry(event) {
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
-            var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
+            var text = $("#AccountNo option:selected").text();
+            var accountNumberText = text.split(' ').slice(2).join(' ');
             var debit = parseNumber($("#debit").val());
             var credit = parseNumber($("#credit").val());
             var multipleSupplierId = safeVal("#MultipleSupplierId");

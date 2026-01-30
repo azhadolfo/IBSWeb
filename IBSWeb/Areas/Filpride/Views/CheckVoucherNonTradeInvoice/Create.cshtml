@@ -241,7 +241,8 @@
             const amount = parseFloat(amountField.value) || 0;
             const taxPercentage = parseFloat(row.querySelector(".taxable").value) || 0;
             const isVatable = vatableField.checked;
-            const accountTitle = accountField.options[accountField.selectedIndex]?.text || '';
+            const text = accountField.options[accountField.selectedIndex]?.text || '';
+            const accountTitle = text.substring(text.indexOf(')') + 1).trim();
             const accountCode = accountField.value;
 
             // Calculate net of VAT
