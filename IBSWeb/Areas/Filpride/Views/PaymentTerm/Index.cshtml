@@ -9,7 +9,7 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="Filpride" asp-controller="PaymentTerms" asp-action="Create" class="btn btn-light">
+        <a asp-area="Filpride" asp-controller="PaymentTerm" asp-action="Create" class="btn btn-light">
             <i class="bi bi-plus-circle"></i> Create New Terms
         </a>
     </div>
@@ -36,7 +36,7 @@
     <script>
         // Event listeners
         $(document).ready(function () {
-            const editUrl = '@Url.Action("Edit", "PaymentTerms", new { area = "Filpride" })';
+            const editUrl = '@Url.Action("Edit", "PaymentTerm", new { area = "Filpride" })';
 
             var table = $('#paginatedTable').DataTable({
                 "order": [[0, 'asc']],
@@ -54,7 +54,7 @@
                                  </div>`
                 },
                 "ajax": {
-                    "url": "@Url.Action("GetPaymentTerms", "PaymentTerms", new { area = "Filpride" })",
+                    "url": "@Url.Action("GetPaymentTerms", "PaymentTerm", new { area = "Filpride" })",
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {
@@ -115,7 +115,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    let url = `@Url.Action("Delete", "PaymentTerms", new { area = "Filpride" })?code=${termsCode}`;
+                    let url = `@Url.Action("Delete", "PaymentTerm", new { area = "Filpride" })?code=${termsCode}`;
                     window.location.href = url;
                 }
             })
