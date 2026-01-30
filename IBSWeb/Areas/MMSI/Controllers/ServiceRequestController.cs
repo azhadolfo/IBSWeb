@@ -422,7 +422,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TugMasterId = model.TugMasterId;
                 currentModel.VesselId = model.VesselId;
                 currentModel.Remarks = model.Remarks;
-                currentModel.TotalHours = model.TotalHours;
 
                 if (currentModel.Date != null &&
                     currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
@@ -926,9 +925,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 DispatchTicketId = model.DispatchTicketId,
             };
 
-            if (model.Terminal != null)
+            if (model.Terminal?.Port != null)
             {
-                viewModel.PortId = model.Terminal!.Port!.PortId;
+                viewModel.PortId = model.Terminal.Port.PortId;
             }
 
             return viewModel;

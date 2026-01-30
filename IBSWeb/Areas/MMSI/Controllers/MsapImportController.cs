@@ -71,6 +71,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
+                if (fieldList == null || fieldList.Count == 0)
+                {
+                    TempData["error"] = "Please select at least one import field.";
+                    return RedirectToAction(nameof(Index));
+                }
                 var sb = new StringBuilder();
 
                 foreach (string field in fieldList)
@@ -288,7 +293,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             foreach (var record in records)
             {
                 string original = record.number ?? string.Empty;
-                string padded = int.Parse(original).ToString("D3");
+                if (!int.TryParse(original, out var portNum))
+                {
+                    continue; // or collect/report invalid rows
+                }
+                string padded = portNum.ToString("D3");
 
                 // check if already in the database
                 if (existingIdentifier.Contains(padded))
@@ -324,10 +333,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             foreach (var record in records)
             {
-                string originalPortNumber = (record.number as string)!.Substring(0, 3);
-                string paddedPortNumber = int.Parse(originalPortNumber).ToString("D3");
-                string originalTerminalNumber = (record.number as string)!.Substring((record.number as string)!.Length - 3, 3);
-                string paddedTerminalNumber = int.Parse(originalTerminalNumber).ToString("D3");
+                var terminalComposite = record.number as string ?? string.Empty;
+                if (terminalComposite.Length < 6) { continue; }
+                var portPart = terminalComposite.Substring(0, 3);
+                var terminalPart = terminalComposite.Substring(terminalComposite.Length - 3, 3);
+                if (!int.TryParse(portPart, out var portNum) || !int.TryParse(terminalPart, out var terminalNum))
+                {
+                    continue;
+                }
+                string paddedPortNumber = portNum.ToString("D3");
+                string paddedTerminalNumber = terminalNum.ToString("D3");
 
                 // check if already in the database
                 if (existingIdentifier.Contains(new { PortNumber = paddedPortNumber, TerminalNumber = paddedTerminalNumber }!))
@@ -337,7 +352,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 MMSITerminal newRecord = new MMSITerminal();
 
-                newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNumber)!.PortId;
+                var port = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNumber);
+                if (port == null) { continue; }
+                newRecord.PortId = port.PortId;
                 newRecord.TerminalName = record.name;
                 newRecord.TerminalNumber = paddedTerminalNumber;
 
@@ -379,11 +396,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 string original = record.number ?? string.Empty;
                 var padded = int.Parse(original).ToString("D4");
+                 var paddedCustomerNumber = int.Parse(record.agent).ToString("D4");
+                var agent = customersList.FirstOrDefault(c => c.CustomerNumber == paddedCustomerNumber);
+                if (agent == null)
+                {
+                    continue; // or throw with a clearer message
+                }
                 var identity = new
                 {
                     PrincipalNumber = padded,
                     PrincipalName = record.name as string ?? string.Empty,
-                    CustomerId = customersList.FirstOrDefault(c => c.CustomerNumber == int.Parse(record.agent).ToString("D4"))!.CustomerId
+                    CustomerId = agent.CustomerId
                 };
 
                 // check if already in the database
@@ -392,15 +415,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     continue;
                 }
 
-                var paddedCustomerNumber = int.Parse(record.agent).ToString("D4");
 
                 MMSIPrincipal newRecord = new MMSIPrincipal();
-                var agent = customersList.FirstOrDefault(c => c.CustomerNumber == paddedCustomerNumber);
-
-                if (agent == null)
-                {
-                    throw new NullReferenceException("Agent not found");
-                }
 
                 switch (record.terms)
                 {
@@ -699,7 +715,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 MMSIDispatchTicket newRecord = new MMSIDispatchTicket();
 
-                var portTerminalOriginal = record.terminal as string;
+                var portTerminalOriginal = record.terminal as string ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(portTerminalOriginal)) { continue; }
 
                 string portNumber = new string(
                     portTerminalOriginal!.Where(c => !char.IsWhiteSpace(c)).Take(3).ToArray()
@@ -958,7 +975,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 newRecord.MMSIBillingNumber = record.number;
                 newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
-                newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
+                var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
+                if (vessel == null) { continue; }
+                newRecord.VesselId = vessel.VesselId;
 
                 if(originalPortNum != string.Empty)
                 {
@@ -976,8 +995,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (record.crnum != string.Empty)
                 {
-                    newRecord.CollectionId = existingCollection.FirstOrDefault(c => c.MMSICollectionNumber == record.crnum)!.MMSICollectionId;
-                    newRecord.Status = "Collected";
+                     var collection = existingCollection.FirstOrDefault(c => c.MMSICollectionNumber == record.crnum);
+                    if (collection != null)
+                    {
+                        newRecord.CollectionId = collection.MMSICollectionId;
+                        newRecord.Status = "Collected";
+                    }
+                    else
+                    {
+                        newRecord.Status = "For Collection";
+                    }
                 }
                 else
                 {
@@ -996,7 +1023,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (originalPrincipalNum != string.Empty)
                 {
-                    newRecord.PrincipalId = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum && p.CustomerId == newRecord.CustomerId)!.PrincipalId;
+                    var principal = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum && p.CustomerId == newRecord.CustomerId);
+                    if (principal != null)
+                    {
+                        newRecord.PrincipalId = principal.PrincipalId;
+                    }
                     newRecord.BilledTo = "PRINCIPAL";
                 }
                 else
@@ -1061,7 +1092,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var customerName = msapCustomer.name as string;
 
                     var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName!.Trim());
-                    newRecord.CustomerId = customer!.CustomerId;
+                    if (customer == null)
+                    {
+                        continue; // or set to null with a warning
+                    }
+                    newRecord.CustomerId = customer.CustomerId;
                 }
 
                 newRecord.MMSICollectionNumber = record.crnum;
