@@ -3,12 +3,12 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -95,7 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, string filterType, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string? view, string filterType)
         {
             await UpdateFilterTypeClaim(filterType);
             if (view != nameof(DynamicView.ReceivingReport))
@@ -103,12 +103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var receivingReports = await _unitOfWork.FilprideReceivingReport
-                .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
-
-            return View("ExportIndex", receivingReports);
+            return View("ExportIndex");
 
             //For the function of correcting the journal entries
             // var receivingReportss = await _unitOfWork.FilprideReceivingReport
@@ -578,6 +573,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
 
+                await _unitOfWork.FilprideReceivingReport.UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId,
+                    model.QuantityReceived, cancellationToken);;
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Receiving Report has been posted.";
                 return RedirectToAction(nameof(Print), new { id });
@@ -793,6 +791,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(Print), new { id });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GetReceivingReportList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var receivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.ReceivingReportId,
+                        x.ReceivingReportNo,
+                        x.Date,
+                        x.PurchaseOrder!.PurchaseOrderNo,
+                        x.QuantityDelivered,
+                        x.QuantityReceived,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = receivingReports
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         //Download as .xlsx file.(Export)
 
         #region -- export xlsx record --
@@ -984,6 +1015,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                      .ToList();
 
             return Json(rrIds);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalPurchase(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var receivingReports = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(x =>
+                        x.Status == nameof(Status.Posted) &&
+                        x.Date.Month == month &&
+                        x.Date.Year == year,
+                        cancellationToken);
+
+                if (!receivingReports.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var receivingReport in receivingReports
+                             .OrderBy(x => x.Date))
+                {
+                    await _unitOfWork.FilprideReceivingReport
+                        .PostAsync(receivingReport, cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = receivingReports.Count() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
+            }
         }
     }
 }

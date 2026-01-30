@@ -3,11 +3,11 @@ using System.Text;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -157,6 +157,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -168,7 +170,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Reference").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Description").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Title").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account No").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Sub-Account").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Debit").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Credit").SemiBold();
                                 });
@@ -182,7 +186,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Reference);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Description);
-                                    table.Cell().Border(0.5f).Padding(3).Text($"{record.AccountNo} {record.AccountTitle}");
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountTitle);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SubAccountName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Debit != 0 ? record.Debit < 0 ? $"({Math.Abs(record.Debit).ToString(SD.Two_Decimal_Format)})" : record.Debit.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Debit < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Credit != 0 ? record.Credit < 0 ? $"({Math.Abs(record.Credit).ToString(SD.Two_Decimal_Format)})" : record.Credit.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Credit < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -192,7 +198,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalDebit != 0 ? totalDebit < 0 ? $"({Math.Abs(totalDebit).ToString(SD.Two_Decimal_Format)})" : totalDebit.ToString(SD.Two_Decimal_Format) : null).SemiBold().FontColor(totalDebit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCredit != 0 ? totalCredit < 0 ? $"({Math.Abs(totalCredit).ToString(SD.Two_Decimal_Format)})" : totalCredit.ToString(SD.Two_Decimal_Format) : null).SemiBold().FontColor(totalCredit < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -291,18 +297,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["A7"].Value = "Date";
                     worksheet.Cells["B7"].Value = "Reference";
                     worksheet.Cells["C7"].Value = "Description";
-                    worksheet.Cells["D7"].Value = "Account Title";
-                    worksheet.Cells["E7"].Value = "Debit";
-                    worksheet.Cells["F7"].Value = "Credit";
-                    worksheet.Cells["G7"].Value = "Posted By";
-                    worksheet.Cells["H7"].Value = "Company";
-                    worksheet.Cells["I7"].Value = "Bank";
-                    worksheet.Cells["J7"].Value = "Customer";
-                    worksheet.Cells["K7"].Value = "Supplier";
-                    worksheet.Cells["L7"].Value = "Employee";
+                    worksheet.Cells["D7"].Value = "Account No";
+                    worksheet.Cells["E7"].Value = "Account Name";
+                    worksheet.Cells["F7"].Value = "Sub-Account";
+                    worksheet.Cells["G7"].Value = "Debit";
+                    worksheet.Cells["H7"].Value = "Credit";
+                    worksheet.Cells["I7"].Value = "Posted By";
 
                     // Apply styling to the header row
-                    using (var range = worksheet.Cells["A7:L7"])
+                    using (var range = worksheet.Cells["A7:I7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -322,39 +325,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 1].Value = gl.Date;
                         worksheet.Cells[row, 2].Value = gl.Reference;
                         worksheet.Cells[row, 3].Value = gl.Description;
-                        worksheet.Cells[row, 4].Value = $"{gl.AccountNo} {gl.AccountTitle}";
-                        worksheet.Cells[row, 5].Value = gl.Debit;
-                        worksheet.Cells[row, 6].Value = gl.Credit;
-                        worksheet.Cells[row, 7].Value = gl.CreatedBy!.ToUpper();
-                        worksheet.Cells[row, 8].Value = gl.CompanyName;
-                        worksheet.Cells[row, 9].Value = gl.BankAccountName;
-                        worksheet.Cells[row, 10].Value = gl.CustomerName;
-                        worksheet.Cells[row, 11].Value = gl.SupplierName;
-                        worksheet.Cells[row, 12].Value = gl.EmployeeName;
+                        worksheet.Cells[row, 4].Value = gl.AccountNo;
+                        worksheet.Cells[row, 5].Value = gl.AccountTitle;
+                        worksheet.Cells[row, 6].Value = gl.SubAccountName;
+                        worksheet.Cells[row, 7].Value = gl.Debit;
+                        worksheet.Cells[row, 8].Value = gl.Credit;
+                        worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper();
 
                         worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
                         row++;
                     }
 
-                    worksheet.Cells[row, 4].Value = "Total ";
-                    worksheet.Cells[row, 5].Value = totalDebit;
-                    worksheet.Cells[row, 6].Value = totalCredit;
+                    worksheet.Cells[row, 6].Value = "Total ";
+                    worksheet.Cells[row, 7].Value = totalDebit;
+                    worksheet.Cells[row, 8].Value = totalCredit;
 
-                    worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
                     // Apply style to subtotal row
-                    using (var range = worksheet.Cells[row, 1, row, 12])
+                    using (var range = worksheet.Cells[row, 1, row, 9])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                     }
 
-                    using (var range = worksheet.Cells[row, 4, row, 6])
+                    using (var range = worksheet.Cells[row, 6, row, 8])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -426,8 +426,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(g => g.Supplier)
-                    .Include(g => g.Customer)
                     .Where(g =>
                         g.Date >= model.DateFrom && g.Date <= model.DateTo &&
                         (model.AccountNo == null || g.AccountNo == model.AccountNo) &&
@@ -505,7 +503,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
-                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -516,11 +513,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Particular").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Title").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Code").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Code").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account No").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Sub-Account").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Debit").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Credit").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Balance").SemiBold();
@@ -564,11 +559,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                         table.Cell().Border(0.5f).Padding(3).Text(journal.Date.ToString(SD.Date_Format));
                                         table.Cell().Border(0.5f).Padding(3).Text(journal.Description);
-                                        table.Cell().Border(0.5f).Padding(3).Text($"{journal.AccountNo} {journal.AccountTitle}");
-                                        table.Cell().Border(0.5f).Padding(3).Text(journal.Customer?.CustomerCode);
-                                        table.Cell().Border(0.5f).Padding(3).Text(journal.Customer?.CustomerName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(journal.Supplier?.SupplierCode);
-                                        table.Cell().Border(0.5f).Padding(3).Text(journal.Supplier?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(journal.AccountNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(journal.AccountTitle);
+                                        table.Cell().Border(0.5f).Padding(3).Text(journal.SubAccountName);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(journal.Debit != 0 ? journal.Debit < 0 ? $"({Math.Abs(journal.Debit).ToString(SD.Two_Decimal_Format)})" : journal.Debit.ToString(SD.Two_Decimal_Format) : null).FontColor(journal.Debit < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(journal.Credit != 0 ? journal.Credit < 0 ? $"({Math.Abs(journal.Credit).ToString(SD.Two_Decimal_Format)})" : journal.Credit.ToString(SD.Two_Decimal_Format) : null).FontColor(journal.Credit < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(balance != 0 ? balance < 0 ? $"({Math.Abs(balance).ToString(SD.Two_Decimal_Format)})" : balance.ToString(SD.Two_Decimal_Format) : null).FontColor(balance < 0 ? Colors.Red.Medium : Colors.Black);
@@ -580,7 +573,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     #region -- Sub Total
 
-                                        table.Cell().ColumnSpan(7).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text($"Total {grouped.Key}").SemiBold();
+                                        table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text($"Total {grouped.Key}").SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(debit.ToString(SD.Two_Decimal_Format)).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(credit.ToString(SD.Two_Decimal_Format)).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(balance.ToString(SD.Two_Decimal_Format)).SemiBold();
@@ -600,7 +593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(7).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTAL:").Bold();
+                                table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTAL:").Bold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(debit != 0 ? debit < 0 ? $"({Math.Abs(debit).ToString(SD.Two_Decimal_Format)})" : debit.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(debit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(credit != 0 ? credit < 0 ? $"({Math.Abs(credit).ToString(SD.Two_Decimal_Format)})" : credit.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(credit < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(balance != 0 ? balance < 0 ? $"({Math.Abs(balance).ToString(SD.Two_Decimal_Format)})" : balance.ToString(SD.Two_Decimal_Format) : null).Bold().FontColor(balance < 0 ? Colors.Red.Medium : Colors.Black);
@@ -659,15 +652,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             try
             {
-                var chartOfAccount = await _unitOfWork.FilprideChartOfAccount
-                    .GetAsync(coa => coa.AccountNumber == model.AccountNo, cancellationToken);
+                var selectedAccountNo = model.AccountNo?
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault();
+
+                var selectedAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(coa => selectedAccountNo != null && coa.AccountNumber == selectedAccountNo, cancellationToken);
 
                 var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(g => g.Supplier)
-                    .Include(g => g.Customer)
                     .Where(g =>
                         g.Date >= dateFrom && g.Date <= dateTo &&
-                        (model.AccountNo == null || g.AccountNo == model.AccountNo) &&
+                        (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
                         g.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -677,12 +672,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
                 }
 
-                // Create the Excel package
+                var accountNumbers = generalLedgerByAccountNo
+                    .Select(g => g.AccountNo)
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .Distinct()
+                    .ToList();
+
+                var accounts = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(a => accountNumbers.Contains(a.AccountNumber!), cancellationToken);
+
+                var accountDictionary = accounts
+                    .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
+                    .ToDictionary(a => a.AccountNumber!, a => a);
+
+                var previousPeriodEndDate = dateFrom.AddDays(-1);
+                var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
+                    .Include(g => g.Account)
+                    .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
+                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var beginningBalanceDictionary = glPeriodBalances
+                    .Where(pb => !string.IsNullOrEmpty(pb.Account.AccountNumber))
+                    .ToDictionary(pb => pb.Account.AccountNumber!, pb => pb.EndingBalance);
+
                 using var package = new ExcelPackage();
-                // Add a new worksheet to the Excel package
                 var worksheet = package.Workbook.Worksheets.Add("GeneralLedger");
 
-                // Set the column headers
                 var mergedCells = worksheet.Cells["A1:C1"];
                 mergedCells.Merge = true;
                 mergedCells.Value = "GENERAL LEDGER BY ACCOUNT NUMBER";
@@ -690,25 +706,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["A2"].Value = "Date Range:";
                 worksheet.Cells["A3"].Value = "Account No:";
-                worksheet.Cells["A4"].Value = "Account Title:";
+                worksheet.Cells["A4"].Value = "Account Name:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-                worksheet.Cells["B3"].Value = $"{chartOfAccount}";
-                worksheet.Cells["B4"].Value = $"{chartOfAccount?.AccountNumber}";
+                worksheet.Cells["B2"].Value = $"{dateFrom:yyyy-MM-dd} - {dateTo:yyyy-MM-dd}";
+                worksheet.Cells["B3"].Value = $"{selectedAccount?.AccountNumber}";
+                worksheet.Cells["B4"].Value = $"{selectedAccount?.AccountName}";
 
                 worksheet.Cells["A7"].Value = "Date";
-                worksheet.Cells["B7"].Value = "Particular";
-                worksheet.Cells["C7"].Value = "Account No";
-                worksheet.Cells["D7"].Value = "Account Title";
-                worksheet.Cells["E7"].Value = "Customer Code";
-                worksheet.Cells["F7"].Value = "Customer Name";
-                worksheet.Cells["G7"].Value = "Supplier Code";
-                worksheet.Cells["H7"].Value = "Supplier Name";
-                worksheet.Cells["I7"].Value = "Debit";
-                worksheet.Cells["J7"].Value = "Credit";
-                worksheet.Cells["K7"].Value = "Balance";
+                worksheet.Cells["B7"].Value = "Reference";
+                worksheet.Cells["C7"].Value = "Particular";
+                worksheet.Cells["D7"].Value = "Account No";
+                worksheet.Cells["E7"].Value = "Account Name";
+                worksheet.Cells["F7"].Value = "Sub-Account";
+                worksheet.Cells["G7"].Value = "Debit";
+                worksheet.Cells["H7"].Value = "Credit";
+                worksheet.Cells["I7"].Value = "Balance";
 
-                using (var range = worksheet.Cells["A7:K7"])
+                using (var range = worksheet.Cells["A7:I7"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -720,98 +734,123 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int row = 8;
-                decimal balance;
                 string currencyFormat = "#,##0.00";
-                decimal debit;
-                decimal credit;
-                foreach (var grouped in generalLedgerByAccountNo.OrderBy(g => g.AccountNo).GroupBy(g => g.AccountTitle))
+                decimal totalDebit = 0;
+                decimal totalCredit = 0;
+                decimal finalBalance = 0;
+
+                var accountBalances = new Dictionary<string, decimal>();
+
+                foreach (var grouped in generalLedgerByAccountNo
+                    .Where(g => !string.IsNullOrEmpty(g.AccountNo))
+                    .OrderBy(g => g.AccountNo)
+                    .GroupBy(g => g.AccountNo!))
                 {
-                    balance = 0;
+                    var accountNo = grouped.Key;
+
+                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(accountNo, 0m);
+
+                    // Initialize running balance for this account
+                    accountBalances[accountNo] = accountBeginningBalance;
+
+                    // Get account details from dictionary
+                    var account = accountDictionary.TryGetValue(accountNo, out var value)
+                        ? value
+                        : null;
+
+                    var isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
+
+                    // Add beginning balance row for this account
+                    worksheet.Cells[row, 3].Value = "Beginning Balance";
+                    worksheet.Cells[row, 4].Value = accountNo;
+                    worksheet.Cells[row, 5].Value = account?.AccountName;
+                    worksheet.Cells[row, 9].Value = accountBeginningBalance;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                    using (var range = worksheet.Cells[row, 1, row, 9])
+                    {
+                        range.Style.Font.Italic = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(242, 242, 242));
+                    }
+
+                    row++;
+
+                    decimal groupDebit = 0;
+                    decimal groupCredit = 0;
 
                     foreach (var journal in grouped.OrderBy(g => g.Date))
                     {
-                        var account = await _unitOfWork.FilprideChartOfAccount
-                            .GetAsync(a => a.AccountNumber == journal.AccountNo, cancellationToken);
-
-                        if (balance != 0)
+                        if (isDebitAccount)
                         {
-                            if (account?.NormalBalance == nameof(NormalBalance.Debit))
-                            {
-                                balance += journal.Debit - journal.Credit;
-                            }
-                            else
-                            {
-                                balance -= journal.Debit - journal.Credit;
-                            }
+                            accountBalances[accountNo] += journal.Debit - journal.Credit;
                         }
                         else
                         {
-                            balance = journal.Debit > 0 ? journal.Debit : journal.Credit;
+                            accountBalances[accountNo] += journal.Credit - journal.Debit;
                         }
 
                         worksheet.Cells[row, 1].Value = journal.Date.ToString("dd-MMM-yyyy");
-                        worksheet.Cells[row, 2].Value = journal.Description;
-                        worksheet.Cells[row, 3].Value = journal.AccountNo;
-                        worksheet.Cells[row, 4].Value = journal.AccountTitle;
-                        worksheet.Cells[row, 5].Value = journal.Customer?.CustomerCode;
-                        worksheet.Cells[row, 6].Value = journal.Customer?.CustomerName;
-                        worksheet.Cells[row, 7].Value = journal.Supplier?.SupplierCode;
-                        worksheet.Cells[row, 8].Value = journal.Supplier?.SupplierName;
+                        worksheet.Cells[row, 2].Value = journal.Reference;
+                        worksheet.Cells[row, 3].Value = journal.Description;
+                        worksheet.Cells[row, 4].Value = journal.AccountNo;
+                        worksheet.Cells[row, 5].Value = journal.AccountTitle;
+                        worksheet.Cells[row, 6].Value = journal.SubAccountName;
+                        worksheet.Cells[row, 7].Value = journal.Debit;
+                        worksheet.Cells[row, 8].Value = journal.Credit;
+                        worksheet.Cells[row, 9].Value = accountBalances[accountNo];
 
-                        worksheet.Cells[row, 9].Value = journal.Debit;
-                        worksheet.Cells[row, 10].Value = journal.Credit;
-                        worksheet.Cells[row, 11].Value = balance;
-
+                        worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                        groupDebit += journal.Debit;
+                        groupCredit += journal.Credit;
 
                         row++;
                     }
 
-                    debit = grouped.Sum(j => j.Debit);
-                    credit = grouped.Sum(j => j.Credit);
-                    balance = debit - credit;
+                    // Subtotal for this account
+                    worksheet.Cells[row, 6].Value = "Total " + account?.AccountName;
+                    worksheet.Cells[row, 7].Value = groupDebit;
+                    worksheet.Cells[row, 8].Value = groupCredit;
+                    worksheet.Cells[row, 9].Value = accountBalances[accountNo];
 
-                    worksheet.Cells[row, 8].Value = "Total " + grouped.Key;
-                    worksheet.Cells[row, 9].Value = debit;
-                    worksheet.Cells[row, 10].Value = credit;
-                    worksheet.Cells[row, 11].Value = balance;
-
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
 
-                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    using (var range = worksheet.Cells[row, 1, row, 9])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                     }
 
+                    totalDebit += groupDebit;
+                    totalCredit += groupCredit;
+                    finalBalance += accountBalances[accountNo];
+
                     row++;
                 }
 
-                using (var range = worksheet.Cells[row, 9, row, 11])
+                // Grand total
+                using (var range = worksheet.Cells[row, 6, row, 9])
                 {
                     range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
 
-                debit = generalLedgerByAccountNo.Sum(j => j.Debit);
-                credit = generalLedgerByAccountNo.Sum(j => j.Credit);
-                balance = debit - credit;
+                worksheet.Cells[row, 6].Value = "Total";
+                worksheet.Cells[row, 6].Style.Font.Bold = true;
+                worksheet.Cells[row, 7].Value = totalDebit;
+                worksheet.Cells[row, 8].Value = totalCredit;
+                worksheet.Cells[row, 9].Value = finalBalance;
 
-                worksheet.Cells[row, 8].Value = "Total";
-                worksheet.Cells[row, 8].Style.Font.Bold = true;
-                worksheet.Cells[row, 9].Value = debit;
-                worksheet.Cells[row, 10].Value = credit;
-                worksheet.Cells[row, 11].Value = balance;
-
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
@@ -836,7 +875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
             }
-}
+        }
 
         #endregion
 
@@ -931,6 +970,355 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(GeneralLedgerBook));
             }
         }
+        #endregion
+
+        [HttpGet]
+        public IActionResult JournalVoucherPriceReport()
+        {
+            return View();
+        }
+
+        #region -- Generate General Ledger Journal Voucher Report Due To Updating Selling Price as Excel File
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> JournalVoucherSellingPriceReportExcel(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = GetUserFullName();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(JournalVoucherPriceReport));
+            }
+
+            // Validate date range
+            if (model.DateFrom > model.DateTo)
+            {
+                TempData["warning"] = "Date From cannot be greater than Date To.";
+                return RedirectToAction(nameof(JournalVoucherPriceReport));
+            }
+
+            try
+            {
+                // Get general ledger books data
+                var generalBooks = await _unitOfWork.FilprideReport
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
+                // Filter for "Update Price" in description (case-insensitive)
+                var filteredData = generalBooks
+                    .Where(gb => gb.Description != null && gb.Description.ToLower().Contains("update price"))
+                    .ToList();
+
+                if (filteredData.Count == 0)
+                {
+                    TempData["info"] = "No records found for updating selling price in the selected date range.";
+                    return RedirectToAction(nameof(JournalVoucherPriceReport));
+                }
+
+                var totalDebit = filteredData.Sum(gb => gb.Debit);
+                var totalCredit = filteredData.Sum(gb => gb.Credit);
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("JV Due to Updating Selling Price");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "JV DUE TO UPDATING SELLING PRICE";
+                mergedCells.Style.Font.Size = 13;
+                mergedCells.Style.Font.Bold = true;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Date";
+                worksheet.Cells["B7"].Value = "Reference";
+                worksheet.Cells["C7"].Value = "Description";
+                worksheet.Cells["D7"].Value = "Account No";
+                worksheet.Cells["E7"].Value = "Account Name";
+                worksheet.Cells["F7"].Value = "Sub-Account";
+                worksheet.Cells["G7"].Value = "Debit";
+                worksheet.Cells["H7"].Value = "Credit";
+                worksheet.Cells["I7"].Value = "Posted By";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:I7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+
+                foreach (var gl in filteredData)
+                {
+                    worksheet.Cells[row, 1].Value = gl.Date;
+                    worksheet.Cells[row, 2].Value = gl.Reference;
+                    worksheet.Cells[row, 3].Value = gl.Description;
+                    worksheet.Cells[row, 4].Value = gl.AccountNo;
+                    worksheet.Cells[row, 5].Value = gl.AccountTitle;
+                    worksheet.Cells[row, 6].Value = gl.SubAccountName;
+                    worksheet.Cells[row, 7].Value = gl.Debit;
+                    worksheet.Cells[row, 8].Value = gl.Credit;
+                    worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper() ?? string.Empty;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 6].Value = "Total ";
+                worksheet.Cells[row, 7].Value = totalDebit;
+                worksheet.Cells[row, 8].Value = totalCredit;
+
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                }
+
+                using (var range = worksheet.Cells[row, 6, row, 8])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                #region -- Audit Trail
+
+                FilprideAuditTrail auditTrailBook = new(
+                    GetUserFullName(),
+                    "Generate general ledger journal voucher - updating selling price report excel file",
+                    "General Ledger JV Report",
+                    companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
+
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"JV_UpdatingSellingPrice_{dateFrom:yyyyMMdd}_{dateTo:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate JV updating selling price report excel. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(JournalVoucherPriceReport));
+            }
+        }
+        #endregion
+
+        #region -- Generate General Ledger Journal Voucher Report Due To Updating Unit Cost as Excel File
+        [HttpGet]
+        public IActionResult JournalVoucherUnitCostReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> JournalVoucherUnitCostReportExcel(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = GetUserFullName();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(JournalVoucherUnitCostReport));
+            }
+
+            // Validate date range
+            if (model.DateFrom > model.DateTo)
+            {
+                TempData["warning"] = "Date From cannot be greater than Date To.";
+                return RedirectToAction(nameof(JournalVoucherUnitCostReport));
+            }
+
+            try
+            {
+                // Get general ledger books data
+                var generalBooks = await _unitOfWork.FilprideReport
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
+                // Filter for "Update Cost" in description (case-insensitive)
+                var filteredData = generalBooks
+                    .Where(gb => gb.Description != null && gb.Description.ToLower().Contains("update cost"))
+                    .ToList();
+
+                if (filteredData.Count == 0)
+                {
+                    TempData["info"] = "No records found for updating unit cost in the selected date range.";
+                    return RedirectToAction(nameof(JournalVoucherUnitCostReport));
+                }
+
+                var totalDebit = filteredData.Sum(gb => gb.Debit);
+                var totalCredit = filteredData.Sum(gb => gb.Credit);
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("JV Due to Updating Unit Cost");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "JV DUE TO UPDATING UNIT COST";
+                mergedCells.Style.Font.Size = 13;
+                mergedCells.Style.Font.Bold = true;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Date";
+                worksheet.Cells["B7"].Value = "Reference";
+                worksheet.Cells["C7"].Value = "Description";
+                worksheet.Cells["D7"].Value = "Account No";
+                worksheet.Cells["E7"].Value = "Account Name";
+                worksheet.Cells["F7"].Value = "Sub-Account";
+                worksheet.Cells["G7"].Value = "Debit";
+                worksheet.Cells["H7"].Value = "Credit";
+                worksheet.Cells["I7"].Value = "Posted By";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:I7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+
+                foreach (var gl in filteredData)
+                {
+                    worksheet.Cells[row, 1].Value = gl.Date;
+                    worksheet.Cells[row, 2].Value = gl.Reference;
+                    worksheet.Cells[row, 3].Value = gl.Description;
+                    worksheet.Cells[row, 4].Value = gl.AccountNo;
+                    worksheet.Cells[row, 5].Value = gl.AccountTitle;
+                    worksheet.Cells[row, 6].Value = gl.SubAccountName;
+                    worksheet.Cells[row, 7].Value = gl.Debit;
+                    worksheet.Cells[row, 8].Value = gl.Credit;
+                    worksheet.Cells[row, 9].Value = gl.CreatedBy.ToUpper();
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 6].Value = "Total ";
+                worksheet.Cells[row, 7].Value = totalDebit;
+                worksheet.Cells[row, 8].Value = totalCredit;
+
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                }
+
+                using (var range = worksheet.Cells[row, 6, row, 8])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                #region -- Audit Trail
+
+                FilprideAuditTrail auditTrailBook = new(
+                    GetUserFullName(),
+                    "Generate general ledger journal voucher - updating unit cost report excel file",
+                    "General Ledger JV Report",
+                    companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
+
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"JV_UpdatingUnitCost_{dateFrom:yyyyMMdd}_{dateTo:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate JV updating unit cost report excel. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(JournalVoucherUnitCostReport));
+            }
+        }
+
         #endregion
     }
 }

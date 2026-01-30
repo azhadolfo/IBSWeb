@@ -2,10 +2,10 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +25,16 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
-                .Where(c => c.Company == companyClaims)
-                .OrderBy(c => c.CustomerOrderSlipNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_customer_order_slips
+                    WHERE company = {0}
+                    ORDER BY customer_order_slip_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    companyClaims)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCos == null)
             {
@@ -184,10 +191,10 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var cos = await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.ForDR) ||
+                .Where(cos => (cos.Status == nameof(CosStatus.ForDR) ||
                                cos.Status == nameof(CosStatus.Completed) ||
                                cos.Status == nameof(CosStatus.Closed) ||
-                               cos.Status == nameof(CosStatus.Expired) &&
+                               cos.Status == nameof(CosStatus.Expired)) &&
                                cos.DeliveredQuantity > 0 &&
                                cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem

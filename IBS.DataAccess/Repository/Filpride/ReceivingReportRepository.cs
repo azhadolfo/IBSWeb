@@ -1,13 +1,13 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -34,9 +34,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.ReceivingReportNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_receiving_reports
+                    WHERE company = {0}
+                        AND receiving_report_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY receiving_report_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "RRBEG%",
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRr == null)
             {
@@ -54,9 +65,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.ReceivingReportNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_receiving_reports
+                    WHERE company = {0}
+                        AND receiving_report_no NOT LIKE {1}
+                        AND type = {2}
+                    ORDER BY receiving_report_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    "RRBEG%",
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRr == null)
             {
@@ -95,11 +117,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 return await _db.SaveChangesAsync(cancellationToken);
             }
 
-            po.ActualPrices.FirstOrDefault()!.AppliedVolume -= quantityReceived;;
+            po.ActualPrices.FirstOrDefault()!.AppliedVolume -= quantityReceived;
             return await _db.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        public async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
@@ -212,7 +234,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Compute the remaining using the default price
-            totalAmount += remainingQuantity * ((poActualPrice?.TriggeredPrice != null ? poActualPrice!.TriggeredPrice : deliveryReceipt.PurchaseOrder.Price) + freight);
+            totalAmount += remainingQuantity * ((poActualPrice?.TriggeredPrice ?? deliveryReceipt.PurchaseOrder.Price) + freight);
             model.Amount = totalAmount;
 
             #region --Audit Trail Recording
@@ -315,8 +337,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = inventoryTitle.AccountName,
                 Debit = netOfVatAmount,
                 Credit = 0,
-                CreatedBy = model.PostedBy,
-                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                CreatedBy = model.PostedBy!,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company,
                 ModuleType = nameof(ModuleType.Purchase)
             });
@@ -333,8 +355,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = vatAmount,
                     Credit = 0,
-                    CreatedBy = model.PostedBy,
-                    CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = model.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
                 });
@@ -350,11 +372,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = apTradeTitle.AccountName,
                 Debit = 0,
                 Credit = netOfEwtAmount,
-                CreatedBy = model.PostedBy,
-                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                CreatedBy = model.PostedBy!,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company,
-                SupplierId = model.PurchaseOrder.SupplierId,
-                SupplierName = model.PurchaseOrder.SupplierName,
+                SubAccountType = SubAccountType.Supplier,
+                SubAccountId = model.PurchaseOrder.SupplierId,
+                SubAccountName = model.PurchaseOrder.SupplierName,
                 ModuleType = nameof(ModuleType.Purchase)
             });
 
@@ -370,7 +393,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = ewtTitle.AccountName,
                     Debit = 0,
                     Credit = ewtAmount,
-                    CreatedBy = model.PostedBy,
+                    CreatedBy = model.PostedBy!,
                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
@@ -393,8 +416,6 @@ namespace IBS.DataAccess.Repository.Filpride
             await unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
 
             #endregion
-
-            await UpdatePoAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
 
             #region --Purchase Book Recording
 
@@ -573,8 +594,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 CreatedBy = userName,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company,
-                SupplierId = model.PurchaseOrder.SupplierId,
-                SupplierName = model.PurchaseOrder.SupplierName,
+                SubAccountType = SubAccountType.Supplier,
+                SubAccountId = model.PurchaseOrder.SupplierId,
+                SubAccountName = model.PurchaseOrder.SupplierName,
                 ModuleType = nameof(ModuleType.Purchase)
             });
 

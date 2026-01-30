@@ -6,6 +6,37 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v1.2.6] - 2025-01-17
+### Added
+- Implement the subaccount in journal voucher.
+
+---
+
+## [v1.2.5] - 2026-01-16
+### Added
+- Added default commissionee and commission rate to the customer file
+
+### Changed
+- Modified the date parameter needed when generating AR Per Customer.
+- Revised the payroll invoice.
+
+### Fixed
+- Moved the otc fuel sales report to path correctly.
+
+---
+
+## [v1.2.4] - 2025-12-16
+### Changed
+- Modified the configuration of notification.js to low the cost of GCP.
+
+---
+
+## [v1.2.3] - 2025-12-04
+### Added
+- Added locking of database when creating new series no.
+
+---
+
 ## [v1.2.2] - 2025-12-01
 ### Added
 - Added journal entries for updating the commission and freight.
@@ -13,10 +44,13 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 ### Fixed
 - Fixed atl booking card in dashboard not accurate.
 
+---
+
 ## [v1.2.1] - 2025-11-29
 ### Changed
 - Changed in to raw sql the query for getting the latest series, applied locking of row to prevent duplicate.
 
+---
 
 ## [v1.2.0] - 2025-11-28
 ### Fixed
@@ -25,6 +59,8 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ### Changed
 - Username value when creating audit trail
+
+---
 
 ## [v1.0.0] - 2025-11-28
 ### Added

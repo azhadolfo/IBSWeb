@@ -135,3 +135,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+$(document).ready(function () {
+    $('#dataTable').DataTable({
+        stateSave: true,
+        processing: true
+    });
+});

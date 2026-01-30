@@ -3,10 +3,10 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -60,7 +60,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (view == nameof(DynamicView.Service))
             {
-                return View("ExportIndex", services);
+                return View("ExportIndex");
             }
 
             return View(services);
@@ -294,6 +294,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetServiceList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var services = (await _dbContext.FilprideServices.ToListAsync(cancellationToken))
+                    .Select(x => new
+                    {
+                        x.ServiceId,
+                        x.ServiceNo,
+                        x.Name,
+                        x.Percent,
+                        x.CreatedBy,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = services
+                });
+            }
+            catch (Exception ex)
+            {
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

@@ -3,9 +3,9 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +59,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var banks = await _unitOfWork.FilprideBankAccount
                 .GetAllAsync(null, cancellationToken);
 
-                return view == nameof(DynamicView.BankAccount) ? View("ExportIndex", banks) : View(banks);
+                return view == nameof(DynamicView.BankAccount) ? View("ExportIndex") : View(banks);
             }
             catch (Exception ex)
             {
@@ -248,6 +248,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(existingModel);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetBankAccountList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var bankAccounts = (await _unitOfWork.FilprideBankAccount
+                    .GetAllAsync(null, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.BankAccountId,
+                        x.AccountNo,
+                        x.AccountName,
+                        x.Bank,
+                        x.Branch,
+                        x.CreatedBy,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = bankAccounts
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

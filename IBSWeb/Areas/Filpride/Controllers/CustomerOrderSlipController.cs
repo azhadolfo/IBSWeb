@@ -4,6 +4,7 @@ using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -11,7 +12,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
@@ -374,8 +374,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BusinessStyle = customer.BusinessStyle,
                     AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
-                    ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7)),
                 };
+
+                ///TODO Temporary solution for 14 days expiration of GASSO FUEL TRADING customer
+                model.ExpirationDate = !model.CustomerName.Contains("GASSO FUEL TRADING", StringComparison.CurrentCultureIgnoreCase)
+                    ? DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7))
+                    : DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(14));
 
                 // Upload files if there is existing
                 if (viewModel.UploadedFiles != null)
@@ -1306,7 +1310,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 customer.CustomerType,
                 Branches = !customer.HasBranch ? null : await _unitOfWork.FilprideCustomer
                     .GetCustomerBranchesSelectListAsync(customer.CustomerId, cancellationToken),
-                customer.HasMultipleTerms
+                customer.HasMultipleTerms,
+                commissioneeId = customer.CommissioneeId,
+                commissionRate = customer.CommissionRate,
             });
         }
 
@@ -1985,10 +1991,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.CommissioneeTaxType = null;
                 }
 
-                var dr = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
+                var drs = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
 
-                if (dr != null)
+                foreach (var dr in drs)
                 {
                     var newCommissionAmount = existingRecord.CommissionRate * dr.Quantity;
                     var difference = newCommissionAmount - dr.CommissionAmount;

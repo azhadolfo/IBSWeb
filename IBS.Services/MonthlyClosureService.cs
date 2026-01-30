@@ -2,14 +2,13 @@ using Google.Apis.Drive.v3.Data;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
-using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Quartz;
 
 namespace IBS.Services
 {
@@ -28,7 +27,8 @@ namespace IBS.Services
         private readonly IUnitOfWork _unitOfWork;
 
         public MonthlyClosureService(ApplicationDbContext dbContext,
-            ILogger<MonthlyClosureService> logger, IUnitOfWork unitOfWork)
+            ILogger<MonthlyClosureService> logger,
+            IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _logger = logger;
@@ -42,17 +42,18 @@ namespace IBS.Services
             {
                 var isMonthAlreadyLocked = await _unitOfWork.IsPeriodPostedAsync(monthDate, cancellationToken);
 
-                if (isMonthAlreadyLocked)
+                if (!isMonthAlreadyLocked)
                 {
-                    throw new InvalidOperationException($"{monthDate:MMMM yyyy} is already locked.");
+                    throw new InvalidOperationException($"{monthDate:MMMM yyyy} is not locked.");
                 }
 
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
-                    .AnyAsync(x => x.Date.Month == monthDate.Month
-                                   && x.Date.Year == monthDate.Year
-                                   && x.VoidedBy == null
-                                   && x.CanceledBy == null
-                                   && !x.HasReceivingReport, cancellationToken);
+                    .AnyAsync(x => x.Company == company &&
+                                   x.Date.Month == monthDate.Month &&
+                                   x.Date.Year == monthDate.Year &&
+                                   x.VoidedBy == null &&
+                                   x.CanceledBy == null &&
+                                   !x.HasReceivingReport, cancellationToken);
 
                 if (hasUnliftedDrs)
                 {
@@ -60,22 +61,12 @@ namespace IBS.Services
                                                         $"Closing for this month cannot proceed.");
                 }
 
-                await AutoReversalForCvWithoutDcrDate(monthDate, cancellationToken);
-                await ComputeNibit(monthDate, cancellationToken);
-                await RecordNotUpdatedSales(monthDate, cancellationToken);
-                await RecordNotUpdatedPurchases(monthDate, cancellationToken);
+                /// TODO await AutoReversalForCvWithoutDcrDate(monthDate, company, cancellationToken);
+                await ComputeNibit(monthDate, company, cancellationToken);
+                await RecordNotUpdatedSales(monthDate, company, cancellationToken);
+                await RecordNotUpdatedPurchases(monthDate, company, cancellationToken);
+                await RecordGlPeriodBalance(monthDate, company, cancellationToken);
 
-                var postedPeriod = new PostedPeriod
-                {
-                    Company = company,
-                    Month = monthDate.Month,
-                    Year = monthDate.Year,
-                    IsPosted = true,
-                    PostedBy = user,
-                    PostedOn = DateTimeHelper.GetCurrentPhilippineTime()
-                };
-
-                await _dbContext.PostedPeriods.AddAsync(postedPeriod, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -88,73 +79,17 @@ namespace IBS.Services
             }
         }
 
-        private async Task InTransit(DateTime previousMonth)
-        {
-            var hadInTransit = await _dbContext.FilprideDeliveryReceipts
-                .AnyAsync(dr =>
-                    dr.Date.Month == previousMonth.Month &&
-                    dr.Date.Year == previousMonth.Year &&
-                    dr.Status == nameof(DRStatus.PendingDelivery));
-
-            if (!hadInTransit)
-            {
-                return;
-            }
-
-            try
-            {
-                var users = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_Logistics ||
-                                u.Department == SD.Department_ManagementAccounting)
-                    .Select(u => u.Id)
-                    .ToListAsync();
-
-
-                var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
-                var message = $"Is the in-transit report final? Kindly generate the {link} and " +
-                              $"answer this question to enable the creation of DR for the month of " +
-                              $"{DateTimeHelper.GetCurrentPhilippineTime():MMM yyyy}. \n" +
-                              $"CC: Management Accounting";
-
-                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
-
-                var lockCreationOfDr = await _dbContext.AppSettings
-                    .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
-
-                if (lockCreationOfDr == null)
-                {
-                    lockCreationOfDr = new AppSetting
-                    {
-                        SettingKey = AppSettingKey.LockTheCreationOfDr,
-                        Value = "true"
-                    };
-
-                    await _dbContext.AppSettings.AddAsync(lockCreationOfDr);
-                }
-                else
-                {
-                    lockCreationOfDr.Value = "true";
-                }
-
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
-                throw;
-            }
-        }
-
-        private async Task AutoReversalForCvWithoutDcrDate(DateOnly previousMonth, CancellationToken cancellationToken)
+        private async Task AutoReversalForCvWithoutDcrDate(DateOnly periodMonth, string company, CancellationToken cancellationToken)
         {
             try
             {
-                var endOfPreviousMonth = previousMonth.AddDays(-1);
+                var endOfPreviousMonth = periodMonth.AddDays(-1);
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv =>
-                        cv.Date.Month == previousMonth.Month &&
-                        cv.Date.Year == previousMonth.Year &&
+                        cv.Company == company &&
+                        cv.Date.Month == periodMonth.Month &&
+                        cv.Date.Year == periodMonth.Year &&
                         cv.CvType != nameof(CVType.Invoicing) &&
                         cv.PostedBy != null &&
                         cv.DcrDate == null
@@ -168,6 +103,7 @@ namespace IBS.Services
 
                 foreach (var cv in disbursementsWithoutDcrDate)
                 {
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                     var ledgers = new List<FilprideGeneralLedgerBook>();
                     var journalBooks = new List<FilprideJournalBook>();
 
@@ -175,31 +111,57 @@ namespace IBS.Services
                         .Where(cvd => cvd.CheckVoucherHeaderId == cv.CheckVoucherHeaderId)
                         .ToListAsync(cancellationToken);
 
-                    foreach (var cvDetails in details)
+                    foreach (var detail in details)
                     {
+                        var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
+                                      ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountNo = cvDetails.AccountNo,
-                            AccountTitle = cvDetails.AccountName,
-                            Debit = cvDetails.Credit,
-                            Credit = cvDetails.Debit,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = detail.Credit,
+                            Credit = detail.Debit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountName = detail.SubAccountName,
+                            ModuleType = nameof(ModuleType.Disbursement)
                         });
 
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
-                            Date = previousMonth,
+                            Date = periodMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountNo = cvDetails.AccountNo,
-                            AccountTitle = cvDetails.AccountName,
-                            Debit = cvDetails.Debit,
-                            Credit = cvDetails.Credit,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountName = detail.SubAccountName,
+                            ModuleType = nameof(ModuleType.Disbursement)
+                        });
+
+                        journalBooks.Add(new FilprideJournalBook
+                        {
+                            Date = endOfPreviousMonth,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
+                            AccountTitle = $"{account.AccountNumber} {account.AccountName}",
+                            Debit = detail.Credit,
+                            Credit = detail.Debit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
@@ -210,22 +172,9 @@ namespace IBS.Services
                             Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
-                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
-                            Debit = cvDetails.Credit,
-                            Credit = cvDetails.Debit,
-                            Company = cv.Company,
-                            CreatedBy = "SYSTEM GENERATED",
-                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                        });
-
-                        journalBooks.Add(new FilprideJournalBook
-                        {
-                            Date = endOfPreviousMonth,
-                            Reference = cv.CheckVoucherHeaderNo!,
-                            Description = cv.Particulars!,
-                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
-                            Debit = cvDetails.Debit,
-                            Credit = cvDetails.Credit,
+                            AccountTitle = $"{account.AccountNumber} {account.AccountName}",
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
                             Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
@@ -251,20 +200,17 @@ namespace IBS.Services
             }
         }
 
-        private async Task ComputeNibit(DateOnly previousMonth, CancellationToken cancellationToken)
+        private async Task ComputeNibit(DateOnly periodMonth, string company, CancellationToken cancellationToken)
         {
             try
             {
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
+                    .Include(gl => gl.Account)
+                    .ThenInclude(filprideChartOfAccount => filprideChartOfAccount.ParentAccount) // Level 4
                     .Where(gl =>
-                        gl.Date.Month == previousMonth.Month &&
-                        gl.Date.Year == previousMonth.Year &&
-                        gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
-                        gl.Company == "Filpride") // TODO Make this dynamic later on
+                        gl.Date.Month == periodMonth.Month &&
+                        gl.Date.Year == periodMonth.Year &&
+                        gl.Company == company)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
@@ -272,7 +218,7 @@ namespace IBS.Services
                     return;
                 }
 
-                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Debit))
+                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Credit))
                 {
                     throw new InvalidOperationException($"GL balance mismatch. " +
                                                         $"Debit:{generalLedgers.Sum(g => g.Debit):N4}, " +
@@ -297,25 +243,26 @@ namespace IBS.Services
                 decimal nibit = 0;
                 foreach (var account in groupByLevelOne)
                 {
-                    if (nibit == 0)
+                    var accountBalance = account.Sum(a =>
+                        a.Account.NormalBalance == nameof(NormalBalance.Debit)
+                            ? a.Debit - a.Credit
+                            : a.Credit - a.Debit);
+
+                    if (account.Key.AccountNumber!.StartsWith("4") || account.Key.AccountNumber!.StartsWith("601"))
                     {
-                        nibit += account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                            a.Debit - a.Credit :
-                            a.Credit - a.Debit);
-
-                        continue;
+                        nibit += accountBalance;
                     }
-
-                    nibit -= account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                        a.Debit - a.Credit :
-                        a.Credit - a.Debit);
+                    else
+                    {
+                        nibit -= accountBalance;
+                    }
                 }
 
                 var nibitForThePeriod = new FilprideMonthlyNibit
                 {
-                    Month = previousMonth.Month,
-                    Year = previousMonth.Year,
-                    Company = "Filpride", // TODO Make this dynamic soon
+                    Month = periodMonth.Month,
+                    Year = periodMonth.Year,
+                    Company = company,
                     NetIncome = nibit,
                     PriorPeriodAdjustment = generalLedgers
                         .Where(g => g.AccountTitle.Contains("Prior Period"))
@@ -325,7 +272,7 @@ namespace IBS.Services
                 var beginning = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(m => m.Year)
                     .ThenByDescending(m => m.Month)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    .FirstOrDefaultAsync(m => m.Company == company, cancellationToken);
 
                 if (beginning != null)
                 {
@@ -345,16 +292,18 @@ namespace IBS.Services
             }
         }
 
-        private async Task RecordNotUpdatedSales(DateOnly previousMonth, CancellationToken cancellationToken)
+        private async Task RecordNotUpdatedSales(DateOnly periodMonth, string company, CancellationToken cancellationToken)
         {
             try
             {
                 var cosNotUpdatedPrice = await _dbContext.FilprideCustomerOrderSlips
                     .Include(x => x.DeliveryReceipts)
-                    .Where(x => x.Date.Month == previousMonth.Month
-                                      && x.Date.Year == previousMonth.Year
-                                      && x.OldPrice == 0
-                                      && x.DeliveredQuantity > 0)
+                    .Where(x =>
+                        x.Company == company &&
+                        x.Date.Month == periodMonth.Month &&
+                        x.Date.Year == periodMonth.Year &&
+                        x.OldPrice == 0 &&
+                        x.DeliveredQuantity > 0)
                     .ToListAsync(cancellationToken);
 
                 if (cosNotUpdatedPrice.Count == 0)
@@ -390,16 +339,18 @@ namespace IBS.Services
             }
         }
 
-        private async Task RecordNotUpdatedPurchases(DateOnly previousMonth, CancellationToken cancellationToken)
+        private async Task RecordNotUpdatedPurchases(DateOnly periodMonth, string company, CancellationToken cancellationToken)
         {
             try
             {
                 var poNotUpdatedPrice = await _dbContext.FilpridePurchaseOrders
                     .Include(x => x.ReceivingReports)
-                    .Where(x => x.Date.Month == previousMonth.Month
-                                && x.Date.Year == previousMonth.Year
-                                && x.UnTriggeredQuantity != 0
-                                && x.QuantityReceived > 0)
+                    .Where(x =>
+                        x.Company == company &&
+                        x.Date.Month == periodMonth.Month &&
+                        x.Date.Year == periodMonth.Year &&
+                        x.UnTriggeredQuantity != 0 &&
+                        x.QuantityReceived > 0)
                     .ToListAsync(cancellationToken);
 
                 if (poNotUpdatedPrice.Count == 0)
@@ -431,6 +382,195 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while recording the not updated sales for the month.");
+                throw;
+            }
+        }
+
+        private async Task RecordGlPeriodBalance(DateOnly periodMonth, string company, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var periodEnd = periodMonth.AddMonths(1).AddDays(-1);
+
+                // Get all accounts from COA for this company
+                var allAccounts = await _dbContext.FilprideChartOfAccounts
+                    .OrderBy(x => x.AccountNumber)
+                    .ToListAsync(cancellationToken);
+
+                if (allAccounts.Count == 0)
+                {
+                    _logger.LogWarning("No accounts found in COA");
+                    return;
+                }
+
+                var glEntries = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(x => x.Account)
+                    .Where(x =>
+                        x.Company == company &&
+                        x.Date.Month == periodMonth.Month &&
+                        x.Date.Year == periodMonth.Year)
+                    .ToListAsync(cancellationToken);
+
+                var glGroupedByAccount = glEntries
+                    .GroupBy(x => x.AccountId)
+                    .Select(g => new
+                    {
+                        AccountId = g.Key,
+                        g.First().Account,
+                        TotalDebit = g.Sum(x => x.Debit),
+                        TotalCredit = g.Sum(x => x.Credit)
+                    })
+                    .ToDictionary(x => x.AccountId);
+
+                var glGroupedBySubAccount = glEntries
+                    .Where(x => x.SubAccountId.HasValue && x.SubAccountType.HasValue)
+                    .GroupBy(x => new
+                    {
+                        x.AccountId,
+                        x.SubAccountId,
+                        x.SubAccountType,
+                        x.SubAccountName
+                    })
+                    .Select(g => new
+                    {
+                        g.Key.AccountId,
+                        g.Key.SubAccountId,
+                        g.Key.SubAccountType,
+                        g.Key.SubAccountName,
+                        Account = g.First().Account,
+                        TotalDebit = g.Sum(x => x.Debit),
+                        TotalCredit = g.Sum(x => x.Credit)
+                    })
+                    .ToList();
+
+                var accountIds = allAccounts.Select(x => x.AccountId).ToList();
+                var closedAt = DateTimeHelper.GetCurrentPhilippineTime();
+
+                // Get beginning balances for all accounts
+                var beginningBalancesDict = await _dbContext.FilprideGlPeriodBalances
+                    .Where(x => accountIds.Contains(x.AccountId) && x.PeriodEndDate < periodEnd)
+                    .GroupBy(x => x.AccountId)
+                    .Select(g => new
+                    {
+                        AccountId = g.Key,
+                        EndingBalance = g.OrderByDescending(x => x.PeriodEndDate)
+                                         .Select(x => x.EndingBalance)
+                                         .FirstOrDefault()
+                    })
+                    .ToDictionaryAsync(x => x.AccountId, x => x.EndingBalance, cancellationToken);
+
+                var glBalances = new List<FilprideGLPeriodBalance>();
+
+                // Process all accounts from COA
+                foreach (var account in allAccounts)
+                {
+                    var beginningBalance = beginningBalancesDict.GetValueOrDefault(account.AccountId, 0m);
+
+                    // Get totals from GL entries (zero if no transactions)
+                    var accountTransactions = glGroupedByAccount.GetValueOrDefault(account.AccountId);
+                    var totalDebit = accountTransactions?.TotalDebit ?? 0m;
+                    var totalCredit = accountTransactions?.TotalCredit ?? 0m;
+
+                    var totalBalance = account.NormalBalance == nameof(NormalBalance.Debit)
+                        ? totalDebit - totalCredit
+                        : totalCredit - totalDebit;
+
+                    var endingBalance = beginningBalance + totalBalance;
+
+                    glBalances.Add(new FilprideGLPeriodBalance
+                    {
+                        AccountId = account.AccountId,
+                        PeriodStartDate = periodMonth,
+                        PeriodEndDate = periodEnd,
+                        FiscalYear = periodMonth.Year,
+                        FiscalPeriod = periodMonth.Month,
+                        BeginningBalance = beginningBalance,
+                        DebitTotal = totalDebit,
+                        CreditTotal = totalCredit,
+                        EndingBalance = endingBalance,
+                        IsClosed = true,
+                        ClosedAt = closedAt,
+                        Company = company
+                    });
+                }
+
+                var subAccountBalances = new List<FilprideGLSubAccountBalance>();
+
+                if (glGroupedBySubAccount.Any())
+                {
+                    var subAccountBeginningBalances = await _dbContext.FilprideGlSubAccountBalances
+                        .Where(x => accountIds.Contains(x.AccountId) && x.PeriodEndDate < periodEnd)
+                        .ToListAsync(cancellationToken);
+
+                    var subAccountBalancesDict = subAccountBeginningBalances
+                        .GroupBy(x => new { x.AccountId, x.SubAccountId, x.SubAccountType })
+                        .Select(g => new
+                        {
+                            Key = g.Key,
+                            EndingBalance = g.OrderByDescending(x => x.PeriodEndDate)
+                                             .Select(x => x.EndingBalance)
+                                             .FirstOrDefault()
+                        })
+                        .ToDictionary(x => x.Key, x => x.EndingBalance);
+
+                    foreach (var subAccount in glGroupedBySubAccount)
+                    {
+                        var key = new
+                        {
+                            subAccount.AccountId,
+                            SubAccountId = subAccount.SubAccountId!.Value,
+                            SubAccountType = subAccount.SubAccountType!.Value
+                        };
+
+                        var beginningBalance = subAccountBalancesDict.GetValueOrDefault(key, 0m);
+
+                        var totalBalance = subAccount.Account.NormalBalance == nameof(NormalBalance.Debit)
+                            ? subAccount.TotalDebit - subAccount.TotalCredit
+                            : subAccount.TotalCredit - subAccount.TotalDebit;
+
+                        var endingBalance = beginningBalance + totalBalance;
+
+                        subAccountBalances.Add(new FilprideGLSubAccountBalance
+                        {
+                            AccountId = subAccount.AccountId,
+                            SubAccountType = subAccount.SubAccountType.Value,
+                            SubAccountId = subAccount.SubAccountId.Value,
+                            SubAccountName = subAccount.SubAccountName!,
+                            PeriodStartDate = periodMonth,
+                            PeriodEndDate = periodEnd,
+                            FiscalYear = periodMonth.Year,
+                            FiscalPeriod = periodMonth.Month,
+                            BeginningBalance = beginningBalance,
+                            DebitTotal = subAccount.TotalDebit,
+                            CreditTotal = subAccount.TotalCredit,
+                            EndingBalance = endingBalance,
+                            IsClosed = true,
+                            Company = company
+                        });
+                    }
+                }
+
+                if (glBalances.Any())
+                {
+                    await _dbContext.FilprideGlPeriodBalances.AddRangeAsync(glBalances, cancellationToken);
+                }
+
+                if (subAccountBalances.Any())
+                {
+                    await _dbContext.FilprideGlSubAccountBalances.AddRangeAsync(subAccountBalances, cancellationToken);
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation(
+                    "Recorded GL balances for period {PeriodMonth} and company {Company}: {AccountCount} accounts ({ActiveCount} with transactions), {SubAccountCount} sub-accounts.",
+                    periodMonth.ToString("yyyy-MM-dd"), company, glBalances.Count, glGroupedByAccount.Count, subAccountBalances.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "An error occurred while recording the GL balance for period {PeriodMonth} and company {Company}.",
+                    periodMonth.ToString("yyyy-MM-dd"), company);
                 throw;
             }
         }

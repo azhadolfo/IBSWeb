@@ -7,18 +7,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply)]
     public class AuthorityToLoadController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -59,6 +58,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply, SD.Department_Logistics)]
         public IActionResult Index()
         {
             return View();
@@ -154,6 +154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
+        [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply)]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -176,6 +177,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply)]
         public async Task<IActionResult> Create(BookATLViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -286,6 +288,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
+        [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply, SD.Department_Logistics)]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -488,6 +491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
+        [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply)]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

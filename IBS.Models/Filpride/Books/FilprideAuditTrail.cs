@@ -1,8 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Net;
-using IBS.Utility;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Books
 {
@@ -32,7 +29,8 @@ namespace IBS.Models.Filpride.Books
         public FilprideAuditTrail(string username, string activity, string documentType, string company)
         {
             Username = username;
-            Date = DateTimeHelper.GetCurrentPhilippineTime();
+            Date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
             MachineName = Environment.MachineName;
             Activity = activity;
             DocumentType = documentType;

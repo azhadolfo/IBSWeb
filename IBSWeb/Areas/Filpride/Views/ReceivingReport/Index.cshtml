@@ -1,5 +1,5 @@
-﻿@model IEnumerable<FilprideReceivingReport>
-@using IBS.Utility.Enums
+﻿@using IBS.Models.Enums
+@model IEnumerable<FilprideReceivingReport>
 @{
     ViewData["Title"] = "Receiving Report";
 }
@@ -24,7 +24,6 @@
                         <th class="text-start">RR#</th>
                         <th class="text-start">Date</th>
                         <th class="text-start">PO#</th>
-                        <th class="text-start">IS PO#</th>
                         <th class="text-start">IS RR#</th>
                         <th class="text-start">DR#</th>
                         <th class="text-start">Customer</th>
@@ -149,10 +148,6 @@
                     { 
                         "data": "purchaseOrderNo",
                         "name": "purchaseOrder.purchaseOrderNo"
-                    },
-                    { 
-                        "data": "oldPoNo",
-                        "name": "purchaseOrder.oldPoNo"
                     },
                     { 
                         "data": "oldRRNo",

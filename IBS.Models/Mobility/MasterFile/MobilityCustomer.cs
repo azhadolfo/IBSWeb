@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
-using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
+using IBS.Models.Enums;
 
 namespace IBS.Models.Mobility.MasterFile
 {
@@ -40,7 +38,8 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal QuantityLimit { get; set; }

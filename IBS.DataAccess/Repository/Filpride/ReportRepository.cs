@@ -1,11 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -101,12 +101,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var generalLedgerBooks = await _db
                 .FilprideGeneralLedgerBooks
                 .Where(i => i.Company == company && i.Date >= dateFrom && i.Date <= dateTo && i.IsPosted)
-                .Include(i => i.BankAccount)
-                .Include(i => i.Customer)
-                .Include(i => i.Supplier)
                 .Include(i => i.Account)
-                .Include(i => i.Employee)
-                .Include(i => i.CompanyModel)
                 .OrderBy(i => i.Date)
                 .ThenBy(i => i.Reference)
                 .ThenByDescending(i => i.Debit)
@@ -324,17 +319,17 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Fetch all delivery receipts within the date range
-            var seviceInvoices = await _db.FilprideServiceInvoices
+            var serviceInvoices = await _db.FilprideServiceInvoices
                 .Where(dr => dr.Company == company &&
-                             DateOnly.FromDateTime(dr.CreatedDate) >= dateFrom &&
-                             DateOnly.FromDateTime(dr.CreatedDate) <= dateTo &&
+                             dr.Period >= dateFrom &&
+                             dr.Period  <= dateTo &&
                              dr.Status == nameof(Status.Posted))
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Service)
-                .OrderBy(p => p.CreatedDate)
+                .OrderBy(p => p.ServiceInvoiceNo)
                 .ToListAsync(cancellationToken);
 
-            return seviceInvoices;
+            return serviceInvoices;
         }
 
         public async Task<List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
@@ -533,6 +528,25 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports;
         }
 
+        public async Task<List<FilprideDeliveryReceipt>> GetHaulerPayableReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var deliveryReceipts = await _db.FilprideDeliveryReceipts
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(dr => dr.Hauler)
+                .Where(dr => dr.Company == company && dr.DeliveredDate <= dateTo && dr.DeliveredDate != null && dr.HaulerId != null && dr.FreightAmount > 0m)
+                .OrderBy(dr => dr.DeliveredDate!.Value.Year)
+                .ThenBy(dr => dr.DeliveredDate!.Value.Month)
+                .ThenBy(dr => dr.Hauler!.SupplierName)
+                .ToListAsync(cancellationToken);
+
+            return deliveryReceipts;
+        }
+
         public async Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, string company, CancellationToken cancellationToken = default)
         {
             var purchaseOrders = await _db.FilpridePurchaseOrders
@@ -557,7 +571,29 @@ namespace IBS.DataAccess.Repository.Filpride
             return purchaseOrders;
         }
 
-        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default)
+        {
+            var salesInvoiceQuery = _db.FilprideSalesInvoices
+                .Where(x => x.Company == company
+                            && x.Status == nameof(Status.Posted)
+                            && (customerIds == null || customerIds.Contains(x.CustomerId))
+                            && x.TransactionDate <= dateTo); // Only check upper bound
+
+            // Include necessary related entities
+            var salesInvoices = await salesInvoiceQuery
+                .Include(si => si.Product)
+                .Include(si => si.Customer)
+                .Include(si => si.DeliveryReceipt)
+                .ThenInclude(dr => dr!.Hauler)
+                .Include(si => si.CustomerOrderSlip)
+                .ToListAsync(cancellationToken);
+
+            return salesInvoices.OrderBy(rr => rr.TransactionDate).ToList();
+        }
+
+
+        public async Task<List<FilprideJournalVoucherDetail>> GetJournalVoucherReport(DateOnly dateFrom,
+            DateOnly dateTo, string company, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -565,21 +601,18 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Base query without date filter yet
-            var salesInvoiceQuery = _db.FilprideSalesInvoices
-                .Where(x => x.Company == company
-                            && x.Status == nameof(Status.Posted)
-                            && (customerIds == null || customerIds.Contains(x.CustomerId))
-                            && x.TransactionDate >= dateFrom && x.TransactionDate <= dateTo);
-
-            // Include necessary related entities
-            var salesInvoices = await salesInvoiceQuery
-                .Include(si => si.Product)
-                .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
-                .Include(si => si.CustomerOrderSlip)
+            var journalVoucherDetails = await _db.FilprideJournalVoucherDetails
+                .Include(jvd => jvd.JournalVoucherHeader)
+                .ThenInclude(jvh => jvh!.CheckVoucherHeader)
+                .Where(x => x.JournalVoucherHeader!.Company == company
+                            && x.JournalVoucherHeader.Date >= dateFrom
+                            && x.JournalVoucherHeader.Date <= dateTo)
+                .OrderBy(jvd => jvd.JournalVoucherHeader!.Date)
+                .OrderBy(jvd => jvd.JournalVoucherHeader!.JournalVoucherHeaderNo)
                 .ToListAsync(cancellationToken);
 
-            return salesInvoices.OrderBy(rr => rr.TransactionDate).ToList();
+
+            return journalVoucherDetails;
         }
     }
 }

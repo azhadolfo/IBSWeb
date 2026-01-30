@@ -1,8 +1,9 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -49,8 +50,14 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
         {
+            if (tin == "000-000-000-00000")
+                return false;
+
             return await _db.FilprideCustomers
-                .AnyAsync(c => c.Company == company && c.CustomerTin == tin, cancellationToken);
+                .AnyAsync(c =>
+                    c.Company == company &&
+                    c.CustomerTin == tin,
+                    cancellationToken);
         }
 
         public async Task UpdateAsync(FilprideCustomer model, CancellationToken cancellationToken = default)
@@ -80,6 +87,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.Type = model.Type;
             existingCustomer.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
             existingCustomer.StationCode = model.StationCode;
+            existingCustomer.CommissionRate = model.CommissionRate;
+            existingCustomer.CommissioneeId = model.CommissioneeId;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -104,6 +113,27 @@ namespace IBS.DataAccess.Repository.Filpride
                     Text = b.BranchName
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public override async Task<FilprideCustomer?> GetAsync(Expression<Func<FilprideCustomer, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                    .Include(c => c.Commissionee)
+                    .FirstOrDefaultAsync(cancellationToken);
+        }
+
+
+        public override async Task<IEnumerable<FilprideCustomer>> GetAllAsync(Expression<Func<FilprideCustomer, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideCustomer> query = dbSet
+                .Include(dr => dr.Commissionee);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

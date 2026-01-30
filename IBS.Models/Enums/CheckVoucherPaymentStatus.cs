@@ -1,10 +1,12 @@
-namespace IBS.Utility.Enums
+namespace IBS.Models.Enums
 {
     public enum CheckVoucherPaymentStatus
     {
         ForPosting,
         Posted,
         Canceled,
-        Voided
+        Voided,
+        Liquidated,
+        Unliquidated
     }
 }

@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -58,16 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.DebitMemo))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var debitMemos = await _unitOfWork.FilprideDebitMemo
-                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", debitMemos);
+                return View("ExportIndex");
             }
 
             return View();
@@ -463,10 +458,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = model.DebitAmount - (withHoldingTaxAmount + withHoldingVatAmount),
                             Credit = 0,
                             Company = model.Company,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate,
-                            CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
-                            CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountType = SubAccountType.Customer,
+                            SubAccountId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
+                            SubAccountName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
                             ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     };
@@ -485,8 +481,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = withHoldingTaxAmount,
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -505,8 +501,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = withHoldingVatAmount,
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -523,9 +519,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountTitle = salesTitle.AccountName,
                             Debit = 0,
                             Company = model.Company,
-                            CreatedBy = model.CreatedBy,
                             Credit = netOfVatAmount,
-                            CreatedDate = model.CreatedDate,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     );
@@ -544,8 +540,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = 0,
                                 Credit = vatAmount,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -643,9 +639,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = 0,
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
-                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                            CustomerId = model.ServiceInvoice.CustomerId,
-                            CustomerName = model.ServiceInvoice.CustomerName,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountType = SubAccountType.Customer,
+                            SubAccountId = model.ServiceInvoice.CustomerId,
+                            SubAccountName = model.ServiceInvoice.CustomerName,
                             ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     };
@@ -665,7 +662,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -685,7 +682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -704,7 +701,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = netOfVatAmount,
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
-                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.DebitMemo)
                         });
                     }
@@ -724,7 +721,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = vatAmount,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
@@ -1047,6 +1044,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetDebitMemoList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var debitMemos = (await _unitOfWork.FilprideDebitMemo
+                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.DebitMemoId,
+                        x.DebitMemoNo,
+                        x.TransactionDate,
+                        x.SalesInvoice?.SalesInvoiceNo,
+                        x.ServiceInvoice?.ServiceInvoiceNo,
+                        x.Source,
+                        x.DebitAmount,
+                        x.CreatedBy,
+                        x.Status,
+                        x.SalesInvoiceId
+                    });
+
+                return Json(new
+                {
+                    data = debitMemos
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)

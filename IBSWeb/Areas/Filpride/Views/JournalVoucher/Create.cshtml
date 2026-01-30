@@ -1,5 +1,5 @@
-﻿@using IBS.Utility.Enums
-@model JournalVoucherVM
+﻿@using IBS.Models.Enums
+@model JournalVoucherViewModel
 
 @{
     ViewData["Title"] = "Journal Voucher - Create";
@@ -28,46 +28,50 @@
 
                     <div class="form-group mb-3">
                         <label class="control-label">Type<span class="required">*</span></label>
-                        <select asp-for="Header!.Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
                             <option value="" selected disabled>Select SI type</option>
                             @foreach (DocumentType journalVoucherType in Enum.GetValues<DocumentType>())
                             {
                                 <option value="@journalVoucherType" selected="@(journalVoucherType == DocumentType.Undocumented)">@journalVoucherType.ToString()</option>
                             }
                         </select>
-                        <span asp-validation-for="Header!.Type" class="text-danger"></span>
+                        <span asp-validation-for="Type" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="Header!.Date" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Header!.Date" type="Date" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"/>
-                        <span asp-validation-for="Header!.Date" class="text-danger"></span>
+                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="TransactionDate"
+                               type="Date"
+                               class="form-control"
+                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"
+                               min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
+                        <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header!.References" type="text" class="form-control" placeholder=""/>
-                        <span asp-validation-for="Header!.References" class="text-danger"></span>
-                        <label asp-for="Header!.References" class="control-label"></label>
+                        <input asp-for="References" type="text" class="form-control" placeholder=""/>
+                        <span asp-validation-for="References" class="text-danger"></span>
+                        <label asp-for="References" class="control-label"></label>
                     </div>
                     <div class="form-group mb-3">
                         <label class="control-label">CV No.</label><span class="required">*</span>
-                        <select asp-for="Header!.CVId" asp-items="@Model.Header!.CheckVoucherHeaders" class="form-select js-select2 checkVoucher" style="width:100%" required>
+                        <select asp-for="CVId" asp-items="@Model.CheckVoucherHeaders" class="form-select js-select2 checkVoucher" style="width:100%" required>
                             <option></option>
                         </select>
-                        <span asp-validation-for="Header!.CVId" class="text-danger"></span>
+                        <span asp-validation-for="CVId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header!.Particulars" type="text" class="form-control" placeholder=""/>
-                        <label asp-for="Header!.Particulars" class="control-label">Particulars<span class="required">*</span></label>
-                        <span asp-validation-for="Header!.Particulars" class="text-danger"></span>
+                        <input asp-for="Particulars" type="text" class="form-control" placeholder=""/>
+                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <span asp-validation-for="Particulars" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header!.CRNo" type="text" class="form-control" placeholder=""/>
-                        <label asp-for="Header!.CRNo" class="control-label"></label>
-                        <span asp-validation-for="Header!.CRNo" class="text-danger"></span>
+                        <input asp-for="CRNo" type="text" class="form-control" placeholder=""/>
+                        <label asp-for="CRNo" class="control-label"></label>
+                        <span asp-validation-for="CRNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <textarea asp-for="Header!.JVReason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
-                        <label asp-for="Header!.JVReason" class="control-label">Reason<span class="required">*</span></label>
-                        <span asp-validation-for="Header!.JVReason" class="text-danger"></span>
+                        <textarea asp-for="JVReason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
+                        <label asp-for="JVReason" class="control-label">Reason<span class="required">*</span></label>
+                        <span asp-validation-for="JVReason" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -228,7 +232,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
-                        <select asp-items="@Model.Header?.COA" class="form-select js-select2" style="width: 100%" id="AccountNo">
+                        <select asp-items="@Model.COA" class="form-select js-select2" style="width: 100%" id="AccountNo">
                             <option></option>
                         </select>
                         <span class="text-danger"></span>

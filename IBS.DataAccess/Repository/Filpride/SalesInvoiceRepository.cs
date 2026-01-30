@@ -3,9 +3,9 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -77,9 +77,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSi = await _db
                 .FilprideSalesInvoices
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.SalesInvoiceNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_sales_invoices
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY sales_invoice_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSi == null)
             {
@@ -98,9 +107,18 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSi = await _db
                 .FilprideSalesInvoices
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.SalesInvoiceNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_sales_invoices
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY sales_invoice_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSi == null)
             {

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
-using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.MasterFile
 {
@@ -23,22 +21,17 @@ namespace IBS.Models.Filpride.MasterFile
         public string AccountName { get; set; }
 
         [StringLength(25)]
+        [Display(Name = "Account Type")]
         public string? AccountType { get; set; }
 
         [StringLength(20)]
+        [Display(Name = "Normal Balance")]
         public string? NormalBalance { get; set; }
 
         public int Level { get; set; }
 
         // Change Parent to an int? (nullable) for FK reference
         public int? ParentAccountId { get; set; }
-
-        // Navigation property for Parent Account
-        [ForeignKey(nameof(ParentAccountId))]
-        public virtual FilprideChartOfAccount? ParentAccount { get; set; }
-
-        // Navigation property for Child Accounts
-        public virtual ICollection<FilprideChartOfAccount> Children { get; set; } = new List<FilprideChartOfAccount>();
 
         [NotMapped]
         public List<SelectListItem>? Main { get; set; }
@@ -49,7 +42,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [Display(Name = "Edited By")]
         [StringLength(50)]
@@ -61,12 +55,29 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool HasChildren { get; set; }
 
+        [StringLength(20)]
+        public string FinancialStatementType { get; set; }
+
         // Select List
+
+        #region Select List
 
         [NotMapped]
         public List<SelectListItem>? Accounts { get; set; }
 
-        [StringLength(20)]
-        public string FinancialStatementType { get; set; }
+        #endregion
+
+        #region Navigation Properties
+
+        [ForeignKey(nameof(ParentAccountId))]
+        public virtual FilprideChartOfAccount? ParentAccount { get; set; }
+
+        public virtual ICollection<FilprideChartOfAccount> Children { get; set; } = new List<FilprideChartOfAccount>();
+
+        public ICollection<FilprideGLPeriodBalance> Balances { get; set; } =  new List<FilprideGLPeriodBalance>();
+
+        public ICollection<FilprideGLSubAccountBalance> SubAccountBalances { get; set; } = new List<FilprideGLSubAccountBalance>();
+
+        #endregion
     }
 }

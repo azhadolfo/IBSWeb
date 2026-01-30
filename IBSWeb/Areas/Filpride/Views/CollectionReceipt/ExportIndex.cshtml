@@ -14,6 +14,18 @@
     <div class="card-body p-4 table-responsive">
         <div class="row pb-3">
             <div class="col-6">
+                <div class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Filter by Date</label><br/>
+                        <label class="fw-semibold small text-muted mb-1">Date From</label>
+                        <input type="date" id="dateFrom" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+
+                    <div class="col-auto">
+                        <label class="fw-semibold small text-muted mb-1">Date To</label>
+                        <input type="date" id="dateTo" class="form-control rounded-3 shadow-sm" style="width:150px;">
+                    </div>
+                </div>
             </div>
             <div class="col-6 text-end">
                 <p>
@@ -22,11 +34,10 @@
             </div>
         </div>
 
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="collectionReceiptTable">
             <thead class="table-secondary">
             <tr class="text-nowrap">
-                <th data-orderable="false">
-                    <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
+                <th>
                 </th>
                 <th>
                     CR No.
@@ -52,72 +63,6 @@
             </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr class="text-truncate">
-                        <td>
-                            <input type="checkbox" class="selectCheckbox text-center" value="@item.CollectionReceiptId">
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CollectionReceiptNo)
-                        </td>
-                        <td>
-                            @item.TransactionDate.ToString("MM/dd/yyyy")
-                        </td>
-                        <td>
-                            @if (item.SalesInvoiceId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.SINo)
-                            }
-                            else if (item.MultipleSIId != null)
-                            {
-                                for (int i = 0; i < item.MultipleSI!.Length; i++)
-                                {
-                                    var siNo = $"{item.MultipleSI[i]}, ";
-                                    @siNo
-                                }
-                            }
-                            else
-                            {
-                                @Html.DisplayFor(modelItem => item.SVNo)
-                            }
-                        </td>
-                        <td>
-                            @if (item.SalesInvoiceId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.SalesInvoice!.CustomerOrderSlip!.CustomerName)
-                            }
-                            else if (item.MultipleSIId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.Customer!.CustomerName)
-                            }
-                            else
-                            {
-                                @Html.DisplayFor(modelItem => item.ServiceInvoice!.CustomerName)
-                            }
-                        </td>
-                        <td class="text-end px-4">
-                            @Html.DisplayFor(modelItem => item.Total)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CreatedBy)
-                        </td>
-                        <td>
-                            @{
-                                var status = item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null
-                                    ? "Posted"
-                                    : item.VoidedBy != null
-                                        ? "Voided"
-                                        : item.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if (status == "Posted") { <text>bg-info</text> }else if (status == "Voided") { <text>bg-danger</text> }else if (status == "Cancelled") { <text>bg-warning</text> }">
-                                @status
-                            </span>
-                        </td>
-                    </tr>
-                }
             </tbody>
         </table>
     </div>
@@ -125,77 +70,136 @@
 
 @section Scripts {
     <script>
-            let selectedRecords = new Set(); // To track selected record IDs
-    let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = new Set();
+        $(document).ready(function () {
+            let table = $('#collectionReceiptTable').DataTable({
+                processing: true,
+                serverSide: false,
+                stateSave: true,
+                ajax: {
+                    url: '@Url.Action("GetCollectionReceiptList", "CollectionReceipt")',
+                    type: 'POST',
+                    data: function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    error: function (xhr) {
+                        console.log(xhr.responseText);
+                    }
+                },
+                columns: [
+                    {data: 'collectionReceiptId', orderable: false, searchable: false, render: DataTable.render.select()},
+                    { data: 'collectionReceiptNo' },
+                    {
+                        "data": "transactionDate",
+                        "name": "transactionDate",
+                        "render": function (data) {
+                            let date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            if (row.siNo)
+                            {
+                                return `<span>${row.siNo}</span>`;
+                            }
+                            else if (row.multipleSI?.length)
+                            {
+                                return `<span data-bs-toggle="tooltip" title="${row.multipleSI.join(', ')}">
+                                        ${row.multipleSI.length} Invoices
+                                    </span>`;
+                            }
+                            else
+                            {
+                                return `<span>${row.svNo}</span>`;
+                            }
+                        }
+                    },
+                    { data: 'customerName' },
+                    { 
+                        data: 'total',
+                        render: function (data) {
+                            return formatNumber(data);
+                        }
+                    },
+                    { data: 'createdBy' },
+                    {
+                        "data": "isPosted",
+                        "render": function (data, type, row) {
+                            let status = row.isPosted && !row.isVoided && !row.isCanceled
+                                ? "Posted"
+                                : row.isVoided
+                                    ? "Voided"
+                                    : row.isCanceled
+                                        ? "Cancelled"
+                                        : "Pending";
 
-    function toggleSelectAll(selectAllCheckbox) {
-        const checkboxes = document.querySelectorAll('.selectCheckbox');
+                            let statusClass = status === "Posted" ? "bg-info" :
+                                status === "Voided" ? "bg-danger" :
+                                    status === "Cancelled" ? "bg-warning" : "";
 
-        if (selectAllCheckbox.checked) {
-            // Select all visible checkboxes and mark all records as selected
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-                selectedRecords.add(checkbox.value);
+                            return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                        }
+                    }
+                ],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
+                order: [[1, 'desc']]
             });
-            allRecordsSelected = true;
-        } else {
-            // Unselect all visible checkboxes and mark all records as unselected
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-                selectedRecords.clear();  // Clear the set
+
+            table.on('select deselect', function(e, dt, type, indexes) {
+                if (type === 'row') {
+                    indexes.forEach(function(idx) {
+                        let id = table.row(idx).data().collectionReceiptId;
+                        selectedRecords[e.type === 'select' ? 'add' : 'delete'](id);
+                    });
+                }
             });
-            allRecordsSelected = false;
-        }
-    }
 
-    // Update selectedRecords when individual checkboxes are toggled
-    document.addEventListener('change', function (e) {
-        if (e.target && e.target.classList.contains('selectCheckbox')) {
-            if (e.target.checked) {
-                selectedRecords.add(e.target.value);
-            } else {
-                selectedRecords.delete(e.target.value);
-            }
-        }
-    });
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let getDateFrom = $('#dateFrom');
+                let getDateTo = $('#dateTo');
+                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
+                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
+                let transactionDate = new Date(data[2]);
 
-    function exportToExcel() {
-        let selectedIds = '';
+                // Remove time part
+                if (dateFrom) dateFrom.setHours(0,0,0,0);
+                if (dateTo) dateTo.setHours(0,0,0,0);
+                transactionDate.setHours(0,0,0,0);
 
-        if (allRecordsSelected) {
-            // Optionally make an AJAX call to get all IDs if "Select All" was selected
-            // Example of a call:
-            fetch('@Url.Action("GetAllCollectionReceiptIds", "CollectionReceipt", new { area = "Filpride" })')
-                .then(response => response.json())
-                .then(data => {
-                    selectedIds = data.join(',');
-                    submitForm(selectedIds);
-                })
-                .catch(error => console.error('Error:', error));
-        } else {
-            // Only get IDs from selected checkboxes in current set
-            selectedIds = Array.from(selectedRecords).join(',');
+                return (dateFrom === null || transactionDate >= dateFrom) &&
+                    (dateTo === null || transactionDate <= dateTo);
+            });
+
+            $('#dateFrom, #dateTo').on('change', function() {
+                $('#collectionReceiptTable').DataTable().draw();
+            });
+        });
+        
+        function exportToExcel() {
+            let selectedIds = Array.from(selectedRecords).join(',');
+            
             if (selectedIds) {
-                submitForm(selectedIds);
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Export", "CollectionReceipt")';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedRecord';
+                input.value = selectedIds;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             } else {
-                alert('No CollectionReceipt selected.');
+                alert('No Collection Receipt selected.');
             }
         }
-    }
-
-    function submitForm(selectedIds) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '@Url.Action("Export", "CollectionReceipt", new { area = "Filpride" })';
-
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'selectedRecord';
-        input.value = selectedIds;
-
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
     </script>
 }

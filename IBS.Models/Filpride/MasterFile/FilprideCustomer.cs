@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
+using IBS.Models.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.MasterFile
@@ -67,7 +66,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Display(Name = "Created Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [Display(Name = "Edited By")]
         [StringLength(50)]
@@ -127,5 +127,14 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? PaymentTerms { get; set; }
+
+        public int? CommissioneeId { get; set; }
+
+        public decimal CommissionRate { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Commissionees { get; set; }
+
+        public FilprideSupplier? Commissionee { get; set; }
     }
 }

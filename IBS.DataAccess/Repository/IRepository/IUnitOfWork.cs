@@ -3,8 +3,8 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Mobility.MasterFile;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository

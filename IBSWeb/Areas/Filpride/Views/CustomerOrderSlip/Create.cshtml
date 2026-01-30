@@ -1,5 +1,5 @@
-﻿@using IBS.Utility.Constants
-@using IBS.Utility.Enums
+﻿@using IBS.Models.Enums
+@using IBS.Utility.Constants
 @model CustomerOrderSlipViewModel
 
 @{
@@ -270,9 +270,18 @@
                                 $('input[name="CustomerType"]').val(data.customerType);
                                 $('select[name="Terms"]').val(data.terms).change();
                                 $('input[name="StationCode"]').val(data.stationCode);
+
+                                // If data has commisionee Id check the Yes radio button else No
+                                if(data.commissioneeId) {
+                                    $('input[name="HasCommission"][value="true"]').prop('checked', true).trigger('change');
+                                    $('select[name="CommissioneeId"]').val(data.commissioneeId).trigger('change');
+                                    $('input[name="CommissionRate"]').val(data.commissionRate);
+                                }
+                                
                                 
                                 // Populate Branches dropdown using fetched data
                                 populateBranches(data.branches);
+                                
 
                                 updateTermsEditability(data.hasMultipleTerms);
                                 
@@ -370,6 +379,8 @@
                     
                 }
             }
+            
+
             
         });
     </script>

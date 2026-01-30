@@ -2,11 +2,9 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Utility.Constants;
-using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -19,19 +17,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        private readonly IHubContext<NotificationHub> _hubContext;
-
         private readonly ApplicationDbContext _dbContext;
 
         private readonly ILogger<NotificationController> _logger;
 
-        public NotificationController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager,
-            IHubContext<NotificationHub> hubContext, ApplicationDbContext dbContext,
+        public NotificationController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext,
             ILogger<NotificationController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
-            _hubContext = hubContext;
             _dbContext = dbContext;
             _logger = logger;
         }
@@ -61,21 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(userId);
-
-            if (count <= 0)
-            {
-                return Json(count);
-            }
-
-            var hubConnections = await _dbContext.HubConnections
-                .Where(h => h.UserName == _userManager.GetUserName(User))
-                .ToListAsync();
-
-            foreach (var hubConnection in hubConnections)
-            {
-                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                    .SendAsync("ReceivedNotification", $"You have {count} unread message.");
-            }
 
             return Json(count);
         }

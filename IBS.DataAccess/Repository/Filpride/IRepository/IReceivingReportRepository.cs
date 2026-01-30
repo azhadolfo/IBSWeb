@@ -1,7 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
@@ -18,5 +17,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task VoidReceivingReportAsync(int receivingReportId, string currentUser, CancellationToken cancellationToken = default);
 
         Task CreateEntriesForUpdatingCost(FilprideReceivingReport model, decimal difference, string userName, CancellationToken cancellationToken = default);
+
+        Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
     }
 }

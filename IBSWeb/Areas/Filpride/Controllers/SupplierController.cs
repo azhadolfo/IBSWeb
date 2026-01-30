@@ -3,11 +3,10 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services;
-using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,18 +24,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly ICacheService _cacheService;
 
         public SupplierController(IUnitOfWork unitOfWork,
             ILogger<SupplierController> logger,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
-            ICloudStorageService cloudStorageService)
+            ICloudStorageService cloudStorageService,
+            ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
+            _cacheService = cacheService;
         }
 
         private string GetUserFullName()
@@ -65,14 +67,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
-            IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.FilprideSupplier
-                .GetAllAsync(null, cancellationToken);
-
             if (view == nameof(DynamicView.Supplier))
             {
-                return View("ExportIndex", suppliers);
+                return View("ExportIndex");
             }
 
             return View();
@@ -181,6 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Company = companyClaims;
                 await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -348,6 +348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.EditedBy = GetUserFullName();
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -413,6 +414,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -479,6 +481,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -498,6 +501,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSupplierList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var suppliers = (await _unitOfWork.FilprideSupplier
+                    .GetAllAsync(null, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.SupplierId,
+                        x.SupplierCode,
+                        x.SupplierName,
+                        x.SupplierAddress,
+                        x.SupplierTin,
+                        x.SupplierTerms,
+                        x.VatType,
+                        x.Category,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = suppliers
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

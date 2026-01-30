@@ -25,8 +25,8 @@ For full version history, see the [CHANGELOG](CHANGELOG.md).
 - **Backend**: ASP.NET Core (C#)
 - **Data Access**: Entity Framework Core
 - **Architecture**: N-Tier / Layered (DataAccess, Models, DTOs, Services, Web)
-- **Frontend**: Razor / MVC + JavaScript / jQuery / DataTables (or other UI lib)
+- **Frontend**: Razor / MVC + JavaScript / jQuery / DataTables
 - **Database**: PostgreSQL
-- **Hosting/Deployment**: Cloud and Docker
+- **Hosting/Deployment**: Google Cloud and Docker
 
 ---

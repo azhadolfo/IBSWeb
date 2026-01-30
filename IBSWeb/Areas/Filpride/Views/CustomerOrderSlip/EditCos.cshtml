@@ -1,6 +1,6 @@
 ﻿@using System.Text.Json
+@using IBS.Models.Enums
 @using IBS.Utility.Constants
-@using IBS.Utility.Enums
 @model CustomerOrderSlipViewModel
 
 @{
@@ -297,14 +297,31 @@
                                 $('select[name="Terms"]').val(data.terms).change();
                                 $('input[name="StationCode"]').val(data.stationCode);
 
-                                if (!isInitialize){
-                                    // Populate Branches dropdown using fetched data
+                                if (data.commissioneeId) {
+                                    $('input[name="HasCommission"][value="true"]')
+                                        .prop('checked', true)
+                                        .trigger('change');
+
+                                    if (isInitialize && @Model.CommissioneeId) {
+                                        // Master
+                                        $('select[name="CommissioneeId"]').val(@Model.CommissioneeId).trigger('change');
+                                        $('input[name="CommissionRate"]').val(@Model.CommissionRate);
+                                    } else {
+                                        // Customer (only first load)
+                                        $('select[name="CommissioneeId"]').val(data.commissioneeId).trigger('change');
+                                        $('input[name="CommissionRate"]').val(data.commissionRate);
+                                    }
+                                }
+
+                                if (!isInitialize) {
                                     populateBranches(data.branches);
                                 }
 
                                 updateTermsEditability(data.hasMultipleTerms);
 
-                            } else {
+                                hasInitialized = true;
+                            }
+                            else {
                                 $('input[name="CustomerAddress"]').val('');
                                 $('input[name="TinNo"]').val('');
                                 $('select[name="Terms"]').val('');
@@ -413,6 +430,8 @@
                     $('#commissionInfo').show();
                     $('input[name="CommissioneeId"]').prop('required', true);
                     $('input[name="CommissionRate"]').prop('required', true);
+                    
+                    
                 } else {
                     $('#commissionInfo').hide();
                     $('select[name="CommissioneeId"]')

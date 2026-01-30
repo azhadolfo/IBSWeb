@@ -4,10 +4,10 @@ using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -33,18 +33,27 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            var lastCv = await _db
+            var lastCr = await _db
                 .FilprideCollectionReceipts
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                .OrderBy(c => c.CollectionReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_collection_receipts
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY collection_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Documented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastCv == null)
+            if (lastCr == null)
             {
                 return "CR0000000001";
             }
 
-            var lastSeries = lastCv.CollectionReceiptNo!;
+            var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(2);
             var incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -54,18 +63,27 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            var lastCv = await _db
+            var lastCr = await _db
                 .FilprideCollectionReceipts
-                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
-                .OrderBy(c => c.CollectionReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
+                .FromSqlRaw(@"
+                    SELECT *
+                    FROM filpride_collection_receipts
+                    WHERE company = {0}
+                        AND type = {1}
+                    ORDER BY collection_receipt_no DESC
+                    LIMIT 1
+                    FOR UPDATE",
+                    company,
+                    nameof(DocumentType.Undocumented))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastCv == null)
+            if (lastCr == null)
             {
                 return "CRU000000001";
             }
 
-            var lastSeries = lastCv.CollectionReceiptNo!;
+            var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(3);
             var incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -120,10 +138,13 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        BankAccountId = collectionReceipt.BankId,
-                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null,
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.BankAccount,
+                        SubAccountId = collectionReceipt.BankId,
+                        SubAccountName = collectionReceipt.BankId.HasValue
+                            ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}"
+                            : null,
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -143,8 +164,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -164,8 +185,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -188,8 +209,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -211,10 +232,11 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount + offsetAmount,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        CustomerId = collectionReceipt.CustomerId,
-                        CustomerName = customerName,
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Customer,
+                        SubAccountId = collectionReceipt.CustomerId,
+                        SubAccountName = customerName,
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -234,8 +256,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -255,8 +277,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -422,7 +444,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var ledgers = new List<FilprideGeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100")
+                                  ?? throw new ArgumentException("Account title '101010100' not found.");
             string description = "";
 
             var customerName = collectionReceipt.SalesInvoiceId != null
@@ -466,10 +489,13 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                     Credit = 0,
                     Company = collectionReceipt.Company,
-                    CreatedBy = collectionReceipt.PostedBy,
-                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    BankAccountId = collectionReceipt.BankId,
-                    BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null,
+                    CreatedBy = collectionReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SubAccountType = SubAccountType.BankAccount,
+                    SubAccountId = collectionReceipt.BankId,
+                    SubAccountName = collectionReceipt.BankId.HasValue
+                        ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}"
+                        : null,
                     ModuleType = nameof(ModuleType.Collection)
                 }
             );
@@ -486,8 +512,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                     Company = collectionReceipt.Company,
-                    CreatedBy = collectionReceipt.PostedBy,
-                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = collectionReceipt.PostedBy!,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Collection)
                 }
             );
@@ -642,7 +668,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, CancellationToken cancellationToken = default)
         {
             for (var i = 0; i < siNo.Length; i++)
             {
@@ -651,13 +677,13 @@ namespace IBS.DataAccess.Repository.Filpride
                     .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken)
                                    ?? throw new NullReferenceException("SalesInvoice not found");
 
-                var amountPaid = salesInvoice.AmountPaid + paidAmount[i] + offsetAmount;
+                var amountPaid = salesInvoice.AmountPaid + paidAmount[i];
 
                 if (!salesInvoice.IsPaid)
                 {
                     decimal netDiscount = salesInvoice.Amount - salesInvoice.Discount;
 
-                    salesInvoice.AmountPaid += salesInvoice.Amount >= amountPaid ? paidAmount[i] + offsetAmount : paidAmount[i];
+                    salesInvoice.AmountPaid += paidAmount[i];
 
                     salesInvoice.Balance = netDiscount - salesInvoice.AmountPaid;
 
@@ -671,14 +697,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         salesInvoice.IsPaid = true;
                         salesInvoice.PaymentStatus = "OverPaid";
                     }
-                }
-                else
-                {
-                    continue;
-                }
-                if (salesInvoice.Amount >= amountPaid)
-                {
-                    offsetAmount = 0;
                 }
             }
         }
@@ -777,17 +795,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     IsPosted = true,
                     Company = originalEntry.Company,
-                    BankAccountId = originalEntry.BankAccountId,
-                    CustomerId = originalEntry.CustomerId,
-                    SupplierId = originalEntry.SupplierId,
                     AccountId = originalEntry.AccountId,
-                    EmployeeId = originalEntry.EmployeeId,
-                    CompanyId = originalEntry.CompanyId,
-                    BankAccountName = originalEntry.BankAccountName,
-                    CompanyName = originalEntry.CompanyName,
-                    CustomerName = originalEntry.CustomerName,
-                    EmployeeName = originalEntry.EmployeeName,
-                    SupplierName = originalEntry.SupplierName,
+                    SubAccountType = originalEntry.SubAccountType,
+                    SubAccountId = originalEntry.SubAccountId,
+                    SubAccountName = originalEntry.SubAccountName,
                     ModuleType = originalEntry.ModuleType,
                 };
 
@@ -857,10 +868,13 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        BankAccountId = collectionReceipt.BankId,
-                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null,
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.BankAccount,
+                        SubAccountId = collectionReceipt.BankId,
+                        SubAccountName = collectionReceipt.BankId.HasValue
+                            ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}"
+                            : null,
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -880,8 +894,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -901,8 +915,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -922,10 +936,11 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        CustomerId = collectionReceipt.CustomerId,
-                        CustomerName = customerName,
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Customer,
+                        SubAccountId = collectionReceipt.CustomerId,
+                        SubAccountName = customerName,
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -945,8 +960,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -966,8 +981,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collectionReceipt.PostedBy!,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -1013,8 +1028,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = currentUser,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = deliveryReceipt.CommissioneeId,
-                    SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
+                    SubAccountType = SubAccountType.Supplier,
+                    SubAccountId = deliveryReceipt.CommissioneeId,
+                    SubAccountName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
                     ModuleType = nameof(ModuleType.Sales)
                 }
             };

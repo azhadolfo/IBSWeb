@@ -1,4 +1,4 @@
-@using IBS.Utility.Enums
+@using IBS.Models.Enums
 @model HaulerPaymentViewModel
 
 @{
@@ -61,7 +61,7 @@
                         <table >
                             <thead class="sticky-top bg-white">
                             <tr>
-                                <th colspan="5" class="text-center py-3">
+                                <th colspan="6" class="text-center py-3">
                                     <span>DR LIST</span>
                                     <span class="selected-dr-count ms-2 px-2 py-1 rounded-pill" 
                                           style="display: none;
@@ -76,6 +76,7 @@
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
+                                <th>Manual DR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -261,6 +262,7 @@
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
+                                            <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
@@ -277,9 +279,10 @@
 
                     const totalRow = $(`
                 <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                    <td colspan="7" class="pt-1"></td>
+                    <td colspan="6" class="pt-1"></td>
                 </tr>
                 <tr class="sticky-bottom bg-white">
+                    <td ></td>
                     <td ></td>
                     <td class="fw-bold text-end p-2">Grand Total:</td>
                     <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>

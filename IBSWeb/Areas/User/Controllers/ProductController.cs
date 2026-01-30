@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -48,11 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (view == nameof(DynamicView.Product))
             {
-                IEnumerable<Product> exportProducts = await _unitOfWork
-                .Product
-                .GetAllAsync();
-
-                return View("ExportIndex", exportProducts);
+                return View("ExportIndex");
             }
 
             return View(products);
@@ -380,6 +376,36 @@ namespace IBSWeb.Areas.User.Controllers
                                      .ToList();
 
             return Json(productIds);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetProducts(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var products = (await _unitOfWork
+                    .Product
+                    .GetAllAsync())
+                    .Select(x => new
+                    {
+                        x.ProductId,
+                        x.ProductCode,
+                        x.ProductName,
+                        x.ProductUnit,
+                        x.CreatedBy,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = products
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)

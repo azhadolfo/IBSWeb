@@ -1,5 +1,5 @@
-﻿@model IEnumerable<FilpridePurchaseOrder>
-@using IBS.Utility.Enums
+﻿@using IBS.Models.Enums
+@model IEnumerable<FilpridePurchaseOrder>
 @{
     ViewData["Title"] = "Purchase Order";
 }
@@ -28,6 +28,7 @@
                         <th class="text-start">Date</th>
                         <th class="text-start">Supplier</th>
                         <th class="text-start">Terms</th>
+                        <th class="text-start">Purchase Type</th>
                         <th class="text-start">Depot</th>
                         <th class="text-start">Product</th>
                         <th class="text-start">Quantity</th>
@@ -224,6 +225,10 @@
                     "data": "terms",
                     "name": "terms"
                 },
+                {
+                    "data": "typeOfPurchase",
+                    "name": "typeOfPurchase"
+                },
                 { 
                     "data": "depot",
                     "name": "pickUpPoint.depot"
@@ -256,7 +261,7 @@
                         var quantityReceived = data;
                         var quantity = row.quantity;
                         var balance = quantity - quantityReceived;
-                        return formatNumber(balance);
+                        return `<span class="d-block fw-medium">${formatNumber(balance)}</span>`;
                     }
                 },
                 {

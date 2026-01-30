@@ -1,4 +1,4 @@
-@using IBS.Utility.Enums
+@using IBS.Models.Enums
 @model CommissionPaymentViewModel
 
 @{
@@ -71,7 +71,7 @@
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
-                                <th>OTC DR No's</th>
+                                <th>Manual DR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -282,9 +282,10 @@
 
                     const totalRow = $(`
                 <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                    <td colspan="7" class="pt-1"></td>
+                    <td colspan="6" class="pt-1"></td>
                 </tr>
                 <tr class="sticky-bottom bg-white">
+                    <td></td>
                     <td></td>
                     <td class="fw-bold text-end p-2">Grand Total:</td>
                     <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>

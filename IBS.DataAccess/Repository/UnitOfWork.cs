@@ -12,10 +12,10 @@ using IBS.DataAccess.Repository.MMSI;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BankAccountRepository = IBS.DataAccess.Repository.Mobility.BankAccountRepository;
@@ -740,7 +740,7 @@ namespace IBS.DataAccess.Repository
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
+                    Text = $"({s.AccountType}) {s.AccountNumber} {s.AccountName}"
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -753,7 +753,7 @@ namespace IBS.DataAccess.Repository
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
-                    Text = s.AccountNumber + " " + s.AccountName
+                    Text = $"({s.AccountType}) {s.AccountNumber} {s.AccountName}"
                 })
                 .ToListAsync(cancellationToken);
         }

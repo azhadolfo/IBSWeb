@@ -4,8 +4,8 @@
 @inject UserManager<ApplicationUser> UserManager
 @using Humanizer
 @using IBS.Models
+@using IBS.Models.Enums
 @using IBS.Utility.Constants
-@using IBS.Utility.Enums
 
 @{
     ViewData["Title"] = "Collection Receipt - Preview";
@@ -112,7 +112,7 @@
         </tr>
         <tr>
             <td>&nbsp;</td>
-            <td style="padding-left:10px;">(₱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  @Model.Total.ToString(decimalFormat))</td>
+            <td style="padding-left:10px;">₱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  @Model.Total.ToString(decimalFormat))</td>
         </tr>
         <tr>
             <td colspan="2" style="padding-left:10px;">

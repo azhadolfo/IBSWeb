@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -58,16 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.CreditMemo))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var creditMemos = await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
-
-                return View("ExportIndex", creditMemos);
+                return View("ExportIndex");
             }
 
             return View();
@@ -628,9 +623,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
-                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                            CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
-                            CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountType = SubAccountType.Customer,
+                            SubAccountId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
+                            SubAccountName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
                             ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     };
@@ -650,7 +646,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = Math.Abs(withHoldingTaxAmount),
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -670,7 +666,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = Math.Abs(withHoldingVatAmount),
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -689,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = 0,
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
-                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     );
@@ -709,7 +705,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -852,10 +848,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = 0,
                             Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
                             Company = model.Company,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate,
-                            CustomerId = model.ServiceInvoice.CustomerId,
-                            CustomerName = model.ServiceInvoice.CustomerName,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountType = SubAccountType.Customer,
+                            SubAccountId = model.ServiceInvoice.CustomerId,
+                            SubAccountName = model.ServiceInvoice.CustomerName,
                             ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     };
@@ -874,8 +871,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = 0,
                                 Credit = Math.Abs(withHoldingTaxAmount),
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -894,8 +891,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = 0,
                                 Credit = Math.Abs(withHoldingVatAmount),
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -912,8 +909,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Debit = viewModelDmcm.NetAmount,
                         Credit = 0,
                         Company = model.Company,
-                        CreatedBy = model.CreatedBy,
-                        CreatedDate = model.CreatedDate,
+                        CreatedBy = model.PostedBy,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
                     });
 
@@ -931,8 +928,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = Math.Abs(vatAmount),
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
@@ -1107,6 +1104,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCreditMemoList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var creditMemos = (await _unitOfWork.FilprideCreditMemo
+                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CreditMemoId,
+                        x.CreditMemoNo,
+                        x.TransactionDate,
+                        x.SalesInvoice?.SalesInvoiceNo,
+                        x.ServiceInvoice?.ServiceInvoiceNo,
+                        x.Source,
+                        x.CreditAmount,
+                        x.CreatedBy,
+                        x.Status,
+                        x.SalesInvoiceId
+                    });
+
+                return Json(new
+                {
+                    data = creditMemos
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)

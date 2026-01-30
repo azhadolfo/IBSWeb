@@ -5,10 +5,10 @@
 
 connection.start()
     .then(function () {
-        console.log('Connected to hub'); // Optional custom log
+        console.log("✅ Notification channel connected"); // Optional custom log
     })
     .catch(function (err) {
-        return console.error(err.toString());
+        return console.error("❌ SignalR start failed:", err.toString());
     });
 
 connection.on("OnConnected", function () {
@@ -17,40 +17,27 @@ connection.on("OnConnected", function () {
 
 function OnConnected() {
     var username = $('#hfUsername').val();
-    if (username != "") {
+    if (username !== "") {
         connection.invoke("SaveUserConnection", username)
             .catch(function (err) {
-                return console.error(err.toString());
+                return console.error("❌ Failed to register user:", err.toString());
             });
     }
 }
 
 connection.on("ReceivedNotification", function (message) {
     Swal.fire({
-        title: message,
-        allowOutsideClick: false,
+        title: 'New Notification',
+        text: message,
         icon: 'info',
-        confirmButtonText: 'Go to Notifications'
-    }).then((result) => {
+        showCancelButton: true,
+        confirmButtonText: 'View Notifications',
+        cancelButtonText: 'Dismiss',
+        timer: 8000,
+        timerProgressBar: true
+    }).then(result => {
         if (result.isConfirmed) {
             window.location.href = '/User/Notification/Index';
         }
     });
-});
-
-function updateNotificationCount() {
-    $.ajax({
-        url: '/User/Notification/GetNotificationCount',
-        type: 'GET',
-        success: function (count) {
-            $('#notificationCount').text(count);
-        },
-        error: function () {
-            console.error("Error fetching notification count");
-        }
-    });
-}
-
-$(document).ready(function () {
-    updateNotificationCount();
 });

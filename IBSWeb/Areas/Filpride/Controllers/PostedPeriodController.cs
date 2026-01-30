@@ -1,8 +1,9 @@
 using IBS.DataAccess.Data;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Services;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +21,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<PostedPeriodController> _logger;
 
+        private readonly ICacheService _cacheService;
+
         public PostedPeriodController(ApplicationDbContext dbContext,
-            UserManager<ApplicationUser> userManager, ILogger<PostedPeriodController> logger)
+            UserManager<ApplicationUser> userManager,
+            ILogger<PostedPeriodController> logger,
+            ICacheService cacheService)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         public async Task<IActionResult> Index()
@@ -70,7 +76,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> PostPeriod(PostPeriodRequest request)
+        public async Task<IActionResult> PostPeriod(PostPeriodRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -89,7 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingPeriod = await _dbContext.PostedPeriods
                         .FirstOrDefaultAsync(p => p.Module == module &&
                                            p.Month == request.Month &&
-                                           p.Year == request.Year);
+                                           p.Year == request.Year, cancellationToken);
 
                     if (existingPeriod != null)
                     {
@@ -111,8 +117,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     postedPeriods.Add(postedPeriod);
                 }
 
-                _dbContext.PostedPeriods.AddRange(postedPeriods);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.PostedPeriods.AddRangeAsync(postedPeriods,  cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{request.Company}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully posted {postedPeriods.Count} module(s) for period {request.Month}/{request.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -120,6 +127,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error posting periods: {ex.Message}";
+                _logger.LogError(ex, ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -127,11 +135,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         // POST: Unpost a period (if needed)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UnpostPeriod(int id)
+        public async Task<IActionResult> UnpostPeriod(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var postedPeriod = await _dbContext.PostedPeriods.FindAsync(id);
+                var postedPeriod = await _dbContext.PostedPeriods.FindAsync(id, cancellationToken);
                 if (postedPeriod == null)
                 {
                     TempData["ErrorMessage"] = "Posted period not found.";
@@ -139,7 +147,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 _dbContext.PostedPeriods.Remove(postedPeriod);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{postedPeriod.Company}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully unposted {postedPeriod.Module} for period {postedPeriod.Month}/{postedPeriod.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -147,6 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error unposting period: {ex.Message}";
+                _logger.LogError(ex, ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }

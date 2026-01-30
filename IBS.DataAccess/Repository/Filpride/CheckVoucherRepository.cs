@@ -3,7 +3,9 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using IBS.Utility.Enums;
+using IBS.Models.Enums;
+using IBS.Models.Filpride.Books;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -296,6 +298,51 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
+        }
+
+        public async Task PostAsync(FilprideCheckVoucherHeader header,
+            IEnumerable<FilprideCheckVoucherDetail> details,
+            CancellationToken cancellationToken = default)
+        {
+            #region --General Ledger Book Recording(CV)--
+
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+            foreach (var detail in details)
+            {
+                var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
+                              ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+                ledgers.Add(
+                        new FilprideGeneralLedgerBook
+                        {
+                            Date = header.Date,
+                            Reference = header.CheckVoucherHeaderNo!,
+                            Description = header.Particulars!,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
+                            Company = header.Company,
+                            CreatedBy = header.PostedBy!,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountName = detail.SubAccountName,
+                            ModuleType = nameof(ModuleType.Disbursement)
+                        }
+                    );
+            }
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            #endregion --General Ledger Book Recording(CV)--
         }
     }
 }

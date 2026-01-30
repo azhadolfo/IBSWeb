@@ -71,6 +71,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
+
+                if (customer == null)
+                {
+                    return NotFound();
+                }
+
+                customer.HasBranch = true;
                 await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording

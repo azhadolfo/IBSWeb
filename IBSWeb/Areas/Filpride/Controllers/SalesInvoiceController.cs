@@ -3,12 +3,12 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -58,16 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.SalesInvoice))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var salesInvoices = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", salesInvoices);
+                return View("ExportIndex");
             }
 
             return View();
@@ -731,6 +726,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                           (!dr.Customer!.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
             });
 
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSalesInvoiceList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var salesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.SalesInvoiceId,
+                        x.SalesInvoiceNo,
+                        customerName = x.Customer!.CustomerName,
+                        x.TransactionDate,
+                        x.Terms,
+                        x.Amount,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = salesInvoices
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)

@@ -3,13 +3,13 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
@@ -167,7 +167,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip!.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder!.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
-                        s.CreatedBy!.ToLower().Contains(searchValue)
+                        s.CreatedBy!.ToLower().Contains(searchValue) ||
+                        s.Freight.ToString().Contains(searchValue) ||
+                        s.HaulerName?.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
                 }
@@ -219,7 +221,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.CanceledBy,
                         dr.HasReceivingReport,
                         dr.AuthorityToLoad!.UppiAtlNo,
-                        dr.AuthorityToLoadNo
+                        dr.AuthorityToLoadNo,
+                        dr.Freight,
+                        dr.HaulerName
                     })
                     .ToList();
 
@@ -473,7 +477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(x => x.AppointedSupplier!)
                     .ThenInclude(x => x.PurchaseOrder!)
                     .ThenInclude(x => x.Supplier)
-                    .Where(x => x.CustomerOrderSlipId == id)
+                    .Where(x => x.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
                     .Select(a => new SelectListItem
                     {
                         Value = a.AppointedSupplier!.PurchaseOrderId.ToString(),
@@ -1395,6 +1399,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "Failed to change the commission details of the customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Changed by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalSales(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var drs = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(x =>
+                            x.VoidedBy == null &&
+                            x.CanceledDate == null &&
+                            x.DeliveredDate.HasValue &&
+                            x.DeliveredDate.Value.Month == month &&
+                            x.DeliveredDate.Value.Year == year,
+                        cancellationToken);
+
+                if (!drs.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var dr in drs
+                             .OrderBy(x => x.DeliveredDate))
+                {
+                    #region--Inventory Recording
+
+                    await _unitOfWork.FilprideInventory.AddSalesToInventoryAsync(dr, cancellationToken);
+
+                    #endregion
+
+                    await _unitOfWork.FilprideDeliveryReceipt.PostAsync(dr, cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = drs.Count() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
             }
         }
     }

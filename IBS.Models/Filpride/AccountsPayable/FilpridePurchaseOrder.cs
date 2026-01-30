@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
@@ -107,7 +106,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsPrinted { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
+        public string Status { get; set; } = nameof(Enums.Status.Pending);
 
         #region--SUB PO
 
@@ -155,5 +154,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string TaxType { get; set; } = string.Empty;
 
         public ICollection<FilprideReceivingReport>? ReceivingReports { get; set; }
+
+        [StringLength(4)]
+        public string TypeOfPurchase { get; set; } = string.Empty;
     }
 }

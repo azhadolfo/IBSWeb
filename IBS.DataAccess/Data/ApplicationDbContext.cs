@@ -152,6 +152,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilpridePurchaseLockedRecordsQueue> FilpridePurchaseLockedRecordsQueues { get; set; }
 
+        public DbSet<FilprideGLPeriodBalance> FilprideGlPeriodBalances { get; set; }
+
+        public DbSet<FilprideGLSubAccountBalance> FilprideGlSubAccountBalances { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -841,6 +845,22 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<FilprideGLPeriodBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.Balances)
+                    .HasForeignKey(a => a.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideGLSubAccountBalance>(b =>
+            {
+                b.HasOne(a => a.Account)
+                    .WithMany(c => c.SubAccountBalances)
+                    .HasForeignKey(a => a.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             #endregion
 
             #region -- Accounts Receivable --
@@ -1099,34 +1119,9 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideGeneralLedgerBook>(gl =>
             {
-                gl.HasOne(gl => gl.Supplier)
-                .WithMany()
-                .HasForeignKey(gl => gl.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.Customer)
-                .WithMany()
-                .HasForeignKey(gl => gl.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.BankAccount)
-                .WithMany()
-                .HasForeignKey(gl => gl.BankAccountId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.Employee)
-                    .WithMany()
-                    .HasForeignKey(gl => gl.EmployeeId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 gl.HasOne(gl => gl.Account)
                     .WithMany()
                     .HasForeignKey(gl => gl.AccountId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                gl.HasOne(gl => gl.CompanyModel)
-                    .WithMany()
-                    .HasForeignKey(gl => gl.CompanyId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

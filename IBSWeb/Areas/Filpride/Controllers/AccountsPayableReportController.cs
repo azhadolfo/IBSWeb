@@ -4,6 +4,7 @@ using Google.Type;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Models.Filpride;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
@@ -11,10 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -107,7 +108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
+                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
                 if (checkVoucherHeader.Count == 0)
                 {
@@ -437,17 +438,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nonTradeInvoiceReport =
                     await _dbContext.FilprideCheckVoucherDetails
+                        .AsNoTracking()
                         .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
                                       && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
                                       && cvd.CheckVoucherHeader.Date >= dateFrom &&
                                       cvd.CheckVoucherHeader.Date <= dateTo)
-                        .Include(cvd => cvd.Supplier)
                         .Include(cvd => cvd.CheckVoucherHeader)
                         .ThenInclude(cvh => cvh!.Supplier)
                         .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
                         .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
                         .ThenByDescending(cvd => cvd.Debit)
                         .ToListAsync(cancellationToken);
+
+                var nonTradeNos = nonTradeInvoiceReport
+                    .Select(x => x.TransactionNo)
+                    .ToList();
+
+                var payments = await _dbContext.FilprideCheckVoucherHeaders
+                    .AsNoTracking()
+                    .Where(x => x.Reference != null && nonTradeNos.Contains(x.Reference) && x.Company == companyClaims)
+                    .Select(x => new {
+                        x.Reference,
+                        x.CheckVoucherHeaderNo,
+                        x.DcrDate
+                    })
+                    .ToListAsync(cancellationToken);
+
+                var paymentDict = payments
+                    .GroupBy(x => x.Reference)
+                    .ToDictionary(g => g.Key!, g => g.First());
 
                 if (nonTradeInvoiceReport.Count == 0)
                 {
@@ -474,25 +493,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
-                int row = 6;
-                int col = 1;
+                var row = 6;
+                var col = 1;
 
                 worksheet.Cells[row, col].Value = "DATE"; col++;
-                worksheet.Cells[row, col].Value = "INV No."; col++;
+                worksheet.Cells[row, col].Value = "INV NO."; col++;
+                worksheet.Cells[row, col].Value = "CV PAYMENT"; col++;
+                worksheet.Cells[row, col].Value = "DCR"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NAME"; col++;
+                worksheet.Cells[row, col].Value = "SUB ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
                 worksheet.Cells[row, col].Value = "STATUS";
 
-                using (var range = worksheet.Cells[row, 1, row, 10])
+                using (var range = worksheet.Cells[row, 1, row, col])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -506,21 +528,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var inv in nonTradeInvoiceReport)
                 {
+                    var paymentInfo = paymentDict.GetValueOrDefault(inv.TransactionNo);
                     col = 1;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue);
+                    worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy"; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.CheckVoucherHeaderNo ?? ""; col++;
+                    if (paymentInfo?.DcrDate.HasValue == true)
+                    {
+                        worksheet.Cells[row, col].Value = paymentInfo.DcrDate.Value.ToDateTime(TimeOnly.MinValue);
+                        worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    }
+                    col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
+                    worksheet.Cells[row, col].Style.WrapText = true; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
-                    worksheet.Cells[row, col].Value = inv.Debit; col++;
-                    worksheet.Cells[row, col].Value = inv.Credit; col++;
+                    worksheet.Cells[row, col].Value = inv.SubAccountName; col++;
+                    worksheet.Cells[row, col].Value = inv.Debit;
+                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
+                    worksheet.Cells[row, col].Value = inv.Credit;
+                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
-
-                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -528,32 +559,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 7].Value = "TOTAL: ";
-                worksheet.Cells[row, 8].Value = totalDebit;
-                worksheet.Cells[row, 9].Value = totalCredit;
+                worksheet.Cells[row, 10].Value = "TOTAL: ";
+                worksheet.Cells[row, 11].Value = totalDebit;
+                worksheet.Cells[row, 12].Value = totalCredit;
 
-                using (var range = worksheet.Cells[row, 1, row, 9])
+                using (var range = worksheet.Cells[row, 1, row, col])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 8, row, 9])
+                using (var range = worksheet.Cells[row, 8, row, col])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
 
                 worksheet.Cells.AutoFitColumns();
-
-                for (int i = 1; i <= 10; i++)
-                {
-                    double width = worksheet.Column(i).Width;
-                    if (width > 80)
-                    {
-                        worksheet.Column(i).Width = 50;
-                    }
-                }
-
                 worksheet.View.FreezePanes(7, 1);
 
                 #region -- Audit Trail --
@@ -572,7 +593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to generate cleared disbursement report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                _logger.LogError(ex, "Failed to generate non trade invoice report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(NonTradeInvoiceReport));
             }
@@ -602,21 +623,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var nonTradeInvoiceReport =
-                    await _dbContext.FilprideCheckVoucherDetails
-                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
-                                      && cvd.CheckVoucherHeader.CvType != nameof(CVType.Invoicing)
-                                      && cvd.CheckVoucherHeader.Date >= dateFrom &&
-                                      cvd.CheckVoucherHeader.Date <= dateTo)
-                        .Include(cvd => cvd.Supplier)
-                        .Include(cvd => cvd.CheckVoucherHeader)
-                        .ThenInclude(cvh => cvh!.Supplier)
-                        .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
-                        .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
-                        .ThenByDescending(cvd => cvd.Debit)
+                var cvTradeHeaderReport = await _dbContext.FilprideCheckVoucherHeaders
+                        .AsNoTracking()
+                        .Where(cvh =>
+                            cvh.Company == companyClaims &&
+                            cvh.CvType != nameof(CVType.Invoicing) &&
+                            cvh.Date >= dateFrom &&
+                            cvh.Date <= dateTo)
+                        .Include(cvh => cvh.Details!)
+                        .Include(cvh => cvh.Supplier)
+                        .OrderBy(cvh => cvh.Date)
+                        .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
                         .ToListAsync(cancellationToken);
 
-                if (nonTradeInvoiceReport.Count == 0)
+
+                var cvTradeHeaderIds = cvTradeHeaderReport.Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var cvTradePayments = await _dbContext.FilprideCVTradePayments.Where(cvp => cvTradeHeaderIds.Contains(cvp.CheckVoucherId)).ToListAsync(cancellationToken);
+
+                var supplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType == "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var receivingReportIds = cvTradePayments.Where(cvp => supplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
+                var receivingReports = await _unitOfWork.FilprideReceivingReport.GetAllAsync(dr => receivingReportIds.Contains(dr.ReceivingReportId), cancellationToken);
+
+                var notSupplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType != "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var deliveryReceiptIds = cvTradePayments.Where(cvp => notSupplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
+                var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetAllAsync(dr => deliveryReceiptIds.Contains(dr.DeliveryReceiptId), cancellationToken);
+
+                if (cvTradeHeaderReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(CvDisbursementReport));
@@ -653,15 +685,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "INVOICE No."; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NAME"; col++;
+                worksheet.Cells[row, col].Value = "SUB ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
                 worksheet.Cells[row, col].Value = "STATUS";
 
-                using (var range = worksheet.Cells[row, 1, row, 13])
+                using (var range = worksheet.Cells[row, 1, row, 14])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -673,97 +706,110 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalCredit = 0m;
                 var totalDebit = 0m;
 
-                foreach (var inv in nonTradeInvoiceReport)
+                foreach (var header in cvTradeHeaderReport)
                 {
-                    col = 1;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.DcrDate.HasValue ? inv.CheckVoucherHeader.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckNo; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
-
-                    if (inv.CheckVoucherHeader.Category == "Trade")
+                    foreach (var details in header.Details!
+                                 .Where(x => !x.IsDisplayEntry)
+                                 .OrderByDescending(d => d.Debit))
                     {
-                        var rrListOfString = new List<string>();
-                        var cvTradeRrs = await _dbContext.FilprideCVTradePayments.Where(ctp =>
-                            ctp.CheckVoucherId == inv.CheckVoucherHeader.CheckVoucherHeaderId).ToListAsync(cancellationToken);
+                        col = 1;
+                        worksheet.Cells[row, col].Value = header.Date.ToDateTime(TimeOnly.MinValue); col++;
+                        worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
+                        worksheet.Cells[row, col].Value = header.DcrDate?.ToDateTime(TimeOnly.MinValue); col++;
+                        worksheet.Cells[row, col].Value = header.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = header.Payee; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars;
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
+                        worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
 
-                        if (cvTradeRrs.Count > 0)
+                        if (header.Category == "Trade")
                         {
-                            foreach (var cvTradeRr in cvTradeRrs)
+                            var rrListOfString = new List<string>();
+
+                            if (header.CvType == "Supplier")
                             {
-                                var rr = await _unitOfWork.FilprideReceivingReport.GetAsync(r => r.ReceivingReportId == cvTradeRr.DocumentId, cancellationToken);
-                                if (rr != null)
+                                var cvTradeRrs = cvTradePayments
+                                    .Where(ctp => ctp.CheckVoucherId == header.CheckVoucherHeaderId)
+                                    .ToList();
+
+                                if (cvTradeRrs.Count > 0)
                                 {
-                                    rrListOfString.Add(rr.ReceivingReportNo!);
+                                    foreach (var cvTradeRr in cvTradeRrs)
+                                    {
+                                        var rr = receivingReports.FirstOrDefault(r => r.ReceivingReportId == cvTradeRr.DocumentId);
+                                        if (rr != null)
+                                        {
+                                            rrListOfString.Add(rr.ReceivingReportNo!);
+                                        }
+                                    }
                                 }
                             }
-                        }
+                            else
+                            {
+                                var cvTradeDrs = cvTradePayments
+                                    .Where(ctp => ctp.CheckVoucherId == header.CheckVoucherHeaderId)
+                                    .ToList();
 
-                        if (rrListOfString.Count > 0)
+                                if (cvTradeDrs.Count > 0)
+                                {
+                                    foreach (var cvTradeRr in cvTradeDrs)
+                                    {
+                                        var rr = deliveryReceipts.FirstOrDefault(r => r.DeliveryReceiptId == cvTradeRr.DocumentId);
+                                        if (rr != null)
+                                        {
+                                            rrListOfString.Add(rr.DeliveryReceiptNo);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (rrListOfString.Count > 0)
+                            {
+                                worksheet.Cells[row, col].Value = $"{string.Join(", ", rrListOfString)}";
+                            }
+                        }
+                        else
                         {
-                            worksheet.Cells[row, col].Value = $"{string.Join(", ", rrListOfString)}";
+                            worksheet.Cells[row, col].Value = header.Reference;
                         }
+                        worksheet.Cells[row, col].Style.WrapText = true;
+                        col++;
+
+                        worksheet.Cells[row, col].Value = details.AccountNo; col++;
+                        worksheet.Cells[row, col].Value = details.AccountName; col++;
+                        worksheet.Cells[row, col].Value = details.SubAccountName; col++;
+                        worksheet.Cells[row, col].Value = details.Debit; col++;
+                        worksheet.Cells[row, col].Value = details.Credit; col++;
+                        worksheet.Cells[row, col].Value = header.Status;
+
+                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+
+                        totalCredit += details.Credit;
+                        totalDebit += details.Debit;
+
+                        row++;
                     }
-                    else
-                    {
-                        worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Reference;
-                    }
-                    col++;
-
-                    worksheet.Cells[row, col].Value = inv.AccountNo; col++;
-
-                    if (inv.AccountName == "Cash in Bank")
-                    {
-                        worksheet.Cells[row, col].Value = $"{inv.AccountName} ({inv.CheckVoucherHeader.BankAccountNumber} {inv.CheckVoucherHeader.BankAccountName})";
-                    }
-                    else
-                    {
-                        worksheet.Cells[row, col].Value = $"{inv.AccountName}";
-                    }
-                    col++;
-
-                    worksheet.Cells[row, col].Value = inv.Debit; col++;
-                    worksheet.Cells[row, col].Value = inv.Credit; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
-
-                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-
-                    totalCredit += inv.Credit;
-                    totalDebit += inv.Debit;
-
-                    row++;
                 }
 
-                worksheet.Cells[row, 10].Value = "TOTAL: ";
-                worksheet.Cells[row, 11].Value = totalDebit;
-                worksheet.Cells[row, 12].Value = totalCredit;
+                worksheet.Cells[row, 11].Value = "TOTAL: ";
+                worksheet.Cells[row, 12].Value = totalDebit;
+                worksheet.Cells[row, 13].Value = totalCredit;
 
-                using (var range = worksheet.Cells[row, 1, row, 12])
+                using (var range = worksheet.Cells[row, 1, row, 14])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 11, row, 12])
+                using (var range = worksheet.Cells[row, 11, row, 14])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
 
                 worksheet.Cells.AutoFitColumns();
-
-                for (int i = 1; i <= 13; i++)
-                {
-                    double width = worksheet.Column(i).Width;
-                    if (width > 80)
-                    {
-                        worksheet.Column(i).Width = 50;
-                    }
-                }
 
                 worksheet.View.FreezePanes(7, 1);
 
@@ -1618,12 +1664,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["AF7"].Value = "OTC DR#.";
                     purchaseReportWorksheet.Cells["AG7"].Value = "IS PO#";
                     purchaseReportWorksheet.Cells["AH7"].Value = "IS RR#";
+                    purchaseReportWorksheet.Cells["AI7"].Value = "TERMS";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:AH7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AI7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -1735,6 +1782,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 32].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
                         purchaseReportWorksheet.Cells[row, 33].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
                         purchaseReportWorksheet.Cells[row, 34].Value = pr.OldRRNo; // IS RR =========
+                        purchaseReportWorksheet.Cells[row, 35].Value = pr.PurchaseOrder?.Terms;
 
                         #endregion -- Assign Values to Cells --
 
@@ -2882,36 +2930,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 gmReportWorksheet.Cells["A7"].Value = "RR DATE";
                 gmReportWorksheet.Cells["B7"].Value = "SUPPLIER NAME";
-                gmReportWorksheet.Cells["C7"].Value = "PO NO.";
-                gmReportWorksheet.Cells["D7"].Value = "FILPRIDE RR";
-                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE DR";
-                gmReportWorksheet.Cells["F7"].Value = "CUSTOMER NAME";
-                gmReportWorksheet.Cells["G7"].Value = "PRODUCT NAME";
-                gmReportWorksheet.Cells["H7"].Value = "ACCOUNT SPECIALIST";
-                gmReportWorksheet.Cells["I7"].Value = "HAULER NAME";
-                gmReportWorksheet.Cells["J7"].Value = "COMMISSIONEE";
-                gmReportWorksheet.Cells["K7"].Value = "VOLUME";
-                gmReportWorksheet.Cells["L7"].Value = "COS PRICE";
-                gmReportWorksheet.Cells["M7"].Value = "SALES G. VAT";
-                gmReportWorksheet.Cells["N7"].Value = "SALES N. VAT";
-                gmReportWorksheet.Cells["O7"].Value = "CPL G. VAT";
-                gmReportWorksheet.Cells["P7"].Value = "PURCHASES G. VAT";
-                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES N.VAT";
-                gmReportWorksheet.Cells["R7"].Value = "GM/LITER";
-                gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT";
-                gmReportWorksheet.Cells["T7"].Value = "FREIGHT CHARGE";
-                gmReportWorksheet.Cells["U7"].Value = "FC AMOUNT";
-                gmReportWorksheet.Cells["V7"].Value = "FC N.VAT";
-                gmReportWorksheet.Cells["W7"].Value = "COMMISSION/LITER";
-                gmReportWorksheet.Cells["X7"].Value = "COMMISSION AMOUNT";
-                gmReportWorksheet.Cells["Y7"].Value = "NET MARGIN/LIT";
-                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN AMOUNT";
+                gmReportWorksheet.Cells["C7"].Value = "SUPPLIER TERMS";
+                gmReportWorksheet.Cells["D7"].Value = "PO NO.";
+                gmReportWorksheet.Cells["E7"].Value = "FILPRIDE RR";
+                gmReportWorksheet.Cells["F7"].Value = "FILPRIDE DR";
+                gmReportWorksheet.Cells["G7"].Value = "CUSTOMER NAME";
+                gmReportWorksheet.Cells["H7"].Value = "PRODUCT NAME";
+                gmReportWorksheet.Cells["I7"].Value = "ACCOUNT SPECIALIST";
+                gmReportWorksheet.Cells["J7"].Value = "HAULER NAME";
+                gmReportWorksheet.Cells["K7"].Value = "COMMISSIONEE";
+                gmReportWorksheet.Cells["L7"].Value = "VOLUME";
+                gmReportWorksheet.Cells["M7"].Value = "COS PRICE";
+                gmReportWorksheet.Cells["N7"].Value = "SALES G. VAT";
+                gmReportWorksheet.Cells["O7"].Value = "SALES N. VAT";
+                gmReportWorksheet.Cells["P7"].Value = "CPL G. VAT";
+                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES G. VAT";
+                gmReportWorksheet.Cells["R7"].Value = "PURCHASES N.VAT";
+                gmReportWorksheet.Cells["S7"].Value = "GM/LITER";
+                gmReportWorksheet.Cells["T7"].Value = "GM AMOUNT";
+                gmReportWorksheet.Cells["U7"].Value = "FREIGHT CHARGE";
+                gmReportWorksheet.Cells["V7"].Value = "FC AMOUNT";
+                gmReportWorksheet.Cells["W7"].Value = "FC N.VAT";
+                gmReportWorksheet.Cells["X7"].Value = "COMMISSION/LITER";
+                gmReportWorksheet.Cells["Y7"].Value = "COMMISSION AMOUNT";
+                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN/LIT";
+                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT";
 
                 #endregion
 
                 #region -- Apply styling to the header row --
 
-                    using (var range = gmReportWorksheet.Cells["A7:Z7"])
+                    using (var range = gmReportWorksheet.Cells["A7:AA7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -2974,30 +3023,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     gmReportWorksheet.Cells[row, 1].Value = dr.DeliveredDate;
                     gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
-                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                    gmReportWorksheet.Cells[row, 4].Value = rr?.ReceivingReportNo;
-                    gmReportWorksheet.Cells[row, 5].Value = dr.DeliveryReceiptNo;
-                    gmReportWorksheet.Cells[row, 6].Value = dr.CustomerOrderSlip.CustomerName;
-                    gmReportWorksheet.Cells[row, 7].Value = dr.PurchaseOrder.ProductName;
-                    gmReportWorksheet.Cells[row, 8].Value = dr.CustomerOrderSlip.AccountSpecialist;
-                    gmReportWorksheet.Cells[row, 9].Value = dr.HaulerName;
-                    gmReportWorksheet.Cells[row, 10].Value = dr.CustomerOrderSlip.CommissioneeName;
-                    gmReportWorksheet.Cells[row, 11].Value = volume;
-                    gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
-                    gmReportWorksheet.Cells[row, 13].Value = salesAmount;
-                    gmReportWorksheet.Cells[row, 14].Value = netSales;
-                    gmReportWorksheet.Cells[row, 15].Value = costPerLiter;
-                    gmReportWorksheet.Cells[row, 16].Value = costAmount;
-                    gmReportWorksheet.Cells[row, 17].Value = netPurchases;
-                    gmReportWorksheet.Cells[row, 18].Value = gmPerLiter;
-                    gmReportWorksheet.Cells[row, 19].Value = gmAmount;
-                    gmReportWorksheet.Cells[row, 20].Value = freightCharge;
-                    gmReportWorksheet.Cells[row, 21].Value = freightChargeAmount;
-                    gmReportWorksheet.Cells[row, 22].Value = freightChargeNet;
-                    gmReportWorksheet.Cells[row, 23].Value = commissionPerLiter;
-                    gmReportWorksheet.Cells[row, 24].Value = commissionAmount;
-                    gmReportWorksheet.Cells[row, 25].Value = netMarginPerLiter;
-                    gmReportWorksheet.Cells[row, 26].Value = netMarginAmount;
+                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.Terms;
+                    gmReportWorksheet.Cells[row, 4].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 5].Value = rr?.ReceivingReportNo;
+                    gmReportWorksheet.Cells[row, 6].Value = dr.DeliveryReceiptNo;
+                    gmReportWorksheet.Cells[row, 7].Value = dr.CustomerOrderSlip.CustomerName;
+                    gmReportWorksheet.Cells[row, 8].Value = dr.PurchaseOrder.ProductName;
+                    gmReportWorksheet.Cells[row, 9].Value = dr.CustomerOrderSlip.AccountSpecialist;
+                    gmReportWorksheet.Cells[row, 10].Value = dr.HaulerName;
+                    gmReportWorksheet.Cells[row, 11].Value = dr.CustomerOrderSlip.CommissioneeName;
+                    gmReportWorksheet.Cells[row, 12].Value = volume;
+                    gmReportWorksheet.Cells[row, 13].Value = cosPricePerLiter;
+                    gmReportWorksheet.Cells[row, 14].Value = salesAmount;
+                    gmReportWorksheet.Cells[row, 15].Value = netSales;
+                    gmReportWorksheet.Cells[row, 16].Value = costPerLiter;
+                    gmReportWorksheet.Cells[row, 17].Value = costAmount;
+                    gmReportWorksheet.Cells[row, 18].Value = netPurchases;
+                    gmReportWorksheet.Cells[row, 19].Value = gmPerLiter;
+                    gmReportWorksheet.Cells[row, 20].Value = gmAmount;
+                    gmReportWorksheet.Cells[row, 21].Value = freightCharge;
+                    gmReportWorksheet.Cells[row, 22].Value = freightChargeAmount;
+                    gmReportWorksheet.Cells[row, 23].Value = freightChargeNet;
+                    gmReportWorksheet.Cells[row, 24].Value = commissionPerLiter;
+                    gmReportWorksheet.Cells[row, 25].Value = commissionAmount;
+                    gmReportWorksheet.Cells[row, 26].Value = netMarginPerLiter;
+                    gmReportWorksheet.Cells[row, 27].Value = netMarginAmount;
 
                     #endregion -- Assign Values to Cells --
 
@@ -3034,52 +3084,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
                 gmReportWorksheet.Cells[row, 10].Value = "Total: ";
-                gmReportWorksheet.Cells[row, 11].Value = totalVolume;
-                gmReportWorksheet.Cells[row, 12].Value = totalCosPrice;
-                gmReportWorksheet.Cells[row, 13].Value = totalSalesAmount;
-                gmReportWorksheet.Cells[row, 14].Value = totalNetSales;
-                gmReportWorksheet.Cells[row, 15].Value = totalCostPerLiter;
-                gmReportWorksheet.Cells[row, 16].Value = totalCostAmount;
-                gmReportWorksheet.Cells[row, 17].Value = totalNetPurchases;
-                gmReportWorksheet.Cells[row, 18].Value = totalGmPerLiter;
-                gmReportWorksheet.Cells[row, 19].Value = totalGmAmount;
-                gmReportWorksheet.Cells[row, 20].Value = totalFreightCharge;
-                gmReportWorksheet.Cells[row, 21].Value = totalFcAmount;
-                gmReportWorksheet.Cells[row, 22].Value = totalFcNet;
-                gmReportWorksheet.Cells[row, 23].Value = totalCommissionPerLiter;
-                gmReportWorksheet.Cells[row, 24].Value = totalCommissionAmount;
-                gmReportWorksheet.Cells[row, 25].Value = totalNetMarginPerLiter;
-                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginAmount;
+                gmReportWorksheet.Cells[row, 12].Value = totalVolume;
+                gmReportWorksheet.Cells[row, 13].Value = totalCosPrice;
+                gmReportWorksheet.Cells[row, 14].Value = totalSalesAmount;
+                gmReportWorksheet.Cells[row, 15].Value = totalNetSales;
+                gmReportWorksheet.Cells[row, 16].Value = totalCostPerLiter;
+                gmReportWorksheet.Cells[row, 17].Value = totalCostAmount;
+                gmReportWorksheet.Cells[row, 18].Value = totalNetPurchases;
+                gmReportWorksheet.Cells[row, 19].Value = totalGmPerLiter;
+                gmReportWorksheet.Cells[row, 20].Value = totalGmAmount;
+                gmReportWorksheet.Cells[row, 21].Value = totalFreightCharge;
+                gmReportWorksheet.Cells[row, 22].Value = totalFcAmount;
+                gmReportWorksheet.Cells[row, 23].Value = totalFcNet;
+                gmReportWorksheet.Cells[row, 24].Value = totalCommissionPerLiter;
+                gmReportWorksheet.Cells[row, 25].Value = totalCommissionAmount;
+                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginPerLiter;
+                gmReportWorksheet.Cells[row, 27].Value = totalNetMarginAmount;
 
-                gmReportWorksheet.Column(11).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(14).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(17).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Column(22).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(27).Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
                 // Apply style to subtotal rows
                 // color to whole row
-                using (var range = gmReportWorksheet.Cells[row, 1, row, 26])
+                using (var range = gmReportWorksheet.Cells[row, 1, row, 27])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
-                using (var range = gmReportWorksheet.Cells[row, 10, row, 26])
+                using (var range = gmReportWorksheet.Cells[row, 10, row, 27])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -4023,9 +4073,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Trade Payable Report as Excel File --
 
-        public async Task<IActionResult> GenerateTradePayableReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateTradePayableReportExcelFile(ViewModelBook viewModel, CancellationToken cancellationToken)
         {
-
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Please input date range";
@@ -4034,8 +4083,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var dateFrom = model.DateFrom;
-                var dateTo = model.DateTo;
+                var dateFrom = viewModel.DateFrom;
+                var dateTo = viewModel.DateTo;
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
                 if (companyClaims == null)
@@ -4045,38 +4094,105 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var currencyFormat = "#,##0.00";
 
-                var tradePayableReport = await _unitOfWork.FilprideReport
-                    .GetTradePayableReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var allCv = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(cv => cv.Category == "Trade" && cv.CvType == "Supplier" && cv.Date <= dateTo)
+                    .Include(cv => cv.Supplier)
+                    .ToListAsync(cancellationToken);
 
-                var allReportMonthYear = tradePayableReport.GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
-
-                var beginning = tradePayableReport
-                    .Where(rr => rr.Date < dateFrom)
-                    .Where(rr => rr.IsPaid == false)
-                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month })
+                var cvIdOfSelected = allCv
+                    .Where(cv => cv.Date >= dateFrom)
+                    .Select(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                var beginningPaid = tradePayableReport
-                    .Where(rr => rr.Date < dateFrom)
-                    .Where(rr => rr.IsPaid)
-                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month })
+                var cvIdOfPrevious = allCv
+                    .Where(cv => cv.Date < dateFrom)
+                    .Select(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                var purchases = tradePayableReport
-                    .Where(rr => rr.Date >= dateFrom && rr.Date <= dateTo)
-                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month })
+                var cvPaymentsOfSelected = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfSelected.Contains(ctp.DocumentId) && ctp.DocumentType == "RR")
+                    .Include(ctp => ctp.CV)
+                    .ToListAsync(cancellationToken);
+
+                var cvPaymentsOfPrevious = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfPrevious.Contains(ctp.DocumentId) && ctp.DocumentType == "RR")
+                    .Include(ctp => ctp.CV)
+                    .ToListAsync(cancellationToken);
+
+                var idsOfRrsOfSelectedPeriodFromCv = cvPaymentsOfSelected
+                    .Select(ctp => new
+                    {
+                        ReceivingReportId = ctp.DocumentId,
+                        ctp.AmountPaid
+                    })
                     .ToList();
 
-                var purchasesPaid = tradePayableReport
-                    .Where(rr => rr.Date >= dateFrom && rr.Date <= dateTo)
-                    .Where(rr => rr.IsPaid)
-                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month })
+                var idsOfRrsOfPreviousPeriodsFromCv = cvPaymentsOfPrevious
+                    .Select(ctp => new
+                    {
+                        ReceivingReportId = ctp.DocumentId,
+                        ctp.AmountPaid
+                    })
+                    .ToList();
+
+                var allRr = await _unitOfWork.FilprideReport
+                    .GetTradePayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
+
+                var rrAndAmountPaidForSelectedPeriodFromCv = allRr
+                    .Where(rr => idsOfRrsOfSelectedPeriodFromCv.Select(rrSet => rrSet.ReceivingReportId).ToList().Contains(rr.ReceivingReportId) &&
+                    rr.Amount != 0m)
+                    .Select(rrSet => new RrWithAmountPaidViewModel
+                    {
+                        ReceivingReport = rrSet,
+                        AmountPaid = idsOfRrsOfSelectedPeriodFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault() == null ? 0m :
+                        idsOfRrsOfSelectedPeriodFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(rr => new MonthYear(
+                        rr.ReceivingReport.Date!.Year,
+                        rr.ReceivingReport.Date!.Month
+                    ));
+
+                var rrAndAmountPaidForPreviousPeriodFromCv = allRr
+                    .Where(rr => idsOfRrsOfPreviousPeriodsFromCv.Select(rrSet => rrSet.ReceivingReportId).ToList().Contains(rr.ReceivingReportId) &&
+                    rr.Amount != 0m)
+                    .Select(rrSet => new RrWithAmountPaidViewModel
+                    {
+                        ReceivingReport = rrSet,
+                        AmountPaid = idsOfRrsOfPreviousPeriodsFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault() == null ? 0m :
+                            idsOfRrsOfPreviousPeriodsFromCv.Where(rr => rr.ReceivingReportId == rrSet.ReceivingReportId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(rr => new MonthYear(
+                        rr.ReceivingReport.Date!.Year,
+                        rr.ReceivingReport.Date!.Month
+                    ));
+
+                var allRrGroupedByMonthYear = allRr
+                    .GroupBy(rr => new MonthYear(
+                        rr.Date!.Year,
+                        rr.Date!.Month
+                    ));
+
+                var allPreviousRrGroupedByMonthYear = allRr
+                    .Where(rr => rr.Date! < dateFrom)
+                    .GroupBy(rr => new MonthYear(
+                        rr.Date!.Year,
+                        rr.Date!.Month
+                    ))
+                    .ToList();
+
+                var allSelectedRrGroupedByMonthYear = allRr
+                    .Where(rr => rr.Date! >= dateFrom)
+                    .GroupBy(rr => new MonthYear(
+                        rr.Date!.Year,
+                        rr.Date!.Month
+                    ))
                     .ToList();
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Trade Payable");
 
                 #region == Title ==
+
                 var titleCells = worksheet.Cells["A1:B1"];
                 titleCells.Merge = true;
                 titleCells.Value = "TRADE PAYABLE REPORT";
@@ -4089,9 +4205,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
+
                 #endregion
 
                 #region == Header Row ==
+
                 titleCells = worksheet.Cells["A7:B7"];
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
@@ -4104,7 +4222,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 titleCells = worksheet.Cells["A6:B6"];
                 titleCells.Merge = true;
-                titleCells.Value = "APTRADE";
+                titleCells.Value = "AP TRADE";
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
                 titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -4140,26 +4258,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     col = col + 1;
                 }
+
                 #endregion
 
                 var row = 8;
-                IEnumerable<IGrouping<object, FilprideReceivingReport>> categorized = null!;
+
+                IEnumerable<IGrouping<MonthYear, FilprideReceivingReport>> loopingMainRrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, RrWithAmountPaidViewModel>> loopingSecondRrGroupedByMonthYear = null!;
 
                 #region == Initialize Variables ==
 
-                // initialize subtotals for month/year
+                // subtotals per month/year
                 var subtotalVolumeBeginning = 0m;
                 var subtotalGrossBeginning = 0m;
                 var subtotalEwtBeginning = 0m;
                 var subtotalNetBeginning = 0m;
+
                 var subtotalVolumePurchases = 0m;
                 var subtotalGrossPurchases = 0m;
                 var subtotalEwtPurchases = 0m;
                 var subtotalNetPurchases = 0m;
+
                 var subtotalVolumePayments = 0m;
                 var subtotalGrossPayments = 0m;
                 var subtotalEwtPayments = 0m;
                 var subtotalNetPayments = 0m;
+
                 var currentVolumeEnding = 0m;
                 var currentGrossEnding = 0m;
                 var currentEwtEnding = 0m;
@@ -4189,121 +4313,230 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                // loop for each month
-                foreach (var monthYear in allReportMonthYear)
+                foreach (var allRrsSameMonthYear in allRrGroupedByMonthYear)
                 {
                     // reset placing per category
 
-                    // get the month-year then group by supplier
-                    var allSupplier = monthYear.GroupBy(rr => rr.PurchaseOrder?.Supplier?.SupplierName)
+                    // get current group of month-year rr
+                    // group the rr by supplier
+                    var sameMonthYearGroupedBySupplier = allRrsSameMonthYear.GroupBy(rr => rr.PurchaseOrder?.Supplier?.SupplierName)
                         .ToList();
 
-                    // enter the month-year to the Excel
-                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(allSupplier.FirstOrDefault()?.FirstOrDefault()?.Date.Month ?? 0))
+                    // MONTH YEAR LABEL
+                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Month ?? 0))
                                                     + " " +
-                                                    (allSupplier.FirstOrDefault()?.FirstOrDefault()?.Date.Year.ToString() ?? " ");
+                                                    (sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
                     worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
                     row++;
 
-                    // get the int of the current month-year to be used in condition
-                    var monthInt = allSupplier.FirstOrDefault()?.FirstOrDefault()?.Date.Month ?? 0;
-                    var yearInt = allSupplier.FirstOrDefault()?.FirstOrDefault()?.Date.Year ?? 0;
-
-
-                    // in the month-year loop by supplier
-                    foreach (var supplier in allSupplier)
+                    // LOOP BY SUPPLIER
+                    foreach (var sameMonthYearSameSupplier in sameMonthYearGroupedBySupplier)
                     {
-                        // write the name of supplier
-                        var supplierName = supplier.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
-                        var isSupplierVatable = supplier.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
-                        var isSupplierTaxable = supplier.First().PurchaseOrder!.TaxType == SD.TaxType_WithTax;
+                        // NAME OF SUPPLIER
+                        var supplierName = sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
+                        var isSupplierVatable = sameMonthYearSameSupplier.First().PurchaseOrder?.Supplier!.VatType == SD.VatType_Vatable;
+                        var isSupplierTaxable = sameMonthYearSameSupplier.First().PurchaseOrder?.Supplier!.TaxType == SD.TaxType_WithTax;
                         worksheet.Cells[row, 2].Value = supplierName;
-                        var whichPayment = string.Empty;
-                        var forPayment = false;
-                        var forEnding = false;
+                        var columnName = string.Empty;
+                        var isPayment = false;
+                        var isEnding = false;
 
-                        // make loop for the two categories
+                        // loop by month-year and supplier
                         for (var i = 1; i != 5; i++)
                         {
-                            // decide category to use either beginning or purchase
+                            // determines if the loop is beginning, current, payment, or ending
                             switch (i)
                             {
+                                // beginning
                                 case 1:
-                                    categorized = beginning;
-                                    whichPayment = "beginning";
+                                    loopingMainRrGroupedByMonthYear = allPreviousRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
+                                    columnName = "beginning";
                                     break;
+                                // current
                                 case 2:
-                                    categorized = purchases;
-                                    whichPayment = "purchases";
+                                    loopingMainRrGroupedByMonthYear = allSelectedRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = null!;
+                                    columnName = "purchases";
                                     break;
+                                // payment
                                 case 3:
-                                    forPayment = true;
+                                    loopingMainRrGroupedByMonthYear = allRrGroupedByMonthYear;
+                                    loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForSelectedPeriodFromCv;
+                                    columnName = "payments";
                                     break;
+                                // ending
                                 case 4:
-                                    forEnding = true;
+                                    isEnding = true;
                                     break;
                             }
 
-                            if (forPayment)
+                            if (isPayment)
                             {
-                                switch (whichPayment)
+                                switch (columnName)
                                 {
                                     case "beginning":
-                                        categorized = beginningPaid;
+                                        loopingSecondRrGroupedByMonthYear = rrAndAmountPaidForPreviousPeriodFromCv;
                                         break;
                                     case "purchases":
-                                        categorized = purchasesPaid;
+                                        loopingSecondRrGroupedByMonthYear = null!;
                                         break;
                                 }
                             }
 
-                            if (categorized != null)
+                            if (loopingMainRrGroupedByMonthYear != null)
                             {
-                                // iterate through the date range, find which month-year
-                                foreach (var monthYearChoice in categorized)
+                                foreach (var sameMonthYear in loopingMainRrGroupedByMonthYear)
                                 {
-                                    // if the month-year was found in iteration, write
-                                    if (monthYearChoice.FirstOrDefault()?.Date.Month !=
-                                        monthYear.FirstOrDefault()?.Date.Month ||
-                                        monthYearChoice.FirstOrDefault()?.Date.Year !=
-                                        monthYear.FirstOrDefault()?.Date.Year)
+                                    // this process finds the rr that has the same month/year for current month/year section
+                                    if (sameMonthYear.FirstOrDefault()?.Date!.Month != allRrsSameMonthYear.FirstOrDefault()?.Date!.Month ||
+                                        sameMonthYear.FirstOrDefault()?.Date!.Year != allRrsSameMonthYear.FirstOrDefault()?.Date!.Year)
                                     {
                                         continue;
                                     }
 
-                                    // write the data per category
-                                    var gross = monthYearChoice
-                                        .Where(rr => rr.Date.Month == monthInt && rr.Date.Year == yearInt)
-                                        .Where(rr => rr.PurchaseOrder?.Supplier?.SupplierName == supplier
-                                            .FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName)
-                                        .Sum(rr => rr.Amount);
-                                    var volume = monthYearChoice
-                                        .Where(rr => rr.Date.Month == monthInt && rr.Date.Year == yearInt)
-                                        .Where(rr => rr.PurchaseOrder?.Supplier?.SupplierName == supplier
-                                            .FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName)
-                                        .Sum(rr => rr.QuantityReceived);
-                                    var netOfVat = isSupplierVatable
-                                        ? repoCalculator.ComputeNetOfVat(gross)
-                                        : gross;
-                                    var ewtPercentage = monthYearChoice.Average(r => r.TaxPercentage);
-                                    var ewt = isSupplierTaxable
-                                        ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage)
-                                        : 0m;
-                                    var net = gross - ewt;
+                                    IEnumerable<RrWithAmountPaidViewModel>? secondLoopSameMonthYearSameSupplier = null;
+                                    IGrouping<MonthYear, RrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
 
-                                    worksheet.Cells[row, i * 5-1].Value = volume;
-                                    worksheet.Cells[row, i*5].Value = gross;
-                                    worksheet.Cells[row, i*5+1].Value = ewt;
-                                    worksheet.Cells[row, i*5+2].Value = net;
-                                    worksheet.Cells[row, i*5-1].Style.Numberformat.Format = currencyFormat;
-                                    worksheet.Cells[row, i*5].Style.Numberformat.Format = currencyFormat;
-                                    worksheet.Cells[row, i*5+1].Style.Numberformat.Format = currencyFormat;
-                                    worksheet.Cells[row, i*5+2].Style.Numberformat.Format = currencyFormat;
+                                    // GET DR SET WITH SAME MONTH YEAR + SUPPLIER
+                                    var sameSupplierSameMonthYear = sameMonthYear
+                                        .Where(rr => rr.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
 
+                                    var volume = 0m;
+                                    var gross = 0m;
+                                    var netOfVat = 0m;
+                                    var ewtPercentage = 0m;
+                                    var ewt = 0m;
+                                    var net = 0m;
+                                    var totalAmount = 0m;
+                                    var totalVolume = 0m;
+                                    decimal sumOfAmountPaid = 0m;
+                                    decimal sumOfVolumePaid = 0m;
+
+                                    // PROCESS DEPENDING ON CATEGORY
                                     switch (i)
                                     {
-                                        // add to subtotals
+                                        // BEGINNING
+                                        case 1:
+                                            // CONTAINS PREVIOUS PAID
+                                            secondLoopSameMonthYear = loopingSecondRrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PREVIOUS PAID WITH SAME SUPPLIER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameSupplier = secondLoopSameMonthYear
+                                                    .Where(rr => rr.ReceivingReport!.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier
+                                                    .FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName)
+                                                    .ToList();
+
+                                                if (secondLoopSameMonthYearSameSupplier.Count() != 0)
+                                                {
+                                                    sumOfAmountPaid =
+                                                        secondLoopSameMonthYearSameSupplier.Sum(rr => rr.AmountPaid);
+
+                                                    sumOfVolumePaid =
+                                                        secondLoopSameMonthYearSameSupplier.Sum(rr => rr.ReceivingReport.QuantityReceived);
+                                                }
+                                            }
+
+                                            totalAmount = sameSupplierSameMonthYear
+                                                .Sum(rr => rr.Amount);
+
+                                            totalVolume = sameSupplierSameMonthYear
+                                                  .Sum(rr => rr.QuantityReceived);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(rr => rr.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+
+                                        // CURRENT
+                                        case 2:
+
+                                            totalAmount = sameSupplierSameMonthYear
+                                                .Sum(rr => rr.Amount);
+
+                                            totalVolume = sameSupplierSameMonthYear
+                                                .Sum(rr => rr.QuantityReceived);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(dr => dr.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+
+                                        // PAYMENT
+                                        case 3:
+                                            // CONTAINS SELECTED PAID
+                                            secondLoopSameMonthYear = loopingSecondRrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PAID WITH SAME SUPPLIER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameSupplier = secondLoopSameMonthYear
+                                                    .Where(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.SupplierName == sameMonthYearSameSupplier.FirstOrDefault()?.PurchaseOrder!.Supplier!.SupplierName);
+
+                                                sumOfAmountPaid =
+                                                    secondLoopSameMonthYearSameSupplier.Sum(rr => rr.AmountPaid);
+
+                                                sumOfVolumePaid =
+                                                    secondLoopSameMonthYearSameSupplier.Sum(rr => rr.ReceivingReport.QuantityReceived);
+
+                                                ewtPercentage = secondLoopSameMonthYear.Average(rr => rr.ReceivingReport.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m);
+                                            }
+
+                                            if (secondLoopSameMonthYearSameSupplier == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            gross = sumOfAmountPaid;
+
+                                            volume = sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+                                    }
+
+                                    // write in the category
+                                    worksheet.Cells[row, i * 5 - 1].Value = volume;
+                                    worksheet.Cells[row, i * 5].Value = gross;
+                                    worksheet.Cells[row, i * 5 + 1].Value = ewt;
+                                    worksheet.Cells[row, i * 5 + 2].Value = net;
+                                    worksheet.Cells[row, i * 5 - 1].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5 + 1].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5 + 2].Style.Numberformat.Format = currencyFormat;
+
+                                    // decide what to do to subtotals depending on category (beg, current, payment)
+                                    switch (i)
+                                    {
+                                        // beginning
                                         case 1:
                                             subtotalVolumeBeginning += volume;
                                             subtotalGrossBeginning += gross;
@@ -4314,6 +4547,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             currentEwtEnding += ewt;
                                             currentNetEnding += net;
                                             break;
+                                        // current
                                         case 2:
                                             subtotalVolumePurchases += volume;
                                             subtotalGrossPurchases += gross;
@@ -4324,6 +4558,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             currentEwtEnding += ewt;
                                             currentNetEnding += net;
                                             break;
+                                        // payment
                                         case 3:
                                             subtotalVolumePayments += volume;
                                             subtotalGrossPayments += gross;
@@ -4338,7 +4573,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             }
 
-                            if (forEnding)
+                            if (isEnding)
                             {
                                 worksheet.Cells[row, 19].Value = currentVolumeEnding;
                                 worksheet.Cells[row, 20].Value = currentGrossEnding;
@@ -4354,13 +4589,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 currentNetEnding = 0m;
                             }
 
-                            forPayment = false;
+                            isPayment = false;
                         }
-                        // after the four categories, next supplier
+
+                        // after the four columns(beginning, current, payment, ending), next is supplier
                         row++;
                     }
 
                     #region == Subtotal Inputting ==
+
                     // after all supplier, input subtotals if not zero
                     if (subtotalGrossBeginning != 0m)
                     {
@@ -4401,6 +4638,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     #region == Ending Subtotal and Grand Total Processes ==
+
                     // input subtotal of ending
                     var subtotalVolumeEnding = subtotalVolumeBeginning + subtotalVolumePurchases - subtotalVolumePayments;
                     var subtotalGrossEnding = subtotalGrossBeginning + subtotalGrossPurchases - subtotalGrossPayments;
@@ -4411,6 +4649,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 20].Value = subtotalGrossEnding;
                     worksheet.Cells[row, 21].Value = subtotalEwtEnding;
                     worksheet.Cells[row, 22].Value = subtotalNetEnding;
+
                     using (var range = worksheet.Cells[row, 19, row, 22])
                     {
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -4467,7 +4706,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
 
                 #region == Grand Total Inputting ==
-                worksheet.Cells[row, 2].Value = "GRAND TOTALS:";
+
+                worksheet.Cells[row, 2].Value = "GRAND TOTAL:";
                 worksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                 worksheet.Cells[row, 4].Value = grandTotalVolumeBeginning;
                 worksheet.Cells[row, 5].Value = grandTotalGrossBeginning;
@@ -4485,17 +4725,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 20].Value = grandTotalGrossEnding;
                 worksheet.Cells[row, 21].Value = grandTotalEwtEnding;
                 worksheet.Cells[row, 22].Value = grandTotalNetEnding;
+
                 using (var range = worksheet.Cells[row, 4, row, 22])
                 {
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Numberformat.Format = currencyFormat;
                 }
+
                 using (var range = worksheet.Cells[row, 1, row, 22])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
+
                 #endregion
 
                 worksheet.Cells.AutoFitColumns();
@@ -4504,6 +4747,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Column(8).Width = 1;
                 worksheet.Column(13).Width = 1;
                 worksheet.Column(18).Width = 1;
+                worksheet.View.FreezePanes(8, 2);
 
                 #region -- Audit Trail --
 
@@ -4517,7 +4761,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-
             }
             catch (Exception ex)
             {
@@ -4526,7 +4769,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(TradePayableReport));
             }
-
         }
 
         #endregion -- Generate AP Trade Report --
@@ -4587,17 +4829,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[5, 3].Value = "BUYER";
                 worksheet.Cells[5, 4].Value = "PRODUCT";
                 worksheet.Cells[5, 5].Value = "PAYMENT TERMS";
-                worksheet.Cells[5, 6].Value = "ORIGINAL PO VOLUME";
-                worksheet.Cells[5, 7].Value = "UNLIFTED LAST MONTH";
-                worksheet.Cells[5, 8].Value = "LIFTED THIS MONTH";
-                worksheet.Cells[5, 9].Value = "UNLIFTED THIS MONTH";
-                worksheet.Cells[5, 10].Value = "PRICE(VAT-EX)";
-                worksheet.Cells[5, 11].Value = "PRICE (VAT-INC)";
-                worksheet.Cells[5, 12].Value = "GROSS AMOUNT";
-                worksheet.Cells[5, 13].Value = "EWT";
-                worksheet.Cells[5, 14].Value = "NET OF EWT";
+                worksheet.Cells[5, 6].Value = "TYPE OF PURCHASE";
+                worksheet.Cells[5, 7].Value = "ORIGINAL PO VOLUME";
+                worksheet.Cells[5, 8].Value = "UNLIFTED LAST MONTH";
+                worksheet.Cells[5, 9].Value = "LIFTED THIS MONTH";
+                worksheet.Cells[5, 10].Value = "UNLIFTED THIS MONTH";
+                worksheet.Cells[5, 11].Value = "PRICE(VAT-EX)";
+                worksheet.Cells[5, 12].Value = "PRICE (VAT-INC)";
+                worksheet.Cells[5, 13].Value = "GROSS AMOUNT";
+                worksheet.Cells[5, 14].Value = "EWT";
+                worksheet.Cells[5, 15].Value = "NET OF EWT";
 
-                using (var range = worksheet.Cells[5, 2, 5, 14])
+                using (var range = worksheet.Cells[5, 2, 5, 15])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -4619,11 +4862,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     })
                     .ToList();
 
-                var groupBySupplierAndTerms = apReport
+                var groupBySupplierTermsAndType = apReport
                     .GroupBy(po => new
                     {
                         po.Supplier,
-                        po.Terms
+                        po.Terms,
+                        po.TypeOfPurchase
                     })
                     .OrderBy(po => po.Key.Supplier!.SupplierName)
                     .ThenBy(po => po.Key.Terms)
@@ -4652,7 +4896,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
 
-                foreach (var sameSupplierGroup in groupBySupplierAndTerms)
+                foreach (var sameSupplierGroup in groupBySupplierTermsAndType)
                 {
                     var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
                     var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
@@ -4680,6 +4924,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .FirstOrDefault(g => g.Key?.ProductName == product);
                         worksheet.Cells[row, 4].Value = product;
                         worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Terms;
+                        worksheet.Cells[row, 6].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.TypeOfPurchase;
 
                         // get the necessary values from po, separate it by variable
                         if (aGroupByProduct != null)
@@ -4736,25 +4981,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     : 0m;
 
                                 // WRITE ORIGINAL PO VOLUME
-                                worksheet.Cells[row, 6].Value = allPoTotal;
-                                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Cells[row, 7].Value = allPoTotal;
+                                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                                 // WRITE UNLIFTED LAST MONTH
                                 if (unliftedLastMonth != 0m)
                                 {
-                                    worksheet.Cells[row, 7].Value = unliftedLastMonth;
-                                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                }
-                                else
-                                {
-                                    worksheet.Cells[row, 7].Value = 0m;
-                                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                }
-
-                                // WRITE LIFTED THIS MONTH
-                                if (liftedThisMonth != 0m)
-                                {
-                                    worksheet.Cells[row, 8].Value = liftedThisMonth;
+                                    worksheet.Cells[row, 8].Value = unliftedLastMonth;
                                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
                                 else
@@ -4763,16 +4996,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
 
-                                // WRITE UNLIFTED THIS MONTH
-                                if (unliftedThisMonth != 0m)
+                                // WRITE LIFTED THIS MONTH
+                                if (liftedThisMonth != 0m)
                                 {
-                                    worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                                    worksheet.Cells[row, 9].Value = liftedThisMonth;
                                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
                                 else
                                 {
                                     worksheet.Cells[row, 9].Value = 0m;
                                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // WRITE UNLIFTED THIS MONTH
+                                if (unliftedThisMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 10].Value = unliftedThisMonth;
+                                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 10].Value = 0m;
+                                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
 
                                 // operations for grandtotals
@@ -4816,12 +5061,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     ? repoCalculator.ComputeNetOfVat(price)
                                     : price;
 
-                                worksheet.Cells[row, 10].Value = priceNetOfVat;
-                                worksheet.Cells[row, 11].Value = price;
-                                worksheet.Cells[row, 12].Value = grossOfLiftedThisMonth;
-                                worksheet.Cells[row, 13].Value = ewt;
-                                worksheet.Cells[row, 14].Value = grossOfLiftedThisMonth - ewt;
-                                using var range = worksheet.Cells[row, 10, row, 14];
+                                worksheet.Cells[row, 11].Value = priceNetOfVat;
+                                worksheet.Cells[row, 12].Value = price;
+                                worksheet.Cells[row, 13].Value = grossOfLiftedThisMonth;
+                                worksheet.Cells[row, 14].Value = ewt;
+                                worksheet.Cells[row, 15].Value = grossOfLiftedThisMonth - ewt;
+                                using var range = worksheet.Cells[row, 11, row, 15];
                                 range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
                         }
@@ -4848,37 +5093,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 3].Value = "SUB-TOTAL";
                     worksheet.Cells[row, 4].Value = "ALL PRODUCTS";
-                    worksheet.Cells[row, 6].Value = poSubtotal;
-                    worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
-                    worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
-                    worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                    worksheet.Cells[row, 7].Value = poSubtotal;
+                    worksheet.Cells[row, 8].Value = unliftedLastMonthSubtotal;
+                    worksheet.Cells[row, 9].Value = liftedThisMonthSubtotal;
+                    worksheet.Cells[row, 10].Value = unliftedThisMonthSubtotal;
                     if (liftedThisMonthSubtotal != 0)
                     {
                         var price = grossAmountSubtotal / liftedThisMonthSubtotal;
                         var priceNetOfVat = isVatable
                             ? repoCalculator.ComputeNetOfVat(price)
                             : price;
-                        worksheet.Cells[row, 10].Value = priceNetOfVat;
-                        worksheet.Cells[row, 11].Value = price;
-                        worksheet.Cells[row, 12].Value = grossAmountSubtotal;
-                        worksheet.Cells[row, 13].Value = ewtAmountSubtotal;
-                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtAmountSubtotal;
+                        worksheet.Cells[row, 11].Value = priceNetOfVat;
+                        worksheet.Cells[row, 12].Value = price;
+                        worksheet.Cells[row, 13].Value = grossAmountSubtotal;
+                        worksheet.Cells[row, 14].Value = ewtAmountSubtotal;
+                        worksheet.Cells[row, 15].Value = grossAmountSubtotal - ewtAmountSubtotal;
                     }
                     else
                     {
-                        worksheet.Cells[row, 10].Value = 0m;
                         worksheet.Cells[row, 11].Value = 0m;
                         worksheet.Cells[row, 12].Value = 0m;
                         worksheet.Cells[row, 13].Value = 0m;
                         worksheet.Cells[row, 14].Value = 0m;
+                        worksheet.Cells[row, 15].Value = 0m;
                     }
 
-                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    using (var range = worksheet.Cells[row, 7, row, 15])
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
-                    using (var range = worksheet.Cells[row, 3, row, 14])
+                    using (var range = worksheet.Cells[row, 3, row, 15])
                     {
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -4906,65 +5151,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     switch (product)
                     {
                         case "BIODIESEL":
-                            worksheet.Cells[row, 6].Value = originalPoGrandTotalBiodiesel;
-                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalBiodiesel;
-                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalBiodiesel;
-                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 7].Value = originalPoGrandTotalBiodiesel;
+                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalBiodiesel;
                             if (liftedThisMonthGrandTotalBiodiesel != 0)
                             {
-                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel / 1.12m;
-                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel / 1.12m;
+                                worksheet.Cells[row, 12].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
                             }
                             else
                             {
-                                worksheet.Cells[row, 10].Value = 0m;
                                 worksheet.Cells[row, 11].Value = 0m;
+                                worksheet.Cells[row, 12].Value = 0m;
                             }
-                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalBiodiesel;
-                            worksheet.Cells[row, 13].Value = ewtGrandTotalBiodiesel;
-                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel;
+                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalBiodiesel;
+                            worksheet.Cells[row, 14].Value = ewtGrandTotalBiodiesel;
+                            worksheet.Cells[row, 15].Value = grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel;
                             break;
                         case "ECONOGAS":
-                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEconogas;
-                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEconogas;
-                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEconogas;
-                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 7].Value = originalPoGrandTotalEconogas;
+                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalEconogas;
                             if (liftedThisMonthGrandTotalEconogas != 0)
                             {
-                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas / 1.12m;
-                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas / 1.12m;
+                                worksheet.Cells[row, 12].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
                             }
                             else
                             {
-                                worksheet.Cells[row, 10].Value = 0m;
                                 worksheet.Cells[row, 11].Value = 0m;
+                                worksheet.Cells[row, 12].Value = 0m;
                             }
-                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEconogas;
-                            worksheet.Cells[row, 13].Value = ewtGrandTotalEconogas;
-                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEconogas - ewtGrandTotalEconogas;
+                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalEconogas;
+                            worksheet.Cells[row, 14].Value = ewtGrandTotalEconogas;
+                            worksheet.Cells[row, 15].Value = grossAmountGrandTotalEconogas - ewtGrandTotalEconogas;
                             break;
                         case "ENVIROGAS":
-                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEnvirogas;
-                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEnvirogas;
-                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEnvirogas;
-                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 7].Value = originalPoGrandTotalEnvirogas;
+                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalEnvirogas;
                             if (liftedThisMonthGrandTotalEnvirogas != 0)
                             {
-                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas / 1.12m;
-                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas / 1.12m;
+                                worksheet.Cells[row, 12].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
                             }
                             else
                             {
-                                worksheet.Cells[row, 10].Value = 0m;
                                 worksheet.Cells[row, 11].Value = 0m;
+                                worksheet.Cells[row, 12].Value = 0m;
                             }
-                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEnvirogas;
-                            worksheet.Cells[row, 13].Value = ewtGrandTotalEnvirogas;
-                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas;
+                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalEnvirogas;
+                            worksheet.Cells[row, 14].Value = ewtGrandTotalEnvirogas;
+                            worksheet.Cells[row, 15].Value = grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas;
                             break;
                     }
 
-                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    using (var range = worksheet.Cells[row, 6, row, 15])
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
@@ -4974,33 +5219,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // final total
                 worksheet.Cells[row, 3].Value = "GRAND-TOTAL";
                 worksheet.Cells[row, 4].Value = "ALL PRODUCTS";
-                worksheet.Cells[row, 6].Value = finalPo;
-                worksheet.Cells[row, 7].Value = finalUnliftedLastMonth;
-                worksheet.Cells[row, 8].Value = finalLiftedThisMonth;
-                worksheet.Cells[row, 9].Value = finalUnliftedThisMonth;
+                worksheet.Cells[row, 7].Value = finalPo;
+                worksheet.Cells[row, 8].Value = finalUnliftedLastMonth;
+                worksheet.Cells[row, 9].Value = finalLiftedThisMonth;
+                worksheet.Cells[row, 10].Value = finalUnliftedThisMonth;
                 if (finalLiftedThisMonth != 0)
                 {
-                    worksheet.Cells[row, 10].Value = finalGross / finalLiftedThisMonth / 1.12m;
-                    worksheet.Cells[row, 11].Value = finalGross / finalLiftedThisMonth;
-                    worksheet.Cells[row, 12].Value = finalGross;
-                    worksheet.Cells[row, 13].Value = finalEwt;
-                    worksheet.Cells[row, 14].Value = finalGross - finalEwt;
+                    worksheet.Cells[row, 11].Value = finalGross / finalLiftedThisMonth / 1.12m;
+                    worksheet.Cells[row, 12].Value = finalGross / finalLiftedThisMonth;
+                    worksheet.Cells[row, 13].Value = finalGross;
+                    worksheet.Cells[row, 14].Value = finalEwt;
+                    worksheet.Cells[row, 15].Value = finalGross - finalEwt;
                 }
                 else
                 {
-                    worksheet.Cells[row, 10].Value = 0m;
                     worksheet.Cells[row, 11].Value = 0m;
                     worksheet.Cells[row, 12].Value = 0m;
-                    worksheet.Cells[row, 13].Value = 0m;
+                    worksheet.Cells[row, 12].Value = 0m;
                     worksheet.Cells[row, 14].Value = 0m;
+                    worksheet.Cells[row, 15].Value = 0m;
                 }
 
-                using (var range = worksheet.Cells[row, 6, row, 14])
+                using (var range = worksheet.Cells[row, 6, row, 15])
                 {
                     range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                 }
 
-                using (var range = worksheet.Cells[row, 3, row, 14])
+                using (var range = worksheet.Cells[row, 3, row, 15])
                 {
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -5086,17 +5331,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 3].Value = "PRODUCT";
                         worksheet.Cells[row, 4].Value = "PORT";
                         worksheet.Cells[row, 5].Value = "REFERENCE MOPS";
-                        worksheet.Cells[row, 6].Value = "ORIGINAL PO VOLUME";
-                        worksheet.Cells[row, 7].Value = "UNLIFTED LAST MONTH";
-                        worksheet.Cells[row, 8].Value = "LIFTED THIS MONTH";
-                        worksheet.Cells[row, 9].Value = "UNLIFTED THIS MONTH";
-                        worksheet.Cells[row, 10].Value = "PRICE(VAT-EX)";
-                        worksheet.Cells[row, 11].Value = "PRICE(VAT-INC)";
-                        worksheet.Cells[row, 12].Value = "GROSS AMOUNT(VAT-INC)";
-                        worksheet.Cells[row, 13].Value = "EWT";
-                        worksheet.Cells[row, 14].Value = "NET OF EWT";
+                        worksheet.Cells[row, 6].Value = "PAYMENT TERMS";
+                        worksheet.Cells[row, 7].Value = "TYPE OF PURCHASE";
+                        worksheet.Cells[row, 8].Value = "ORIGINAL PO VOLUME";
+                        worksheet.Cells[row, 9].Value = "UNLIFTED LAST MONTH";
+                        worksheet.Cells[row, 10].Value = "LIFTED THIS MONTH";
+                        worksheet.Cells[row, 11].Value = "UNLIFTED THIS MONTH";
+                        worksheet.Cells[row, 12].Value = "PRICE(VAT-EX)";
+                        worksheet.Cells[row, 13].Value = "PRICE(VAT-INC)";
+                        worksheet.Cells[row, 14].Value = "GROSS AMOUNT(VAT-INC)";
+                        worksheet.Cells[row, 15].Value = "EWT";
+                        worksheet.Cells[row, 16].Value = "NET OF EWT";
 
-                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        using (var range = worksheet.Cells[row, 1, row, 16])
                         {
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                             range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
@@ -5170,22 +5417,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 3].Value = po.Product!.ProductName;
                             worksheet.Cells[row, 4].Value = po.PickUpPoint!.Depot;
                             worksheet.Cells[row, 5].Value = po.TriggerDate != default ? $"TRIGGER {po.TriggerDate.ToString("MM.dd.yyyy")}" : "UNDETERMINED";
-                            worksheet.Cells[row, 6].Value = poTotal;
-                            worksheet.Cells[row, 7].Value = unliftedLastMonth;
-                            worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
-                            worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                            worksheet.Cells[row, 6].Value = po.Terms;
+                            worksheet.Cells[row, 7].Value = po.TypeOfPurchase.ToUpper();
+                            worksheet.Cells[row, 8].Value = poTotal;
+                            worksheet.Cells[row, 9].Value = unliftedLastMonth;
+                            worksheet.Cells[row, 10].Value = liftedThisMonthRrQty;
+                            worksheet.Cells[row, 11].Value = unliftedThisMonth;
                             var cost = liftedThisMonthRrQty > 0
                                 ? grossAmount / liftedThisMonthRrQty
                                 : 0;
-                            worksheet.Cells[row, 10].Value = isVatable
+                            worksheet.Cells[row, 12].Value = isVatable
                                 ? repoCalculator.ComputeNetOfVat(cost)
                                 : cost;
-                            worksheet.Cells[row, 11].Value = cost;
-                            worksheet.Cells[row, 12].Value = grossAmount;
-                            worksheet.Cells[row, 13].Value = ewt;
-                            worksheet.Cells[row, 14].Value = grossAmount - ewt;
+                            worksheet.Cells[row, 13].Value = cost;
+                            worksheet.Cells[row, 14].Value = grossAmount;
+                            worksheet.Cells[row, 15].Value = ewt;
+                            worksheet.Cells[row, 16].Value = grossAmount - ewt;
 
-                            using (var range = worksheet.Cells[row, 6, row, 14])
+                            using (var range = worksheet.Cells[row, 6, row, 16])
                             {
                                 range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
@@ -5202,22 +5451,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ewtGrandTotal += ewtSubtotal;
 
                         worksheet.Cells[row, 2].Value = "SUB-TOTAL";
-                        worksheet.Cells[row, 6].Value = poSubtotal;
-                        worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
-                        worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
-                        worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                        worksheet.Cells[row, 8].Value = poSubtotal;
+                        worksheet.Cells[row, 9].Value = unliftedLastMonthSubtotal;
+                        worksheet.Cells[row, 10].Value = liftedThisMonthSubtotal;
+                        worksheet.Cells[row, 11].Value = unliftedThisMonthSubtotal;
                         if (liftedThisMonthSubtotal != 0)
                         {
                             var price = grossAmountSubtotal / liftedThisMonthSubtotal;
                             var priceNetOfVat = isVatable
                                 ? repoCalculator.ComputeNetOfVat(price)
                                 : price;
-                            worksheet.Cells[row, 10].Value = priceNetOfVat;
-                            worksheet.Cells[row, 11].Value = price;
+                            worksheet.Cells[row, 12].Value = priceNetOfVat;
+                            worksheet.Cells[row, 13].Value = price;
                         }
-                        worksheet.Cells[row, 12].Value = grossAmountSubtotal;
-                        worksheet.Cells[row, 13].Value = ewtSubtotal;
-                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtSubtotal;
+                        worksheet.Cells[row, 14].Value = grossAmountSubtotal;
+                        worksheet.Cells[row, 15].Value = ewtSubtotal;
+                        worksheet.Cells[row, 16].Value = grossAmountSubtotal - ewtSubtotal;
 
                         using (var range = worksheet.Cells[row, 3, row, 5])
                         {
@@ -5225,11 +5474,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Value = product;
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                         }
-                        using (var range = worksheet.Cells[row, 6, row, 14])
+                        using (var range = worksheet.Cells[row, 6, row, 16])
                         {
                             range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
-                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        using (var range = worksheet.Cells[row, 1, row, 16])
                         {
                             range.Style.Font.Bold = true;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -5240,22 +5489,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     worksheet.Cells[row, 2].Value = "GRAND-TOTAL";
-                    worksheet.Cells[row, 6].Value = poGrandTotal;
-                    worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotal;
-                    worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotal;
-                    worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotal;
+                    worksheet.Cells[row, 8].Value = poGrandTotal;
+                    worksheet.Cells[row, 9].Value = unliftedLastMonthGrandTotal;
+                    worksheet.Cells[row, 10].Value = liftedThisMonthGrandTotal;
+                    worksheet.Cells[row, 11].Value = unliftedThisMonthGrandTotal;
                     if (liftedThisMonthGrandTotal != 0)
                     {
                         var price = grossAmountGrandTotal / liftedThisMonthGrandTotal;
                         var priceNetOfVat = isVatable
                             ? repoCalculator.ComputeNetOfVat(price)
                             : price;
-                        worksheet.Cells[row, 10].Value = priceNetOfVat;
-                        worksheet.Cells[row, 11].Value = price;
+                        worksheet.Cells[row, 12].Value = priceNetOfVat;
+                        worksheet.Cells[row, 13].Value = price;
                     }
-                    worksheet.Cells[row, 12].Value = grossAmountGrandTotal;
-                    worksheet.Cells[row, 13].Value = ewtGrandTotal;
-                    worksheet.Cells[row, 14].Value = grossAmountGrandTotal - ewtGrandTotal;
+                    worksheet.Cells[row, 14].Value = grossAmountGrandTotal;
+                    worksheet.Cells[row, 15].Value = ewtGrandTotal;
+                    worksheet.Cells[row, 16].Value = grossAmountGrandTotal - ewtGrandTotal;
 
                     using (var range = worksheet.Cells[row, 3, row, 5])
                     {
@@ -5263,11 +5512,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Value = "ALL PRODUCTS";
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     }
-                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    using (var range = worksheet.Cells[row, 6, row, 16])
                     {
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
-                    using (var range = worksheet.Cells[row, 1, row, 14])
+                    using (var range = worksheet.Cells[row, 1, row, 16])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -5304,7 +5553,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     worksheet.Columns.AutoFit();
-                    worksheet.Column(1).Width = 14;
+                    worksheet.Column(1).Width = 16;
                 }
 
                 #endregion == BY SUPPLIER ==
@@ -7508,6 +7757,722 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         [HttpGet]
+        public IActionResult HaulerPayableReport()
+        {
+            return View();
+        }
+
+        #region -- Generate Hauler Payable Report Excel File --
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateHaulerPayableReportExcelFile(ViewModelBook viewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Please input date range";
+                return RedirectToAction(nameof(HaulerPayableReport));
+            }
+
+            try
+            {
+                var dateFrom = viewModel.DateFrom;
+                var dateTo = viewModel.DateTo;
+                var extractedBy = GetUserFullName();
+                var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var currencyFormat = "#,##0.00";
+
+                var allCv = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(cv => cv.Category == "Trade" && cv.CvType == "Hauler" && cv.Date <= dateTo)
+                    .Include(cv => cv.Supplier)
+                    .ToListAsync(cancellationToken);
+
+                var cvIdOfSelected = allCv
+                    .Where(cv => cv.Date >= dateFrom)
+                    .Select(cv => cv.CheckVoucherHeaderId)
+                    .ToList();
+
+                var cvIdOfPrevious = allCv
+                    .Where(cv => cv.Date < dateFrom)
+                    .Select(cv => cv.CheckVoucherHeaderId)
+                    .ToList();
+
+                var cvPaymentsOfSelected = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfSelected.Contains(ctp.DocumentId) && ctp.DocumentType == "DR")
+                    .Include(ctp => ctp.CV)
+                    .ToListAsync(cancellationToken);
+
+                var cvPaymentsOfPrevious = await _dbContext.FilprideCVTradePayments
+                    .Where(ctp => cvIdOfPrevious.Contains(ctp.DocumentId) && ctp.DocumentType == "DR")
+                    .Include(ctp => ctp.CV)
+                    .ToListAsync(cancellationToken);
+
+                var idsOfDrsOfSelectedPeriodFromCv = cvPaymentsOfSelected
+                    .Select(ctp => new
+                    {
+                        DeliveryReceiptId = ctp.DocumentId,
+                        ctp.AmountPaid
+                    })
+                    .ToList();
+
+                var idsOfDrsOfPreviousPeriodsFromCv = cvPaymentsOfPrevious
+                    .Select(ctp => new
+                    {
+                        DeliveryReceiptId = ctp.DocumentId,
+                        ctp.AmountPaid
+                    })
+                    .ToList();
+
+                var allDr = await _unitOfWork.FilprideReport
+                    .GetHaulerPayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
+
+                var drAndAmountPaidForSelectedPeriodFromCv = allDr
+                    .Where(dr => idsOfDrsOfSelectedPeriodFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
+                    dr.FreightAmount != 0m)
+                    .Select(drSet => new DrWithAmountPaidViewModel
+                    {
+                        DeliveryReceipt = drSet,
+                        AmountPaid = idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
+                        idsOfDrsOfSelectedPeriodFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Year,
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Month
+                    ));
+
+                var drAndAmountPaidForPreviousPeriodFromCv = allDr
+                    .Where(dr => idsOfDrsOfPreviousPeriodsFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
+                    dr.FreightAmount != 0m)
+                    .Select(drSet => new DrWithAmountPaidViewModel
+                    {
+                        DeliveryReceipt = drSet,
+                        AmountPaid = idsOfDrsOfPreviousPeriodsFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault() == null ? 0m :
+                            idsOfDrsOfPreviousPeriodsFromCv.Where(dr => dr.DeliveryReceiptId == drSet.DeliveryReceiptId).FirstOrDefault()!.AmountPaid
+                    })
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Year,
+                        dr.DeliveryReceipt.DeliveredDate!.Value.Month
+                    ));
+
+                var allDrGroupedByMonthYear = allDr
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ));
+
+                var allPreviousDrGroupedByMonthYear = allDr
+                    .Where(dr => dr.DeliveredDate!.Value < dateFrom)
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ))
+                    .ToList();
+
+                var allSelectedDrGroupedByMonthYear = allDr
+                    .Where(dr => dr.DeliveredDate!.Value >= dateFrom)
+                    .GroupBy(dr => new MonthYear(
+                        dr.DeliveredDate!.Value.Year,
+                        dr.DeliveredDate!.Value.Month
+                    ))
+                    .ToList();
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Hauler Payable");
+
+                #region == Title ==
+
+                var titleCells = worksheet.Cells["A1:B1"];
+                titleCells.Merge = true;
+                titleCells.Value = "HAULER PAYABLE REPORT";
+                titleCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                #endregion
+
+                #region == Header Row ==
+
+                titleCells = worksheet.Cells["A7:B7"];
+                titleCells.Style.Font.Size = 13;
+                titleCells.Style.Font.Bold = true;
+                titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                worksheet.Cells["A7"].Value = "MONTH";
+                worksheet.Cells["A7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                worksheet.Cells["B7"].Value = "HAULER";
+                worksheet.Cells["B7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+
+                titleCells = worksheet.Cells["A6:B6"];
+                titleCells.Merge = true;
+                titleCells.Value = "AP HAULING";
+                titleCells.Style.Font.Size = 13;
+                titleCells.Style.Font.Bold = true;
+                titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+
+                string[] headers = ["BEGINNING", "FREIGHT AMOUNTS", "PAYMENTS", "ENDING"];
+                string[] subHeaders = ["VOLUME", "GROSS", "EWT", "NET AMOUNT"];
+                var col = 4;
+
+                foreach (var header in headers)
+                {
+                    foreach (var subheader in subHeaders)
+                    {
+                        worksheet.Cells[7, col].Value = subheader;
+                        worksheet.Cells[7, col].Style.Font.Bold = true;
+                        worksheet.Cells[7, col].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        worksheet.Cells[7, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        col = col + 1;
+                    }
+
+                    titleCells = worksheet.Cells[6, col-4, 6, col-1];
+                    titleCells.Merge = true;
+                    titleCells.Value = header;
+                    titleCells.Style.Font.Size = 13;
+                    titleCells.Style.Font.Bold = true;
+                    titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+
+                    col = col + 1;
+                }
+
+                #endregion
+
+                var row = 8;
+                IEnumerable<IGrouping<MonthYear, FilprideDeliveryReceipt>> loopingMainDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaidViewModel>> loopingSecondDrGroupedByMonthYear = null!;
+                IEnumerable<IGrouping<MonthYear, DrWithAmountPaidViewModel>> loopingThirdDrGroupedByMonthYear = null!;
+
+                #region == Initialize Variables ==
+
+                // subtotals per month/year
+                var subtotalVolumeBeginning = 0m;
+                var subtotalGrossBeginning = 0m;
+                var subtotalEwtBeginning = 0m;
+                var subtotalNetBeginning = 0m;
+
+                var subtotalVolumePurchases = 0m;
+                var subtotalGrossPurchases = 0m;
+                var subtotalEwtPurchases = 0m;
+                var subtotalNetPurchases = 0m;
+
+                var subtotalVolumePayments = 0m;
+                var subtotalGrossPayments = 0m;
+                var subtotalEwtPayments = 0m;
+                var subtotalNetPayments = 0m;
+
+                var currentVolumeEnding = 0m;
+                var currentGrossEnding = 0m;
+                var currentEwtEnding = 0m;
+                var currentNetEnding = 0m;
+
+                var grandTotalVolumeBeginning = 0m;
+                var grandTotalGrossBeginning = 0m;
+                var grandTotalEwtBeginning = 0m;
+                var grandTotalNetBeginning = 0m;
+
+                var grandTotalVolumePurchases = 0m;
+                var grandTotalGrossPurchases = 0m;
+                var grandTotalEwtPurchases = 0m;
+                var grandTotalNetPurchases = 0m;
+
+                var grandTotalVolumePayments = 0m;
+                var grandTotalGrossPayments = 0m;
+                var grandTotalEwtPayments = 0m;
+                var grandTotalNetPayments = 0m;
+
+                var grandTotalVolumeEnding = 0m;
+                var grandTotalGrossEnding = 0m;
+                var grandTotalEwtEnding = 0m;
+                var grandTotalNetEnding = 0m;
+
+                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
+
+                #endregion
+
+                // DO NOT CHANGE loop for month year
+                foreach (var allDrsSameMonthYear in allDrGroupedByMonthYear)
+                {
+                    // reset placing per category
+
+                    // get current group of month-year drs
+                    // group the drs by hauler
+                    var sameMonthYearGroupedByHauler = allDrsSameMonthYear.GroupBy(rr => rr.Hauler!.SupplierName)
+                        .ToList();
+
+                    // MONTH YEAR LABEL
+                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Month ?? 0))
+                                                    + " " +
+                                                    (sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Year.ToString() ?? " ");
+                    worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    row++;
+
+                    // LOOP BY HAULER
+                    foreach (var sameMonthYearSameHauler in sameMonthYearGroupedByHauler)
+                    {
+                        // NAME OF HAULER
+                        var supplierName = sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName ?? "";
+                        var isSupplierVatable = sameMonthYearSameHauler.First().Hauler!.VatType == SD.VatType_Vatable;
+                        var isSupplierTaxable = sameMonthYearSameHauler.First().Hauler!.TaxType == SD.TaxType_WithTax;
+                        worksheet.Cells[row, 2].Value = supplierName;
+                        var columnName = string.Empty;
+                        var isPayment = false;
+                        var isEnding = false;
+
+                        // loop by month-year and hauler
+                        for (var i = 1; i != 5; i++)
+                        {
+                            // determines if the loop is beginning, current, payment, or ending
+                            switch (i)
+                            {
+                                // beginning
+                                case 1:
+                                    loopingMainDrGroupedByMonthYear = allPreviousDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCv;
+                                    loopingThirdDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
+                                    columnName = "beginning";
+                                    break;
+                                // current
+                                case 2:
+                                    loopingMainDrGroupedByMonthYear = allSelectedDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = null!;
+                                    loopingThirdDrGroupedByMonthYear = null!;
+                                    columnName = "purchases";
+                                    break;
+                                // payment
+                                case 3:
+                                    loopingMainDrGroupedByMonthYear = allDrGroupedByMonthYear;
+                                    loopingSecondDrGroupedByMonthYear = drAndAmountPaidForSelectedPeriodFromCv;
+                                    loopingThirdDrGroupedByMonthYear = null!;
+                                    columnName = "payments";
+                                    break;
+                                // ending
+                                case 4:
+                                    isEnding = true;
+                                    break;
+                            }
+
+                            if (isPayment)
+                            {
+                                switch (columnName)
+                                {
+                                    case "beginning":
+                                        loopingSecondDrGroupedByMonthYear = drAndAmountPaidForPreviousPeriodFromCv;
+                                        break;
+                                    case "purchases":
+                                        loopingSecondDrGroupedByMonthYear = null!;
+                                        break;
+                                }
+                            }
+
+                            if (loopingMainDrGroupedByMonthYear != null)
+                            {
+                                foreach (var sameMonthYear in loopingMainDrGroupedByMonthYear)
+                                {
+                                    // this process finds the dr that has the same month/year for current month/year section
+                                    if (sameMonthYear.FirstOrDefault()?.DeliveredDate!.Value.Month != allDrsSameMonthYear.FirstOrDefault()?.DeliveredDate!.Value.Month ||
+                                        sameMonthYear.FirstOrDefault()?.DeliveredDate!.Value.Year != allDrsSameMonthYear.FirstOrDefault()?.DeliveredDate!.Value.Year)
+                                    {
+                                        continue;
+                                    }
+
+                                    IEnumerable<DrWithAmountPaidViewModel>? secondLoopSameMonthYearSameHauler = null;
+                                    IGrouping<MonthYear, DrWithAmountPaidViewModel>? secondLoopSameMonthYear = null!;
+
+                                    // GET DR SET WITH SAME MONTH YEAR + HAULER
+                                    var sameHaulerSameMonthYear = sameMonthYear
+                                        .Where(rr => rr.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
+
+                                    var volume = 0m;
+                                    var gross = 0m;
+                                    var netOfVat = 0m;
+                                    var ewtPercentage = 0m;
+                                    var ewt = 0m;
+                                    var net = 0m;
+                                    var totalAmount = 0m;
+                                    var totalVolume = 0m;
+                                    decimal sumOfAmountPaid = 0m;
+                                    decimal sumOfVolumePaid = 0m;
+
+                                    // PROCESS DEPENDING ON CATEGORY
+                                    switch (i)
+                                    {
+
+                                        // BEGINNING
+                                        case 1:
+                                            // CONTAINS PREVIOUS PAID
+                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PREVIOUS PAID WITH SAME HAULER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
+                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler
+                                                    .FirstOrDefault()?.Hauler!.SupplierName)
+                                                    .ToList();
+
+                                                if (secondLoopSameMonthYearSameHauler.Count() != 0)
+                                                {
+                                                    sumOfAmountPaid =
+                                                        secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+
+                                                    sumOfVolumePaid =
+                                                        secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
+                                                }
+                                            }
+
+                                            totalAmount = sameHaulerSameMonthYear
+                                                .Sum(dr => dr.FreightAmount);
+
+                                            totalVolume = sameHaulerSameMonthYear
+                                                  .Sum(dr => dr.Quantity);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(dr => dr.Hauler!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+
+                                        // CURRENT
+                                        case 2:
+
+                                            totalAmount = sameHaulerSameMonthYear
+                                                .Sum(dr => dr.FreightAmount);
+
+                                            totalVolume = sameHaulerSameMonthYear
+                                                .Sum(dr => dr.Quantity);
+
+                                            gross = totalAmount - sumOfAmountPaid;
+
+                                            volume = totalVolume - sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewtPercentage = sameMonthYear.Average(dr => dr.Hauler!.WithholdingTaxPercent ?? 0m);
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+
+                                        // PAYMENT
+                                        case 3:
+                                            // CONTAINS SELECTED PAID
+                                            secondLoopSameMonthYear = loopingSecondDrGroupedByMonthYear
+                                                .FirstOrDefault(secondLoop => secondLoop.Key == sameMonthYear.Key);
+
+                                            // GET PAID WITH SAME SUPPLIER
+                                            if (secondLoopSameMonthYear != null)
+                                            {
+                                                secondLoopSameMonthYearSameHauler = secondLoopSameMonthYear
+                                                    .Where(rr => rr.DeliveryReceipt.Hauler!.SupplierName == sameMonthYearSameHauler.FirstOrDefault()?.Hauler!.SupplierName);
+
+                                                sumOfAmountPaid =
+                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.AmountPaid);
+
+                                                sumOfVolumePaid =
+                                                    secondLoopSameMonthYearSameHauler.Sum(dr => dr.DeliveryReceipt.Quantity);
+
+                                                ewtPercentage = secondLoopSameMonthYear.Average(dr => dr.DeliveryReceipt.Hauler!.WithholdingTaxPercent ?? 0m);
+                                            }
+
+                                            if (secondLoopSameMonthYearSameHauler == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            gross = sumOfAmountPaid;
+
+                                            volume = sumOfVolumePaid;
+
+                                            netOfVat = isSupplierVatable ? repoCalculator.ComputeNetOfVat(gross) : gross;
+
+                                            ewt = isSupplierTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, ewtPercentage) : 0m;
+
+                                            net = gross - ewt;
+
+                                            break;
+                                    }
+
+                                    // write in the category
+                                    worksheet.Cells[row, i * 5 - 1].Value = volume;
+                                    worksheet.Cells[row, i * 5].Value = gross;
+                                    worksheet.Cells[row, i * 5 + 1].Value = ewt;
+                                    worksheet.Cells[row, i * 5 + 2].Value = net;
+                                    worksheet.Cells[row, i * 5 - 1].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5 + 1].Style.Numberformat.Format = currencyFormat;
+                                    worksheet.Cells[row, i * 5 + 2].Style.Numberformat.Format = currencyFormat;
+
+                                    // decide what to do to subtotals depending on category (beg, current, payment)
+                                    switch (i)
+                                    {
+                                        // beginning
+                                        case 1:
+                                            subtotalVolumeBeginning += volume;
+                                            subtotalGrossBeginning += gross;
+                                            subtotalEwtBeginning += ewt;
+                                            subtotalNetBeginning += net;
+                                            currentVolumeEnding += volume;
+                                            currentGrossEnding += gross;
+                                            currentEwtEnding += ewt;
+                                            currentNetEnding += net;
+                                            break;
+                                        // current
+                                        case 2:
+                                            subtotalVolumePurchases += volume;
+                                            subtotalGrossPurchases += gross;
+                                            subtotalEwtPurchases += ewt;
+                                            subtotalNetPurchases += net;
+                                            currentVolumeEnding += volume;
+                                            currentGrossEnding += gross;
+                                            currentEwtEnding += ewt;
+                                            currentNetEnding += net;
+                                            break;
+                                        // payment
+                                        case 3:
+                                            subtotalVolumePayments += volume;
+                                            subtotalGrossPayments += gross;
+                                            subtotalEwtPayments += ewt;
+                                            subtotalNetPayments += net;
+                                            currentVolumeEnding -= volume;
+                                            currentGrossEnding -= gross;
+                                            currentEwtEnding -= ewt;
+                                            currentNetEnding -= net;
+                                            break;
+                                    }
+                                }
+                            }
+
+                            if (isEnding)
+                            {
+                                worksheet.Cells[row, 19].Value = currentVolumeEnding;
+                                worksheet.Cells[row, 20].Value = currentGrossEnding;
+                                worksheet.Cells[row, 21].Value = currentEwtEnding;
+                                worksheet.Cells[row, 22].Value = currentNetEnding;
+                                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                                currentVolumeEnding = 0m;
+                                currentGrossEnding = 0m;
+                                currentEwtEnding = 0m;
+                                currentNetEnding = 0m;
+                            }
+
+                            isPayment = false;
+                        }
+                        // after the four columns(beginning, current, payment, ending), next hauler
+                        row++;
+                    }
+
+                    #region == Subtotal Inputting ==
+
+                    // after all hauler, input subtotals if not zero
+                    if (subtotalGrossBeginning != 0m)
+                    {
+                        worksheet.Cells[row, 4].Value = subtotalVolumeBeginning;
+                        worksheet.Cells[row, 5].Value = subtotalGrossBeginning;
+                        worksheet.Cells[row, 6].Value = subtotalEwtBeginning;
+                        worksheet.Cells[row, 7].Value = subtotalNetBeginning;
+
+                        using var range = worksheet.Cells[row, 4, row, 7];
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Numberformat.Format = currencyFormat;
+                    }
+                    if (subtotalGrossPurchases != 0m)
+                    {
+                        worksheet.Cells[row, 9].Value = subtotalVolumePurchases;
+                        worksheet.Cells[row, 10].Value = subtotalGrossPurchases;
+                        worksheet.Cells[row, 11].Value = subtotalEwtPurchases;
+                        worksheet.Cells[row, 12].Value = subtotalNetPurchases;
+
+                        using var range = worksheet.Cells[row, 9, row, 12];
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Numberformat.Format = currencyFormat;
+                    }
+                    if (subtotalGrossPayments != 0m)
+                    {
+                        worksheet.Cells[row, 14].Value = subtotalVolumePayments;
+                        worksheet.Cells[row, 15].Value = subtotalGrossPayments;
+                        worksheet.Cells[row, 16].Value = subtotalEwtPayments;
+                        worksheet.Cells[row, 17].Value = subtotalNetPayments;
+
+                        using var range = worksheet.Cells[row, 14, row, 17];
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Numberformat.Format = currencyFormat;
+                    }
+
+                    #endregion
+
+                    #region == Ending Subtotal and Grand Total Processes ==
+
+                    // input subtotal of ending
+                    var subtotalVolumeEnding = subtotalVolumeBeginning + subtotalVolumePurchases - subtotalVolumePayments;
+                    var subtotalGrossEnding = subtotalGrossBeginning + subtotalGrossPurchases - subtotalGrossPayments;
+                    var subtotalEwtEnding = subtotalEwtBeginning + subtotalEwtPurchases - subtotalEwtPayments;
+                    var subtotalNetEnding = subtotalNetBeginning + subtotalNetPurchases - subtotalNetPayments;
+
+                    worksheet.Cells[row, 19].Value = subtotalVolumeEnding;
+                    worksheet.Cells[row, 20].Value = subtotalGrossEnding;
+                    worksheet.Cells[row, 21].Value = subtotalEwtEnding;
+                    worksheet.Cells[row, 22].Value = subtotalNetEnding;
+
+                    using (var range = worksheet.Cells[row, 19, row, 22])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Numberformat.Format = currencyFormat;
+                    }
+
+                    // after inputting all subtotals, next row
+                    row++;
+
+                    // after inputting all subtotals, add subtotals to grand total
+                    grandTotalVolumeBeginning += subtotalVolumeBeginning;
+                    grandTotalGrossBeginning += subtotalGrossBeginning;
+                    grandTotalEwtBeginning += subtotalEwtBeginning;
+                    grandTotalNetBeginning += subtotalNetBeginning;
+
+                    grandTotalVolumePurchases += subtotalVolumePurchases;
+                    grandTotalGrossPurchases += subtotalGrossPurchases;
+                    grandTotalEwtPurchases += subtotalEwtPurchases;
+                    grandTotalNetPurchases += subtotalNetPurchases;
+
+                    grandTotalVolumePayments += subtotalVolumePayments;
+                    grandTotalGrossPayments += subtotalGrossPayments;
+                    grandTotalEwtPayments += subtotalEwtPayments;
+                    grandTotalNetPayments += subtotalNetPayments;
+
+                    grandTotalVolumeEnding += subtotalVolumeEnding;
+                    grandTotalGrossEnding += subtotalGrossEnding;
+                    grandTotalEwtEnding += subtotalEwtEnding;
+                    grandTotalNetEnding += subtotalNetEnding;
+
+                    // reset subtotals
+                    subtotalVolumePurchases = 0m;
+                    subtotalGrossPurchases = 0m;
+                    subtotalEwtPurchases = 0m;
+                    subtotalNetPurchases = 0m;
+                    subtotalVolumeBeginning = 0m;
+                    subtotalGrossBeginning = 0m;
+                    subtotalEwtBeginning = 0m;
+                    subtotalNetBeginning = 0m;
+                    currentVolumeEnding = 0m;
+                    currentGrossEnding = 0m;
+                    currentEwtEnding = 0m;
+                    currentNetEnding = 0m;
+                    subtotalVolumePayments = 0m;
+                    subtotalGrossPayments = 0m;
+                    subtotalEwtPayments = 0m;
+                    subtotalNetPayments = 0m;
+
+                    #endregion
+                }
+
+                row++;
+
+                #region == Grand Total Inputting ==
+
+                worksheet.Cells[row, 2].Value = "GRAND TOTAL:";
+                worksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                worksheet.Cells[row, 4].Value = grandTotalVolumeBeginning;
+                worksheet.Cells[row, 5].Value = grandTotalGrossBeginning;
+                worksheet.Cells[row, 6].Value = grandTotalEwtBeginning;
+                worksheet.Cells[row, 7].Value = grandTotalNetBeginning;
+                worksheet.Cells[row, 9].Value = grandTotalVolumePurchases;
+                worksheet.Cells[row, 10].Value = grandTotalGrossPurchases;
+                worksheet.Cells[row, 11].Value = grandTotalEwtPurchases;
+                worksheet.Cells[row, 12].Value = grandTotalNetPurchases;
+                worksheet.Cells[row, 14].Value = grandTotalVolumePayments;
+                worksheet.Cells[row, 15].Value = grandTotalGrossPayments;
+                worksheet.Cells[row, 16].Value = grandTotalEwtPayments;
+                worksheet.Cells[row, 17].Value = grandTotalNetPayments;
+                worksheet.Cells[row, 19].Value = grandTotalVolumeEnding;
+                worksheet.Cells[row, 20].Value = grandTotalGrossEnding;
+                worksheet.Cells[row, 21].Value = grandTotalEwtEnding;
+                worksheet.Cells[row, 22].Value = grandTotalNetEnding;
+
+                using (var range = worksheet.Cells[row, 4, row, 22])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Numberformat.Format = currencyFormat;
+                }
+
+                using (var range = worksheet.Cells[row, 1, row, 22])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
+
+                #endregion
+
+                worksheet.Cells.AutoFitColumns();
+
+                worksheet.Column(3).Width = 1;
+                worksheet.Column(8).Width = 1;
+                worksheet.Column(13).Width = 1;
+                worksheet.Column(18).Width = 1;
+                worksheet.View.FreezePanes(8, 2);
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate hauler payable report excel file", "Accounts Payable Report", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                var fileName = $"Hauler_Payable_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate hauler payable report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(HaulerPayableReport));
+            }
+        }
+
+        #endregion
+
+
+
+        [HttpGet]
         public async Task<IActionResult> GetPurchaseOrderListBySupplier(int supplierId, CancellationToken cancellationToken)
         {
             var purchaseOrderList = await _dbContext.FilpridePurchaseOrders
@@ -7522,5 +8487,183 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(purchaseOrderList);
         }
+
+        [HttpGet]
+        public IActionResult JournalVoucherReport()
+        {
+            return View();
+        }
+
+        #region -- Generated Journal Voucher Report as Excel File --
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateJournalVoucherExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Please input date range";
+                return RedirectToAction(nameof(JournalVoucherReport));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = GetUserFullName();
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                // Fetch journal voucher report data
+                var journalVoucherReport = await _unitOfWork.FilprideReport
+                    .GetJournalVoucherReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
+                if (journalVoucherReport.Count == 0)
+                {
+                    TempData["info"] = "No Record Found";
+                    return RedirectToAction(nameof(JournalVoucherReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("JournalVoucherReport");
+
+                // Set report title
+                var reportTitle = worksheet.Cells["A1:B1"];
+                reportTitle.Merge = true;
+                reportTitle.Value = "JOURNAL VOUCHER REPORT";
+                reportTitle.Style.Font.Size = 13;
+
+                // Set filter information
+                worksheet.Cells["A2"].Value = "Date Range: ";
+                worksheet.Cells["B2"].Value = $"{model.DateFrom} - {model.DateTo}";
+                worksheet.Cells["A3"].Value = "Extracted By: ";
+                worksheet.Cells["B3"].Value = GetUserFullName();
+                worksheet.Cells["A4"].Value = "Company: ";
+                worksheet.Cells["B4"].Value = await GetCompanyClaimAsync();
+
+                // Set column headers (Row 7)
+                int headerRow = 7;
+
+                worksheet.Cells[headerRow, 1].Value = "DATE";
+                worksheet.Cells[headerRow, 2].Value = "JV #";
+                worksheet.Cells[headerRow, 3].Value = "PARTICULARS";
+                worksheet.Cells[headerRow, 4].Value = "DEBIT";
+                worksheet.Cells[headerRow, 5].Value = "CREDIT";
+                worksheet.Cells[headerRow, 6].Value = "ACCOUNT NUMBER";
+                worksheet.Cells[headerRow, 7].Value = "ACCOUNT NAME";
+                worksheet.Cells[headerRow, 8].Value = "JV STATUS";
+                worksheet.Cells[headerRow, 9].Value = "JV REASON";
+                worksheet.Cells[headerRow, 10].Value = "CHECK NO";
+                worksheet.Cells[headerRow, 11].Value = "CV #";
+                worksheet.Cells[headerRow, 12].Value = "PAYEE";
+                worksheet.Cells[headerRow, 13].Value = "PREPARED BY";
+
+                // Align all cells left
+                worksheet.Cells[worksheet.Dimension.Address].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+                // Then Apply styling to the header row (only bold, border will be applied to the whole range later)
+                using (var range = worksheet.Cells[headerRow, 1, headerRow, 13])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                // Apply border to left, right of header
+                using (var range = worksheet.Cells[headerRow, 1, headerRow, 13])
+                {
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = headerRow + 1;
+                string currencyFormat = "#,##0.00";
+
+                foreach (var detail in journalVoucherReport)
+                {
+                    worksheet.Cells[row, 1].Value = detail.JournalVoucherHeader!.Date;
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 2].Value = detail.JournalVoucherHeader.JournalVoucherHeaderNo;
+                    worksheet.Cells[row, 3].Value = detail.JournalVoucherHeader.Particulars;
+                    worksheet.Cells[row, 3].Style.WrapText = true;
+                    worksheet.Cells[row, 4].Value = detail.Debit;
+                    worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 5].Value = detail.Credit;
+                    worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 6].Value = detail.AccountNo;
+                    worksheet.Cells[row, 7].Value = detail.AccountName;
+                    worksheet.Cells[row, 8].Value = detail.JournalVoucherHeader.Status;
+                    worksheet.Cells[row, 9].Value = detail.JournalVoucherHeader.JVReason;
+                    worksheet.Cells[row, 10].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckNo;
+                    worksheet.Cells[row, 11].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.CheckVoucherHeaderNo;
+                    worksheet.Cells[row, 12].Value = detail.JournalVoucherHeader.CheckVoucherHeader?.Payee;
+                    worksheet.Cells[row, 13].Value = detail.JournalVoucherHeader.CreatedBy;
+
+                    row++;
+                }
+
+                // Append the total of credit and debit
+                worksheet.Cells[row, 3].Value = "TOTAL:";
+                worksheet.Cells[row, 4].Value = journalVoucherReport.Sum(jv => jv.Debit);
+                worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 5].Value = journalVoucherReport.Sum(jv => jv.Credit);
+                worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+
+                // Apply the specified styling to the total row
+                using (var range = worksheet.Cells[row, 1, row, 13])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.Column(3).Width = 60;
+                worksheet.Column(9).Width = 30;
+
+                // Freeze panes at particulars and
+                worksheet.View.FreezePanes(headerRow + 1, 3);
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(
+                    GetUserFullName(),
+                    "Generate journal voucher report excel file",
+                    "Journal Voucher Report",
+                    companyClaims
+                );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                var fileName = $"JournalVoucher_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate journal voucher report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(JournalVoucherReport));
+            }
+        }
+
+
+        #endregion
     }
 }

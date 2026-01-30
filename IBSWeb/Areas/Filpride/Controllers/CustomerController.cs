@@ -3,9 +3,9 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -58,7 +58,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (view == nameof(DynamicView.Customer))
             {
-                return View("ExportIndex", customer);
+                return View("ExportIndex");
             }
 
             return View(customer);
@@ -67,10 +67,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
             var model = new FilprideCustomer()
             {
+
                 PaymentTerms = await _unitOfWork.FilprideTerms
-                    .GetFilprideTermsListAsyncByCode(cancellationToken)
+                    .GetFilprideTermsListAsyncByCode(cancellationToken),
+                Commissionees = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
             };
             return View(model);
         }
@@ -95,9 +102,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.PaymentTerms = await _unitOfWork.FilprideTerms
                 .GetFilprideTermsListAsyncByCode(cancellationToken);
 
-            //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
-
-            bool isTinExist = false;
+            var isTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
             if (isTinExist)
             {
@@ -145,12 +150,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (customer != null)
             {
                 customer.PaymentTerms = await _unitOfWork.FilprideTerms
                     .GetFilprideTermsListAsyncByCode(cancellationToken);
-
+                customer.Commissionees = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                 return View(customer);
             }
 
@@ -393,6 +403,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCustomerList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var customer = (await _unitOfWork.FilprideCustomer
+                    .GetAllAsync(null, cancellationToken))
+                    .Select(x => new
+                    {
+                        x.CustomerId,
+                        x.CustomerCode,
+                        x.CustomerName,
+                        x.CustomerTin,
+                        x.BusinessStyle,
+                        x.CustomerTerms,
+                        x.CustomerType,
+                        x.CreatedDate
+                    });
+
+                return Json(new
+                {
+                    data = customer
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

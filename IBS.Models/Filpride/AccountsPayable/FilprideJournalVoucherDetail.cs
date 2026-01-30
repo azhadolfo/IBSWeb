@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
@@ -29,5 +30,12 @@ namespace IBS.Models.Filpride.AccountsPayable
         public int JournalVoucherHeaderId { get; set; }
 
         public FilprideJournalVoucherHeader? JournalVoucherHeader { get; set; }
+
+        public SubAccountType? SubAccountType { get; set; }
+
+        public int? SubAccountId { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string? SubAccountName { get; set; }
     }
 }

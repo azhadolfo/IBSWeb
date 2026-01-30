@@ -52,5 +52,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal[] Credit { get; set; }
 
         public string? Type { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }

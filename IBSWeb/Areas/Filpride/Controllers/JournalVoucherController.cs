@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Enums;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -59,16 +59,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.JournalVoucher))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var journalVoucherHeader = await _unitOfWork.FilprideJournalVoucher
-                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", journalVoucherHeader);
+                return View("ExportIndex");
             }
 
             return View();
@@ -94,7 +89,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.JournalVoucherHeaderNo!.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.References?.Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.CheckVoucherHeaderNo!.Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) == true ||
                         s.Particulars.ToLower().Contains(searchValue) ||
                         s.CRNo?.ToLower().Contains(searchValue) == true ||
                         s.JVReason.ToLower().ToString().Contains(searchValue) ||
@@ -153,21 +148,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new JournalVoucherVM
-            {
-                Header = new FilprideJournalVoucherHeader(),
-                Details = new List<FilprideJournalVoucherDetail>()
-            };
+            var viewModel = new JournalVoucherViewModel();
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Header.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            viewModel.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
+            viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims &&
-                            c.CvType == nameof(CVType.Payment) &&
-                            c.PostedBy != null) ///TODO in the future show only the cleared payment
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -175,12 +168,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            viewModel.MinDate = await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
             return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(JournalVoucherVM? model, CancellationToken cancellationToken, string[] accountNumber, decimal[]? debit, decimal[]? credit)
+        public async Task<IActionResult> Create(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -189,89 +185,102 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model!.Header!.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-
-            model.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
+            viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
                     Text = cvh.CheckVoucherHeaderNo
                 })
                 .ToListAsync(cancellationToken);
+            viewModel.MinDate =  await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
 
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
-                return View(model);
+                return View(viewModel);
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                #region --CV Details Entry
-
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
-                var cvDetails = new List<FilprideJournalVoucherDetail>();
-
-                var totalDebit = 0m;
-                var totalCredit = 0m;
-                if (totalDebit != totalCredit)
-                {
-                    TempData["warning"] = "The debit and credit should be equal!";
-                    return View(model);
-                }
-
-                #endregion --CV Details Entry
-
                 #region --Saving the default entries
 
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken);
                 //JV Header Entry
-                model.Header.JournalVoucherHeaderNo = generateJvNo;
-                model.Header.CreatedBy = GetUserFullName();
-                model.Header.Company = companyClaims;
+                var model = new FilprideJournalVoucherHeader
+                {
+                    Type = viewModel.Type,
+                    JournalVoucherHeaderNo = generateJvNo,
+                    Date = viewModel.TransactionDate,
+                    References = viewModel.References,
+                    CVId = viewModel.CVId,
+                    Particulars = viewModel.Particulars,
+                    CRNo = viewModel.CRNo,
+                    JVReason = viewModel.JVReason,
+                    CreatedBy = GetUserFullName(),
+                    Company = companyClaims,
+                };
+
+                await _dbContext.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion --Saving the default entries
 
-                await _dbContext.AddAsync(model.Header, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                #region Details
 
-                for (int i = 0; i < accountNumber.Length; i++)
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(x => x.CheckVoucherHeaderId == model.CVId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {model.CVId} not found");
+
+                var cvDetails = new List<FilprideJournalVoucherDetail>();
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
                 {
-                    var currentAccountNumber = accountNumber[i];
+                    var currentAccountNumber = viewModel.AccountNumber[i];
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
-                        .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
-                    var currentDebit = debit![i];
-                    var currentCredit = credit![i];
-                    totalDebit += debit[i];
-                    totalCredit += credit[i];
+                                           .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {currentAccountNumber} not found");
+
+                    var isAdvances = accountTitle.AccountName.Contains("Advances to Officers and Employees");
 
                     cvDetails.Add(
                         new FilprideJournalVoucherDetail
                         {
                             AccountNo = currentAccountNumber,
-                            AccountName = accountTitle!.AccountName,
+                            AccountName = accountTitle.AccountName,
                             TransactionNo = generateJvNo,
-                            JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
-                            Debit = currentDebit,
-                            Credit = currentCredit
+                            JournalVoucherHeaderId = model.JournalVoucherHeaderId,
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            SubAccountType = isAdvances ? SubAccountType.Employee : null,
+                            SubAccountId = isAdvances ? cv.EmployeeId : null,
+                            SubAccountName = isAdvances ? cv.Payee : null,
                         }
                     );
                 }
 
+                #endregion
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
+
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.Header.CreatedBy!, $"Created new journal voucher# {model.Header.JournalVoucherHeaderNo}", "Journal Voucher", model.Header.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Journal voucher created successfully";
+                TempData["success"] = $"Journal voucher # {model.JournalVoucherHeaderNo} created successfully";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -281,7 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return View(model);
+                return View(viewModel);
             }
         }
 
@@ -361,85 +370,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var modelHeader = await _dbContext.FilprideJournalVoucherHeaders
-                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
-
-            if (modelHeader == null)
-            {
-                return NotFound();
-            }
-
-            var modelDetails = await _dbContext.FilprideJournalVoucherDetails
-                .Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId)
-                .ToListAsync(cancellationToken: cancellationToken);
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
+                var modelHeader = await _dbContext.FilprideJournalVoucherHeaders
+                    .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
+
+                if (modelHeader == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+                if (modelHeader.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                }
+
+                var modelDetails = await _dbContext.FilprideJournalVoucherDetails
+                    .Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId)
+                    .ToListAsync(cancellationToken: cancellationToken);
+
                 modelHeader.PostedBy = GetUserFullName();
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                #region --General Ledger Book Recording(GL)--
-
-                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                var ledgers = new List<FilprideGeneralLedgerBook>();
-
-                foreach (var details in modelDetails)
-                {
-                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                    ledgers.Add(
-                        new FilprideGeneralLedgerBook
-                        {
-                            Date = modelHeader.Date,
-                            Reference = modelHeader.JournalVoucherHeaderNo!,
-                            Description = modelHeader.Particulars,
-                            AccountId = account.AccountId,
-                            AccountNo = account.AccountNumber,
-                            AccountTitle = account.AccountName,
-                            Debit = details.Debit,
-                            Credit = details.Credit,
-                            Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
-                        }
-                    );
-                }
-
-                if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
-                {
-                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                }
-
-                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                #endregion --General Ledger Book Recording(GL)--
-
-                #region --Journal Book Recording(JV)--
-
-                var journalBook = new List<FilprideJournalBook>();
-                foreach (var details in modelDetails)
-                {
-                    journalBook.Add(
-                        new FilprideJournalBook
-                        {
-                            Date = modelHeader.Date,
-                            Reference = modelHeader.JournalVoucherHeaderNo!,
-                            Description = modelHeader.Particulars,
-                            AccountTitle = details.AccountNo + " " + details.AccountName,
-                            Debit = details.Debit,
-                            Credit = details.Credit,
-                            Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBook, cancellationToken);
-
-                #endregion --Journal Book Recording(JV)--
+                await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -510,18 +469,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideJournalVoucherHeaders
-                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            if (model == null)
-            {
-                return NotFound();
-            }
 
             try
             {
+                var model = await _dbContext.FilprideJournalVoucherHeaders
+                    .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+                if (model.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot cancel this record because the period {model.Date:MMM yyyy} is already closed.");
+                }
+
                 model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
@@ -554,54 +521,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
-                .Include(jv => jv.CheckVoucherHeader)
-                .FirstOrDefaultAsync(cvh => cvh.JournalVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
+            try
             {
-                return NotFound();
+                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
+                    .Include(jv => jv.CheckVoucherHeader)
+                    .FirstOrDefaultAsync(cvh => cvh.JournalVoucherHeaderId == id, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
+
+                var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
+                    .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
+                var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
+                var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
+                var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
+
+                JournalVoucherViewModel model = new()
+                {
+                    JVId = existingHeaderModel.JournalVoucherHeaderId,
+                    JVNo = existingHeaderModel.JournalVoucherHeaderNo,
+                    TransactionDate = existingHeaderModel.Date,
+                    References = existingHeaderModel.References,
+                    CVId = existingHeaderModel.CVId,
+                    Particulars = existingHeaderModel.Particulars,
+                    CRNo = existingHeaderModel.CRNo,
+                    JVReason = existingHeaderModel.JVReason,
+                    AccountNumber = accountNumbers,
+                    AccountTitle = accountTitles,
+                    Debit = debit,
+                    Credit = credit,
+                    CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .Where(c =>
+                            c.Company == companyClaims &&
+                            c.IsAdvances &&
+                            c.EmployeeId != null &&
+                            c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
+                        .Select(cvh => new SelectListItem
+                        {
+                            Value = cvh.CheckVoucherHeaderId.ToString(),
+                            Text = cvh.CheckVoucherHeaderNo
+                        })
+                        .ToListAsync(cancellationToken),
+                    COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                };
+
+
+                return View(model);
             }
-
-            var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
-                .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
-                .ToListAsync(cancellationToken);
-
-            var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
-            var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
-            var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
-            var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-
-            JournalVoucherViewModel model = new()
+            catch (Exception ex)
             {
-                JVId = existingHeaderModel.JournalVoucherHeaderId,
-                JVNo = existingHeaderModel.JournalVoucherHeaderNo,
-                TransactionDate = existingHeaderModel.Date,
-                References = existingHeaderModel.References,
-                CVId = existingHeaderModel.CVId,
-                Particulars = existingHeaderModel.Particulars,
-                CRNo = existingHeaderModel.CRNo,
-                JVReason = existingHeaderModel.JVReason,
-                AccountNumber = accountNumbers,
-                AccountTitle = accountTitles,
-                Debit = debit,
-                Credit = credit,
-                CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                    .OrderBy(c => c.CheckVoucherHeaderId)
-                    .Where(c => c.Company == companyClaims &&
-                                c.CvType == nameof(CVType.Payment) &&
-                                c.PostedBy != null)
-                    .Select(cvh => new SelectListItem
-                    {
-                        Value = cvh.CheckVoucherHeaderId.ToString(),
-                        Text = cvh.CheckVoucherHeaderNo
-                    })
-                    .ToListAsync(cancellationToken),
-                COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken)
-            };
-
-
-            return View(model);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch jv. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -614,12 +601,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                .OrderBy(c => c.CheckVoucherHeaderId)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.IsAdvances &&
+                    c.EmployeeId != null &&
+                    c.Status == nameof(CheckVoucherPaymentStatus.Unliquidated))
+                .Select(cvh => new SelectListItem
+                {
+                    Value = cvh.CheckVoucherHeaderId.ToString(),
+                    Text = cvh.CheckVoucherHeaderNo
+                })
+                .ToListAsync(cancellationToken);
+            viewModel.MinDate =  await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
 
             try
             {
-                #region --CV Details Entry
-
                 var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
                     .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == viewModel.JVId, cancellationToken);
 
@@ -628,76 +637,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
+                await _dbContext.FilprideJournalVoucherDetails
                     .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
-                    .ToListAsync(cancellationToken);
+                    .ExecuteDeleteAsync(cancellationToken);
 
-                // Dictionary to keep track of AccountNo and their ids for comparison
-                var accountTitleDict = new Dictionary<string, List<int>>();
-                foreach (var details in existingDetailsModel)
-                {
-                    if (!accountTitleDict.ContainsKey(details.AccountNo))
-                    {
-                        accountTitleDict[details.AccountNo] = new List<int>();
-                    }
-                    accountTitleDict[details.AccountNo].Add(details.JournalVoucherDetailId);
-                }
-
-                // Add or update records
-                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                {
-                    if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
-                    {
-                        // Update the first matching record and remove it from the list
-                        var detailsId = ids.First();
-                        ids.RemoveAt(0);
-                        var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
-                        var currentAccountNumber = viewModel.AccountNumber[i];
-                        var accountTitle = await _unitOfWork.FilprideChartOfAccount
-                            .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
-
-                        details.AccountNo = currentAccountNumber;
-                        details.AccountName = accountTitle!.AccountName;
-                        details.Debit = viewModel.Debit[i];
-                        details.Credit = viewModel.Credit[i];
-                        details.TransactionNo = viewModel.JVNo!;
-                        details.JournalVoucherHeaderId = viewModel.JVId;
-
-                        if (ids.Count == 0)
-                        {
-                            accountTitleDict.Remove(viewModel.AccountNumber[i]);
-                        }
-                    }
-                    else
-                    {
-                        var currentAccountNumber = viewModel.AccountNumber[i];
-                        var accountTitle = await _unitOfWork.FilprideChartOfAccount
-                            .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
-                        // Add new record
-                        var newDetails = new FilprideJournalVoucherDetail
-                        {
-                            AccountNo = currentAccountNumber,
-                            AccountName = accountTitle!.AccountName,
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            TransactionNo = viewModel.JVNo!,
-                            JournalVoucherHeaderId = viewModel.JVId
-                        };
-                        _dbContext.Add(newDetails);
-                    }
-                }
-
-                // Remove remaining records that were duplicates
-                foreach (var ids in accountTitleDict.Values)
-                {
-                    foreach (var id in ids)
-                    {
-                        var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == id);
-                        _dbContext.Remove(details);
-                    }
-                }
-
-                #endregion --CV Details Entry
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #region --Saving the default entries
 
@@ -712,6 +656,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #endregion --Saving the default entries
+
+                #region Details
+
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                             .GetAsync(x => x.CheckVoucherHeaderId == existingHeaderModel.CVId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {existingHeaderModel.CVId} not found");
+
+                var cvDetails = new List<FilprideJournalVoucherDetail>();
+                for (var i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    var currentAccountNumber = viewModel.AccountNumber[i];
+                    var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                                           .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {currentAccountNumber} not found");
+
+                    var isAdvances = accountTitle.AccountName.Contains("Advances to Officers and Employees");
+
+                    cvDetails.Add(
+                        new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = currentAccountNumber,
+                            AccountName = accountTitle.AccountName,
+                            TransactionNo = existingHeaderModel.JournalVoucherHeaderNo!,
+                            JournalVoucherHeaderId = existingHeaderModel.JournalVoucherHeaderId,
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            SubAccountType = isAdvances ? SubAccountType.Employee : null,
+                            SubAccountId = isAdvances ? cv.EmployeeId : null,
+                            SubAccountName = isAdvances ? cv.Payee : null,
+                        }
+                    );
+                }
+
+                #endregion
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -766,6 +746,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Audit Trail Recording
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetJournalVoucherList(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var journalVoucherHeader = (await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken))
+                    .Select(x => new
+                    {
+                        x.JournalVoucherHeaderId,
+                        x.JournalVoucherHeaderNo,
+                        x.Date,
+                        x.CheckVoucherHeader!.CheckVoucherHeaderNo,
+                        x.CRNo,
+                        x.JVReason,
+                        x.CreatedBy,
+                        x.Status
+                    });
+
+                return Json(new
+                {
+                    data = journalVoucherHeader
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         //Download as .xlsx file.(Export)
@@ -1142,7 +1155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet6.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
                     worksheet6.Cells[cvdRow, 8].Value = item.Amount;
                     worksheet6.Cells[cvdRow, 9].Value = item.AmountPaid;
-                    worksheet6.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet6.Cells[cvdRow, 10].Value = item.SubAccountId;
                     worksheet6.Cells[cvdRow, 11].Value = item.EwtPercent;
                     worksheet6.Cells[cvdRow, 12].Value = item.IsUserSelected;
                     worksheet6.Cells[cvdRow, 13].Value = item.IsVatable;
@@ -1273,6 +1286,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
 
             return Json(jvIds);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReJournalJv(int? month, int? year, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var jvs = await _dbContext.FilprideJournalVoucherHeaders
+                    .Include(x => x.Details)
+                    .Where(x =>
+                        x.PostedBy != null &&
+                        x.Date.Month == month &&
+                        x.Date.Year == year)
+                    .ToListAsync(cancellationToken);
+
+                if (!jvs.Any())
+                {
+                    return Json(new { sucess = true, message = "No records were returned." });
+                }
+
+                foreach (var jv in jvs
+                             .OrderBy(x => x.Date))
+                {
+                    await _unitOfWork.FilprideJournalVoucher.PostAsync(jv,
+                        jv.Details!,
+                        cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return Json(new { month, year, count = jvs.Count });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Json(new { success = false, error = ex.Message });
+            }
         }
     }
 }

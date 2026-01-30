@@ -132,10 +132,10 @@
                                         <td>
                                             <select name="AccountingEntries[@i].TaxPercentage" asp-for="@Model.AccountingEntries[i].TaxPercentage" class="form-select form-select-sm taxable">
                                                 <option value="0" selected="">0%</option>
-                                                <option value="0.01">1%</option>
-                                                <option value="0.02">2%</option>
-                                                <option value="0.05">5%</option>
-                                                <option value="0.1">10%</option>
+                                                <option value="0.0100">1%</option>
+                                                <option value="0.0200">2%</option>
+                                                <option value="0.0500">5%</option>
+                                                <option value="0.1000">10%</option>
                                             </select>
                                         </td>
                                         <td>
@@ -276,7 +276,8 @@
             netOfVatField.value = netOfVat.toFixed(4);
 
             // Add to accumulated entries
-            const accountTitle = accountField.options[accountField.selectedIndex]?.text || '';
+            const text = accountField.options[accountField.selectedIndex]?.text || '';
+            const accountTitle = text.substring(text.indexOf(')') + 1).trim();
             addToAccumulatedEntries(accountTitle, netOfVat, 0);
 
             if (vatAmount > 0) {
