@@ -68,6 +68,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Creates a new MMSI dispatch ticket from the provided service request view model, optionally saving an image and/or video, computing total hours and initial status, recording an audit trail, and redirecting to the index on success.
+        /// </summary>
+        /// <param name="viewModel">The service request data submitted by the user used to build the dispatch ticket.</param>
+        /// <param name="imageFile">Optional image file to attach to the dispatch ticket.</param>
+        /// <param name="videoFile">Optional video file to attach to the dispatch ticket.</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>
+        /// A redirect to the Index action when creation succeeds; otherwise returns the Create view populated with the view model and validation or error messages.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
@@ -458,6 +468,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Applies edits to an existing dispatch ticket: validates input, updates ticket fields and media, recalculates total hours when dates/times are present (with PHIL-CEB half-hour rounding), resets tariff-related fields, records an audit trail, and persists changes within a transaction.
+        /// </summary>
+        /// <param name="viewModel">View model containing the edited dispatch ticket data.</param>
+        /// <param name="imageFile">Optional new image file to replace the ticket's existing image.</param>
+        /// <param name="videoFile">Optional new video file to replace the ticket's existing video.</param>
+        /// <param name="cancellationToken">Token to cancel database and I/O operations.</param>
+        /// <returns>
+        /// An IActionResult that redirects to the dispatch ticket list on success or redirects back to the Edit view with warnings or errors on failure.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> EditTicket(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
@@ -886,6 +906,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return Json(item);
         }
 
+        /// <summary>
+        /// Retrieves a paginated, searchable, and sortable list of MMSI dispatch tickets formatted for DataTables.
+        /// </summary>
+        /// <remarks>
+        /// The result respects the current filter type stored in the user's claims and excludes tickets with statuses "For Posting", "Cancelled", and "Incomplete". When present, signed URLs are included for image and video attachments.
+        /// </remarks>
+        /// <param name="parameters">DataTables parameters (paging, global and column search, and ordering) used to shape the query.</param>
+        /// <param name="cancellationToken">Token to observe while waiting for the operation to complete.</param>
+        /// <returns>
+        /// An IActionResult that contains JSON with the following fields:
+        /// - `draw`: the draw counter from DataTables.
+        /// - `recordsTotal`: total matching records.
+        /// - `recordsFiltered`: total matching records after filtering.
+        /// - `data`: the paged list of dispatch tickets (each may include signed media URLs when applicable).
+        /// On error, the action redirects to the Index view for the current filter type.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {

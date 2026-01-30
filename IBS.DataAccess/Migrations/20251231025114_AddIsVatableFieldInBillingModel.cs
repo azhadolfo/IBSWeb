@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -7,7 +7,9 @@ namespace IBS.DataAccess.Migrations
     /// <inheritdoc />
     public partial class AddIsVatableFieldInBillingModel : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Adds a non-nullable boolean column named "is_vatable" with a default value of false to the "mmsi_billings" table.
+        /// </summary>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
@@ -18,7 +20,9 @@ namespace IBS.DataAccess.Migrations
                 defaultValue: false);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Removes the `is_vatable` column from the `mmsi_billings` table.
+        /// </summary>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

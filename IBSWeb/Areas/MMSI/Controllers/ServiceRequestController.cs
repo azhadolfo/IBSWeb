@@ -75,6 +75,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
         }
 
+        /// <summary>
+        /// Displays MMSI dispatch tickets with status "For Posting" or "Incomplete", optionally filters by <paramref name="filterType"/>, generates signed URLs for any image/video files, and updates the current user's filter type claim.
+        /// </summary>
+        /// <param name="filterType">Optional filter key used to narrow which tickets are shown and stored as the user's current filter type.</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>An <see cref="IActionResult"/> that renders the view containing the filtered list of dispatch tickets.</returns>
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
             var dispatchTickets = await _unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting" || dt.Status == "Incomplete", cancellationToken);
@@ -118,6 +124,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Creates a new MMSI service request from the submitted view model and optional image/video uploads.
+        /// </summary>
+        /// <param name="viewModel">The form data for the service request; select lists on the view model are populated before processing.</param>
+        /// <param name="imageFile">Optional image file to attach to the request.</param>
+        /// <param name="videoFile">Optional video file to attach to the request.</param>
+        /// <param name="cancellationToken">Token to observe while awaiting the operation.</param>
+        /// <returns>
+        /// Redirects to the Index action when creation succeeds; otherwise returns the Create view populated with the submitted view model.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
@@ -239,6 +255,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Displays the edit view for the MMSI service request identified by <paramref name="id"/> after verifying user access.
+        /// </summary>
+        /// <param name="id">The DispatchTicketId of the service request to edit.</param>
+        /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+        /// <returns>
+        /// The Edit view populated with a ServiceRequestViewModel when the ticket is found and access is allowed;
+        /// a redirect to Index if access is denied; or NotFound if no matching ticket exists.
+        /// </returns>
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
@@ -274,6 +299,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Processes an edit to an existing service request, persisting changes, handling optional image/video replacement, computing total hours, creating an audit entry, and updating the record's status.
+        /// </summary>
+        /// <param name="viewModel">View model containing edited service request values and identifiers used to locate the existing record.</param>
+        /// <param name="imageFile">Optional uploaded image file to replace the existing image for the service request.</param>
+        /// <param name="videoFile">Optional uploaded video file to replace the existing video for the service request.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// An IActionResult that redirects to the index on successful edit or access denial, or returns the edit view with the provided view model when validation fails or an error occurs.
+        /// </returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
@@ -495,6 +530,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return Json(terminalsList);
         }
 
+        /// <summary>
+        /// Provides a filtered, sorted, and paginated list of MMSI dispatch tickets formatted for DataTables.
+        /// </summary>
+        /// <param name="parameters">DataTables request parameters (paging, search, ordering, and column definitions) supplied from the form.</param>
+        /// <param name="cancellationToken">Token to cancel the database and IO operations.</param>
+        /// <returns>
+        /// An <see cref="IActionResult"/> that is a JSON payload containing DataTables fields: `draw`, `recordsTotal`, `recordsFiltered`, and `data` (the page of matching dispatch tickets; image/video signed URLs are included when available). 
+        /// On error, redirects to the Index action and sets an error message in TempData.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
@@ -771,6 +815,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Cancels the dispatch tickets identified in the provided JSON array of record IDs and records the action in the audit trail.
+        /// </summary>
+        /// <param name="records">A JSON-serialized array of dispatch ticket IDs (e.g., ["1","2","3"]).</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// An <see cref="IActionResult"/> that redirects to the Index action. On success TempData["success"] is set; on failure TempData["error"] is set.
+        /// </returns>
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
@@ -898,6 +950,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             };
         }
 
+        /// <summary>
+        /// Map an <c>MMSIDispatchTicket</c> entity to a <c>ServiceRequestViewModel</c> for display or editing.
+        /// </summary>
+        /// <param name="model">The source dispatch ticket whose fields will be copied into the view model.</param>
+        /// <returns>A <c>ServiceRequestViewModel</c> populated from <paramref name="model"/>; <see cref="ServiceRequestViewModel.PortId"/> is set when <c>model.Terminal?.Port</c> is present.</returns>
         public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(MMSIDispatchTicket model)
         {
             var viewModel = new ServiceRequestViewModel

@@ -14,6 +14,14 @@ namespace IBS.DataAccess.Repository.MMSI
             _db = db;
         }
 
+        /// <summary>
+        /// Retrieves MMSI dispatch tickets whose Date falls within the specified inclusive range and populates related navigation data (customer, vessel, tugboat, terminal/port, service) as well as associated billing and collection when present.
+        /// </summary>
+        /// <param name="dateFrom">Start of the date range (inclusive).</param>
+        /// <param name="dateTo">End of the date range (inclusive).</param>
+        /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+        /// <returns>A list of <see cref="MMSIDispatchTicket"/> items matching the date range, ordered by Date; each item includes related entities and, when applicable, its Billing and Billing.Collection populated.</returns>
+        /// <exception cref="System.ArgumentException">Thrown when <paramref name="dateFrom"/> is greater than <paramref name="dateTo"/>.</exception>
         public async Task<List<MMSIDispatchTicket>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)

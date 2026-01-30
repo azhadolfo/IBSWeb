@@ -146,6 +146,10 @@ namespace IBS.DataAccess.Repository.MMSI
             return vessels;
         }
 
+        /// <summary>
+        /// Retrieves MMSI-enabled customers as SelectListItem entries ordered by customer name.
+        /// </summary>
+        /// <returns>A list of SelectListItem where Value is the customer's Id and Text is the customer's name, ordered by CustomerName.</returns>
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
@@ -158,6 +162,11 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieves terminal items formatted for a select list, optionally filtered by port.
+        /// </summary>
+        /// <param name="portId">Port identifier to filter terminals by; when equal to 0 no port filter is applied. May be null.</param>
+        /// <returns>A list of SelectListItem where each item's Value is the terminal's Id and Text is the terminal's Name, or null.</returns>
         public async Task<List<SelectListItem>?> GetMMSITerminalsSelectList(int? portId, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSITerminal> query = dbSet;

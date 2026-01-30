@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -7,7 +7,14 @@ namespace IBS.DataAccess.Migrations
     /// <inheritdoc />
     public partial class AddCollectionNumberToBillingModel : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Applies schema changes to the mmsi_billings table to allow nullable references and add a collection number column.
+        /// </summary>
+        /// <remarks>
+        /// - Makes vessel_id, terminal_id, and port_id nullable.
+        /// - Adds a nullable text column named collection_number.
+        /// - Drops and recreates foreign keys for port_id, terminal_id, and vessel_id (recreated without cascade delete).
+        /// </remarks>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -74,7 +81,9 @@ namespace IBS.DataAccess.Migrations
                 principalColumn: "vessel_id");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reverts schema changes made in the corresponding Up migration: removes the `collection_number` column, restores `port_id`, `terminal_id`, and `vessel_id` to non-nullable integers with a default value of 0, and re-adds their foreign keys with cascade delete behavior.
+        /// </summary>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

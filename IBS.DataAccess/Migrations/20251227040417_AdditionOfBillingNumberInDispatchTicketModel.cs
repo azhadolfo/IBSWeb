@@ -7,7 +7,12 @@ namespace IBS.DataAccess.Migrations
     /// <inheritdoc />
     public partial class AdditionOfBillingNumberInDispatchTicketModel : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Modifies the mmsi_dispatch_tickets schema to add a billing number, convert billing_id to integer, and establish an index and foreign key to mmsi_billings.
+        /// </summary>
+        /// <remarks>
+        /// Alters mmsi_dispatch_tickets.billing_id to type integer, adds a nullable text column billing_number, creates index ix_mmsi_dispatch_tickets_billing_id on billing_id, and adds foreign key fk_mmsi_dispatch_tickets_mmsi_billings_billing_id referencing mmsi_billings(mmsi_billing_id).
+        /// </remarks>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(
@@ -35,7 +40,9 @@ namespace IBS.DataAccess.Migrations
                 principalColumn: "mmsi_billing_id");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reverts the migration by removing the foreign key and index on mmsi_dispatch_tickets.billing_id, dropping the billing_number column, and changing mmsi_dispatch_tickets.billing_id back to a nullable text column.
+        /// </summary>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

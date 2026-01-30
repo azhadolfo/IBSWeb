@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -187,7 +187,12 @@ namespace IBS.DataAccess.Migrations
                 principalColumn: "vessel_id");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reverts the migration by restoring mmsi_dispatch_tickets columns to their original non-nullable state and re-adding foreign key constraints with cascade delete.
+        /// </summary>
+        /// <remarks>
+        /// Columns reverted include foreign key ids, date/time fields, and charge/type strings; reverted columns are assigned their previous defaults (integers → 0, strings → empty, DateTime/DateOnly/TimeOnly → their zero/default values).
+        /// </remarks>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

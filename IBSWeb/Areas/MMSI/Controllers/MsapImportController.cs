@@ -30,6 +30,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ILogger<BillingController> _logger;
         private readonly IUserAccessService _userAccessService;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="MsapImportController"/> with the services required for database operations, user management, logging, and user access checks.
+        /// </summary>
         public MsapImportController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
             ILogger<BillingController> logger, IUserAccessService userAccessService)
         {
@@ -40,12 +43,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Retrieves the current user's display name using the GivenName claim or falls back to the identity name.
+        /// </summary>
+        /// <returns>The value of the ClaimTypes.GivenName claim if present; otherwise <c>User.Identity.Name</c>.</returns>
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
                    ?? User.Identity?.Name!;
         }
 
+        /// <summary>
+        /// Retrieve the current user's "Company" claim value.
+        /// </summary>
+        /// <returns>
+        /// The value of the "Company" claim if present; `null` if the user cannot be found or the claim is absent.
+        /// </returns>
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -59,12 +72,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        /// <summary>
+        /// Displays the MSAP import index view.
+        /// </summary>
+        /// <returns>The view result for the MSAP import index page.</returns>
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
+        /// <summary>
+        /// Processes the selected import fields and runs the corresponding CSV import for each selection.
+        /// </summary>
+        /// <param name="fieldList">A list of field identifiers to import; each identifier maps to a specific CSV import routine.</param>
+        /// <returns>A redirect to the Index action. On success, TempData["success"] contains a newline-escaped summary of import results; on validation failure or error, TempData["error"] contains an explanatory message.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(List<string> fieldList)
@@ -94,6 +116,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Dispatches the appropriate MSAP CSV import for the given field and returns a summary message describing the outcome.
+        /// </summary>
+        /// <param name="field">Identifier of the import to run. Accepted values: "Customer", "Port", "Terminal", "Principal", "Service", "Tugboat", "TugboatOwner", "TugMaster", "Vessel", "DispatchTicket", "Billing", "Collection".</param>
+        /// <param name="cancellationToken">Optional token to cancel the import operation.</param>
+        /// <returns>A string describing the import result (for example, a count of imported records or an invalid-field message).</returns>
+        /// <exception cref="InvalidOperationException">Thrown if an error occurs during the import; the exception message contains the underlying error.</exception>
         public async Task<string> ImportFromCSV(string field, CancellationToken cancellationToken = default)
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -206,6 +235,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         #region -- Masterfiles --
 
+        /// <summary>
+        /// Imports Filpride customer records from the specified CSV file into the MMSI company dataset, creating new customers for rows whose names do not already exist.
+        /// </summary>
+        /// <param name="customerCSVPath">Filesystem path to the CSV file containing customer records.</param>
+        /// <param name="cancellationToken">Cancellation token to observe while performing asynchronous operations.</param>
+        /// <returns>A summary string indicating the number of new customer records created.</returns>
         public async Task<string> ImportMsapCustomers(string customerCSVPath, CancellationToken cancellationToken)
         {
             var existingNames = (await _unitOfWork.FilprideCustomer.GetAllAsync(c => c.Company == "MMSI", cancellationToken))
@@ -280,6 +315,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Customers imported successfully, {customerList.Count} new records";
         }
 
+        /// <summary>
+        /// Import MMSI ports from a CSV file and persist any new ports to the database.
+        /// </summary>
+        /// <param name="portCSVPath">Filesystem path to a CSV whose records contain `number` (port number) and `name` (port name).</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>A message describing the import result and the number of new port records added.</returns>
         public async Task<string> ImportMsapPorts(string portCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSIPorts.ToListAsync(cancellationToken))
@@ -318,6 +359,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Ports imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports terminal records from a CSV file into the MMSI terminals table.
+        /// </summary>
+        /// <param name="terminalCSVPath">Filesystem path to a CSV file that contains terminal records. Each record must include a `number` field (a composite of a 3-digit port number and a 3-digit terminal number) and a `name` field for the terminal.</param>
+        /// <returns>A message indicating success and the number of new terminal records imported.</returns>
         public async Task<string> ImportMsapTerminals(string terminalCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSITerminals.Include(t => t.Port).ToListAsync(cancellationToken))
@@ -366,6 +412,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Terminals imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports principal records from a CSV file, creating new MMSIPrincipal entities linked to MMSI customers and saving them to the database.
+        /// </summary>
+        /// <param name="principalCSVPath">Filesystem path to the principals CSV file.</param>
+        /// <param name="customerCSVPath">Filesystem path to the customers CSV file used to resolve agent/customer mappings.</param>
+        /// <param name="cancellationToken">Token to observe while waiting for the operation to complete.</param>
+        /// <returns>A summary message indicating how many new principal records were imported.</returns>
         public async Task<string> ImportMsapPrincipals(string principalCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSIPrincipals.ToListAsync(cancellationToken))
@@ -459,6 +512,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Principals imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Import MMSI service master records from a CSV file into the database.
+        /// </summary>
+        /// <remarks>
+        /// Each CSV record's `number` field is parsed and padded to 3 digits; records with service numbers that already exist are skipped.
+        /// </remarks>
+        /// <param name="serviceCSVPath">Filesystem path to the CSV containing service records (expected fields: `number`, `desc`).</param>
+        /// <param name="cancellationToken">Token to observe while waiting for the operation to complete.</param>
+        /// <returns>A summary message indicating how many new service records were added.</returns>
         public async Task<string> ImportMsapServices(string serviceCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSIServices.ToListAsync(cancellationToken))
@@ -493,6 +555,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Services imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports tugboat records from the specified CSV file into the database, creating new MMSITugboat entries for numbers not already present.
+        /// </summary>
+        /// <param name="tugboatCSVPath">File path to the CSV containing tugboat records. Each record is expected to include `number`, `owner`, `name`, and `companyowned` fields.</param>
+        /// <param name="cancellationToken">Token to observe while waiting for the operation to complete.</param>
+        /// <returns>A summary string indicating how many new tugboat records were created.</returns>
         public async Task<string> ImportMsapTugboats(string tugboatCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSITugboats.ToListAsync(cancellationToken))
@@ -537,6 +605,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Tugboats imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports tugboat owner records from the specified CSV file into the database.
+        /// </summary>
+        /// <param name="tugboatOwnerCSVPath">Filesystem path of the CSV file containing tugboat owner records (expects columns `number` and `name`).</param>
+        /// <param name="cancellationToken">Token to observe for cancellation.</param>
+        /// <returns>A message stating how many new tugboat owner records were added.</returns>
+        /// <remarks>
+        /// Numeric owner identifiers in the CSV are parsed and normalized to three-digit strings; records with identifiers that already exist are skipped.
+        /// </remarks>
         public async Task<string> ImportMsapTugboatOwners(string tugboatOwnerCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
@@ -570,6 +647,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Tugboat Owners imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports tug master records from a CSV file into the database.
+        /// </summary>
+        /// <param name="tugMasterCSVPath">File path to the CSV containing tug master records (expects fields `empno`, `name`, `active`).</param>
+        /// <param name="cancellationToken">Token to cancel the import operation.</param>
+        /// <returns>A message indicating success and the number of new tug masters imported.</returns>
         public async Task<string> ImportMsapTugMasters(string tugMasterCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSITugMasters.ToListAsync(cancellationToken))
@@ -601,6 +684,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Tug Masters imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports vessel master records from the specified CSV file into the database.
+        /// </summary>
+        /// <param name="vesselCSVPath">File path to a CSV containing vessel records. Expected columns: `number` (numeric, will be padded to 4 digits), `name`, and `type` (use "L" for LOCAL; other values are treated as FOREIGN).</param>
+        /// <returns>A string message describing the import result and the number of new vessel records added.</returns>
         public async Task<string> ImportMsapVessels(string vesselCSVPath, CancellationToken cancellationToken)
         {
             var existingIdentifier = (await _dbContext.MMSIVessels.ToListAsync(cancellationToken))
@@ -637,6 +725,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         #endregion -- Masterfiles --
 
+        /// <summary>
+        /// Imports dispatch ticket records from the provided MSAP dispatch and customer CSV files into the database.
+        /// </summary>
+        /// <param name="dispatchTicketCSVPath">File path to the CSV containing dispatch ticket records.</param>
+        /// <param name="customerCSVPath">File path to the CSV containing customer reference records used for customer resolution.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
+        /// <returns>A summary message indicating how many new dispatch ticket records were created.</returns>
         public async Task<string> ImportMsapDispatchTickets(string dispatchTicketCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
             using var reader0 = new StreamReader(customerCSVPath);
@@ -860,6 +955,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Dispatch Tickets imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports MMSI billing records from the specified billing CSV and maps customers using the provided customer CSV, creating new MMSIBilling entities in the database.
+        /// </summary>
+        /// <param name="billingCSVPath">Filesystem path to the billing CSV file.</param>
+        /// <param name="customerCSVPath">Filesystem path to the customer CSV file used to resolve customer mappings.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A message indicating success and the number of new billing records imported.</returns>
         public async Task<string> ImportMsapBillings(string billingCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
             using var reader0 = new StreamReader(customerCSVPath);
@@ -1045,6 +1147,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"Billings imported successfully, {newRecords.Count} new records";
         }
 
+        /// <summary>
+        /// Imports MMSI collection records from the provided collection and customer CSV files and persists any new collections to the database.
+        /// </summary>
+        /// <param name="collectionCSVPath">File path to the CSV containing collection records (expected fields include crnum, custno, checkno, crdate, checkdate, datedeposited, amount, n2307, undocumented, createdby, createddate).</param>
+        /// <param name="customerCSVPath">File path to the CSV containing MSAP customer records (used to resolve customer names to existing FilprideCustomers for company "MMSI").</param>
+        /// <param name="cancellationToken">Token to observe while waiting for the operation to complete.</param>
+        /// <returns>A summary message indicating how many new collection records were imported.</returns>
         public async Task<string> ImportMsapCollections(string collectionCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
             using var reader0 = new StreamReader(customerCSVPath);

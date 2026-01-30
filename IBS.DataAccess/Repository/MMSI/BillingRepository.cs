@@ -37,6 +37,11 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.ToListAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieve a single MMSIBilling that matches an optional predicate, including its Terminal (and Terminal.Port), Vessel, Customer, and Principal.
+        /// </summary>
+        /// <param name="filter">An optional expression used to filter which MMSIBilling to return; pass null to retrieve the first MMSIBilling in the set.</param>
+        /// <returns>The first MMSIBilling that satisfies the predicate, or null if no match is found.</returns>
         public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSIBilling> query = dbSet
@@ -54,12 +59,22 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieves the dispatch ticket IDs associated with the specified billing record.
+        /// </summary>
+        /// <param name="billingId">The billing record identifier used to filter dispatch tickets.</param>
+        /// <returns>A list of dispatch ticket IDs as strings; returns an empty list if no matching tickets are found.</returns>
         public async Task<List<string>?> GetToBillDispatchTicketListAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets.Where(t => t.BillingId == billingId)
                 .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieves distinct tugboat names for the specified billing.
+        /// </summary>
+        /// <param name="billingId">The billing identifier used to filter dispatch tickets.</param>
+        /// <returns>A list of distinct tugboat names associated with the billing; returns an empty list if there are none.</returns>
         public async Task<List<string>?> GetUniqueTugboatsListAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets
@@ -69,6 +84,11 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieve dispatch tickets associated with the specified billing record, ordered by departure date then time.
+        /// </summary>
+        /// <param name="billingId">Identifier of the billing record whose dispatch tickets to retrieve.</param>
+        /// <returns>The list of matching <see cref="MMSIDispatchTicket"/> instances ordered by DateLeft then TimeLeft, or null if no result is available.</returns>
         public async Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets
@@ -99,6 +119,11 @@ namespace IBS.DataAccess.Repository.MMSI
             return terminalsList;
         }
 
+        /// <summary>
+        /// Get MMSI customers as a list of SelectListItem ordered by customer name.
+        /// </summary>
+        /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+        /// <returns>A list of SelectListItem where Value is the customer's ID and Text is the customer's name.</returns>
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
@@ -111,6 +136,12 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Gets customers that have dispatch tickets eligible for MMSI billing and projects them as SelectListItem entries.
+        /// </summary>
+        /// <param name="currentCustomerId">If non-zero, also include tickets belonging to this customer when determining eligibility; null or zero applies only the "For Billing" status filter.</param>
+        /// <param name="type">If non-empty, restricts results to customers whose Type equals this value; empty string disables type filtering.</param>
+        /// <returns>A list of SelectListItem ordered by customer name representing customers with billable MMSI dispatch tickets, or null if no customers match.</returns>
         public async Task<List<SelectListItem>?> GetMMSICustomersWithBillablesSelectList(int? currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _db.MMSIDispatchTickets
@@ -166,6 +197,11 @@ namespace IBS.DataAccess.Repository.MMSI
             return ticketsList;
         }
 
+        /// <summary>
+        /// Retrieves all dispatch tickets associated with the specified billing record and projects them to select list items ordered by dispatch number.
+        /// </summary>
+        /// <param name="id">The billing record identifier used to filter dispatch tickets.</param>
+        /// <returns>A list of SelectListItem where each item's Value is the dispatch ticket ID as a string and Text is the dispatch number, ordered by dispatch number.</returns>
         public async Task<List<SelectListItem>> GetMMSIBilledTicketsById(int id, CancellationToken cancellationToken = default)
         {
             var dispatchTicketList = await _db.MMSIDispatchTickets
@@ -196,6 +232,11 @@ namespace IBS.DataAccess.Repository.MMSI
             return "BL" + (parsed.ToString("D8"));
         }
 
+        /// <summary>
+        /// Splits the billing entity's source address into up to four lines and assigns them to AddressLine1–AddressLine4.
+        /// </summary>
+        /// <param name="model">The MMSIBilling whose Principal.Address (when PrincipalId is not null) or Customer.CustomerAddress (when PrincipalId is null) will be split into lines of up to 40 characters.</param>
+        /// <returns>The same <see cref="MMSIBilling"/> instance with AddressLine1 through AddressLine4 populated (or cleared if no source address exists).</returns>
         public MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
         {
             // Splitting the address for the view

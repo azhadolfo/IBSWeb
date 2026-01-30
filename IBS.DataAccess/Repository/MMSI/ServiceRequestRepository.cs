@@ -47,6 +47,12 @@ namespace IBS.DataAccess.Repository.MMSI
             return ports;
         }
 
+        /// <summary>
+        /// Builds a list of terminal select items filtered by the provided model's port information.
+        /// </summary>
+        /// <param name="model">View model whose Terminal.Port.PortId is used first, or whose PortId is used if the former is null.</param>
+        /// <param name="cancellationToken">Token to cancel the database query.</param>
+        /// <returns>A list of <see cref="SelectListItem"/> representing terminals filtered by the model; an empty list if no port information is available.</returns>
         private async Task<List<SelectListItem>> GetMMSITerminalsById(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> terminals;

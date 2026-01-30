@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -7,7 +7,15 @@ namespace IBS.DataAccess.Migrations
     /// <inheritdoc />
     public partial class AddDispatchAmountAndBAFAmountInBillingModel : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Applies schema changes to the mmsi_billings table: makes customer_id nullable, adds baf_amount and dispatch_amount columns, and updates the foreign key to filpride_customers.
+        /// </summary>
+        /// <remarks>
+        /// - Drops the existing foreign key constraint on mmsi_billings.customer_id.
+        /// - Alters mmsi_billings.customer_id to allow nulls.
+        /// - Adds non-nullable numeric columns baf_amount and dispatch_amount with a default value of 0.
+        /// - Re-creates the foreign key from mmsi_billings.customer_id to filpride_customers.customer_id (no explicit cascade behavior specified).
+        /// </remarks>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

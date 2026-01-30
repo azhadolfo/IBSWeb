@@ -95,6 +95,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Creates a new billing from the supplied view model, persists it, links the selected dispatch tickets, records an audit trail, and then redirects to the billing list.
+        /// </summary>
+        /// <param name="viewModel">Input model containing billing fields and the list of dispatch tickets to bill.</param>
+        /// <returns>
+        /// An <see cref="IActionResult"/> that redirects to the Index action on success, or returns the Create view populated with the view model and select lists when validation fails or an error occurs.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> Create(CreateBillingViewModel viewModel, CancellationToken cancellationToken)
         {
@@ -191,6 +198,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Converts a CreateBillingViewModel into an MMSIBilling domain model.
+        /// </summary>
+        /// <param name="viewModel">The view model containing billing data to map into the domain model.</param>
+        /// <returns>An MMSIBilling populated with values from the provided view model.</returns>
+        /// <exception cref="NullReferenceException">Thrown when <paramref name="viewModel"/> supplies an MMSIBillingId that is zero.</exception>
         public MMSIBilling CreateBillingVmToBillingModel(CreateBillingViewModel viewModel)
         {
             var model = new MMSIBilling
@@ -223,6 +236,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return model;
         }
 
+        /// <summary>
+        /// Create a CreateBillingViewModel populated from the given MMSIBilling domain model.
+        /// </summary>
+        /// <param name="model">The source MMSIBilling to convert.</param>
+        /// <returns>A CreateBillingViewModel with properties copied from <paramref name="model"/>.</returns>
         public CreateBillingViewModel BillingModelToCreateBillingVm(MMSIBilling model)
         {
             var viewModel = new CreateBillingViewModel
@@ -391,6 +409,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Displays the edit form for an existing MMSI billing populated with its data and related select lists.
+        /// </summary>
+        /// <param name="id">The MMSIBillingId of the billing to edit.</param>
+        /// <param name="cancellationToken">Cancellation token for the request.</param>
+        /// <returns>
+        /// An IActionResult containing the view with a populated CreateBillingViewModel, or a redirect to Index when the current user lacks access.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown when no billing with the specified <paramref name="id"/> is found.</exception>
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
@@ -432,6 +459,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Persists changes from the edit billing form, records an audit trail, updates linked dispatch tickets and totals, and sets a status message.
+        /// </summary>
+        /// <param name="viewModel">View model containing the edited billing fields and the list of dispatch tickets to bill.</param>
+        /// <param name="file">Optional uploaded file associated with the billing.</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>Redirects to the billing index with a success, warning, or error message depending on the outcome.</returns>
         [HttpPost]
         public async Task<IActionResult> Edit(CreateBillingViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
@@ -620,6 +654,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        /// <summary>
+        /// Loads a billing with its related dispatch tickets and tugboat data, processes its address, and returns the preview view.
+        /// </summary>
+        /// <param name="id">The MMSI billing identifier to preview.</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>An <see cref="IActionResult"/> that is the preview view populated with the billing model, or NotFound if the billing does not exist.</returns>
+        /// <exception cref="NullReferenceException">Thrown when the unique tugboat list cannot be retrieved (the billing's UniqueTugboats is null).</exception>
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
@@ -642,6 +683,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// Generates an Excel workbook for the specified billing and returns it as a downloadable file.
+        /// </summary>
+        /// <param name="id">The MMSI billing identifier to generate the report for.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>
+        /// A file result containing the billing Excel workbook when successful; otherwise a redirect to the Index action.
+        /// TempData["error"] is set when the billing is not found or an error occurs.
+        /// </returns>
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             try
@@ -813,6 +863,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return user?.UserName;
         }
 
+        /// <summary>
+        /// Get the principals for a given customer and return them as JSON.
+        /// </summary>
+        /// <param name="customerId">The customer identifier to fetch principals for.</param>
+        /// <returns>A JSON result containing the principals list (`List<SelectListItem>`) or `null` if none are available.</returns>
         [HttpGet]
         public async Task<IActionResult> GetPrincipalsJSON(string customerId, CancellationToken cancellationToken)
         {
@@ -820,6 +875,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return Json(principalsList);
         }
 
+        /// <summary>
+        /// Retrieves principals for the specified customer and returns them as a list of SelectListItem, or null when no customerId is provided.
+        /// </summary>
+        /// <param name="customerId">The customer identifier as a string; if null the method returns null.</param>
+        /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+        /// <returns>A list of SelectListItem representing the customer's principals, or null if <paramref name="customerId"/> is null.</returns>
         [HttpGet]
         public async Task<List<SelectListItem>?> GetPrincipals(string? customerId, CancellationToken cancellationToken)
         {
@@ -856,6 +917,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return Json(principalsList);
         }
 
+        /// <summary>
+        /// Builds a list of dispatch ticket select items for editing: includes the customer's unbilled tickets and, when the specified billing exists and belongs to the same customer, the tickets already billed under that billing.
+        /// </summary>
+        /// <param name="customerId">The customer's ID; when null, only global unbilled tickets are returned.</param>
+        /// <param name="billingId">The billing ID to include billed tickets from; use 0 to exclude billed-ticket lookup.</param>
+        /// <returns>
+        /// A list of SelectListItem representing dispatch tickets for the edit UI, or null if no tickets were found.
+        /// </returns>
         [HttpPost]
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
         {
