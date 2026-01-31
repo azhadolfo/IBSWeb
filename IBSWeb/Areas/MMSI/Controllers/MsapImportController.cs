@@ -1203,11 +1203,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.MMSICollectionNumber = record.crnum;
                 newRecord.CheckNumber = record.checkno;
                 newRecord.Status = "Create";
-                newRecord.Date = DateOnly.ParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                newRecord.CheckDate = record.checkdate == "/  /" ? DateOnly.MinValue : DateOnly.ParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                newRecord.DepositDate = DateOnly.ParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                newRecord.Amount = decimal.Parse(record.amount);
-                newRecord.EWT = decimal.Parse(record.n2307);
+                if (!DateOnly.TryParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var crDate) ||
+                    !DateOnly.TryParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var depositDate) ||
+                    !decimal.TryParse(record.amount, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) ||
+                    !decimal.TryParse(record.n2307, NumberStyles.Number, CultureInfo.InvariantCulture, out var ewt))
+                {
+                    continue;
+                }
+                newRecord.Date = crDate;
+                newRecord.CheckDate = record.checkdate == "/  /" 
+                    ? DateOnly.MinValue 
+                    : (DateOnly.TryParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var checkDate) ? checkDate : DateOnly.MinValue);
+                newRecord.DepositDate = depositDate;
+                newRecord.Amount = amount;
+                newRecord.EWT = ewt;
                 newRecord.IsUndocumented = record.undocumented == "T";
                 newRecord.CreatedBy = record.createdby;
                 newRecord.CreatedDate = DateTime.ParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
