@@ -1077,14 +1077,84 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetPurchaseOrderList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPurchaseOrderList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var purchaseOrders = (await _unitOfWork.FilpridePurchaseOrder
-                    .GetAllAsync(po => po.Company == companyClaims && po.Type == nameof(DocumentType.Documented), cancellationToken))
+                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAllAsync(po => po.Company == companyClaims && po.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    purchaseOrders = purchaseOrders
+                        .Where(s => s.Date >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    purchaseOrders = purchaseOrders
+                        .Where(s => s.Date <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    purchaseOrders = purchaseOrders
+                        .Where(s =>
+                            s.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.SupplierName!.ToLower().Contains(searchValue) ||
+                            s.ProductName!.ToLower().Contains(searchValue) ||
+                            s.Amount.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    purchaseOrders = purchaseOrders
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = purchaseOrders.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilpridePurchaseOrder> pagedPurchaseOrders;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedPurchaseOrders = purchaseOrders;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedPurchaseOrders = purchaseOrders
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedPurchaseOrders
                     .Select(x => new
                     {
                         x.PurchaseOrderId,
@@ -1094,16 +1164,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.ProductName,
                         x.Amount,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = purchaseOrders
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get purchase orders. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

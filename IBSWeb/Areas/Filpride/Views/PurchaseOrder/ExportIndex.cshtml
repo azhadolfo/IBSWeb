@@ -37,29 +37,14 @@
         <table class="table table-bordered table-hover" id="purchaseOrderTable">
             <thead class="table-secondary">
             <tr>
-                <th>
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.PurchaseOrderNo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Date)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Supplier)
-                </th>
-                <th>
-                    Product
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Amount)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.CreatedBy)
-                </th>
-                <th>
-                    Status
-                </th>
+                <th></th>
+                <th>@Html.DisplayNameFor(model => model.PurchaseOrderNo)</th>
+                <th>@Html.DisplayNameFor(model => model.Date)</th>
+                <th>@Html.DisplayNameFor(model => model.Supplier)</th>
+                <th>Product</th>
+                <th>@Html.DisplayNameFor(model => model.Amount)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedBy)</th>
+                <th>Status</th>
             </tr>
             </thead>
             <tbody>
@@ -71,46 +56,90 @@
 @section Scripts {
     <script>
         let selectedRecords = new Set();
+        
         $(document).ready(function () {
+            // Load persisted date filters from localStorage
+            let dateFromValue = localStorage.getItem('exportPODateFrom') || "";
+            let dateToValue = localStorage.getItem('exportPODateTo') || "";
+            $('#dateFrom').val(dateFromValue);
+            $('#dateTo').val(dateToValue);
+            
             let table = $('#purchaseOrderTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,      // ENABLE SERVER-SIDE PROCESSING
                 stateSave: true,
+                stateDuration: 86400,  // 24 hours
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+                language: {
+                    processing: `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
                 ajax: {
-                    url: '@Url.Action("GetPurchaseOrderList", "PurchaseOrder")',
+                    url: '@Url.Action("GetPurchaseOrderList", "PurchaseOrder", new { area = "Filpride" })',
                     type: 'POST',
                     data: function (d) {
                         return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                            // Pass date filters to server
+                            dateFrom: $('#dateFrom').val() || null,
+                            dateTo: $('#dateTo').val() || null
                         });
                     },
                     error: function (xhr) {
-                        console.log(xhr.responseText);
+                        console.error('DataTables error:', xhr.responseText);
+                        alert('An error occurred while loading the data');
                     }
                 },
                 columns: [
-                    {data: 'purchaseOrderId', orderable: false, searchable: false, render: DataTable.render.select()},
-                    { data: 'purchaseOrderNo' },
                     {
-                        "data": "date",
-                        "name": "date",
-                        "render": function (data) {
+                        data: 'purchaseOrderId', 
+                        orderable: false, 
+                        searchable: false,
+                        name: 'purchaseOrderId',
+                        render: DataTable.render.select()
+                    },
+                    { 
+                        data: 'purchaseOrderNo',
+                        name: 'purchaseOrderNo'
+                    },
+                    {
+                        data: "date",
+                        name: "date",
+                        render: function (data) {
                             let date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: '2-digit' 
+                            });
                         }
                     },
-                    { data: 'supplierName' },
-                    { data: 'productName' },
+                    { 
+                        data: 'supplierName',
+                        name: 'supplierName'
+                    },
+                    { 
+                        data: 'productName',
+                        name: 'productName'
+                    },
                     { 
                         data: 'amount',
+                        name: 'amount',
                         render: function (data) {
                             return formatNumber(data);
                         }
                     },
-                    { data: 'createdBy' },
+                    { 
+                        data: 'createdBy',
+                        name: 'createdBy'
+                    },
                     {
-                        "data": "isPosted",
-                        "render": function (data, type, row) {
+                        data: "isPosted",
+                        name: "status",
+                        render: function (data, type, row) {
                             let status = row.isPosted && !row.isVoided && !row.isCanceled
                                 ? "Posted"
                                 : row.isVoided
@@ -131,9 +160,11 @@
                     style: 'multi',
                     selector: 'td:first-child'
                 },
-                order: [[1, 'desc']]
+                order: [[1, 'desc']],
+                pageLength: 10
             });
 
+            // Handle row selection
             table.on('select deselect', function(e, dt, type, indexes) {
                 if (type === 'row') {
                     indexes.forEach(function(idx) {
@@ -143,24 +174,14 @@
                 }
             });
 
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                let getDateFrom = $('#dateFrom');
-                let getDateTo = $('#dateTo');
-                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
-                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
-                let transactionDate = new Date(data[2]);
-
-                // Remove time part
-                if (dateFrom) dateFrom.setHours(0,0,0,0);
-                if (dateTo) dateTo.setHours(0,0,0,0);
-                transactionDate.setHours(0,0,0,0);
-
-                return (dateFrom === null || transactionDate >= dateFrom) &&
-                    (dateTo === null || transactionDate <= dateTo);
-            });
-
+            // Handle date filter changes
             $('#dateFrom, #dateTo').on('change', function() {
-                $('#purchaseOrderTable').DataTable().draw();
+                // Persist the date values
+                localStorage.setItem('exportPODateFrom', $('#dateFrom').val());
+                localStorage.setItem('exportPODateTo', $('#dateTo').val());
+                
+                // Reload table with new date filters
+                table.ajax.reload();
             });
         });
         
@@ -170,11 +191,13 @@
             if (selectedIds) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '@Url.Action("Export", "PurchaseOrder")';
+                form.action = '@Url.Action("Export", "PurchaseOrder", new { area = "Filpride" })';
+                
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
+                
                 form.appendChild(input);
                 document.body.appendChild(form);
                 form.submit();
