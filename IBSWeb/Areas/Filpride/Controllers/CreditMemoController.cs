@@ -1107,35 +1107,116 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCreditMemoList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCreditMemoList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var creditMemos = (await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken))
+                var creditMemos = await _unitOfWork.FilprideCreditMemo
+                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    creditMemos = creditMemos
+                        .Where(s => s.TransactionDate >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    creditMemos = creditMemos
+                        .Where(s => s.TransactionDate <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    creditMemos = creditMemos
+                        .Where(s =>
+                            s.CreditMemoNo!.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.SalesInvoice?.SalesInvoiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.ServiceInvoice?.ServiceInvoiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.Source!.ToLower().Contains(searchValue) ||
+                            s.CreditAmount.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    creditMemos = creditMemos
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = creditMemos.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideCreditMemo> pagedCreditMemos;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedCreditMemos = creditMemos;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedCreditMemos = creditMemos
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedCreditMemos
                     .Select(x => new
                     {
                         x.CreditMemoId,
                         x.CreditMemoNo,
                         x.TransactionDate,
-                        x.SalesInvoice?.SalesInvoiceNo,
-                        x.ServiceInvoice?.ServiceInvoiceNo,
+                        salesInvoiceNo = x.SalesInvoice?.SalesInvoiceNo,
+                        serviceInvoiceNo = x.ServiceInvoice?.ServiceInvoiceNo,
                         x.Source,
                         x.CreditAmount,
                         x.CreatedBy,
                         x.Status,
-                        x.SalesInvoiceId
-                    });
+                        x.SalesInvoiceId,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = creditMemos
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get credit memos. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

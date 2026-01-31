@@ -39,29 +39,14 @@
         <table class="table table-bordered table-hover" id="creditMemoTable">
             <thead class="table-secondary">
             <tr>
-                <th>
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.CreditMemoNo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.TransactionDate)
-                </th>
-                <th>
-                    Invoice No
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Source)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.CreditAmount)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.CreatedBy)
-                </th>
-                <th>
-                    Status
-                </th>
+                <th></th>
+                <th>@Html.DisplayNameFor(model => model.CreditMemoNo)</th>
+                <th>@Html.DisplayNameFor(model => model.TransactionDate)</th>
+                <th>Invoice No</th>
+                <th>@Html.DisplayNameFor(model => model.Source)</th>
+                <th>@Html.DisplayNameFor(model => model.CreditAmount)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedBy)</th>
+                <th>Status</th>
             </tr>
             </thead>
             <tbody>
@@ -73,56 +58,99 @@
 @section Scripts {
     <script>
         let selectedRecords = new Set();
+        
         $(document).ready(function () {
+            // Load persisted date filters from localStorage
+            let dateFromValue = localStorage.getItem('exportCMDateFrom') || "";
+            let dateToValue = localStorage.getItem('exportCMDateTo') || "";
+            $('#dateFrom').val(dateFromValue);
+            $('#dateTo').val(dateToValue);
+            
             let table = $('#creditMemoTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,      // ENABLE SERVER-SIDE PROCESSING
                 stateSave: true,
+                stateDuration: 86400,  // 24 hours
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+                language: {
+                    processing: `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
                 ajax: {
-                    url: '@Url.Action("GetCreditMemoList", "CreditMemo")',
+                    url: '@Url.Action("GetCreditMemoList", "CreditMemo", new { area = "Filpride" })',
                     type: 'POST',
                     data: function (d) {
                         return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                            // Pass date filters to server
+                            dateFrom: $('#dateFrom').val() || null,
+                            dateTo: $('#dateTo').val() || null
                         });
                     },
                     error: function (xhr) {
-                        console.log(xhr.responseText);
+                        console.error('DataTables error:', xhr.responseText);
+                        alert('An error occurred while loading the data');
                     }
                 },
                 columns: [
-                    {data: 'creditMemoId', orderable: false, searchable: false, render: DataTable.render.select()},
-                    { data: 'creditMemoNo' },
                     {
-                        "data": "transactionDate",
-                        "name": "transactionDate",
-                        "render": function (data) {
+                        data: 'creditMemoId', 
+                        orderable: false, 
+                        searchable: false,
+                        name: 'creditMemoId',
+                        render: DataTable.render.select()
+                    },
+                    { 
+                        data: 'creditMemoNo',
+                        name: 'creditMemoNo'
+                    },
+                    {
+                        data: "transactionDate",
+                        name: "transactionDate",
+                        render: function (data) {
                             let date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: '2-digit' 
+                            });
                         }
                     },
                     {
-                        "data": "creditMemoId",
-                        "render": function (data, type, row) {
+                        data: "creditMemoId",
+                        orderable: false,
+                        name: 'invoiceNo',
+                        render: function (data, type, row) {
                             if (row.salesInvoiceId) {
-                                return row.salesInvoiceNo
+                                return row.salesInvoiceNo;
                             }
                             else {
-                                return row.serviceInvoiceNo
+                                return row.serviceInvoiceNo;
                             }
                         }
                     },
-                    { data: 'source' },
+                    { 
+                        data: 'source',
+                        name: 'source'
+                    },
                     { 
                         data: 'creditAmount',
+                        name: 'creditAmount',
                         render: function (data) {
                             return formatNumber(data);
                         }
                     },
-                    { data: 'createdBy' },
+                    { 
+                        data: 'createdBy',
+                        name: 'createdBy'
+                    },
                     {
-                        "data": "isPosted",
-                        "render": function (data, type, row) {
+                        data: "isPosted",
+                        name: "status",
+                        render: function (data, type, row) {
                             let status = row.isPosted && !row.isVoided && !row.isCanceled
                                 ? "Posted"
                                 : row.isVoided
@@ -143,9 +171,11 @@
                     style: 'multi',
                     selector: 'td:first-child'
                 },
-                order: [[1, 'desc']]
+                order: [[1, 'desc']],
+                pageLength: 10
             });
 
+            // Handle row selection
             table.on('select deselect', function(e, dt, type, indexes) {
                 if (type === 'row') {
                     indexes.forEach(function(idx) {
@@ -155,24 +185,14 @@
                 }
             });
 
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                let getDateFrom = $('#dateFrom');
-                let getDateTo = $('#dateTo');
-                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
-                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
-                let transactionDate = new Date(data[2]);
-
-                // Remove time part
-                if (dateFrom) dateFrom.setHours(0,0,0,0);
-                if (dateTo) dateTo.setHours(0,0,0,0);
-                transactionDate.setHours(0,0,0,0);
-
-                return (dateFrom === null || transactionDate >= dateFrom) &&
-                    (dateTo === null || transactionDate <= dateTo);
-            });
-
+            // Handle date filter changes
             $('#dateFrom, #dateTo').on('change', function() {
-                $('#creditMemoTable').DataTable().draw();
+                // Persist the date values
+                localStorage.setItem('exportCMDateFrom', $('#dateFrom').val());
+                localStorage.setItem('exportCMDateTo', $('#dateTo').val());
+                
+                // Reload table with new date filters
+                table.ajax.reload();
             });
         });
         
@@ -182,11 +202,13 @@
             if (selectedIds) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '@Url.Action("Export", "CreditMemo")';
+                form.action = '@Url.Action("Export", "CreditMemo", new { area = "Filpride" })';
+                
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
+                
                 form.appendChild(input);
                 document.body.appendChild(form);
                 form.submit();
