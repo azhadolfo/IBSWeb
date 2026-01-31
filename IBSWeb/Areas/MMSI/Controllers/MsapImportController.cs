@@ -274,10 +274,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #endregion -- Saving Values --
 
                 customerList.Add(newCustomer);
-                await _dbContext.FilprideCustomers.AddAsync(newCustomer, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
             }
 
+            await _dbContext.FilprideCustomers.AddRangeAsync(customerList, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return $"Customers imported successfully, {customerList.Count} new records";
         }
 
@@ -1041,14 +1041,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
                 }
 
+                var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
+                if (vessel == null)
+                {
+                    continue;
+                }
+                newRecord.VesselId = vessel.VesselId;
+
                 newRecord.MMSIBillingNumber = record.number;
                 newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
                 if(paddedPortNum != string.Empty)
                 {
                     newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)?.PortId;
-                }                if(paddedPortNum != string.Empty)
-                {
-                    newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                 }
 
                 newRecord.Amount = decimal.Parse(record.amount);
