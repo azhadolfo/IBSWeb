@@ -629,7 +629,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             foreach (var record in records)
             {
                 string originalNumber = record.number ?? string.Empty;
-                var padded = int.Parse(originalNumber).ToString("D4");
+                if (!int.TryParse(originalNumber, out var vesselNum))
+                {
+                    continue;
+                }
+                var padded = vesselNum.ToString("D4");
 
                 if (existingIdentifier.Contains(padded))
                 {
@@ -1203,17 +1207,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.MMSICollectionNumber = record.crnum;
                 newRecord.CheckNumber = record.checkno;
                 newRecord.Status = "Create";
-                if (!DateOnly.TryParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var crDate) ||
-                    !DateOnly.TryParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var depositDate) ||
-                    !decimal.TryParse(record.amount, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) ||
-                    !decimal.TryParse(record.n2307, NumberStyles.Number, CultureInfo.InvariantCulture, out var ewt))
+
+                DateOnly crDate = default;
+                DateOnly depositDate = default;
+                decimal amount = default;
+                decimal ewt = default;
+
+                if (!DateOnly.TryParseExact(record.crdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out crDate) ||
+                    !DateOnly.TryParseExact(record.datedeposited, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out depositDate) ||
+                    !decimal.TryParse(record.amount, NumberStyles.Number, CultureInfo.InvariantCulture, out amount) ||
+                    !decimal.TryParse(record.n2307, NumberStyles.Number, CultureInfo.InvariantCulture, out ewt))
                 {
                     continue;
                 }
+
                 newRecord.Date = crDate;
-                newRecord.CheckDate = record.checkdate == "/  /" 
-                    ? DateOnly.MinValue 
-                    : (DateOnly.TryParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var checkDate) ? checkDate : DateOnly.MinValue);
+
+                DateOnly checkDate = default;
+                newRecord.CheckDate = record.checkdate == "/  /"
+                    ? DateOnly.MinValue
+                    : (DateOnly.TryParseExact(record.checkdate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out checkDate) ? checkDate : DateOnly.MinValue);
+
                 newRecord.DepositDate = depositDate;
                 newRecord.Amount = amount;
                 newRecord.EWT = ewt;
