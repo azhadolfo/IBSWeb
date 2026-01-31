@@ -385,12 +385,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var customers = csv2.GetRecords<dynamic>().ToList();
 
             var customersList = customers
-                .Select(c => new
+                .Select(c =>
                 {
-                    CustomerId = mmsiCustomers.FirstOrDefault(cu => cu.CustomerName == c.name)!.CustomerId,
-                    CustomerNumber = c.number,
-                    CustomerName = c.name
+                    var matchedCustomer = mmsiCustomers.FirstOrDefault(cu => cu.CustomerName == c.name);
+                    return matchedCustomer == null ? null : new
+                    {
+                        CustomerId = matchedCustomer.CustomerId,
+                        CustomerNumber = c.number,
+                        CustomerName = c.name
+                    };
                 })
+                .Where(c => c != null)
                 .ToList();
 
             foreach (var record in records)
