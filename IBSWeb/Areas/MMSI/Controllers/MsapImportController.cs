@@ -796,12 +796,34 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.TimeLeft = TimeOnly.ParseExact(timeLeftInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
                 newRecord.TimeArrived = TimeOnly.ParseExact(timeArrivedInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);                newRecord.BaseOrStation = record.basestation == string.Empty ? null : record.basestation;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
-                newRecord.DispatchRate = decimal.Parse(record.dispatchrate);
-                newRecord.DispatchBillingAmount = decimal.Parse(record.dispatchbillamt);
-                newRecord.DispatchNetRevenue = decimal.Parse(record.dispatchnetamt);
-                newRecord.BAFRate = decimal.Parse(record.bafrate);
-                newRecord.BAFBillingAmount = decimal.Parse(record.bafbillamt);
-                newRecord.BAFNetRevenue = decimal.Parse(record.bafnetamt);
+                if (!decimal.TryParse(record.dispatchrate, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal dispatchRate))
+                {
+                    continue;
+                }
+                newRecord.DispatchRate = dispatchRate;
+                if (!decimal.TryParse(record.dispatchbillamt, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal dispatchBillingAmount))
+                {
+                    continue;
+                }
+                newRecord.DispatchBillingAmount = dispatchBillingAmount;
+                // newRecord.DispatchNetRevenue = decimal.Parse(record.dispatchnetamt);
+                if (!decimal.TryParse(record.bafrate, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal bafRate))
+                {
+                    continue;
+                }
+                newRecord.BAFRate = bafRate;
+                // newRecord.BAFBillingAmount = decimal.Parse(record.bafbillamt);
+                if (!decimal.TryParse(record.bafbillamt, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal bafBillingAmount))
+                {
+                    continue;
+                }
+                newRecord.BAFBillingAmount = bafBillingAmount;
+                // newRecord.BAFNetRevenue = decimal.Parse(record.bafnetamt);
+                if (!decimal.TryParse(record.bafnetamt, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal bafNetRevenue))
+                {
+                    continue;
+                }
+                newRecord.BAFNetRevenue = bafNetRevenue;
                 newRecord.TotalBilling = newRecord.DispatchBillingAmount + newRecord.BAFBillingAmount;
                 newRecord.TotalNetRevenue = newRecord.DispatchNetRevenue + newRecord.BAFNetRevenue;
                 if (string.IsNullOrEmpty(paddedTugboatNum) ||
