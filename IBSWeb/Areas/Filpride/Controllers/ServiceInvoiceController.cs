@@ -847,14 +847,97 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetServiceInvoiceList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetServiceInvoiceList(
+                [FromForm] DataTablesParameters parameters,
+                string? dateFrom,  // Format: "2024-01" (year-month)
+                string? dateTo,    // Format: "2024-12" (year-month)
+                CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var serviceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken))
+                var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply month range filter if provided
+                if (!string.IsNullOrEmpty(dateFrom))
+                {
+                    // Parse "2024-01" to first day of month
+                    var parts = dateFrom.Split('-');
+                    if (parts.Length == 2 && int.TryParse(parts[0], out int year) && int.TryParse(parts[1], out int month))
+                    {
+                        var fromDate = new DateOnly(year, month, 1);
+                        serviceInvoices = serviceInvoices
+                            .Where(s => s.Period >= fromDate)
+                            .ToList();
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(dateTo))
+                {
+                    // Parse "2024-12" to last day of month
+                    var parts = dateTo.Split('-');
+                    if (parts.Length == 2 && int.TryParse(parts[0], out int year) && int.TryParse(parts[1], out int month))
+                    {
+                        var daysInMonth = DateTime.DaysInMonth(year, month);
+                        var toDate = new DateOnly(year, month, daysInMonth);
+                        serviceInvoices = serviceInvoices
+                            .Where(s => s.Period <= toDate)
+                            .ToList();
+                    }
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    serviceInvoices = serviceInvoices
+                        .Where(s =>
+                            s.ServiceInvoiceNo!.ToLower().Contains(searchValue) ||
+                            s.CustomerName!.ToLower().Contains(searchValue) ||
+                            s.ServiceName!.ToLower().Contains(searchValue) ||
+                            s.Period.ToString("MMM yyyy").ToLower().Contains(searchValue) ||
+                            s.Total.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    serviceInvoices = serviceInvoices
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = serviceInvoices.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideServiceInvoice> pagedServiceInvoices;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedServiceInvoices = serviceInvoices;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedServiceInvoices = serviceInvoices
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedServiceInvoices
                     .Select(x => new
                     {
                         x.ServiceInvoiceId,
@@ -864,16 +947,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.Period,
                         x.Total,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = serviceInvoices
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get service invoices. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
