@@ -372,7 +372,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 3].Value = item.Name;
                 worksheet.Cells[row, 4].Value = item.Percent;
                 worksheet.Cells[row, 5].Value = item.CreatedBy;
-                worksheet.Cells[row, 6].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 6].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 7].Value = item.CurrentAndPreviousNo;
                 worksheet.Cells[row, 8].Value = item.UnearnedNo;
                 worksheet.Cells[row, 9].Value = item.ServiceId;

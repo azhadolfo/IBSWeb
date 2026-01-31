@@ -826,7 +826,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 12].Value = item.IsTaxAndVatPaid;
                 worksheet.Cells[row, 13].Value = item.DueDate.ToString("yyyy-MM-dd");
                 worksheet.Cells[row, 14].Value = item.CreatedBy;
-                worksheet.Cells[row, 15].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 15].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 16].Value = item.CancellationRemarks;
                 worksheet.Cells[row, 17].Value = item.ReceivingReportId;
                 worksheet.Cells[row, 18].Value = item.CustomerId;
@@ -835,7 +835,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 21].Value = item.SalesInvoiceNo;
                 worksheet.Cells[row, 22].Value = item.SalesInvoiceId;
                 worksheet.Cells[row, 23].Value = item.PostedBy;
-                worksheet.Cells[row, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                worksheet.Cells[row, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                 row++;
             }

@@ -988,13 +988,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 4].Value = item.CRNo;
                     worksheet.Cells[row, 5].Value = item.JVReason;
                     worksheet.Cells[row, 6].Value = item.CreatedBy;
-                    worksheet.Cells[row, 7].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 7].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet.Cells[row, 8].Value = item.CancellationRemarks;
                     worksheet.Cells[row, 9].Value = item.CVId;
                     worksheet.Cells[row, 10].Value = item.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 11].Value = item.JournalVoucherHeaderId;
                     worksheet.Cells[row, 12].Value = item.PostedBy;
-                    worksheet.Cells[row, 13].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 13].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1041,13 +1041,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet5.Cells[cvhRow, 11].Value = item.CheckVoucherHeader.EndDate?.ToString("yyyy-MM-dd");
                     worksheet5.Cells[cvhRow, 12].Value = item.CheckVoucherHeader.NumberOfMonths;
                     worksheet5.Cells[cvhRow, 13].Value = item.CheckVoucherHeader.NumberOfMonthsCreated;
-                    worksheet5.Cells[cvhRow, 14].Value = item.CheckVoucherHeader.LastCreatedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet5.Cells[cvhRow, 14].Value = item.CheckVoucherHeader.LastCreatedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet5.Cells[cvhRow, 15].Value = item.CheckVoucherHeader.AmountPerMonth;
                     worksheet5.Cells[cvhRow, 16].Value = item.CheckVoucherHeader.IsComplete;
                     worksheet5.Cells[cvhRow, 17].Value = item.CheckVoucherHeader.AccruedType;
                     worksheet5.Cells[cvhRow, 18].Value = item.CheckVoucherHeader.Reference;
                     worksheet5.Cells[cvhRow, 19].Value = item.CheckVoucherHeader.CreatedBy;
-                    worksheet5.Cells[cvhRow, 20].Value = item.CheckVoucherHeader.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet5.Cells[cvhRow, 20].Value = item.CheckVoucherHeader.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet5.Cells[cvhRow, 21].Value = item.CheckVoucherHeader.Total;
                     if (item.CheckVoucherHeader.Amount != null)
                     {
@@ -1063,7 +1063,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet5.Cells[cvhRow, 30].Value = item.CheckVoucherHeader.SupplierId;
                     worksheet5.Cells[cvhRow, 31].Value = item.CheckVoucherHeader.CheckVoucherHeaderId;
                     worksheet5.Cells[cvhRow, 32].Value = item.CheckVoucherHeader.PostedBy;
-                    worksheet5.Cells[cvhRow, 33].Value = item.CheckVoucherHeader.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet5.Cells[cvhRow, 33].Value = item.CheckVoucherHeader.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     cvhRow++;
                 }
@@ -1199,17 +1199,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[rrRow, 11].Value = item.Remarks;
                     worksheet4.Cells[rrRow, 12].Value = item.AmountPaid;
                     worksheet4.Cells[rrRow, 13].Value = item.IsPaid;
-                    worksheet4.Cells[rrRow, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet4.Cells[rrRow, 14].Value = item.PaidDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet4.Cells[rrRow, 15].Value = item.CanceledQuantity;
                     worksheet4.Cells[rrRow, 16].Value = item.CreatedBy;
-                    worksheet4.Cells[rrRow, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet4.Cells[rrRow, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet4.Cells[rrRow, 18].Value = item.CancellationRemarks;
                     worksheet4.Cells[rrRow, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
                     worksheet4.Cells[rrRow, 20].Value = item.POId;
                     worksheet4.Cells[rrRow, 21].Value = item.ReceivingReportNo;
                     worksheet4.Cells[rrRow, 22].Value = item.ReceivingReportId;
                     worksheet4.Cells[rrRow, 23].Value = item.PostedBy;
-                    worksheet4.Cells[rrRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[rrRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     rrRow++;
                 }
@@ -1245,7 +1245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[poRow, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : null;
                     worksheet3.Cells[poRow, 10].Value = item.Remarks;
                     worksheet3.Cells[poRow, 11].Value = item.CreatedBy;
-                    worksheet3.Cells[poRow, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet3.Cells[poRow, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet3.Cells[poRow, 13].Value = item.IsClosed;
                     worksheet3.Cells[poRow, 14].Value = item.CancellationRemarks;
                     worksheet3.Cells[poRow, 15].Value = item.ProductId;
@@ -1253,7 +1253,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[poRow, 17].Value = item.SupplierId;
                     worksheet3.Cells[poRow, 18].Value = item.PurchaseOrderId;
                     worksheet3.Cells[poRow, 19].Value = item.PostedBy;
-                    worksheet3.Cells[poRow, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[poRow, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     poRow++;
                 }

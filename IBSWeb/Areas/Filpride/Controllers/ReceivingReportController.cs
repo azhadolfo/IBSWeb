@@ -927,17 +927,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 11].Value = item.Remarks;
                     worksheet.Cells[row, 12].Value = item.AmountPaid;
                     worksheet.Cells[row, 13].Value = item.IsPaid;
-                    worksheet.Cells[row, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 14].Value = item.PaidDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet.Cells[row, 15].Value = item.CanceledQuantity;
                     worksheet.Cells[row, 16].Value = item.CreatedBy;
-                    worksheet.Cells[row, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet.Cells[row, 18].Value = item.CancellationRemarks;
                     worksheet.Cells[row, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
                     worksheet.Cells[row, 20].Value = item.POId;
                     worksheet.Cells[row, 21].Value = item.ReceivingReportNo;
                     worksheet.Cells[row, 22].Value = item.ReceivingReportId;
                     worksheet.Cells[row, 23].Value = item.PostedBy;
-                    worksheet.Cells[row, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -973,7 +973,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[poRow, 9].Value = item.PurchaseOrder.ReceivedDate != default ? item.PurchaseOrder.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : null;
                     worksheet2.Cells[poRow, 10].Value = item.PurchaseOrder.Remarks;
                     worksheet2.Cells[poRow, 11].Value = item.PurchaseOrder.CreatedBy;
-                    worksheet2.Cells[poRow, 12].Value = item.PurchaseOrder.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet2.Cells[poRow, 12].Value = item.PurchaseOrder.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet2.Cells[poRow, 13].Value = item.PurchaseOrder.IsClosed;
                     worksheet2.Cells[poRow, 14].Value = item.PurchaseOrder.CancellationRemarks;
                     worksheet2.Cells[poRow, 15].Value = item.PurchaseOrder.ProductId;
@@ -981,7 +981,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[poRow, 17].Value = item.PurchaseOrder.SupplierId;
                     worksheet2.Cells[poRow, 18].Value = item.PurchaseOrder.PurchaseOrderId;
                     worksheet2.Cells[poRow, 19].Value = item.PurchaseOrder.PostedBy;
-                    worksheet2.Cells[poRow, 20].Value = item.PurchaseOrder.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet2.Cells[poRow, 20].Value = item.PurchaseOrder.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     poRow++;
                 }
