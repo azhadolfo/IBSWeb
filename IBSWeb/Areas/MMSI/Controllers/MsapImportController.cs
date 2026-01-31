@@ -788,9 +788,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.COSNumber = record.cosno == string.Empty ? null : record.cosno;
                 newRecord.DateLeft = DateOnly.Parse(record.dateleft);
                 newRecord.DateArrived = DateOnly.Parse(record.datearrived);
-                newRecord.TimeLeft =  TimeOnly.ParseExact((int.Parse(record.timeleft)).ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
-                newRecord.TimeArrived = TimeOnly.ParseExact((int.Parse(record.timearrived)).ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
-                newRecord.BaseOrStation = record.basestation == string.Empty ? null : record.basestation;
+                if (!int.TryParse(record.timeleft as string, out var timeLeftInt) ||
+                    !int.TryParse(record.timearrived as string, out var timeArrivedInt))
+                {
+                    continue; // Skip records with invalid time values
+                }
+                newRecord.TimeLeft = TimeOnly.ParseExact(timeLeftInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
+                newRecord.TimeArrived = TimeOnly.ParseExact(timeArrivedInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);                newRecord.BaseOrStation = record.basestation == string.Empty ? null : record.basestation;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
                 newRecord.DispatchRate = decimal.Parse(record.dispatchrate);
                 newRecord.DispatchBillingAmount = decimal.Parse(record.dispatchbillamt);
@@ -800,7 +804,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.BAFNetRevenue = decimal.Parse(record.bafnetamt);
                 newRecord.TotalBilling = newRecord.DispatchBillingAmount + newRecord.BAFBillingAmount;
                 newRecord.TotalNetRevenue = newRecord.DispatchNetRevenue + newRecord.BAFNetRevenue;
-                newRecord.TugBoatId = existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum)!.TugboatId;
+                if (string.IsNullOrEmpty(paddedTugboatNum) ||
+                      string.IsNullOrEmpty(paddedVesselNum) ||
+                      string.IsNullOrEmpty(paddedServiceNum))
+                {
+                    continue;
+                }
+                var tugboat = existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum);
+                var tugMaster = existingTugMasters.FirstOrDefault(tm => tm.TugMasterNumber == record.masterno);
+                var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
+                var service = existingServices.FirstOrDefault(s => s.ServiceNumber == paddedServiceNum);
+                if (tugboat == null || tugMaster == null || vessel == null || service == null)
+                    newRecord.TugBoatId = existingTugboats.FirstOrDefault(tb => tb.TugboatNumber == paddedTugboatNum)!.TugboatId;
+                newRecord.TugBoatId = tugboat?.TugboatId;
+                newRecord.TugMasterId = tugMaster?.TugMasterId;
+                newRecord.VesselId = vessel?.VesselId;
+                newRecord.ServiceId = service?.ServiceId;
                 newRecord.TugMasterId = existingTugMasters.FirstOrDefault(tm => tm.TugMasterNumber == record.masterno)!.TugMasterId;
                 newRecord.VesselId = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum)!.VesselId;
                 newRecord.TerminalId = record.terminal == string.Empty ? null : existingTerminals.FirstOrDefault(t => t.PortNumber == portNumber && t.TerminalNumber == terminalNumber)!.PortId;
@@ -1024,11 +1043,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 newRecord.MMSIBillingNumber = record.number;
                 newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
-                var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
-                if (vessel == null) { continue; }
-                newRecord.VesselId = vessel.VesselId;
-
                 if(paddedPortNum != string.Empty)
+                {
+                    newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)?.PortId;
+                }                if(paddedPortNum != string.Empty)
                 {
                     newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                 }
