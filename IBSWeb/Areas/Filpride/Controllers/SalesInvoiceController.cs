@@ -729,14 +729,84 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetSalesInvoiceList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetSalesInvoiceList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var salesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken))
+                var salesInvoices = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    salesInvoices = salesInvoices
+                        .Where(s => s.TransactionDate >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    salesInvoices = salesInvoices
+                        .Where(s => s.TransactionDate <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    salesInvoices = salesInvoices
+                        .Where(s =>
+                            s.SalesInvoiceNo!.ToLower().Contains(searchValue) ||
+                            s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
+                            s.Terms.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.Amount.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    salesInvoices = salesInvoices
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = salesInvoices.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideSalesInvoice> pagedSalesInvoices;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedSalesInvoices = salesInvoices;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedSalesInvoices = salesInvoices
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedSalesInvoices
                     .Select(x => new
                     {
                         x.SalesInvoiceId,
@@ -746,16 +816,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.Terms,
                         x.Amount,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = salesInvoices
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get sales invoices. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
