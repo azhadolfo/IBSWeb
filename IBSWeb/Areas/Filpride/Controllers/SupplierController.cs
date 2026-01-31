@@ -598,10 +598,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 8].Value = item.ProofOfRegistrationFilePath;
                 worksheet.Cells[row, 9].Value = item.ReasonOfExemption;
                 worksheet.Cells[row, 10].Value = item.Validity;
-                worksheet.Cells[row, 11].Value = item.ValidityDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 11].Value = item.ValidityDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 12].Value = item.ProofOfExemptionFilePath;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
-                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.Branch;
                 worksheet.Cells[row, 16].Value = item.Category;
                 worksheet.Cells[row, 17].Value = item.TradeName;

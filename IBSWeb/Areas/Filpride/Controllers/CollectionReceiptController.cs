@@ -2437,7 +2437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 19].Value = item.F2306FilePath;
                     worksheet.Cells[row, 20].Value = item.F2307FilePath;
                     worksheet.Cells[row, 21].Value = item.CreatedBy;
-                    worksheet.Cells[row, 22].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 22].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet.Cells[row, 23].Value = item.CancellationRemarks;
                     if (item.MultipleSIId != null)
                     {
@@ -2452,7 +2452,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 31].Value = item.ServiceInvoiceId;
                     worksheet.Cells[row, 32].Value = item.CollectionReceiptId;
                     worksheet.Cells[row, 33].Value = item.PostedBy;
-                    worksheet.Cells[row, 34].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 34].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -2490,7 +2490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 12].Value = item.SalesInvoice.IsTaxAndVatPaid;
                     worksheet3.Cells[siRow, 13].Value = item.SalesInvoice.DueDate.ToString("yyyy-MM-dd");
                     worksheet3.Cells[siRow, 14].Value = item.SalesInvoice.CreatedBy;
-                    worksheet3.Cells[siRow, 15].Value = item.SalesInvoice.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet3.Cells[siRow, 15].Value = item.SalesInvoice.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet3.Cells[siRow, 16].Value = item.SalesInvoice.CancellationRemarks;
                     worksheet3.Cells[siRow, 17].Value = item.SalesInvoice.ReceivingReportId;
                     worksheet3.Cells[siRow, 18].Value = item.SalesInvoice.CustomerId;
@@ -2499,7 +2499,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
                     worksheet3.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
-                    worksheet3.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -2536,14 +2536,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[svRow, 11].Value = item.ServiceInvoice.Instructions;
                     worksheet4.Cells[svRow, 12].Value = item.ServiceInvoice.IsPaid;
                     worksheet4.Cells[svRow, 13].Value = item.ServiceInvoice.CreatedBy;
-                    worksheet4.Cells[svRow, 14].Value = item.ServiceInvoice.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet4.Cells[svRow, 14].Value = item.ServiceInvoice.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet4.Cells[svRow, 15].Value = item.ServiceInvoice.CancellationRemarks;
                     worksheet4.Cells[svRow, 16].Value = item.ServiceInvoice.CustomerId;
                     worksheet4.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet4.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
                     worksheet4.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
                     worksheet4.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
-                    worksheet4.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -2577,7 +2577,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 12].Value = item.IsTaxAndVatPaid;
                     worksheet3.Cells[siRow, 13].Value = item.DueDate.ToString("yyyy-MM-dd");
                     worksheet3.Cells[siRow, 14].Value = item.CreatedBy;
-                    worksheet3.Cells[siRow, 15].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet3.Cells[siRow, 15].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet3.Cells[siRow, 16].Value = item.CancellationRemarks;
                     worksheet3.Cells[siRow, 17].Value = item.ReceivingReportId;
                     worksheet3.Cells[siRow, 18].Value = item.CustomerId;
@@ -2586,7 +2586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoiceId;
                     worksheet3.Cells[siRow, 23].Value = item.PostedBy;
-                    worksheet3.Cells[siRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -2612,7 +2612,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[offsetRow, 4].Value = item.IsRemoved;
                     worksheet2.Cells[offsetRow, 5].Value = item.Amount;
                     worksheet2.Cells[offsetRow, 6].Value = item.CreatedBy;
-                    worksheet2.Cells[offsetRow, 7].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet2.Cells[offsetRow, 7].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet2.Cells[offsetRow, 8].Value = item.AccountTitle;
 
                     offsetRow++;
