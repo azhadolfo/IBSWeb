@@ -1232,8 +1232,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.Amount = amount;
                 newRecord.EWT = ewt;
                 newRecord.IsUndocumented = record.undocumented == "T";
+                if (!DateTime.TryParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var createdDate))
+                {
+                    continue;
+                }
                 newRecord.CreatedBy = record.createdby;
-                newRecord.CreatedDate = DateTime.ParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                newRecord.CreatedDate = createdDate;
 
                 newRecords.Add(newRecord);
             }
