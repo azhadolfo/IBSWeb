@@ -848,7 +848,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.ServiceId = existingServices.FirstOrDefault(t => t.ServiceNumber == paddedServiceNum)!.ServiceId;
                 newRecord.CreatedBy = record.entryby;
                 newRecord.CreatedDate = DateTime.Parse(record.entrydate);
-                newRecord.ApOtherTugs = Decimal.Parse(record.apothertug);
+                if (!decimal.TryParse(record.apothertug, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal apOtherTugs))
+                {
+                    continue;
+                }
+                newRecord.ApOtherTugs = apOtherTugs;
                 newRecord.DispatchChargeType = null;
                 newRecord.BAFChargeType = null;
                 newRecord.Status = "For Billing";
