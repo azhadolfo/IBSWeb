@@ -208,7 +208,7 @@
                         }
                     },
                     {
-                        "data": "amount",
+                        "data": "total",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.total);
                             return `<span class="d-block fw-medium">${amount}</span>`;
