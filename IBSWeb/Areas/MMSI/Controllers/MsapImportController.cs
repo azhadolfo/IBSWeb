@@ -413,7 +413,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     continue;
                 }
                 var paddedCustomerNumber = agentNum.ToString("D4");
-                var agent = customersList.FirstOrDefault(c => c.CustomerNumber == paddedCustomerNumber);
+                var agent = customersList.FirstOrDefault(c => c?.CustomerNumber == paddedCustomerNumber);
                 if (agent == null)
                 {
                     continue; // or throw with a clearer message
@@ -726,10 +726,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             foreach (var record in records)
             {
+                 if (!DateTime.TryParse(record.entrydate as string, out var entryDate))
+                {
+                    continue;
+                }
                 var comparableVariable = new
                 {
                     DispatchNumber = (record.number as string)?.Trim() ?? "",
-                    CreatedDate = DateTime.Parse((string)record.entrydate)
+                    CreatedDate = entryDate
                 };
 
                 if (existingIdentifier.Contains(comparableVariable))
@@ -1217,8 +1221,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number as string == record.custno as string);
 
-                var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number as string == record.custno as string);
-
                 if (msapCustomer == null)
                 {
                     continue; // Skip records without matching customer
@@ -1265,7 +1267,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.Amount = amount;
                 newRecord.EWT = ewt;
                 newRecord.IsUndocumented = record.undocumented == "T";
-                if (!DateTime.TryParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var createdDate))
+                if (!DateTime.TryParseExact(record.createddate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime createdDate))
                 {
                     continue;
                 }
