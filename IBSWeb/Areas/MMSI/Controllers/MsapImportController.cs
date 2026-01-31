@@ -1188,21 +1188,25 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number as string == record.custno as string);
 
-                if (msapCustomer != null)
-                {
-                    var customerName = msapCustomer.name as string;
-                    if (string.IsNullOrWhiteSpace(customerName))
-                    {
-                        continue;
-                    }
-                        var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName.Trim());
+                var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number as string == record.custno as string);
 
-                        if (customer == null)
-                        {
-                        continue; // or set to null with a warning
-                    }
-                    newRecord.CustomerId = customer.CustomerId;
+                if (msapCustomer == null)
+                {
+                    continue; // Skip records without matching customer
                 }
+
+                var customerName = msapCustomer.name as string;
+                if (string.IsNullOrWhiteSpace(customerName))
+                {
+                    continue;
+                }
+                var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == customerName.Trim());
+
+                if (customer == null)
+                {
+                    continue; // or set to null with a warning
+                }
+                newRecord.CustomerId = customer.CustomerId;
 
                 newRecord.MMSICollectionNumber = record.crnum;
                 newRecord.CheckNumber = record.checkno;
