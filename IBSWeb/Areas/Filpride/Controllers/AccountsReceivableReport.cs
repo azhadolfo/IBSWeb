@@ -1021,12 +1021,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(DispatchReport));
             }
 
-            if ((viewModel.DateFrom == default || viewModel.DateTo == default) && viewModel.ReportType == "InTransit") // Fix Missing Dates
-            {
-                TempData["warning"] = "Please enter a valid Date From and To";
-                return RedirectToAction(nameof(DispatchReport));
-            }
-
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
@@ -1059,8 +1053,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else
                 {
                     filter = i => i.Company == companyClaims
-                        && i.Date >= viewModel.DateFrom
-                        && i.Date <= viewModel.DateTo
                         && i.DeliveredDate == null
                         && i.Status == nameof(DRStatus.PendingDelivery);
                 }
@@ -1102,9 +1094,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var mergedCellsA6 = worksheet.Cells["A6:B6"];
                 mergedCellsA6.Merge = true;
 
-                mergedCellsA6.Value = dateRangeType == "AsOf"
-                    ? $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}"
-                    : $"DISPATCH REPORT from {viewModel.DateFrom:dd MMM, yyyy} to {viewModel.DateTo:dd MMM, yyyy}";
+                mergedCellsA6.Value =
+                    viewModel.ReportType == "InTransit"
+                        ? $"DISPATCH REPORT AS OF {DateTimeHelper.GetCurrentPhilippineTime():dd MMM, yyyy}"
+                        : dateRangeType == "AsOf"
+                            ? $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}"
+                            : $"DISPATCH REPORT from {viewModel.DateFrom:dd MMM, yyyy} to {viewModel.DateTo:dd MMM, yyyy}";
+
 
                 var mergedCellsA7 = worksheet.Cells["A7:B7"];
                 mergedCellsA7.Merge = true;
