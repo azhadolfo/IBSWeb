@@ -1079,20 +1079,44 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.VesselId = vessel.VesselId;
 
                 newRecord.MMSIBillingNumber = record.number;
-                newRecord.Date = DateOnly.ParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture);
+               if (!DateOnly.TryParseExact(record.date, "M/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly billingDate))
+                {
+                    continue;
+                }
+                newRecord.Date = billingDate;
                 if(paddedPortNum != string.Empty)
                 {
                     newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)?.PortId;
                 }
 
-                newRecord.Amount = decimal.Parse(record.amount);
+                if (!decimal.TryParse(record.amount, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amount))
+                {
+                    continue;
+                }
+                newRecord.Amount = amount;
                 newRecord.IsUndocumented = record.undocumented == "T";
-                newRecord.ApOtherTug = decimal.Parse(record.apothertug);
-                newRecord.CreatedDate = DateTime.ParseExact( record.entrydate, "M/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None );
+                if (!decimal.TryParse(record.apothertug, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal apOtherTug))
+                {
+                    continue;
+                }
+                newRecord.ApOtherTug = apOtherTug;
+                if (!DateTime.TryParseExact(record.entrydate, "M/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime createdDate))
+                {
+                    continue;
+                }
+                newRecord.CreatedDate = createdDate;
                 newRecord.CreatedBy = record.entryby as string == string.Empty ? string.Empty : record.entryby;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
-                newRecord.DispatchAmount = decimal.Parse(record.dispatchamount);
-                newRecord.BAFAmount = decimal.Parse(record.bafamount);
+                 if (!decimal.TryParse(record.dispatchamount, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal dispatchAmount))
+                {
+                    continue;
+                }
+                newRecord.DispatchAmount = dispatchAmount;
+                if (!decimal.TryParse(record.bafamount, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal bafAmount))
+                {
+                    continue;
+                }
+                newRecord.BAFAmount = bafAmount;
 
                 if (record.crnum != string.Empty)
                 {
