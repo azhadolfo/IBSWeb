@@ -483,7 +483,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             foreach (var record in records)
             {
                 string originalNumber = record.number ?? string.Empty;
-                var padded = int.Parse(originalNumber).ToString("D3");
+                if (!int.TryParse(originalNumber, out var serviceNum))
+                {
+                    continue; // or log invalid rows
+                }
+                var padded = serviceNum.ToString("D3");
 
                 // check if already in the database
                 if (existingIdentifier.Contains(padded))
@@ -784,8 +788,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.COSNumber = record.cosno == string.Empty ? null : record.cosno;
                 newRecord.DateLeft = DateOnly.Parse(record.dateleft);
                 newRecord.DateArrived = DateOnly.Parse(record.datearrived);
-                newRecord.TimeLeft =  TimeOnly.ParseExact(record.timeleft, "HHmm", CultureInfo.InvariantCulture);
-                newRecord.TimeArrived = TimeOnly.ParseExact(record.timearrived, "HHmm", CultureInfo.InvariantCulture);
+                newRecord.TimeLeft =  TimeOnly.ParseExact((int.Parse(record.timeleft)).ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
+                newRecord.TimeArrived = TimeOnly.ParseExact((int.Parse(record.timearrived)).ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
                 newRecord.BaseOrStation = record.basestation == string.Empty ? null : record.basestation;
                 newRecord.VoyageNumber = record.voyage == string.Empty ? null : record.voyage;
                 newRecord.DispatchRate = decimal.Parse(record.dispatchrate);
@@ -950,29 +954,55 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     continue;
                 }
 
-                var originalVesselNum = record.vesselnum ?? string.Empty;
-                var paddedVesselNum = int.Parse(originalVesselNum).ToString("D4");
+                static string PadNumber(string? value, int width)
+                {
+                    return int.TryParse(value, out var n)
+                        ? n.ToString($"D{width}")
+                        : string.Empty;
+                }
 
-                var originalPortNum = record.terminal;
-                var originalTerminalNum = string.Empty;
+                // Vessel
+                var paddedVesselNum = PadNumber(record.vesselnum, 4);
+                if (paddedVesselNum == string.Empty)
+                {
+                    continue;
+                }
+
+                // Port + Terminal (expects at least 6 chars: 3 for port, 3 for terminal)
                 var paddedPortNum = string.Empty;
                 var paddedTerminalNum = string.Empty;
 
-                if (originalPortNum != string.Empty)
+                var terminalRaw = record.terminal ?? string.Empty;
+                if (terminalRaw != string.Empty)
                 {
-                    originalPortNum = originalPortNum.Substring(0, 3);
-                    originalTerminalNum = originalPortNum.Substring(originalPortNum.Length - 3, 3);
-                    paddedPortNum = int.Parse(originalPortNum).ToString("D3");
-                    paddedTerminalNum = int.Parse(originalTerminalNum).ToString("D3");
+                    if (terminalRaw.Length < 6)
+                    {
+                        continue;
+                    }
+
+                    var portPart = terminalRaw.Substring(0, 3);
+                    var terminalPart = terminalRaw.Substring(terminalRaw.Length - 3, 3);
+
+                    paddedPortNum = PadNumber(portPart, 3);
+                    paddedTerminalNum = PadNumber(terminalPart, 3);
+
+                    if (paddedPortNum == string.Empty || paddedTerminalNum == string.Empty)
+                    {
+                        continue;
+                    }
                 }
 
-                var originalPrincipalNum = record.billto;
-
+                // Principal
                 var paddedPrincipalNum = string.Empty;
-                if (originalPrincipalNum != string.Empty)
+                if (!string.IsNullOrEmpty(record.billto))
                 {
-                    paddedPrincipalNum = int.Parse(originalPrincipalNum).ToString("D4");
+                    paddedPrincipalNum = PadNumber(record.billto, 4);
+                    if (paddedPrincipalNum == string.Empty)
+                    {
+                        continue;
+                    }
                 }
+
 
                 MMSIBilling newRecord = new MMSIBilling();
 
@@ -998,7 +1028,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (vessel == null) { continue; }
                 newRecord.VesselId = vessel.VesselId;
 
-                if(originalPortNum != string.Empty)
+                if(paddedPortNum != string.Empty)
                 {
                     newRecord.PortId = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNum)!.PortId;
                 }
@@ -1033,14 +1063,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 newRecord.CollectionNumber = record.crnum == string.Empty ? null : record.crnum;
                 newRecord.IsUndocumented = record.undocumented == "T";
 
-                if (originalTerminalNum != string.Empty)
+                if (paddedTerminalNum != string.Empty)
                 {
                     newRecord.TerminalId = existingTerminals.FirstOrDefault(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum)?.TerminalId;
                 }
 
                 newRecord.IsVatable = record.vat == "T";
 
-                if (originalPrincipalNum != string.Empty)
+                if (paddedPrincipalNum != string.Empty)
                 {
                     var principal = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum && p.CustomerId == newRecord.CustomerId);
                     if (principal != null)
