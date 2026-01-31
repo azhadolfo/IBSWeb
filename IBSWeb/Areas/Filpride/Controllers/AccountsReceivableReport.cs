@@ -1059,10 +1059,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else
                 {
                     filter = i => i.Company == companyClaims
-                                  && i.Date >= viewModel.DateFrom
-                                  && i.Date <= viewModel.DateTo
-                                  && i.CanceledBy == null
-                                  && i.VoidedBy == null;
+                        && i.Date >= viewModel.DateFrom
+                        && i.Date <= viewModel.DateTo
+                        && i.DeliveredDate == null
+                        && i.Status == nameof(DRStatus.PendingDelivery);
                 }
 
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
@@ -1155,7 +1155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 int currentRow = 10;
                 string headerColumn = "Y9";
-                int grandTotalColumn = 25; 
+                int grandTotalColumn = 25;
                 decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
                 decimal totalLiftedQuantity = 0;
@@ -1228,7 +1228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     grandTotalQuantity += quantity;
                     grandSumOfTotalFreightAmount += totalFreightAmount;
                     totalLiftedQuantity += liftedQuantity;
-                    grandTotalAmount += totalAmount; 
+                    grandTotalAmount += totalAmount;
                 }
 
                 // Grand Total row
