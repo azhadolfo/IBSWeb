@@ -489,7 +489,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 8].Value = item.WithHoldingVat;
                 worksheet.Cells[row, 9].Value = item.WithHoldingTax;
                 worksheet.Cells[row, 10].Value = item.CreatedBy;
-                worksheet.Cells[row, 11].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 11].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 12].Value = item.CustomerId;
                 worksheet.Cells[row, 13].Value = item.CustomerCode;
 

@@ -445,7 +445,7 @@ namespace IBSWeb.Areas.User.Controllers
                 worksheet.Cells[row, 2].Value = item.ProductName;
                 worksheet.Cells[row, 3].Value = item.ProductUnit;
                 worksheet.Cells[row, 4].Value = item.CreatedBy;
-                worksheet.Cells[row, 5].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 5].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 6].Value = item.ProductId;
 
                 row++;

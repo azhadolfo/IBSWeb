@@ -721,14 +721,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 11].Value = item.Instructions;
                 worksheet.Cells[row, 12].Value = item.IsPaid;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
-                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;
                 worksheet.Cells[row, 16].Value = item.CustomerId;
                 worksheet.Cells[row, 17].Value = item.ServiceInvoiceNo;
                 worksheet.Cells[row, 18].Value = item.ServiceId;
                 worksheet.Cells[row, 19].Value = item.ServiceInvoiceId;
                 worksheet.Cells[row, 20].Value = item.PostedBy;
-                worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                 row++;
             }

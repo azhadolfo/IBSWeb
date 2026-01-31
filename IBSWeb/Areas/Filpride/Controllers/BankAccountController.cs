@@ -321,7 +321,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = item.Branch;
                 worksheet.Cells[row, 2].Value = item.CreatedBy;
-                worksheet.Cells[row, 3].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 3].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 4].Value = item.AccountName;
                 worksheet.Cells[row, 5].Value = item.AccountNo;
                 worksheet.Cells[row, 6].Value = item.Bank;
