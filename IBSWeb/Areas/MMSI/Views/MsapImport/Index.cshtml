@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "MSAP Import";
+}
+
+<style>
+    .container {
+        max-width: 60% !important;
+        min-width: 580px !important;
+        width: 60% !important;
+    }
+    
+    @@media (max-width: 768px) {
+        .container {
+            max-width: 100% !important;
+            min-width: 310px !important;
+            width: 100% !important;
+        }
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-4">
+            <form asp-action="Index" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="col-12 col-md-6 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="m-0">Master Files</h2>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllMaster">Select All</button>
+                        </div>
+                        <div class="border rounded p-3">
+                            @foreach (var option in new List<string> { "Customer", "Port", "Terminal", "Principal", "Service", "Tugboat", "TugMaster", "Vessel", "TugboatOwner" })
+                            {
+                                <div class="form-check m-1">
+                                    <input class="form-check-input master-checkbox" type="checkbox" value="@option" name="fieldList" id="@option">
+                                    <label class="form-check-label" for="@option">
+                                        @option Masterfile
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="m-0">Data Entries</h2>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllData">Select All</button>
+                        </div>
+                        <div class="border rounded p-3">
+                            @foreach (var option in new List<string> { "DispatchTicket", "Billing", "Collection", "Tariff" })
+                            {
+                                <div class="form-check m-1">
+                                    <input class="form-check-input data-checkbox" type="checkbox" value="@option" name="fieldList" id="@option">
+                                    <label class="form-check-label" for="@option">
+                                        @option entries
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Select All for Master Files
+            $('#selectAllMaster').click(function() {
+                var allChecked = $('.master-checkbox:checked').length === $('.master-checkbox').length;
+                $('.master-checkbox').prop('checked', !allChecked);
+                $(this).text(allChecked ? 'Select All' : 'Deselect All');
+            });
+
+            // Select All for Data Entries
+            $('#selectAllData').click(function() {
+                var allChecked = $('.data-checkbox:checked').length === $('.data-checkbox').length;
+                $('.data-checkbox').prop('checked', !allChecked);
+                $(this).text(allChecked ? 'Select All' : 'Deselect All');
+            });
+
+            // Update button text when checkboxes change
+            $('.master-checkbox').change(function() {
+                var allChecked = $('.master-checkbox:checked').length === $('.master-checkbox').length;
+                $('#selectAllMaster').text(allChecked ? 'Deselect All' : 'Select All');
+            });
+
+            $('.data-checkbox').change(function() {
+                var allChecked = $('.data-checkbox:checked').length === $('.data-checkbox').length;
+                $('#selectAllData').text(allChecked ? 'Deselect All' : 'Select All');
+            });
+        });
+    </script>
+}

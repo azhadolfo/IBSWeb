@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 if (dispatchTicket.BillingId != null)
                 {
                     dispatchTicket.Billing = await _db.MMSIBillings
-                        .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
+                        .Where(b => b.MMSIBillingId == dispatchTicket.BillingId)
                         .Include(b => b.Customer)
                         .Include(b => b.Principal)
                         .FirstOrDefaultAsync(cancellationToken);

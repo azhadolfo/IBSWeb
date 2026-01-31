@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            var dispatchTickets = await _unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting", cancellationToken);
+            var dispatchTickets = await _unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting" || dt.Status == "Incomplete", cancellationToken);
             var currentUser = await _userManager.GetUserAsync(User);
 
             if (User.IsInRole("PortCoordinator"))
@@ -121,115 +121,120 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (!ModelState.IsValid)
-            {
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-                TempData["warning"] = "Can't create entry, please review your input.";
-                ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
-                return View(viewModel);
-            }
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            ViewData["PortId"] = viewModel.PortId;
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var model = ServiceRequestVmToDispatchTicketModel(viewModel);
-            model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
-            model.Terminal!.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
 
             try
             {
-                model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-
-                if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                if (!ModelState.IsValid)
                 {
-                    model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                    var timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.CreatedDate = timeStamp;
+                    throw new Exception("Can't create entry, please review your input.");
+                }
 
-                    // upload file if something is submitted
-                    if (imageFile != null && imageFile.Length > 0)
-                    {
-                        model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                        model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
-                        ViewBag.Message = "Image uploaded successfully!";
-                    }
-                    if (videoFile != null && videoFile.Length > 0)
-                    {
-                        model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                        model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
-                        ViewBag.Message = "Video uploaded successfully!";
-                    }
+                var model = ServiceRequestVmToDispatchTicketModel(viewModel);
 
-                    model.Status = "For Posting";
+                model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
+                model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                if (model.CustomerId != null)
+                {
                     model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                    var dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    var dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    var timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
-
-                    // find the nearest half hour if the customer is phil-ceb
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
-                    {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
-
-                        if (fractionalPart >= 0.75m)
-                        {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
-                        }
-                        else if (fractionalPart >= 0.25m)
-                        {
-                            totalHours = wholeHours + 0.5m; // round to half hour
-                        }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
-                        }
-                    }
-
-                    model.TotalHours = totalHours;
-                    await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
-
-                    #region -- Audit Trail
-
-                    var audit = new FilprideAuditTrail
-                    {
-                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                        Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
-                        MachineName = Environment.MachineName,
-                        Activity = $"Create service request #{model.DispatchNumber}",
-                        DocumentType = "Service Request",
-                        Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
-                    };
-
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
-
-                    #endregion --Audit Trail
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Service Request #{model.DispatchNumber} was successfully created.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
-                else
+
+                if (imageFile != null && imageFile.Length > 0)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
-                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
-                    TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
-                    ViewData["PortId"] = model.Terminal?.Port?.PortId;
-                    return View(viewModel);
+                    model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                    model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
                 }
+
+                if (videoFile != null && videoFile.Length > 0)
+                {
+                    model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                    model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
+                }
+
+                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
+                {
+                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                    {
+                        var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        var timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+
+                        // find the nearest half hour if the customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                        {
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
+
+                            if (totalHours == 0)
+                            {
+                                totalHours = 0.5m;
+                            }
+                        }
+
+                        model.TotalHours = totalHours;
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
+                        return View(viewModel);
+                    }
+                }
+
+                model.Status = "Incomplete";
+
+                if (model.Date != null &&
+                    model.DateLeft != null && model.TimeLeft != null && model.DateArrived != null && model.TimeArrived != null &&
+                    model.TerminalId != null && model.ServiceId != null && model.TugBoatId != null && model.TugMasterId != null && model.VesselId != null)
+                {
+                    model.Status = "For Posting";
+                }
+
+                await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail
+
+                var audit = new FilprideAuditTrail
+                {
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Create service request #{model.DispatchNumber}",
+                    DocumentType = "Service Request",
+                    Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
+                };
+
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+
+                #endregion --Audit Trail
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Service Request #{model.DispatchNumber} was successfully created.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create service request.");
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = $"{ex.Message}";
-                ViewData["PortId"] = model.Terminal?.Port?.PortId;
+                TempData["error"] = ex.Message;
                 return View(viewModel);
             }
         }
@@ -237,6 +242,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
             var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
@@ -264,200 +275,208 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
-                TempData["warning"] = "Can't apply edit, please review your input.";
-                return RedirectToAction("Edit", new { id = vm.DispatchTicketId });
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
             }
+
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            ViewData["PortId"] = viewModel.PortId;
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var user = await _userManager.GetUserAsync(User);
-            var model = ServiceRequestVmToDispatchTicketModel(vm);
-            var currentModel = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
-
-            if (currentModel == null)
-            {
-                return NotFound();
-            }
 
             try
             {
-                if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                if (!ModelState.IsValid)
                 {
-                    // calculate for the hours of the new entry
-                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+                    throw new Exception("Can't apply edit, please review your input.");
+                }
 
-                    // find the nearest half hour if the new customer is phil-ceb
+                var model = ServiceRequestVmToDispatchTicketModel(viewModel);
+                var currentModel = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
+
+                if (currentModel == null)
+                {
+                    throw new NullReferenceException("Current record not found.");
+                }
+
+                currentModel.EditedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
+                currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                if (model.CustomerId != null)
+                {
                     model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                }
 
-                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                if (imageFile != null)
+                {
+                    // delete existing before replacing
+                    if (!string.IsNullOrEmpty(currentModel.ImageName))
                     {
-                        var wholeHours = Math.Truncate(totalHours);
-                        var fractionalPart = totalHours - wholeHours;
-
-                        if (fractionalPart >= 0.75m)
-                        {
-                            totalHours = wholeHours + 1.0m; // round up to next hour
-                        }
-                        else if (fractionalPart >= 0.25m)
-                        {
-                            totalHours = wholeHours + 0.5m; // round to half hour
-                        }
-                        else
-                        {
-                            totalHours = wholeHours; // keep as is
-                        }
-
-                        if (totalHours == 0)
-                        {
-                            totalHours = 0.5m;
-                        }
+                        await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
                     }
 
-                    model.TotalHours = totalHours;
+                    model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                    model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
+                }
 
-                    if (imageFile != null)
+                if (videoFile != null)
+                {
+                    // delete existing before replacing
+                    if (!string.IsNullOrEmpty(currentModel.VideoName))
                     {
-                        // delete existing before replacing
-                        if (!string.IsNullOrEmpty(currentModel.ImageName))
+                        await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
+                    }
+
+                    model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                    model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
+                }
+
+                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
+                {
+                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                    {
+                        var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                        var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        var timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+
+                        // find the nearest half hour if the new customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
-                            await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
+
+                            if (totalHours == 0)
+                            {
+                                totalHours = 0.5m;
+                            }
                         }
 
-                        model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                        model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
+                        model.TotalHours = totalHours;
                     }
-
-                    if (videoFile != null)
+                    else
                     {
-                        // delete existing before replacing
-                        if (!string.IsNullOrEmpty(currentModel.VideoName))
-                        {
-                            await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
-                        }
-
-                        model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                        model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
+                        await transaction.RollbackAsync(cancellationToken);
+                        TempData["warning"] = "Date/Time Left cannot be later than Date/Time Arrived!";
+                        return View(viewModel);
                     }
+                }
 
-                    #region -- Audit changes
+                #region -- Audit changes
 
-                    var changes = new List<string>();
-                    if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
-                    if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                    if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                    if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                    if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
-                    if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
-                    if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
-                    if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
-                    if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
-                    if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
-                    if (currentModel.ServiceId != model.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}"); }
-                    if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
-                    if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
-                    if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
-                    if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
-                    if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
-                    if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
+                var changes = new List<string>();
+                if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
+                if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
+                if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
+                if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
+                if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
+                if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
+                if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
+                if (currentModel.ServiceId != model.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}"); }
+                if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
+                if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
+                if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
+                if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
+                if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
 
-                    #endregion -- Audit changes
+                #endregion -- Audit changes
 
-                    #region -- Apply changes
+                #region -- Apply changes
 
-                    currentModel.EditedBy = user!.UserName;
-                    currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    currentModel.Date = model.Date;
-                    currentModel.DispatchNumber = model.DispatchNumber;
-                    currentModel.COSNumber = model.COSNumber;
-                    currentModel.VoyageNumber = model.VoyageNumber;
-                    currentModel.CustomerId = model.CustomerId;
-                    currentModel.DateLeft = model.DateLeft;
-                    currentModel.TimeLeft = model.TimeLeft;
-                    currentModel.DateArrived = model.DateArrived;
-                    currentModel.TimeArrived = model.TimeArrived;
-                    currentModel.TotalHours = (decimal)timeDifference.TotalHours;
-                    currentModel.TerminalId = model.TerminalId;
-                    currentModel.ServiceId = model.ServiceId;
-                    currentModel.TugBoatId = model.TugBoatId;
-                    currentModel.TugMasterId = model.TugMasterId;
-                    currentModel.VesselId = model.VesselId;
-                    currentModel.Remarks = model.Remarks;
-                    currentModel.TotalHours = model.TotalHours;
-                    if (imageFile != null)
-                    {
-                        currentModel.ImageName = model.ImageName;
-                        currentModel.ImageSignedUrl = model.ImageSignedUrl;
-                        currentModel.ImageSavedUrl = model.ImageSavedUrl;
-                    }
-                    if (videoFile != null)
-                    {
-                        currentModel.VideoName = model.VideoName;
-                        currentModel.VideoSignedUrl = model.VideoSignedUrl;
-                        currentModel.VideoSavedUrl = model.VideoSavedUrl;
-                    }
+                currentModel.Date = model.Date;
+                currentModel.DispatchNumber = model.DispatchNumber;
+                currentModel.COSNumber = model.COSNumber;
+                currentModel.VoyageNumber = model.VoyageNumber;
+                currentModel.CustomerId = model.CustomerId;
+                currentModel.DateLeft = model.DateLeft;
+                currentModel.TimeLeft = model.TimeLeft;
+                currentModel.DateArrived = model.DateArrived;
+                currentModel.TimeArrived = model.TimeArrived;
+                currentModel.TotalHours = model.TotalHours;
+                currentModel.TerminalId = model.TerminalId;
+                currentModel.ServiceId = model.ServiceId;
+                currentModel.TugBoatId = model.TugBoatId;
+                currentModel.TugMasterId = model.TugMasterId;
+                currentModel.VesselId = model.VesselId;
+                currentModel.Remarks = model.Remarks;
 
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    #endregion -- Apply changes
-
-                    #region -- Audit Trail
-
-                    var audit = new FilprideAuditTrail
-                    {
-                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                        Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
-                        MachineName = Environment.MachineName,
-                        Activity = changes.Any()
-                            ? $"Edit service request #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
-                            : $"No changes detected: id#{currentModel.DispatchNumber}",
-                        DocumentType = "Service Request",
-                        Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
-                    };
-
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
-
-                    #endregion --Audit Trail
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Entry edited successfully!";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                if (currentModel.Date != null &&
+                    currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
+                    currentModel.TerminalId != null && currentModel.ServiceId != null && currentModel.TugBoatId != null && currentModel.TugMasterId != null && currentModel.VesselId != null)
+                {
+                    currentModel.Status = "For Posting";
                 }
                 else
                 {
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["warning"] = "Date/Time Left cannot be later than Date/Time Arrived!";
-                    model = await _dbContext.MMSIDispatchTickets
-                        .Include(dt => dt.Terminal)
-                        .ThenInclude(t => t!.Port)
-                        .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
-
-                    var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                    ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
-                    return View(viewModel);
+                    currentModel.Status = "Incomplete";
                 }
+
+                if (imageFile != null)
+                {
+                    currentModel.ImageName = model.ImageName;
+                    currentModel.ImageSavedUrl = model.ImageSavedUrl;
+                }
+
+                if (videoFile != null)
+                {
+                    currentModel.VideoName = model.VideoName;
+                    currentModel.VideoSavedUrl = model.VideoSavedUrl;
+                }
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #endregion -- Apply changes
+
+                #region -- Audit Trail
+
+                var audit = new FilprideAuditTrail
+                {
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
+                    MachineName = Environment.MachineName,
+                    Activity = changes.Any()
+                        ? $"Edit service request #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
+                        : $"No changes detected: id#{currentModel.DispatchNumber}",
+                    DocumentType = "Service Request",
+                    Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
+                };
+
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+
+                #endregion --Audit Trail
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Entry edited successfully!";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                var companyClaims = await GetCompanyClaimAsync();
                 _logger.LogError(ex, "Failed to edit service request.");
                 TempData["error"] = ex.Message;
-
-                // get the model values from db
-                model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model!.DispatchTicketId, cancellationToken);
-
-                var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
         }
@@ -492,7 +511,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Include(dt => dt.Tugboat)
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
-                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled")
+                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled" || dt.Status == "Incomplete")
                     .ToListAsync(cancellationToken);
 
                 // Apply status filter based on filterType
@@ -503,6 +522,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         case "ForPosting":
                             queried = queried.Where(dt =>
                                 dt.Status == "For Posting").ToList();
+                            break;
+                        case "Incomplete":
+                            queried = queried.Where(dt =>
+                                dt.Status == "Incomplete").ToList();
                             break;
                         case "ForTariff":
                             queried = queried.Where(dt =>
@@ -532,7 +555,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     queried = queried
                     .Where(dt =>
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber.ToString().Contains(searchValue) == true ||
+                        dt.DispatchNumber.ToLower().Contains(searchValue) ||
                         dt.Service!.ServiceName.ToString().Contains(searchValue) == true ||
                         dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
                         dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
@@ -560,6 +583,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 if (searchValue == "cancelled")
                                 {
                                     queried = queried.Where(s => s.Status == "Cancelled").ToList();
+                                }
+                                if (searchValue == "incomplete")
+                                {
+                                    queried = queried.Where(s => s.Status == "Incomplete").ToList();
                                 }
                                 else
                                 {
@@ -746,6 +773,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (string.IsNullOrEmpty(records))
             {
                 TempData["error"] = "Passed record list is empty";
@@ -867,7 +900,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(MMSIDispatchTicket model)
         {
-            return new ServiceRequestViewModel
+            var viewModel = new ServiceRequestViewModel
             {
                 Date = model.Date,
                 COSNumber = model.COSNumber,
@@ -891,6 +924,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 VideoSignedUrl = model.VideoSignedUrl,
                 DispatchTicketId = model.DispatchTicketId,
             };
+
+            if (model.Terminal?.Port != null)
+            {
+                viewModel.PortId = model.Terminal.Port.PortId;
+            }
+
+            return viewModel;
         }
     }
 }

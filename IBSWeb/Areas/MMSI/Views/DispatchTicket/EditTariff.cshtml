@@ -13,14 +13,14 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center">
-            <h2 class="text-white py-2"><i class="bi bi-cash-coin"></i>@ViewData["Title"]</h2>
+            <h2 class="text-white py-2">@ViewData["Title"]</h2>
         </div>
     </div>
 
-    <div class="card-body">
-        <div class="row px-3 justify-content-center d-flex">
-            <div class="col-11 border">
-                <div class="row mt-2">
+    <div class="card-body p-3 m-0">
+        <div class="row g-0 justify-content-center">
+            <div class="col p-2 border rounded">
+                <div class="row m-2">
                     <div class="col">
                         <h5>DISPATCH TICKET DETAILS</h5>
                     </div>
@@ -73,7 +73,7 @@
         </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body p-3 m-0">
         <form id="myForm" method="post" class="row">
             <input type="hidden" asp-for="DispatchNumber" value="@Model.DispatchNumber"></input>
             <div class="border-2 px-3 mt-2">
@@ -98,14 +98,14 @@
                     </div>
                 </div>
 
-                <div class="row px-3">
+                <div class="row">
                     <!-- Left Section -->
                     <div class="col-6 align-content-center p-3">
-                        <div class="row border">
+                        <div class="row border rounded">
                             <div class="col">
                                 <div class="row">
                                     <div class="col-6 mt-3 text-start">
-                                        <b><i>Dispatch charge Type</i></b>
+                                        <b><i>Dispatch charge type</i></b>
                                     </div>
                                     <div class="col-6"></div>
                                 </div>
@@ -149,13 +149,13 @@
 
                     <!-- Right Section -->
                     <div class="col-6 align-content-center p-3">
-                        <div class="row border">
+                        <div class="row border rounded">
                             <div class="col">
                                 <div class="row">
                                     <div class="col-6 mt-3 text-start">
                                         <div class="row">
                                             <div class="col-12">
-                                                <b><i>BAF charge Type</i></b>
+                                                <b><i>BAF charge type</i></b>
                                             </div>
                                         </div>
                                         <div class="row">

@@ -38,6 +38,10 @@ namespace IBS.Models.MMSI
         private string? _voyageNumber;
         public decimal Amount { get; set; }
 
+        public decimal DispatchAmount { get; set; }
+
+        public decimal BAFAmount { get; set; }
+
         public string CreatedBy { get; set; }
 
         [Column(TypeName = "timestamp without time zone")]
@@ -50,7 +54,7 @@ namespace IBS.Models.MMSI
 
         public bool IsPrincipal { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
@@ -58,17 +62,23 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(PrincipalId))]
         public MMSIPrincipal? Principal { get; set; }
 
-        public int VesselId { get; set; }
+        public int? VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public MMSIVessel? Vessel { get; set; }
 
-        public int PortId { get; set; }
+        public int? PortId { get; set; }
         [ForeignKey(nameof(PortId))]
         public MMSIPort? Port { get; set; }
 
-        public int TerminalId { get; set; }
+        public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
+
+        public decimal ApOtherTug { get; set; }
+
+        public bool IsVatable { get; set; }
+
+        public bool IsPrinted { get; set; }
 
         #region ---Address Lines---
 
@@ -116,6 +126,8 @@ namespace IBS.Models.MMSI
 
         [NotMapped]
         public MMSICollection? Collection { get; set; }
+
+        public string? CollectionNumber { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CustomerPrincipal { get; set; }
