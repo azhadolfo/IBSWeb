@@ -3938,14 +3938,83 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCheckVoucherHeaderList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckVoucherHeaderList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var checkVoucherHeaders = (await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != "Payment", cancellationToken))
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != "Payment", cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    checkVoucherHeaders = checkVoucherHeaders
+                        .Where(s => s.Date >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    checkVoucherHeaders = checkVoucherHeaders
+                        .Where(s => s.Date <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    checkVoucherHeaders = checkVoucherHeaders
+                        .Where(s =>
+                            (s.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) ?? false) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            (s.SupplierName?.ToLower().Contains(searchValue) ?? false) ||
+                            (s.CvType?.ToLower().Contains(searchValue) ?? false) ||
+                            (s.CreatedBy?.ToLower().Contains(searchValue) ?? false) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    checkVoucherHeaders = checkVoucherHeaders
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = checkVoucherHeaders.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideCheckVoucherHeader> pagedCheckVoucherHeaders;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedCheckVoucherHeaders = checkVoucherHeaders;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedCheckVoucherHeaders = checkVoucherHeaders
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedCheckVoucherHeaders
                     .Select(x => new
                     {
                         x.CheckVoucherHeaderId,
@@ -3954,16 +4023,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.SupplierName,
                         x.CvType,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = checkVoucherHeaders
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get check voucher headers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
