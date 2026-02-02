@@ -749,33 +749,130 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetJournalVoucherList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetJournalVoucherList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var journalVoucherHeader = (await _unitOfWork.FilprideJournalVoucher
-                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken))
+                var journalVoucherHeaders = await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    journalVoucherHeaders = journalVoucherHeaders
+                        .Where(s => s.Date >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    journalVoucherHeaders = journalVoucherHeaders
+                        .Where(s => s.Date <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    journalVoucherHeaders = journalVoucherHeaders
+                        .Where(s =>
+                            (s.JournalVoucherHeaderNo != null && s.JournalVoucherHeaderNo.ToLower().Contains(searchValue)) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            (s.CheckVoucherHeader?.CheckVoucherHeaderNo != null && s.CheckVoucherHeader.CheckVoucherHeaderNo.ToLower().Contains(searchValue)) ||
+                            (s.CRNo != null && s.CRNo.ToLower().Contains(searchValue)) ||
+                            (s.JVReason != null && s.JVReason.ToLower().Contains(searchValue)) ||
+                            (s.CreatedBy != null && s.CreatedBy.ToLower().Contains(searchValue)) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    // Map frontend column names to actual entity property names
+                    var columnMapping = new Dictionary<string, string>
+            {
+                { "journalVoucherHeaderNo", "JournalVoucherHeaderNo" },
+                { "date", "Date" },
+                { "checkVoucherHeaderNo", "CheckVoucherHeader.CheckVoucherHeaderNo" },
+                { "crNo", "CRNo" },
+                { "jvReason", "JVReason" },
+                { "createdBy", "CreatedBy" },
+                { "status", "Status" }
+            };
+
+                    // Get the actual property name
+                    var actualColumnName = columnMapping.ContainsKey(columnName)
+                        ? columnMapping[columnName]
+                        : columnName;
+
+                    journalVoucherHeaders = journalVoucherHeaders
+                        .AsQueryable()
+                        .OrderBy($"{actualColumnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = journalVoucherHeaders.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideJournalVoucherHeader> pagedJournalVoucherHeaders;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedJournalVoucherHeaders = journalVoucherHeaders;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedJournalVoucherHeaders = journalVoucherHeaders
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedJournalVoucherHeaders
                     .Select(x => new
                     {
                         x.JournalVoucherHeaderId,
                         x.JournalVoucherHeaderNo,
                         x.Date,
-                        x.CheckVoucherHeader!.CheckVoucherHeaderNo,
+                        checkVoucherHeaderNo = x.CheckVoucherHeader?.CheckVoucherHeaderNo,
                         x.CRNo,
                         x.JVReason,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = journalVoucherHeader
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
