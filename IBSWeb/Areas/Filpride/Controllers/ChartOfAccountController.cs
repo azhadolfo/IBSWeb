@@ -183,12 +183,98 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetChartOfAccountList(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetChartOfAccountList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var chartOfAccounts = (await _unitOfWork.FilprideChartOfAccount
-                    .GetAllAsync(cancellationToken : cancellationToken))
+                var chartOfAccounts = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(cancellationToken: cancellationToken);
+
+                // Apply date range filter if provided (using CreatedDate)
+                if (dateFrom.HasValue)
+                {
+                    chartOfAccounts = chartOfAccounts
+                        .Where(s => s.CreatedDate >= dateFrom.Value)
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    // Add one day to include the entire end date
+                    var dateToInclusive = dateTo.Value.AddDays(1);
+                    chartOfAccounts = chartOfAccounts
+                        .Where(s => s.CreatedDate < dateToInclusive)
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    chartOfAccounts = chartOfAccounts
+                        .Where(s =>
+                            (s.AccountNumber != null && s.AccountNumber.ToLower().Contains(searchValue)) ||
+                            (s.AccountName != null && s.AccountName.ToLower().Contains(searchValue)) ||
+                            (s.AccountType != null && s.AccountType.ToLower().Contains(searchValue)) ||
+                            (s.NormalBalance != null && s.NormalBalance.ToLower().Contains(searchValue)) ||
+                            s.Level.ToString().Contains(searchValue) ||
+                            s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    // Map frontend column names to actual entity property names
+                    var columnMapping = new Dictionary<string, string>
+                    {
+                        { "accountNumber", "AccountNumber" },
+                        { "accountName", "AccountName" },
+                        { "accountType", "AccountType" },
+                        { "normalBalance", "NormalBalance" },
+                        { "level", "Level" },
+                        { "createdDate", "CreatedDate" }
+                    };
+
+                    // Get the actual property name
+                    var actualColumnName = columnMapping.ContainsKey(columnName)
+                        ? columnMapping[columnName]
+                        : columnName;
+
+                    chartOfAccounts = chartOfAccounts
+                        .AsQueryable()
+                        .ToList();
+                }
+
+                var totalRecords = chartOfAccounts.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideChartOfAccount> pagedChartOfAccounts;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedChartOfAccounts = chartOfAccounts;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedChartOfAccounts = chartOfAccounts
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedChartOfAccounts
                     .Select(x => new
                     {
                         x.AccountId,
@@ -198,15 +284,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.NormalBalance,
                         x.Level,
                         x.CreatedDate
-                    });
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = chartOfAccounts
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
