@@ -847,6 +847,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetServiceInvoiceList(
                 [FromForm] DataTablesParameters parameters,
                 string? dateFrom,  // Format: "2024-01" (year-month)

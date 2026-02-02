@@ -792,6 +792,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetReceivingReportList(
             [FromForm] DataTablesParameters parameters,
             DateTime? dateFrom,

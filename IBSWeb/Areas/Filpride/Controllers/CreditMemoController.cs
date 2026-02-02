@@ -1107,6 +1107,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetCreditMemoList(
             [FromForm] DataTablesParameters parameters,
             DateTime? dateFrom,

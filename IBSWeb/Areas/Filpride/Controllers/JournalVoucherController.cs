@@ -749,6 +749,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetJournalVoucherList(
             [FromForm] DataTablesParameters parameters,
             DateTime? dateFrom,
