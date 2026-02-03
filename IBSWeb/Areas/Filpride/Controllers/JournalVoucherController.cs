@@ -808,7 +808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 { "journalVoucherHeaderNo", "JournalVoucherHeaderNo" },
                 { "date", "Date" },
-                { "checkVoucherHeaderNo", "CheckVoucherHeader.CheckVoucherHeaderNo" },
+                { "checkVoucherHeaderNo", "IIF(CheckVoucherHeader == null, null, CheckVoucherHeader.CheckVoucherHeaderNo)" },
                 { "crNo", "CRNo" },
                 { "jvReason", "JVReason" },
                 { "createdBy", "CreatedBy" },
@@ -826,6 +826,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
+                var totalAllRecords = journalVoucherHeaders.Count();
                 var totalRecords = journalVoucherHeaders.Count();
 
                 // Apply pagination - HANDLE -1 FOR "ALL"
@@ -865,7 +866,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     draw = parameters.Draw,
-                    recordsTotal = totalRecords,
+                    recordsTotal = totalAllRecords,
                     recordsFiltered = totalRecords,
                     data = pagedData
                 });
@@ -874,8 +875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to get journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 

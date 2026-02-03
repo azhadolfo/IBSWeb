@@ -896,13 +896,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     serviceInvoices = serviceInvoices
                         .Where(s =>
-                            s.ServiceInvoiceNo!.ToLower().Contains(searchValue) ||
-                            s.CustomerName!.ToLower().Contains(searchValue) ||
-                            s.ServiceName!.ToLower().Contains(searchValue) ||
+                            (s.ServiceInvoiceNo ?? string.Empty).ToLower().Contains(searchValue) ||
+                            (s.CustomerName ?? string.Empty).ToLower().Contains(searchValue) ||
+                            (s.ServiceName ?? string.Empty).ToLower().Contains(searchValue) ||
                             s.Period.ToString("MMM yyyy").ToLower().Contains(searchValue) ||
                             s.Total.ToString().Contains(searchValue) ||
-                            s.CreatedBy!.ToLower().Contains(searchValue) ||
-                            s.Status.ToLower().Contains(searchValue)
+                            (s.CreatedBy ?? string.Empty).ToLower().Contains(searchValue) ||
+                            (s.Status ?? string.Empty).ToLower().Contains(searchValue)
                         )
                         .ToList();
                 }
@@ -913,6 +913,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    // Whitelist of allowed columns for sorting
+                    var allowedColumns = new[] { "ServiceInvoiceNo", "CustomerName", "ServiceName", "Period", "Total", "CreatedBy", "Status" };
+                    
+                    if (!allowedColumns.Contains(columnName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        // Default to ServiceInvoiceNo if invalid column
+                        columnName = "ServiceInvoiceNo";
+                    }
 
                     serviceInvoices = serviceInvoices
                         .AsQueryable()
@@ -968,8 +977,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to get service invoices. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 

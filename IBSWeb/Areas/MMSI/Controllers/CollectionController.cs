@@ -61,6 +61,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -89,7 +90,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 await _unitOfWork.Collection.AddAsync(model, cancellationToken);
 
-                // save first then refetch again so it has auto generates id
+                // save first then refetch using the ID from UnitOfWork if available
                 var refetchModel = await _unitOfWork.Collection
                     .GetAsync(c => c.CreatedDate == dateNow, cancellationToken);
 
@@ -118,7 +119,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     // find the billings that was collected and mark them as collected
                     var billingChosen = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == int.Parse(collectBills), cancellationToken);
-                    billingChosen!.Status = "Collected";
+                    if (billingChosen == null)
+                    {
+                        _logger.LogWarning("Billing ID {BillingId} not found during collection creation.", collectBills);
+                        continue;
+                    }
+                    billingChosen.Status = "Collected";
                     billingChosen.CollectionId = refetchModel.MMSICollectionId;
                 }
                 await _unitOfWork.Billing.SaveAsync(cancellationToken);
@@ -249,8 +255,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get collections");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 
@@ -282,6 +287,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
             try
@@ -382,7 +388,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
                     TempData["warning"] = "There was an error updating the collection.";
-                    viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer!.Type, cancellationToken);
+                    if (customer != null)
+                    {
+                        viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer.Type, cancellationToken);
+                    }
+                    else
+                    {
+                        viewModel.Customers = new SelectList(new List<SelectListItem>());
+                    }
                     return View(viewModel);
                 }
             }
@@ -393,7 +406,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 _logger.LogError(ex, "Failed to edit collection.");
                 TempData["error"] = ex.Message;
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer!.Type, cancellationToken);
+                if (customer != null)
+                {
+                    viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer.Type, cancellationToken);
+                }
+                else
+                {
+                    viewModel.Customers = new SelectList(new List<SelectListItem>());
+                }
                 return View(viewModel);
             }
         }

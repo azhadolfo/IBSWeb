@@ -54,6 +54,8 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 @section Scripts{
     <script>
         let selectedRecords = new Set();
@@ -130,7 +132,9 @@
                         data: "createdDate",
                         name: "createdDate",
                         render: function (data) {
+                            if (!data) return '';
                             let date = new Date(data);
+                            if (isNaN(date.getTime())) return '-';
                             return date.toLocaleDateString('en-US', { 
                                 year: 'numeric', 
                                 month: 'short', 
@@ -163,6 +167,10 @@
                 localStorage.setItem('exportCustomerDateFrom', $('#dateFrom').val());
                 localStorage.setItem('exportCustomerDateTo', $('#dateTo').val());
                 
+                // Clear selection state before reloading
+                selectedRecords.clear();
+                table.rows().deselect();
+                
                 // Reload table with new date filters
                 table.ajax.reload();
             });
@@ -176,14 +184,21 @@
                 form.method = 'POST';
                 form.action = '@Url.Action("Export", "Customer", new { area = "Filpride" })';
                 
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = $('input[name="__RequestVerificationToken"]').val();
+                form.appendChild(tokenInput);
+                
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
-                
                 form.appendChild(input);
+                
                 document.body.appendChild(form);
                 form.submit();
+                form.remove();
             } else {
                 alert('No Customer selected.');
             }

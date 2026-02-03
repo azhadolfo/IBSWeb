@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -416,91 +417,104 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var customers = await _unitOfWork.FilprideCustomer
-                    .GetAllAsync(null, cancellationToken);
-
-                // Apply date range filter if provided (using CreatedDate)
+                // Build predicate for date filtering
+                Expression<Func<FilprideCustomer, bool>> datePredicate = c => true; // default: no filter
+                
                 if (dateFrom.HasValue)
                 {
-                    customers = customers
-                        .Where(s => s.CreatedDate >= dateFrom.Value)
-                        .ToList();
+                    var dateFromValue = dateFrom.Value;
+                    datePredicate = c => c.CreatedDate >= dateFromValue;
                 }
-
+                
                 if (dateTo.HasValue)
                 {
-                    // Add one day to include the entire end date
                     var dateToInclusive = dateTo.Value.AddDays(1);
+                    if (dateFrom.HasValue)
+                    {
+                        var dateFromValue = dateFrom.Value;
+                        datePredicate = c => c.CreatedDate >= dateFromValue && c.CreatedDate < dateToInclusive;
+                    }
+                    else
+                    {
+                        datePredicate = c => c.CreatedDate < dateToInclusive;
+                    }
+                }
+                
+                // Apply filters at database level
+                var customers = await _unitOfWork.FilprideCustomer
+                    .GetAllAsync(datePredicate, cancellationToken);
+
+                // Apply search filter if provided
+                if (parameters != null && parameters.Search != null && !string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    
                     customers = customers
-                        .Where(s => s.CreatedDate < dateToInclusive)
+                        .Where(s =>
+                            (s.CustomerCode != null && s.CustomerCode.ToLower().Contains(searchValue)) ||
+                            (s.CustomerName != null && s.CustomerName.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTin != null && s.CustomerTin.ToLower().Contains(searchValue)) ||
+                            (s.BusinessStyle != null && s.BusinessStyle.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTerms != null && s.CustomerTerms.ToLower().Contains(searchValue)) ||
+                            (s.CustomerType != null && s.CustomerType.ToLower().Contains(searchValue)) ||
+                            s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
+                        )
                         .ToList();
                 }
 
-                // Apply search filter if provided
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
-        {
-            var searchValue = parameters.Search.Value.ToLower();
-            
-            customers = customers
-                .Where(s =>
-                    (s.CustomerCode != null && s.CustomerCode.ToLower().Contains(searchValue)) ||
-                    (s.CustomerName != null && s.CustomerName.ToLower().Contains(searchValue)) ||
-                    (s.CustomerTin != null && s.CustomerTin.ToLower().Contains(searchValue)) ||
-                    (s.BusinessStyle != null && s.BusinessStyle.ToLower().Contains(searchValue)) ||
-                    (s.CustomerTerms != null && s.CustomerTerms.ToLower().Contains(searchValue)) ||
-                    (s.CustomerType != null && s.CustomerType.ToLower().Contains(searchValue)) ||
-                    s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
-                )
-                .ToList();
-        }
+                // Calculate counts before sorting
+                var totalAllRecords = customers.Count();
+                var filterCount = customers.Count();
+                
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-        // Apply sorting if provided
-        if (parameters.Order?.Count > 0)
-        {
-            var orderColumn = parameters.Order[0];
-            var columnName = parameters.Columns[orderColumn.Column].Data;
-            var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    // Map frontend column names to actual entity property names
+                    var columnMapping = new Dictionary<string, string>
+                    {
+                        { "customerCode", "CustomerCode" },
+                        { "customerName", "CustomerName" },
+                        { "customerTin", "CustomerTin" },
+                        { "businessStyle", "BusinessStyle" },
+                        { "customerTerms", "CustomerTerms" },
+                        { "customerType", "CustomerType" },
+                        { "createdDate", "CreatedDate" }
+                    };
 
-            // Map frontend column names to actual entity property names
-            var columnMapping = new Dictionary<string, string>
-            {
-                { "customerCode", "CustomerCode" },
-                { "customerName", "CustomerName" },
-                { "customerTin", "CustomerTin" },
-                { "businessStyle", "BusinessStyle" },
-                { "customerTerms", "CustomerTerms" },
-                { "customerType", "CustomerType" },
-                { "createdDate", "CreatedDate" }
-            };
+                    // Validate and get the actual property name
+                    if (!columnMapping.ContainsKey(columnName))
+                    {
+                        // Default to CustomerCode if invalid column
+                        columnName = "customerCode";
+                    }
+                    
+                    var actualColumnName = columnMapping[columnName];
 
-            // Get the actual property name
-            var actualColumnName = columnMapping.ContainsKey(columnName) 
-                ? columnMapping[columnName] 
-                : columnName;
+                    customers = customers
+                        .AsQueryable()
+                        .OrderBy($"{actualColumnName} {sortDirection}")
+                        .ToList();
+                }
 
-            customers = customers
-                .AsQueryable()
-                .OrderBy($"{actualColumnName} {sortDirection}")
-                .ToList();
-        }
-
-        var totalRecords = customers.Count();
-
-        // Apply pagination - HANDLE -1 FOR "ALL"
-        IEnumerable<FilprideCustomer> pagedCustomers;
-        
-        if (parameters.Length == -1)
-        {
-            // "All" selected - return all records
-            pagedCustomers = customers;
-        }
-        else
-        {
-            // Normal pagination
-            pagedCustomers = customers
-                .Skip(parameters.Start)
-                .Take(parameters.Length);
-        }
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideCustomer> pagedCustomers;
+                
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedCustomers = customers;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedCustomers = customers
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
 
         var pagedData = pagedCustomers
             .Select(x => new
@@ -519,8 +533,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         return Json(new
         {
             draw = parameters.Draw,
-            recordsTotal = totalRecords,
-            recordsFiltered = totalRecords,
+            recordsTotal = totalAllRecords,
+            recordsFiltered = filterCount,
             data = pagedData
         });
     }
@@ -528,8 +542,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         _logger.LogError(ex, "Failed to get customers. Error: {ErrorMessage}, Stack: {StackTrace}.",
             ex.Message, ex.StackTrace);
-        TempData["error"] = ex.Message;
-        return RedirectToAction(nameof(Index));
+        return StatusCode(500, new { success = false, error = ex.Message });
     }
 }
 

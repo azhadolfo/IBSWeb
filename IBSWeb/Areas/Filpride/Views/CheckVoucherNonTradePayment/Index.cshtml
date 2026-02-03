@@ -106,7 +106,16 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var cancellationRemarks = $("#cancellationRemarks").val();
+                    var cancellationRemarks = $("#cancellationRemarks").val() || "";
+                    // Trim and validate
+                    if (cancellationRemarks.trim() === "") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: 'Please provide cancellation remarks'
+                        });
+                        return;
+                    }
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
@@ -132,10 +141,19 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var liquidationDate = $("#liquidationDate").val();
-                    // Encode the cancellationRemarks to make it URL safe
+                    var liquidationDate = $("#liquidationDate").val() || "";
+                    // Validate liquidation date
+                    if (!liquidationDate) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: 'Please select a liquidation date'
+                        });
+                        return;
+                    }
+                    // Encode the liquidationDate to make it URL safe
                     var encodedLiquidationDate = encodeURIComponent(liquidationDate);
-                    // Append the encoded remarks as a parameter in the URL
+                    // Append the encoded date as a parameter in the URL
                     var url = `@Url.Action("LiquidateAdvances", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${id}&liquidateDate=${encodedLiquidationDate}`;
                     window.location.href = url;
                 }
@@ -286,13 +304,15 @@
                     // Initialize totals
                     var totalAmount = 0;
 
-                    // Sum up columns
+                    // Sum up columns with NaN protection
                     data.forEach(function (row) {
-                        totalAmount += row.total;
+                        let value = Number(row.total);
+                        if (!isFinite(value)) value = 0;
+                        totalAmount += value;
                     });
 
                     // Update footer with totals
-                    $(this.api().column(4).footer()).html(formatNumber(totalAmount));
+                    $(this.api().column(4).footer()).html(formatNumber(totalAmount || 0));
                 }
             });
 

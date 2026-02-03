@@ -821,6 +821,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
+                // Compute count before search (total after base filters)
+                var totalAllRecords = receivingReports.Count();
+                
                 // Apply search filter if provided
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
@@ -836,19 +839,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.CreatedBy!.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue)
                         )
-                        .ToList();
-                }
-
-                // Apply sorting if provided
-                if (parameters.Order?.Count > 0)
-                {
-                    var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Name;
-                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-
-                    receivingReports = receivingReports
-                        .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
 
@@ -891,7 +881,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     draw = parameters.Draw,
-                    recordsTotal = totalRecords,
+                    recordsTotal = totalAllRecords,
                     recordsFiltered = totalRecords,
                     data = pagedData
                 });
@@ -900,8 +890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to get receiving reports. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 

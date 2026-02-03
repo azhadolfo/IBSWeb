@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
-
+                var totalRecordsBeforeFilter = creditMemos.Count();
                 var totalRecords = creditMemos.Count();
 
                 var pagedData = creditMemos
@@ -1147,7 +1147,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.SalesInvoice?.SalesInvoiceNo?.ToLower().Contains(searchValue) == true ||
                             s.ServiceInvoice?.ServiceInvoiceNo?.ToLower().Contains(searchValue) == true ||
-                            s.Source!.ToLower().Contains(searchValue) ||
+                            (s.Source != null && s.Source.ToLower().Contains(searchValue)) ||
                             s.CreditAmount.ToString().Contains(searchValue) ||
                             s.CreatedBy!.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue)
@@ -1168,6 +1168,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
+                // Compute unfiltered total before search/sort filters
+                var totalAllRecords = creditMemos.Count();
+                
                 var totalRecords = creditMemos.Count();
 
                 // Apply pagination - HANDLE -1 FOR "ALL"
@@ -1209,7 +1212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     draw = parameters.Draw,
-                    recordsTotal = totalRecords,
+                    recordsTotal = totalAllRecords,
                     recordsFiltered = totalRecords,
                     data = pagedData
                 });
@@ -1218,8 +1221,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to get credit memos. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 

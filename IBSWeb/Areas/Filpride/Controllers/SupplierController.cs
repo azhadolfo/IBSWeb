@@ -535,7 +535,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Apply search filter if provided
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                if (parameters != null && parameters.Search != null && !string.IsNullOrEmpty(parameters.Search.Value))
                 {
             var searchValue = parameters.Search.Value.ToLower();
             
@@ -553,8 +553,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
         }
 
+        // Calculate total before search
+        var totalAllRecords = suppliers.Count();
+        
         // Apply sorting if provided
-        if (parameters.Order?.Count > 0)
+        if (parameters?.Order?.Count > 0)
         {
             var orderColumn = parameters.Order[0];
             var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -573,10 +576,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 { "createdDate", "CreatedDate" }
             };
 
-            // Get the actual property name
-            var actualColumnName = columnMapping.ContainsKey(columnName) 
-                ? columnMapping[columnName] 
-                : columnName;
+            // Get the actual property name - validate and use safe default
+            if (!columnMapping.ContainsKey(columnName))
+            {
+                throw new ArgumentException($"Invalid column name: {columnName}");
+            }
+            
+            var actualColumnName = columnMapping[columnName];
 
             suppliers = suppliers
                 .AsQueryable()
@@ -589,7 +595,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         // Apply pagination - HANDLE -1 FOR "ALL"
         IEnumerable<FilprideSupplier> pagedSuppliers;
         
-        if (parameters.Length == -1)
+        if (parameters?.Length == -1)
         {
             // "All" selected - return all records
             pagedSuppliers = suppliers;
@@ -598,8 +604,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             // Normal pagination
             pagedSuppliers = suppliers
-                .Skip(parameters.Start)
-                .Take(parameters.Length);
+                .Skip(parameters!.Start)
+                .Take(parameters!.Length);
         }
 
         var pagedData = pagedSuppliers
@@ -620,7 +626,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         return Json(new
         {
             draw = parameters.Draw,
-            recordsTotal = totalRecords,
+            recordsTotal = totalAllRecords,
             recordsFiltered = totalRecords,
             data = pagedData
         });
@@ -629,8 +635,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         _logger.LogError(ex, "Failed to get suppliers. Error: {ErrorMessage}, Stack: {StackTrace}.",
             ex.Message, ex.StackTrace);
-        TempData["error"] = ex.Message;
-        return RedirectToAction(nameof(Index));
+        return StatusCode(500, new { success = false, error = ex.Message });
     }
 }
 

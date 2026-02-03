@@ -53,6 +53,8 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 @section Scripts {
     <script>
         let selectedRecords = new Set();
@@ -69,7 +71,7 @@
                 serverSide: true,      // ENABLE SERVER-SIDE PROCESSING
                 stateSave: true,
                 stateDuration: 86400,  // 24 hours
-                lengthMenu: [ [1, 25, 50, 100, -1], [1, 25, 50, 100, "All"] ],
+                lengthMenu: [ [10, 25, 50, 100, 500], [10, 25, 50, 100, 500] ],
                 language: {
                     processing: `<div class="d-flex justify-content-center">
                                     <div class="spinner-border text-primary" role="status">
@@ -202,14 +204,21 @@
                 form.method = 'POST';
                 form.action = '@Url.Action("Export", "DebitMemo", new { area = "Filpride" })';
                 
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = $('input[name="__RequestVerificationToken"]').val();
+                form.appendChild(tokenInput);
+                
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
-                
                 form.appendChild(input);
+                
                 document.body.appendChild(form);
                 form.submit();
+                form.remove();
             } else {
                 alert('No Debit Memo selected.');
             }

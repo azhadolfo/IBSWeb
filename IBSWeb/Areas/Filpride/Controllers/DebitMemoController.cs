@@ -1158,8 +1158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 _logger.LogError(ex, "Failed to get debit memos. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
 
