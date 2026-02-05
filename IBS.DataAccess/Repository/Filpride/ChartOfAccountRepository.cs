@@ -21,13 +21,14 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<FilprideChartOfAccount> GenerateAccount(FilprideChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
         {
             var existingCoa = await _db.FilprideChartOfAccounts
-                .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken) ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
+                .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken)
+                              ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
 
             model.AccountType = existingCoa.AccountType;
             model.NormalBalance = existingCoa.NormalBalance;
             model.Level = existingCoa.Level + 1;
             model.ParentAccountId = existingCoa.AccountId;
-            model.AccountNumber = await GenerateNumberAsync(thirdLevel, cancellationToken);
+            model.AccountNumber = await GenerateNumberAsync(model.ParentAccountId, thirdLevel, cancellationToken);
 
             return model;
         }
@@ -120,22 +121,22 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        private async Task<string> GenerateNumberAsync(string parent, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateNumberAsync(int? parentId, string thirdLevel, CancellationToken cancellationToken = default)
         {
             var lastAccount = await _db.FilprideChartOfAccounts
-                .OrderBy(c => c.AccountNumber)
-                //.LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
-                .LastOrDefaultAsync(cancellationToken);
+                .OrderByDescending(c => c.AccountNumber)
+                .FirstOrDefaultAsync(coa => coa.ParentAccountId == parentId, cancellationToken);
 
-            if (lastAccount != null)
+            if (lastAccount == null)
             {
-                var accountNo = int.Parse(lastAccount.AccountNumber!);
-                var generatedNo = accountNo + 1;
-
-                return generatedNo.ToString();
+                return thirdLevel + "01";
             }
 
-            return parent + "01";
+            var accountNo = int.Parse(lastAccount.AccountNumber!);
+            var generatedNo = accountNo + 1;
+
+            return generatedNo.ToString();
+
         }
 
         public override async Task<FilprideChartOfAccount?> GetAsync(Expression<Func<FilprideChartOfAccount, bool>> filter, CancellationToken cancellationToken = default)

@@ -18,30 +18,24 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastDm = await _db
                 .FilprideDebitMemos
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_debit_memos
-                    WHERE company = {0}
-                        AND type = {1}
-                    ORDER BY credit_debit_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Documented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.DebitMemoNo)
+                .FirstOrDefaultAsync(x =>
+                    x.Company == company &&
+                    x.Type == nameof(DocumentType.Documented),
+                    cancellationToken);
 
             if (lastDm == null)
             {
@@ -59,18 +53,12 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDm = await _db
                 .FilprideDebitMemos
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_debit_memos
-                    WHERE company = {0}
-                        AND type = {1}
-                    ORDER BY credit_debit_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Undocumented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.DebitMemoNo)
+                .FirstOrDefaultAsync(x =>
+                        x.Company == company &&
+                        x.Type == nameof(DocumentType.Undocumented),
+                    cancellationToken);
 
             if (lastDm == null)
             {

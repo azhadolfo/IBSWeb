@@ -23,32 +23,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default)
         {
-            if (documentType == nameof(DocumentType.Documented))
+            return documentType switch
             {
-                return await GenerateDocumentedCodeAsync(companyClaims, cancellationToken);
-            }
-
-            return await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateDocumentedCodeAsync(companyClaims, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_delivery_receipts
-                    WHERE company = {0}
-                        AND delivery_receipt_no NOT LIKE {1}
-                        AND type = {2}
-                    ORDER BY delivery_receipt_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    companyClaims,
-                    "%BEG%",
-                    nameof(DocumentType.Documented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .FirstOrDefaultAsync(x =>
+                    x.Company == companyClaims &&
+                    x.Type == nameof(DocumentType.Documented) &&
+                    !x.DeliveryReceiptNo.Contains("BEG"),
+                    cancellationToken);
 
             if (lastDr == null)
             {
@@ -66,20 +59,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_delivery_receipts
-                    WHERE company = {0}
-                        AND delivery_receipt_no NOT LIKE {1}
-                        AND type = {2}
-                    ORDER BY delivery_receipt_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    companyClaims,
-                    "%BEG%",
-                    nameof(DocumentType.Undocumented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .FirstOrDefaultAsync(x =>
+                        x.Company == companyClaims &&
+                        x.Type == nameof(DocumentType.Undocumented) &&
+                        !x.DeliveryReceiptNo.Contains("BEG"),
+                    cancellationToken);
 
             if (lastDr == null)
             {

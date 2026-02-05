@@ -22,32 +22,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_receiving_reports
-                    WHERE company = {0}
-                        AND receiving_report_no NOT LIKE {1}
-                        AND type = {2}
-                    ORDER BY receiving_report_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    "RRBEG%",
-                    nameof(DocumentType.Documented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.ReceivingReportNo)
+                .FirstOrDefaultAsync(x =>
+                    x.Company == company &&
+                    x.Type == nameof(DocumentType.Documented) &&
+                    !x.ReceivingReportNo!.Contains("RRBEG"),
+                    cancellationToken);
 
             if (lastRr == null)
             {
@@ -65,20 +58,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastRr = await _db
                 .FilprideReceivingReports
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_receiving_reports
-                    WHERE company = {0}
-                        AND receiving_report_no NOT LIKE {1}
-                        AND type = {2}
-                    ORDER BY receiving_report_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    "RRBEG%",
-                    nameof(DocumentType.Undocumented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.ReceivingReportNo)
+                .FirstOrDefaultAsync(x =>
+                        x.Company == company &&
+                        x.Type == nameof(DocumentType.Undocumented) &&
+                        !x.ReceivingReportNo!.Contains("RRBEG"),
+                    cancellationToken);
 
             if (lastRr == null)
             {

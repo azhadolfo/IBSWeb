@@ -21,12 +21,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
 
@@ -34,18 +34,12 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSv = await _db
                 .FilprideServiceInvoices
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_service_invoices
-                    WHERE company = {0}
-                        AND type = {1}
-                    ORDER BY service_invoice_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Documented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.ServiceInvoiceNo)
+                .FirstOrDefaultAsync(x =>
+                    x.Company == company &&
+                    x.Type == nameof(DocumentType.Documented),
+                    cancellationToken);
 
             if (lastSv == null)
             {
@@ -64,18 +58,12 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSv = await _db
                 .FilprideServiceInvoices
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_service_invoices
-                    WHERE company = {0}
-                        AND type = {1}
-                    ORDER BY service_invoice_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Undocumented))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.ServiceInvoiceNo)
+                .FirstOrDefaultAsync(x =>
+                        x.Company == company &&
+                        x.Type == nameof(DocumentType.Undocumented),
+                    cancellationToken);
 
             if (lastSv == null)
             {
