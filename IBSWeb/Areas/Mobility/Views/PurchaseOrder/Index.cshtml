@@ -399,7 +399,7 @@
                     url: '@Url.Action("ProcessProductTransfer", "PurchaseOrder", new { area = "Mobility" })',
                     type: 'POST',
                     contentType: 'application/x-www-form-urlencoded',
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    headers: { 'RequestVerificationToken': csrfToken },
                     data: {
                         purchaseOrderId: purchaseOrderId,
                         pickupPointId: pickupPointId,

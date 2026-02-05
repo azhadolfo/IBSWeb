@@ -76,6 +76,22 @@ namespace IBS.DataAccess.Repository
                 .ToDateTime(new TimeOnly(0, 0));
         }
 
+        public async Task<bool> IsPeriodPostedAsync(Module module, DateOnly date, CancellationToken cancellationToken = default)
+        {
+            if (!Enum.IsDefined(typeof(Module), module))
+            {
+                throw new InvalidEnumArgumentException(nameof(module), (int)module, typeof(Module));
+            }
+
+            return await _db.PostedPeriods
+                .AnyAsync(m =>
+                    m.Module == module.ToString() &&
+                    m.IsPosted &&
+                    m.Year == date.Year &&
+                    m.Month == date.Month,
+                    cancellationToken);
+        }
+
         #region--Mobility
 
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)

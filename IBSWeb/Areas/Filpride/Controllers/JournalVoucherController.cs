@@ -382,9 +382,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
-                if (modelHeader.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.JournalVoucher, modelHeader.Date, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
@@ -481,9 +479,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
-                if (model.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.JournalVoucher, model.Date, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot cancel this record because the period {model.Date:MMM yyyy} is already closed.");
@@ -532,9 +528,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
-                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.JournalVoucher, existingHeaderModel.Date, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
@@ -577,6 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken),
                     COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                    MinDate = minDate
                 };
 
 

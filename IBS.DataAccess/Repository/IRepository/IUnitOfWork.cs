@@ -220,5 +220,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default);
 
         Task<DateTime> GetMinimumPeriodBasedOnThePostedPeriods(Module module, CancellationToken cancellationToken = default);
+
+        Task<bool> IsPeriodPostedAsync(Module module, DateOnly date, CancellationToken cancellationToken = default);
     }
 }

@@ -607,9 +607,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                if (existingModel.Date < DateOnly.FromDateTime(minDate))
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, existingModel.Date, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot edit this record because the period {existingModel.Date:MMM yyyy} is already closed.");
@@ -1054,8 +1053,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                if (modelHeader.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
                 }
@@ -1188,8 +1186,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new NullReferenceException("CV Header not found.");
                 }
 
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                if (cvHeader.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
                 }

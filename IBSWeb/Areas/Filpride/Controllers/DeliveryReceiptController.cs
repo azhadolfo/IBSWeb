@@ -466,7 +466,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.DeliveryReceipt, existingRecord.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }

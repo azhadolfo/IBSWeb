@@ -372,7 +372,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var minDate =
                     await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.ReceivingReport,
                         cancellationToken);
-                if (receivingReport.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.ReceivingReport, receivingReport.Date, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot edit this record because the period {receivingReport.Date:MMM yyyy} is already closed.");
