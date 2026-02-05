@@ -156,6 +156,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 user.Name = Input.Name;
                 user.Department = Input.Department;
                 user.StationAccess = Input.StationAccess;
+                user.IsActive = true;
+                user.CreatedDate = DateTime.Now;
 
                 await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);

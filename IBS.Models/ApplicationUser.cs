@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace IBS.Models
@@ -13,5 +15,19 @@ namespace IBS.Models
         public ICollection<UserNotification> UserNotifications { get; set; }
 
         public string? Position { get; set; }
+        // ⭐ USER MANAGEMENT PROPERTIES ⭐
+        [Required]
+        [Column(TypeName = "boolean")]
+        public bool IsActive { get; set; } = true;
+
+        [Required]
+        [Column(TypeName = "timestamp")]
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        [Column(TypeName = "timestamp")]
+        public DateTime? ModifiedDate { get; set; }
+
+        [MaxLength(256)]
+        public string? ModifiedBy { get; set; }
     }
 }
