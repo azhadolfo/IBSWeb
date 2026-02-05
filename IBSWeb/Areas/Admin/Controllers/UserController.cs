@@ -169,7 +169,11 @@ namespace IBSWeb.Areas.Admin.Controllers
                             company
                         );
 
-                        _logger.LogInformation("User {Username} created successfully by {CurrentUser}", model.Username, currentUser);
+                        var safeUsername = (model.Username ?? string.Empty)
+                            .Replace("\r", string.Empty)
+                            .Replace("\n", string.Empty);
+
+                        _logger.LogInformation("User {Username} created successfully by {CurrentUser}", safeUsername, currentUser);
                         return Json(new { success = true, message = "User created successfully" });
                     }
                     else
