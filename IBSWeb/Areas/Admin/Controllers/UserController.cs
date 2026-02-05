@@ -112,6 +112,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upsert([FromBody] UserUpsertModel model)
         {
             if (model == null)
@@ -252,8 +253,11 @@ namespace IBSWeb.Areas.Admin.Controllers
                                 company
                             );
                         }
+                        var safeUsername = (model.Username ?? string.Empty)
+                            .Replace("\r", string.Empty)
+                            .Replace("\n", string.Empty);
 
-                        _logger.LogInformation("User {Username} updated successfully by {CurrentUser}", model.Username, currentUser);
+                        _logger.LogInformation("User {safeUsername} updated successfully by {CurrentUser}", safeUsername, currentUser);
                         return Json(new { success = true, message = "User updated successfully" });
                     }
                     else
@@ -271,10 +275,15 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(string id)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return Json(new { success = false, message = "Invalid user id" });
+                }
                 var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
                 var company = User.FindFirstValue("Company") ?? "System";
                 var user = await _userManager.FindByIdAsync(id);
@@ -305,7 +314,11 @@ namespace IBSWeb.Areas.Admin.Controllers
                         company
                     );
 
-                    _logger.LogInformation("User {Username} {Action} by {CurrentUser}", user.UserName, action, currentUser);
+                    var safeUsername = (user.UserName ?? string.Empty)
+                        .Replace("\r", string.Empty)
+                        .Replace("\n", string.Empty);
+                        
+                    _logger.LogInformation("User {safeUsername} {Action} by {CurrentUser}", safeUsername, action, currentUser);
                     return Json(new { success = true, message = $"User {action} successfully" });
                 }
 
@@ -319,6 +332,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetModel model)
         {
             try
@@ -353,7 +367,11 @@ namespace IBSWeb.Areas.Admin.Controllers
                         company
                     );
 
-                    _logger.LogInformation("Password reset for user {Username} by {CurrentUser}", user.UserName, currentUser);
+                    var safeUsername = (user.UserName ?? string.Empty)
+                        .Replace("\r", string.Empty)
+                        .Replace("\n", string.Empty);
+
+                    _logger.LogInformation("Password reset for user {Username} by {CurrentUser}", safeUsername, currentUser);
                     return Json(new { success = true, message = "Password reset successfully" });
                 }
 
