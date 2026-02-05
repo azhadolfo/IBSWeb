@@ -38,32 +38,15 @@
         <table class="table table-bordered table-hover" id="supplierTable">
             <thead class="table-secondary">
                 <tr>
-                    <th>
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SupplierCode)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SupplierName)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SupplierAddress)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SupplierTin)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SupplierTerms)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.VatType)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.Category)
-                    </th>
-                    <th>
-                        CREATED DATE
-                    </th>
+                    <th></th>
+                    <th>@Html.DisplayNameFor(model => model.SupplierCode)</th>
+                    <th>@Html.DisplayNameFor(model => model.SupplierName)</th>
+                    <th>@Html.DisplayNameFor(model => model.SupplierAddress)</th>
+                    <th>@Html.DisplayNameFor(model => model.SupplierTin)</th>
+                    <th>@Html.DisplayNameFor(model => model.SupplierTerms)</th>
+                    <th>@Html.DisplayNameFor(model => model.VatType)</th>
+                    <th>@Html.DisplayNameFor(model => model.Category)</th>
+                    <th>CREATED DATE</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,41 +54,93 @@
         </table>
     </div>
 </div>
+
 @section Scripts{
     <script>
         let selectedRecords = new Set();
+        
         $(document).ready(function () {
+            // Load persisted date filters from localStorage
+            let dateFromValue = localStorage.getItem('exportSupplierDateFrom') || "";
+            let dateToValue = localStorage.getItem('exportSupplierDateTo') || "";
+            $('#dateFrom').val(dateFromValue);
+            $('#dateTo').val(dateToValue);
+            
             let table = $('#supplierTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,      // ENABLE SERVER-SIDE PROCESSING
                 stateSave: true,
+                stateDuration: 86400,  // 24 hours
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+                language: {
+                    processing: `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
                 ajax: {
-                    url: '@Url.Action("GetSupplierList", "Supplier")',
+                    url: '@Url.Action("GetSupplierList", "Supplier", new { area = "Filpride" })',
                     type: 'POST',
                     data: function (d) {
                         return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                            // Pass date filters to server
+                            dateFrom: $('#dateFrom').val() || null,
+                            dateTo: $('#dateTo').val() || null
                         });
                     },
                     error: function (xhr) {
-                        console.log(xhr.responseText);
+                        console.error('DataTables error:', xhr.responseText);
+                        alert('An error occurred while loading the data');
                     }
                 },
                 columns: [
-                    {data: 'supplierId', orderable: false, searchable: false, render: DataTable.render.select()},
-                    { data: 'supplierCode' },
-                    { data: 'supplierName' },
-                    { data: 'supplierAddress' },
-                    { data: 'supplierTin' },
-                    { data: 'supplierTerms' },
-                    { data: 'vatType' },
-                    { data: 'category' },
                     {
-                        "data": "createdDate",
-                        "name": "createdDate",
-                        "render": function (data) {
+                        data: 'supplierId', 
+                        orderable: false, 
+                        searchable: false,
+                        name: 'supplierId',
+                        render: DataTable.render.select()
+                    },
+                    { 
+                        data: 'supplierCode',
+                        name: 'supplierCode'
+                    },
+                    { 
+                        data: 'supplierName',
+                        name: 'supplierName'
+                    },
+                    { 
+                        data: 'supplierAddress',
+                        name: 'supplierAddress'
+                    },
+                    { 
+                        data: 'supplierTin',
+                        name: 'supplierTin'
+                    },
+                    { 
+                        data: 'supplierTerms',
+                        name: 'supplierTerms'
+                    },
+                    { 
+                        data: 'vatType',
+                        name: 'vatType'
+                    },
+                    { 
+                        data: 'category',
+                        name: 'category'
+                    },
+                    {
+                        data: "createdDate",
+                        name: "createdDate",
+                        render: function (data) {
                             let date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: '2-digit' 
+                            });
                         }
                     }
                 ],
@@ -113,9 +148,11 @@
                     style: 'multi',
                     selector: 'td:first-child'
                 },
-                order: [[1, 'desc']]
+                order: [[1, 'desc']],
+                pageLength: 10
             });
 
+            // Handle row selection
             table.on('select deselect', function(e, dt, type, indexes) {
                 if (type === 'row') {
                     indexes.forEach(function(idx) {
@@ -125,24 +162,14 @@
                 }
             });
 
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                let getDateFrom = $('#dateFrom');
-                let getDateTo = $('#dateTo');
-                let dateFrom = getDateFrom.val() ? new Date(getDateFrom.val()) : null;
-                let dateTo = getDateTo.val() ? new Date(getDateTo.val()) : null;
-                let transactionDate = new Date(data[8]);
-
-                // Remove time part
-                if (dateFrom) dateFrom.setHours(0,0,0,0);
-                if (dateTo) dateTo.setHours(0,0,0,0);
-                transactionDate.setHours(0,0,0,0);
-
-                return (dateFrom === null || transactionDate >= dateFrom) &&
-                    (dateTo === null || transactionDate <= dateTo);
-            });
-
+            // Handle date filter changes
             $('#dateFrom, #dateTo').on('change', function() {
-                $('#supplierTable').DataTable().draw();
+                // Persist the date values
+                localStorage.setItem('exportSupplierDateFrom', $('#dateFrom').val());
+                localStorage.setItem('exportSupplierDateTo', $('#dateTo').val());
+                
+                // Reload table with new date filters
+                table.ajax.reload();
             });
         });
         
@@ -152,11 +179,13 @@
             if (selectedIds) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '@Url.Action("Export", "Supplier")';
+                form.action = '@Url.Action("Export", "Supplier", new { area = "Filpride" })';
+                
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
+                
                 form.appendChild(input);
                 document.body.appendChild(form);
                 form.submit();

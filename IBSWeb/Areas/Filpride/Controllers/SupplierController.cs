@@ -505,36 +505,134 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetSupplierList(CancellationToken cancellationToken)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetSupplierList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var suppliers = (await _unitOfWork.FilprideSupplier
-                    .GetAllAsync(null, cancellationToken))
-                    .Select(x => new
-                    {
-                        x.SupplierId,
-                        x.SupplierCode,
-                        x.SupplierName,
-                        x.SupplierAddress,
-                        x.SupplierTin,
-                        x.SupplierTerms,
-                        x.VatType,
-                        x.Category,
-                        x.CreatedDate
-                    });
+                var suppliers = await _unitOfWork.FilprideSupplier
+                    .GetAllAsync(null, cancellationToken);
 
-                return Json(new
+                // Apply date range filter if provided (using CreatedDate)
+                if (dateFrom.HasValue)
                 {
-                    data = suppliers
-                });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+                    suppliers = suppliers
+                        .Where(s => s.CreatedDate >= dateFrom.Value)
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    // Add one day to include the entire end date
+                    var dateToInclusive = dateTo.Value.AddDays(1);
+                    suppliers = suppliers
+                        .Where(s => s.CreatedDate < dateToInclusive)
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+            var searchValue = parameters.Search.Value.ToLower();
+            
+            suppliers = suppliers
+                .Where(s =>
+                    (s.SupplierCode != null && s.SupplierCode.ToLower().Contains(searchValue)) ||
+                    (s.SupplierName != null && s.SupplierName.ToLower().Contains(searchValue)) ||
+                    (s.SupplierAddress != null && s.SupplierAddress.ToLower().Contains(searchValue)) ||
+                    (s.SupplierTin != null && s.SupplierTin.ToLower().Contains(searchValue)) ||
+                    (s.SupplierTerms != null && s.SupplierTerms.ToLower().Contains(searchValue)) ||
+                    (s.VatType != null && s.VatType.ToLower().Contains(searchValue)) ||
+                    (s.Category != null && s.Category.ToLower().Contains(searchValue)) ||
+                    s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
+                )
+                .ToList();
         }
+
+        // Apply sorting if provided
+        if (parameters.Order?.Count > 0)
+        {
+            var orderColumn = parameters.Order[0];
+            var columnName = parameters.Columns[orderColumn.Column].Data;
+            var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+            // Map frontend column names to actual entity property names
+            var columnMapping = new Dictionary<string, string>
+            {
+                { "supplierCode", "SupplierCode" },
+                { "supplierName", "SupplierName" },
+                { "supplierAddress", "SupplierAddress" },
+                { "supplierTin", "SupplierTin" },
+                { "supplierTerms", "SupplierTerms" },
+                { "vatType", "VatType" },
+                { "category", "Category" },
+                { "createdDate", "CreatedDate" }
+            };
+
+            // Get the actual property name
+            var actualColumnName = columnMapping.ContainsKey(columnName) 
+                ? columnMapping[columnName] 
+                : columnName;
+
+            suppliers = suppliers
+                .AsQueryable()
+                .OrderBy($"{actualColumnName} {sortDirection}")
+                .ToList();
+        }
+
+        var totalRecords = suppliers.Count();
+
+        // Apply pagination - HANDLE -1 FOR "ALL"
+        IEnumerable<FilprideSupplier> pagedSuppliers;
+        
+        if (parameters.Length == -1)
+        {
+            // "All" selected - return all records
+            pagedSuppliers = suppliers;
+        }
+        else
+        {
+            // Normal pagination
+            pagedSuppliers = suppliers
+                .Skip(parameters.Start)
+                .Take(parameters.Length);
+        }
+
+        var pagedData = pagedSuppliers
+            .Select(x => new
+            {
+                x.SupplierId,
+                x.SupplierCode,
+                x.SupplierName,
+                x.SupplierAddress,
+                x.SupplierTin,
+                x.SupplierTerms,
+                x.VatType,
+                x.Category,
+                x.CreatedDate
+            })
+            .ToList();
+
+        return Json(new
+        {
+            draw = parameters.Draw,
+            recordsTotal = totalRecords,
+            recordsFiltered = totalRecords,
+            data = pagedData
+        });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to get suppliers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+            ex.Message, ex.StackTrace);
+        TempData["error"] = ex.Message;
+        return RedirectToAction(nameof(Index));
+    }
+}
 
         //Download as .xlsx file.(Export)
 

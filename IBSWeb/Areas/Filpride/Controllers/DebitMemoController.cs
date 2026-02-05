@@ -1047,35 +1047,117 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetDebitMemoList(CancellationToken cancellationToken)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetDebitMemoList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var debitMemos = (await _unitOfWork.FilprideDebitMemo
-                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken))
+                var debitMemos = await _unitOfWork.FilprideDebitMemo
+                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    debitMemos = debitMemos
+                        .Where(s => s.TransactionDate >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    debitMemos = debitMemos
+                        .Where(s => s.TransactionDate <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    debitMemos = debitMemos
+                        .Where(s =>
+                            s.DebitMemoNo!.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.SalesInvoice?.SalesInvoiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.ServiceInvoice?.ServiceInvoiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.Source!.ToLower().Contains(searchValue) ||
+                            s.DebitAmount.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    debitMemos = debitMemos
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = debitMemos.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideDebitMemo> pagedDebitMemos;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedDebitMemos = debitMemos;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedDebitMemos = debitMemos
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedDebitMemos
                     .Select(x => new
                     {
                         x.DebitMemoId,
                         x.DebitMemoNo,
                         x.TransactionDate,
-                        x.SalesInvoice?.SalesInvoiceNo,
-                        x.ServiceInvoice?.ServiceInvoiceNo,
+                        salesInvoiceNo = x.SalesInvoice?.SalesInvoiceNo,
+                        serviceInvoiceNo = x.ServiceInvoice?.ServiceInvoiceNo,
                         x.Source,
                         x.DebitAmount,
                         x.CreatedBy,
                         x.Status,
-                        x.SalesInvoiceId
-                    });
+                        x.SalesInvoiceId,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = debitMemos
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get debit memos. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

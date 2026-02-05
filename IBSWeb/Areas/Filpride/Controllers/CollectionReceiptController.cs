@@ -2808,14 +2808,87 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCollectionReceiptList(CancellationToken cancellationToken)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetCollectionReceiptList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var collectionReceipts = (await _unitOfWork.FilprideCollectionReceipt
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken))
+                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    collectionReceipts = collectionReceipts
+                        .Where(s => s.TransactionDate >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    collectionReceipts = collectionReceipts
+                        .Where(s => s.TransactionDate <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    collectionReceipts = collectionReceipts
+                        .Where(s =>
+                            s.CollectionReceiptNo!.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.SINo?.ToLower().Contains(searchValue) == true ||
+                            s.SVNo?.ToLower().Contains(searchValue) == true ||
+                            (s.MultipleSI != null && s.MultipleSI.Any(si => si.ToLower().Contains(searchValue))) ||
+                            s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
+                            s.Total.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    collectionReceipts = collectionReceipts
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = collectionReceipts.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideCollectionReceipt> pagedCollectionReceipts;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedCollectionReceipts = collectionReceipts;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedCollectionReceipts = collectionReceipts
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedCollectionReceipts
                     .Select(x => new
                     {
                         x.CollectionReceiptId,
@@ -2824,19 +2897,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.SINo,
                         x.MultipleSI,
                         x.SVNo,
-                        x.Customer!.CustomerName,
+                        customerName = x.Customer!.CustomerName,
                         x.Total,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = collectionReceipts
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get collection receipts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
