@@ -22,8 +22,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastSupplier = await _db
                 .FilprideSuppliers
-                .OrderBy(s => s.SupplierId)
-                .LastOrDefaultAsync(cancellationToken);
+                .OrderByDescending(s => s.SupplierId)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSupplier == null)
             {

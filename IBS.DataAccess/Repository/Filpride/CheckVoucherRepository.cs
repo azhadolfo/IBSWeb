@@ -20,34 +20,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND category = {2}
-                        AND check_voucher_header_no LIKE {3}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Documented),
-                    "Trade",
-                    "%CV%")
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                    x.Category == "Trade" &&
+                    x.Type == nameof(DocumentType.Documented) &&
+                    x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {
@@ -65,22 +56,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND category = {2}
-                        AND check_voucher_header_no LIKE {3}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Undocumented),
-                    "Trade",
-                    "%CV%")
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                        x.Category == "Trade" &&
+                        x.Type == nameof(DocumentType.Undocumented) &&
+                        x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {
@@ -158,32 +140,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeMultipleInvoiceAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeMultipleInvoiceForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeMultipleInvoiceForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeMultipleInvoiceForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeMultipleInvoiceForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateCodeMultipleInvoiceForDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND cv_type = {2}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Documented),
-                    nameof(CVType.Invoicing))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                        x.CvType == nameof(CVType.Invoicing) &&
+                        x.Type == nameof(DocumentType.Documented) &&
+                        x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {
@@ -201,20 +176,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND cv_type = {2}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Undocumented),
-                    nameof(CVType.Invoicing))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                        x.CvType == nameof(CVType.Invoicing) &&
+                        x.Type == nameof(DocumentType.Undocumented) &&
+                        x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {
@@ -230,32 +198,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeMultiplePaymentAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(DocumentType.Documented))
+            return type switch
             {
-                return await GenerateCodeMultiplePaymentForDocumented(company, cancellationToken);
-            }
-
-            return await GenerateCodeMultiplePaymentForUnDocumented(company, cancellationToken);
+                nameof(DocumentType.Documented) => await GenerateCodeMultiplePaymentForDocumented(company, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeMultiplePaymentForUnDocumented(company, cancellationToken),
+                _ => throw new ArgumentException("Invalid type")
+            };
         }
 
         private async Task<string> GenerateCodeMultiplePaymentForDocumented(string company, CancellationToken cancellationToken = default)
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND cv_type = {2}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Documented),
-                    nameof(CVType.Payment))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                        x.CvType == nameof(CVType.Payment) &&
+                        x.Type == nameof(DocumentType.Documented) &&
+                        x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {
@@ -273,20 +234,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_check_voucher_headers
-                    WHERE company = {0}
-                        AND type = {1}
-                        AND cv_type = {2}
-                    ORDER BY check_voucher_header_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company,
-                    nameof(DocumentType.Undocumented),
-                    nameof(CVType.Payment))
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .FirstOrDefaultAsync(x =>
+                        x.CvType == nameof(CVType.Payment) &&
+                        x.Type == nameof(DocumentType.Undocumented) &&
+                        x.Company == company,
+                    cancellationToken);
 
             if (lastCv == null)
             {

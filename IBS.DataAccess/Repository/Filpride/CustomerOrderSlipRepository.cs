@@ -25,16 +25,9 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_customer_order_slips
-                    WHERE company = {0}
-                    ORDER BY customer_order_slip_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    companyClaims)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.CustomerOrderSlipNo)
+                .FirstOrDefaultAsync(x => x.Company == companyClaims, cancellationToken);
 
             if (lastCos == null)
             {

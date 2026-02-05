@@ -20,16 +20,9 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastAtl = await _db
                 .FilprideAuthorityToLoads
-                .FromSqlRaw(@"
-                    SELECT *
-                    FROM filpride_authority_to_loads
-                    WHERE company = {0}
-                    ORDER BY authority_to_load_id DESC, authority_to_load_no DESC
-                    LIMIT 1
-                    FOR UPDATE",
-                    company)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(x => x.AuthorityToLoadNo)
+                .FirstOrDefaultAsync(x => x.Company == company, cancellationToken);
 
             var yearToday = DateTimeHelper.GetCurrentPhilippineTime().Year;
 

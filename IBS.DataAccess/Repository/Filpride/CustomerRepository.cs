@@ -23,29 +23,29 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastCustomer = await _db
                 .FilprideCustomers
-                .Where(c => c.CustomerType == customerType)
-                .OrderBy(c => c.CustomerId)
-                .LastOrDefaultAsync(cancellationToken);
+                .OrderByDescending(c => c.CustomerId)
+                .FirstOrDefaultAsync(c => c.CustomerType == customerType, cancellationToken);
 
-            if (lastCustomer != null)
+            if (lastCustomer == null)
             {
-                var lastCode = lastCustomer.CustomerCode!;
-                var numericPart = lastCode.Substring(3);
-
-                // Parse the numeric part and increment it by one
-                var incrementedNumber = int.Parse(numericPart) + 1;
-
-                // Format the incremented number with leading zeros and concatenate with the letter part
-                return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
+                return customerType switch
+                {
+                    nameof(CustomerType.Retail) => "RET0001",
+                    nameof(CustomerType.Industrial) => "IND0001",
+                    nameof(CustomerType.Reseller) => "RES0001",
+                    _ => "GOV0001"
+                };
             }
 
-            return customerType switch
-            {
-                nameof(CustomerType.Retail) => "RET0001",
-                nameof(CustomerType.Industrial) => "IND0001",
-                nameof(CustomerType.Reseller) => "RES0001",
-                _ => "GOV0001"
-            };
+            var lastCode = lastCustomer.CustomerCode!;
+            var numericPart = lastCode.Substring(3);
+
+            // Parse the numeric part and increment it by one
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            // Format the incremented number with leading zeros and concatenate with the letter part
+            return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
+
         }
 
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
