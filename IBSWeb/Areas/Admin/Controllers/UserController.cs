@@ -228,11 +228,10 @@ namespace IBSWeb.Areas.Admin.Controllers
                 }
 
                 // Prevent admin from deactivating themselves
-                if (user.UserName == currentUser)
+                if (string.Equals(user.UserName, currentUser, StringComparison.OrdinalIgnoreCase))
                 {
                     return Json(new { success = false, message = "You cannot deactivate your own account" });
                 }
-
                 user.IsActive = !user.IsActive;
                 user.ModifiedDate = DateTime.Now;
                 user.ModifiedBy = currentUser;
@@ -284,7 +283,11 @@ namespace IBSWeb.Areas.Admin.Controllers
                 {
                     user.ModifiedDate = DateTime.Now;
                     user.ModifiedBy = currentUser;
-                    await _userManager.UpdateAsync(user);
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to update audit fields for user {Username} after password reset", user.UserName);
+                    }
 
                     await LogAuditTrail(
                         currentUser,

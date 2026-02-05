@@ -135,10 +135,10 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
 
                     // CHECK IF USER IS ACTIVE 
-                    if (!user.IsActive)
+                    if (!user.IsActive || !user.IsActive)
                     {
                         await _signInManager.SignOutAsync();
-                        _logger.LogWarning("Deactivated user attempted to login: {Username}", Input.Username);
+                        _logger.LogWarning("User not found or deactivated: {Username}", Input.Username);
                         ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact the administrator.");
                         await LoadPageData(returnUrl);
                         return Page();

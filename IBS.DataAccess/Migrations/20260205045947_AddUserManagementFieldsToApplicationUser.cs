@@ -16,7 +16,7 @@ namespace IBS.DataAccess.Migrations
                 table: "AspNetUsers",
                 type: "timestamp",
                 nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                defaultValue: new DateTime(2024, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<bool>(
                 name: "is_active",
