@@ -8,6 +8,7 @@ using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -29,7 +30,10 @@ builder.Host.UseSerilog();
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // MVC
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 // DBContext (scoped)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
