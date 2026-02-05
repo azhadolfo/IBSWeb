@@ -465,7 +465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
@@ -1344,8 +1344,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
@@ -1491,8 +1490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot reappoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
