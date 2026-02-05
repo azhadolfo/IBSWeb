@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Admin.Controllers
 {
@@ -78,6 +79,11 @@ namespace IBSWeb.Areas.Admin.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return Json(new { success = false, message = "Invalid user id" });
+                }
+
                 var user = await _userManager.FindByIdAsync(id);
                 if (user == null)
                 {
@@ -100,7 +106,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user {UserId}. Error: {ErrorMessage}", id, ex.Message);
+                _logger.LogError(ex, "Error retrieving user. Error: {ErrorMessage}", ex.Message);
                 return Json(new { success = false, message = "Error retrieving user data" });
             }
         }
@@ -108,6 +114,22 @@ namespace IBSWeb.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Upsert([FromBody] UserUpsertModel model)
         {
+            if (model == null)
+                return Json(new { success = false, message = "Invalid request payload" });
+
+            if (string.IsNullOrWhiteSpace(model.Username) ||
+                string.IsNullOrWhiteSpace(model.Name) ||
+                string.IsNullOrWhiteSpace(model.Department) ||
+                string.IsNullOrWhiteSpace(model.Role))
+            {
+                return Json(new { success = false, message = "Missing required fields" });
+            }
+
+            if (string.IsNullOrEmpty(model.Id) && string.IsNullOrWhiteSpace(model.Password))
+            {
+                return Json(new { success = false, message = "Password is required for new users" });
+            }
+
             try
             {
                 var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
@@ -123,14 +145,21 @@ namespace IBSWeb.Areas.Admin.Controllers
                         Department = model.Department,
                         StationAccess = model.StationAccess,
                         IsActive = model.IsActive,
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                     };
 
                     var result = await _userManager.CreateAsync(newUser, model.Password!);
 
                     if (result.Succeeded)
                     {
-                        await _userManager.AddToRoleAsync(newUser, model.Role);
+                        var addRoleResult = await _userManager.AddToRoleAsync(newUser, model.Role);
+                        if (!addRoleResult.Succeeded)
+                        {
+                            // If role assignment failed, remove the newly created user and return error
+                            await _userManager.DeleteAsync(newUser);
+                            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
+                            return Json(new { success = false, message = errors, errors = addRoleResult.Errors.Select(e => e.Description) });
+                        }
 
                         // Audit Trail
                         await LogAuditTrail(
@@ -169,8 +198,32 @@ namespace IBSWeb.Areas.Admin.Controllers
                     var currentRoles = await _userManager.GetRolesAsync(user);
                     if (!currentRoles.Contains(model.Role))
                     {
-                        await _userManager.RemoveFromRolesAsync(user, currentRoles);
-                        await _userManager.AddToRoleAsync(user, model.Role);
+                        // Remove existing roles
+                        var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                        if (!removeResult.Succeeded)
+                        {
+                            var errors = string.Join(", ", removeResult.Errors.Select(e => e.Description));
+                            return Json(new { success = false, message = errors, errors = removeResult.Errors.Select(e => e.Description) });
+                        }
+
+                        // Add new role
+                        var addRoleResult = await _userManager.AddToRoleAsync(user, model.Role);
+                        if (!addRoleResult.Succeeded)
+                        {
+                            // Try to restore previous roles if possible
+                            if (currentRoles.Any())
+                            {
+                                var restoreResult = await _userManager.AddToRolesAsync(user, currentRoles);
+                                if (!restoreResult.Succeeded)
+                                {
+                                    _logger.LogError("Failed to restore roles for user {Username} after AddToRole failure: {Errors}", user.UserName, string.Join(", ", restoreResult.Errors.Select(e => e.Description)));
+                                }
+                            }
+
+                            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
+                            return Json(new { success = false, message = errors, errors = addRoleResult.Errors.Select(e => e.Description) });
+                        }
+
                         changes.Add($"Role: {currentRoles.FirstOrDefault()} → {model.Role}");
                     }
 
@@ -233,7 +286,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                     return Json(new { success = false, message = "You cannot deactivate your own account" });
                 }
                 user.IsActive = !user.IsActive;
-                user.ModifiedDate = DateTime.Now;
+                user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 user.ModifiedBy = currentUser;
 
                 var result = await _userManager.UpdateAsync(user);

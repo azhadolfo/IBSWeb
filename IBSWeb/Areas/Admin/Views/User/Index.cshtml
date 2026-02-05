@@ -237,11 +237,11 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 columns: [
-                    { data: 'username' },
-                    { data: 'name' },
-                    { data: 'department' },
-                    { data: 'role' },
-                    { data: 'stationAccess' },
+                    { data: 'username', render: data => escapeHtml(data) },
+                    { data: 'name', render: data => escapeHtml(data) },
+                    { data: 'department', render: data => escapeHtml(data) },
+                    { data: 'role', render: data => escapeHtml(data) },
+                    { data: 'stationAccess', render: data => escapeHtml(data) },
                     {
                         data: 'isActive',
                         render: function (data) {
