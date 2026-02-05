@@ -356,8 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
-                if (model.TransactionDate < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.DebitMemo, model.TransactionDate, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
                 }
@@ -877,7 +876,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
-                if (debitMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.DebitMemo, debitMemo.TransactionDate, cancellationToken))
                 {
                     throw new ArgumentException(
                         $"Cannot edit this record because the period {debitMemo.TransactionDate:MMM yyyy} is already closed.");

@@ -698,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
-            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, existingModel.TransactionDate, cancellationToken))
             {
                 throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
             }
@@ -1448,7 +1448,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, existingModel.TransactionDate, cancellationToken))
             {
                 throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
             }
@@ -1703,7 +1703,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
-            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, existingModel.TransactionDate, cancellationToken))
             {
                 throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
             }
@@ -1959,9 +1959,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
-
-            if (model.TransactionDate < DateOnly.FromDateTime(minDate))
+            if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, model.TransactionDate, cancellationToken))
             {
                 throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
             }
