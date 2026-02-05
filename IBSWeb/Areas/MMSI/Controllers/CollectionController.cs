@@ -187,6 +187,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetCollectionList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try

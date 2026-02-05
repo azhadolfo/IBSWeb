@@ -792,33 +792,114 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetReceivingReportList(CancellationToken cancellationToken)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetReceivingReportList(
+            [FromForm] DataTablesParameters parameters,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var receivingReports = (await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken))
+                var receivingReports = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
+
+                // Apply date range filter if provided
+                if (dateFrom.HasValue)
+                {
+                    receivingReports = receivingReports
+                        .Where(s => s.Date >= DateOnly.FromDateTime(dateFrom.Value))
+                        .ToList();
+                }
+
+                if (dateTo.HasValue)
+                {
+                    receivingReports = receivingReports
+                        .Where(s => s.Date <= DateOnly.FromDateTime(dateTo.Value))
+                        .ToList();
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    receivingReports = receivingReports
+                        .Where(s =>
+                            s.ReceivingReportNo!.ToLower().Contains(searchValue) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.PurchaseOrder!.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
+                            s.QuantityDelivered.ToString().Contains(searchValue) ||
+                            s.QuantityReceived.ToString().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
+
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    receivingReports = receivingReports
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = receivingReports.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<FilprideReceivingReport> pagedReceivingReports;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedReceivingReports = receivingReports;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedReceivingReports = receivingReports
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedReceivingReports
                     .Select(x => new
                     {
                         x.ReceivingReportId,
                         x.ReceivingReportNo,
                         x.Date,
-                        x.PurchaseOrder!.PurchaseOrderNo,
+                        purchaseOrderNo = x.PurchaseOrder!.PurchaseOrderNo,
                         x.QuantityDelivered,
                         x.QuantityReceived,
                         x.CreatedBy,
-                        x.Status
-                    });
+                        x.Status,
+                        // Include status flags for badge rendering
+                        isPosted = x.PostedBy != null,
+                        isVoided = x.VoidedBy != null,
+                        isCanceled = x.CanceledBy != null
+                    })
+                    .ToList();
 
                 return Json(new
                 {
-                    data = receivingReports
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get receiving reports. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
