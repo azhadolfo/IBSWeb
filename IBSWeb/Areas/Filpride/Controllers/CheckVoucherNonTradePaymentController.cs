@@ -1471,7 +1471,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TotalDebit = totalDebit,
                 TotalCredit = totalDebit,
                 Particulars = firstParticulars,
-                CvBalances = cvBalances
+                CvBalances = cvBalances,
+                TransactionDate = invoices.Select(x => x.CheckVoucherHeader!.Date).FirstOrDefault()
             });
         }
 
