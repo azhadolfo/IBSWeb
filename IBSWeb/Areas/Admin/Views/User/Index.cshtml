@@ -9,36 +9,33 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="mb-0">User Management</h2>
-            <p class="text-muted">Manage system users, roles, and permissions</p>
-        </div>
-        <div class="col-auto">
-            <button type="button" class="btn btn-primary" onclick="openUpsertModal()">
-                <i class="bi bi-plus-circle"></i> Create New User
-            </button>
-        </div>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        <button type="button" class="btn btn-light" onclick="openUpsertModal()">
+            <i class="bi bi-plus-circle"></i> Create New User
+        </button>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <table id="userTable" class="table table-hover table-striped" style="width:100%">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Department</th>
-                        <th>Role</th>
-                        <th>Station</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Modified</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-            </table>
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table id="userTable" class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="text-start">Username</th>
+                            <th class="text-start">Full Name</th>
+                            <th class="text-start">Department</th>
+                            <th class="text-start">Role</th>
+                            <th class="text-start">Station</th>
+                            <th class="text-start">Status</th>
+                            <th class="text-start">Created</th>
+                            <th class="text-start">Modified</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -149,7 +146,7 @@
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Reset Password</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -171,7 +168,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" id="resetPasswordBtn" onclick="resetPassword()">
+                <button type="button" class="btn btn-primary" id="resetPasswordBtn" onclick="resetPassword()">
                     <i class="bi bi-key"></i> Reset Password
                 </button>
             </div>
@@ -185,14 +182,12 @@
         let userTable;
         let upsertModal;
         let resetPasswordModal;
-        let shouldRefreshOnClose = false; // Flag to track if we need to refresh
+        let shouldRefreshOnClose = false;
 
-        // Get antiforgery token
         function getAntiforgeryToken() {
             return $('input[name="__RequestVerificationToken"]').val();
         }
 
-        // Setup AJAX to include antiforgery token
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
                 if (settings.type === 'POST' || settings.type === 'PUT' || settings.type === 'DELETE') {
@@ -202,15 +197,26 @@
         });
 
         $(document).ready(function () {
-            // Initialize modals
             upsertModal = new bootstrap.Modal(document.getElementById('upsertModal'));
             resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
 
-            // Initialize Select2
             initializeSelect2();
 
-            // Initialize DataTable
             userTable = $('#userTable').DataTable({
+                "order": [[6, 'desc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [8] }
+                ],
+                "processing": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`,
+                    "emptyTable": "No users found"
+                },
                 ajax: {
                     url: '/Admin/User/GetAll',
                     dataSrc: 'data',
@@ -222,6 +228,13 @@
                             text: 'Failed to load users. Please refresh the page.'
                         });
                     }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#userTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#userTable').removeClass('table-loading');
+                    $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 columns: [
                     { data: 'username' },
@@ -278,7 +291,6 @@
                 }
             });
 
-            // Event delegation for action buttons
             $('#userTable').on('click', '.btn-edit-user', function() {
                 openUpsertModal($(this).data('user-id'));
             });
@@ -291,24 +303,19 @@
                 openResetPasswordModal($(this).data('user-id'), $(this).data('username'));
             });
 
-            // Load roles and stations
             loadRoles();
             loadStations();
 
-            // Toggle station field based on department and role
             $('#department, #role').on('change', toggleStationField);
 
-            // Toggle status label
             $('#isActive').on('change', function () {
                 $('#statusLabel').text(this.checked ? 'Active' : 'Inactive');
             });
 
-            // Reinitialize Select2 when modal is shown
             $('#upsertModal').on('shown.bs.modal', function () {
                 initializeSelect2();
             });
 
-            // Destroy Select2 and refresh table when modal is hidden (if needed)
             $('#upsertModal').on('hidden.bs.modal', function () {
                 $('.js-select2').select2('destroy');
                 if (shouldRefreshOnClose) {
@@ -317,7 +324,6 @@
                 }
             });
 
-            // Refresh table when reset password modal is hidden (if needed)
             $('#resetPasswordModal').on('hidden.bs.modal', function () {
                 if (shouldRefreshOnClose) {
                     userTable.ajax.reload(null, false);
@@ -483,7 +489,6 @@
             const confirmPassword = $('#confirmPassword').val();
             const isActive = $('#isActive').is(':checked');
 
-            // Validation
             if (!username || !name || !department || !role) {
                 Swal.fire({
                     icon: 'warning',
@@ -521,7 +526,6 @@
                 }
             }
 
-            // Disable button to prevent double submission
             const saveBtn = $('#saveUserBtn');
             saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
 
@@ -545,7 +549,7 @@
                     saveBtn.prop('disabled', false).html('<i class="bi bi-save"></i> Save User');
                     
                     if (response.success) {
-                        shouldRefreshOnClose = true; // Set flag to refresh on modal close
+                        shouldRefreshOnClose = true;
                         
                         Swal.fire({
                             icon: 'success',
@@ -589,7 +593,6 @@
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading
                     Swal.fire({
                         title: 'Processing...',
                         text: 'Please wait',
@@ -660,7 +663,6 @@
                 return;
             }
 
-            // Disable button to prevent double submission
             const resetBtn = $('#resetPasswordBtn');
             resetBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Resetting...');
 
@@ -676,7 +678,7 @@
                     resetBtn.prop('disabled', false).html('<i class="bi bi-key"></i> Reset Password');
                     
                     if (response.success) {
-                        shouldRefreshOnClose = true; // Set flag to refresh on modal close
+                        shouldRefreshOnClose = true;
                         
                         Swal.fire({
                             icon: 'success',

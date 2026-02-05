@@ -22,7 +22,8 @@ namespace IBS.Models
 
         [Required]
         [Column(TypeName = "timestamp")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
         [Column(TypeName = "timestamp")]
         public DateTime? ModifiedDate { get; set; }
