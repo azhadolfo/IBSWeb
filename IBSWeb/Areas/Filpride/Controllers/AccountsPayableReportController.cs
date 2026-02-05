@@ -4900,7 +4900,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
                     var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
-                    var ewtPercentage = sameSupplierGroup.First().Supplier!.WithholdingTaxPercent ?? 0m;
+                    var ewtPercentage = 0m;
                     row += 2;
                     worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
                     worksheet.Cells[row, 2].Style.Font.Bold = true;
@@ -4959,6 +4959,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 grossOfLiftedThisMonth += rr.Amount;
                                             }
                                         }
+                                        ewtPercentage = po.ReceivingReports!
+                                            .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                            .Average(r => r.TaxPercentage);
                                     }
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
@@ -5392,7 +5395,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     unliftedLastMonth = 0m;
                                 }
 
-                                ewtPercentage = po.ReceivingReports!.Average(r => r.TaxPercentage);
+                                ewtPercentage = po.ReceivingReports!
+                                    .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                    .Average(r => r.TaxPercentage);
                             }
 
                             var netOfVat = isVatable
