@@ -1464,7 +1464,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Debit = 0m,
                 Credit = totalDebit
             });
-
+            var transactionDate = invoices
+                .Select(x => (DateOnly?)x.CheckVoucherHeader!.Date)
+                .Max();
             return Json(new
             {
                 JournalEntries = journalEntries,
@@ -1472,7 +1474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TotalCredit = totalDebit,
                 Particulars = firstParticulars,
                 CvBalances = cvBalances,
-                TransactionDate = invoices.Select(x => x.CheckVoucherHeader!.Date).FirstOrDefault()
+                TransactionDate = transactionDate
             });
         }
 
