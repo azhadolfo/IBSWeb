@@ -285,9 +285,9 @@
                     <td ></td>
                     <td ></td>
                     <td class="fw-bold text-end p-2">Grand Total:</td>
-                    <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
+                    <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumberToFour(totalGross)}</td>
                     <td class="text-end grandTotalAmountPaid" id="grandTotalNetAmount">0.00</td>
-                    <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
+                    <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumberToFour(totalBalance)}</td>
                 </tr>
             `);
                     tbody.append(totalRow);
@@ -376,10 +376,10 @@
                 
                 totalNetOfEWT += drAmount;
             });
-            $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
-            $(".grandTotalAmountPaid").text(formatNumber(totalNetOfEWT));
+            $(".totalNetOfEWT").val(formatNumberToFour(totalNetOfEWT));
+            $(".grandTotalAmountPaid").text(formatNumberToFour(totalNetOfEWT));
             let grandTotalGross = parseNumber($(".grandTotalGross").text());
-            $(".grandTotalBalance").text(formatNumber(Math.abs(grandTotalGross - totalNetOfEWT)));
+            $(".grandTotalBalance").text(formatNumberToFour(Math.abs(grandTotalGross - totalNetOfEWT)));
             updateTotalDebitAndCredit();
             validateDebitAndCredit();
         }
@@ -401,8 +401,8 @@
                 totalCredit += credit;
             });
 
-            $(".totalDebit").text(formatNumber(totalDebit));
-            $(".totalCredit").text(formatNumber(totalCredit));
+            $(".totalDebit").text(formatNumberToFour(totalDebit));
+            $(".totalCredit").text(formatNumberToFour(totalCredit));
             $("#debit").val("0.000");
             $("#credit").val("0.000");
         }

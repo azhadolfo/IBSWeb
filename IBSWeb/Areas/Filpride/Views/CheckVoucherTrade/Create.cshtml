@@ -337,7 +337,7 @@
                                 <tr class="fw-bold bg-light subtotalRow" data-po="${currentPO}">
                                     <td colspan="3"></td>
                                     <td class="fw-bold text-end">Subtotal (${rr.purchaseOrderNo}):</td>
-                                    <td class="text-end subTotalGross">${formatNumber(subTotalGross)}</td>
+                                    <td class="text-end subTotalGross">${formatNumberToFour(subTotalGross)}</td>
                                     <td class="text-end subTotalAmountPaid">0.00</td>
                                     <td class="text-end subTotalBalance">0.00</td>
                                 </tr>
@@ -355,9 +355,9 @@
                         <tr class="sticky-bottom bg-white">
                             <td colspan="3"></td>
                             <td class="fw-bold text-end p-2">Grand Total:</td>
-                            <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
+                            <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumberToFour(totalGross)}</td>
                             <td class="text-end grandTotalAmountPaid" id="grandTotalNetAmount">0.00</td>
-                            <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
+                            <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumberToFour(totalBalance)}</td>
                         </tr>
                     `);
                     tbody.append(totalRow);
@@ -378,8 +378,8 @@
                     success: function(response) {
                         if (response.hasCodOrPrepaid && response.advanceAmount > 0) {
                             $("#advancesRow").show();
-                            $("#advancesDebit").val(formatNumber(0));
-                            $("#advancesCredit").val(formatNumber(response.advanceAmount));
+                            $("#advancesDebit").val(formatNumberToFour(0));
+                            $("#advancesCredit").val(formatNumberToFour(response.advanceAmount));
                             $("#AdvancesCVNo").val(response.advanceCVNo);
                             updateTotalDebitAndCredit();
                         } else {
@@ -475,14 +475,14 @@
                 });
                 
                 let subTotalGross = parseNumber($(this).find(".subTotalGross").text());
-                $(this).find(".subTotalAmountPaid").text(formatNumber(subTotalAmountPaid));
-                $(this).find(".subTotalBalance").text(formatNumber(Math.abs(subTotalGross - subTotalAmountPaid)));
+                $(this).find(".subTotalAmountPaid").text(formatNumberToFour(subTotalAmountPaid));
+                $(this).find(".subTotalBalance").text(formatNumberToFour(Math.abs(subTotalGross - subTotalAmountPaid)));
             });
             
-            $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
-            $(".grandTotalAmountPaid").text(formatNumber(totalNetOfEWT));
+            $(".totalNetOfEWT").val(formatNumberToFour(totalNetOfEWT));
+            $(".grandTotalAmountPaid").text(formatNumberToFour(totalNetOfEWT));
             let grandTotalGross = parseNumber($(".grandTotalGross").text());
-            $(".grandTotalBalance").text(formatNumber(Math.abs(grandTotalGross - totalNetOfEWT)));
+            $(".grandTotalBalance").text(formatNumberToFour(Math.abs(grandTotalGross - totalNetOfEWT)));
 
             var hasAdvances = $("#advancesRow").is(":visible");
             var advancesAmount = hasAdvances ? parseNumber($("#advancesCredit").val()) : 0;
@@ -493,7 +493,7 @@
                 if (cashInBankAmount < 0) cashInBankAmount = 0;
             }
 
-            $(".cib-credit").val(formatNumber(cashInBankAmount));
+            $(".cib-credit").val(formatNumberToFour(cashInBankAmount));
             
             updateTotalDebitAndCredit();
             validateDebitAndCredit();
@@ -516,8 +516,8 @@
                 totalCredit += credit;
             });
 
-            $(".totalDebit").text(formatNumber(totalDebit));
-            $(".totalCredit").text(formatNumber(totalCredit));
+            $(".totalDebit").text(formatNumberToFour(totalDebit));
+            $(".totalCredit").text(formatNumberToFour(totalCredit));
             $("#debit").val("0.000");
             $("#credit").val("0.000");
         }
