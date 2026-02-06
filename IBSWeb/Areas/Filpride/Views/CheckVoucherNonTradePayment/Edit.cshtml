@@ -26,7 +26,10 @@
                 <input asp-for="CvId" type="hidden"/>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control"/>
+                    <input asp-for="TransactionDate" 
+                           type="Date" 
+                           class="form-control" 
+                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -266,6 +269,11 @@
                                 $(".totalDebit").text(formatNumberToFour(data.totalDebit));
                                 $(".totalCredit").text(formatNumberToFour(data.totalCredit));
                                 $("#Total").val(formatNumberToFour(data.totalCredit));
+
+                                const minDateFromModel = "@Model.MinDate:yyyy-MM-dd";
+                                if(data.transactionDate > minDateFromModel){
+                                    $("#TransactionDate").val(data.transactionDate).attr("min", data.transactionDate)
+                                }
                                 
                                 validateDebitAndCredit();
                             }
