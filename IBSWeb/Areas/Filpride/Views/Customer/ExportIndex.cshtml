@@ -180,8 +180,14 @@
                 input.type = 'hidden';
                 input.name = 'selectedRecord';
                 input.value = selectedIds;
-                
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = $('input[name="__RequestVerificationToken"]').val();
+
                 form.appendChild(input);
+                form.appendChild(tokenInput);
                 document.body.appendChild(form);
                 form.submit();
             } else {
