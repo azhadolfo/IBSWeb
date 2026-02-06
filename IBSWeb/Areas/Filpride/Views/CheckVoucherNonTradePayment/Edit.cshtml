@@ -270,7 +270,7 @@
                                 $(".totalCredit").text(formatNumberToFour(data.totalCredit));
                                 $("#Total").val(formatNumberToFour(data.totalCredit));
 
-                                const minDateFromModel = "@Model.MinDate:yyyy-MM-dd";
+                                const minDateFromModel = "@Model.MinDate.ToString("yyyy-MM-dd")";
                                 if(data.transactionDate > minDateFromModel){
                                     $("#TransactionDate").val(data.transactionDate).attr("min", data.transactionDate)
                                 }
