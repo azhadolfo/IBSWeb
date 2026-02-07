@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260205045947_AddUserManagementFieldsToApplicationUser")]
+    partial class AddUserManagementFieldsToApplicationUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -799,10 +802,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_check_voucher_headers_supplier_id");
 
-                    b.HasIndex("CheckVoucherHeaderNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_check_voucher_headers_check_voucher_header_no_comp");
-
                     b.ToTable("filpride_check_voucher_headers", (string)null);
                 });
 
@@ -980,10 +979,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CVId")
                         .HasDatabaseName("ix_filpride_journal_voucher_headers_cv_id");
-
-                    b.HasIndex("JournalVoucherHeaderNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_journal_voucher_headers_journal_voucher_header_no_");
 
                     b.ToTable("filpride_journal_voucher_headers", (string)null);
                 });
@@ -1247,10 +1242,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_purchase_orders_supplier_id");
 
-                    b.HasIndex("PurchaseOrderNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_purchase_orders_purchase_order_no_company");
-
                     b.ToTable("filpride_purchase_orders", (string)null);
                 });
 
@@ -1451,10 +1442,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("POId")
                         .HasDatabaseName("ix_filpride_receiving_reports_po_id");
-
-                    b.HasIndex("ReceivingReportNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_receiving_reports_receiving_report_no_company");
 
                     b.ToTable("filpride_receiving_reports", (string)null);
                 });
@@ -1720,10 +1707,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_collection_receipts_service_invoice_id");
 
-                    b.HasIndex("CollectionReceiptNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_collection_receipts_collection_receipt_no_company");
-
                     b.ToTable("filpride_collection_receipts", (string)null);
                 });
 
@@ -1920,10 +1903,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_credit_memos_service_invoice_id");
 
-                    b.HasIndex("CreditMemoNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_credit_memos_credit_memo_no_company");
-
                     b.ToTable("filpride_credit_memos", (string)null);
                 });
 
@@ -2072,10 +2051,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_debit_memos_service_invoice_id");
-
-                    b.HasIndex("DebitMemoNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_debit_memos_debit_memo_no_company");
 
                     b.ToTable("filpride_debit_memos", (string)null);
                 });
@@ -2277,10 +2252,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_filpride_sales_invoices_purchase_order_id");
-
-                    b.HasIndex("SalesInvoiceNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_sales_invoices_sales_invoice_no_company");
 
                     b.ToTable("filpride_sales_invoices", (string)null);
                 });
@@ -2484,10 +2455,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("ServiceId")
                         .HasDatabaseName("ix_filpride_service_invoices_service_id");
-
-                    b.HasIndex("ServiceInvoiceNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_service_invoices_service_invoice_no_company");
 
                     b.ToTable("filpride_service_invoices", (string)null);
                 });
@@ -3555,10 +3522,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_supplier_id");
 
-                    b.HasIndex("AuthorityToLoadNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_authority_to_loads_authority_to_load_no_company");
-
                     b.ToTable("filpride_authority_to_loads", (string)null);
                 });
 
@@ -3990,6 +3953,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_id");
 
+                    b.HasIndex("CustomerOrderSlipNo")
+                        .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no");
+
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_filpride_customer_order_slips_date");
 
@@ -4007,10 +3973,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_customer_order_slips_supplier_id");
-
-                    b.HasIndex("CustomerOrderSlipNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no_company");
 
                     b.ToTable("filpride_customer_order_slips", (string)null);
                 });
@@ -4251,15 +4213,14 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_filpride_delivery_receipts_date");
 
+                    b.HasIndex("DeliveryReceiptNo")
+                        .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
+
                     b.HasIndex("HaulerId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_hauler_id");
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_purchase_order_id");
-
-                    b.HasIndex("DeliveryReceiptNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no_company");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
                 });

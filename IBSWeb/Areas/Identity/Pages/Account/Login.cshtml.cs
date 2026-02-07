@@ -129,10 +129,23 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // Check if user exists and is active BEFORE attempting password sign in
+                var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                
+                if (user != null && !user.IsActive)
+                {
+                    _logger.LogWarning("Deactivated user attempted login: {Username}", Input.Username);
+                    ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact the administrator.");
+                    await LoadPageData(returnUrl);
+                    return Page();
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                
                 if (result.Succeeded)
                 {
-                    var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                    // User is guaranteed to exist and be active at this point
+                    user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
 
                     // Remove existing dynamic claims
                     var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
