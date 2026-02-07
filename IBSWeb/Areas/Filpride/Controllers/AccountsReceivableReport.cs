@@ -4334,7 +4334,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B2"].Value = $"{dateFrom.ToString(SD.Date_Format)} - {dateTo.ToString(SD.Date_Format)}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 

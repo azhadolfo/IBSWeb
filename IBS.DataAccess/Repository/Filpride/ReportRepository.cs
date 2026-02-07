@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             Func<FilpridePurchaseBook, object> orderBy;
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var cashReceiptBooks = _db
@@ -78,7 +78,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var disbursementBooks = _db
@@ -95,7 +95,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var generalLedgerBooks = await _db
@@ -114,7 +114,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var inventoryBooks = _db
@@ -132,7 +132,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var disbursementBooks = _db
@@ -149,7 +149,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var receivingReportRepo = new ReceivingReportRepository(_db);
@@ -208,7 +208,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var auditTrailBooks = await _db
@@ -224,7 +224,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             return await _db.FilprideCustomerOrderSlips
@@ -244,7 +244,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Fetch all delivery receipts within the date range
@@ -296,7 +296,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var salesInvoices = await _db.FilprideSalesInvoices
@@ -315,7 +315,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Fetch all delivery receipts within the date range
@@ -336,7 +336,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var purchaseOrder = await _db.FilpridePurchaseOrders
@@ -355,7 +355,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var checkVoucherHeader = await _db.FilprideCheckVoucherHeaders
@@ -380,7 +380,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Base query without date filter yet
@@ -460,7 +460,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Base query without date filter yet
@@ -492,7 +492,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var collectionReceipts = await _db.FilprideCollectionReceipts
@@ -514,7 +514,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var receivingReports = await _db.FilprideReceivingReports
@@ -532,7 +532,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             var deliveryReceipts = await _db.FilprideDeliveryReceipts
@@ -602,7 +602,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Base query without date filter yet
