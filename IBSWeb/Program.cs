@@ -30,12 +30,6 @@ builder.Host.UseSerilog();
 // QuestPDF
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
-// MVC
-builder.Services.AddControllersWithViews(options =>
-{
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-});
-
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
