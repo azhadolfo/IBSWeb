@@ -575,7 +575,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
             // Base query without date filter yet
