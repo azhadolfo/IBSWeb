@@ -3977,11 +3977,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return BadRequest();
             }
-            // Convert AsOfMonthYear to DateTo
-            if (model.AsOfMonthYear.HasValue)
-            {
-                model.SetAsOfDate();
-            }
 
             if (!ModelState.IsValid)
             {
@@ -4027,7 +4022,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     column.Item().Text(text =>
                                     {
                                         text.Span("As of: ").SemiBold();
-                                        text.Span($"{model.AsOfMonthYear!.Value:MMMM yyyy}");
+                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
                                     });
                                 });
 
@@ -4292,8 +4287,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-
-
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Please input date range";
@@ -4302,19 +4295,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-
-                // Convert AsOfMonthYear to DateTo
-                if (model.AsOfMonthYear.HasValue)
-                {
-                    model.SetAsOfDate();
-                }
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
-
-
-
                 if (companyClaims == null)
                 {
                     return BadRequest();
@@ -4344,8 +4328,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-
-                worksheet.Cells["B2"].Value = $"{model.AsOfMonthYear!.Value:MMMM yyyy}";
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
