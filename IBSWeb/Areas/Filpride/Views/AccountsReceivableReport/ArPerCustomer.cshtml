@@ -18,14 +18,14 @@
         <form id="dynamicForm" method="post" target="_blank">
             <div class="row">
                 <div class="mb-3">
-                    <label asp-for="AsOfMonthYear" class="control-label"></label>
-                    <input type="month" asp-for="AsOfMonthYear" class="form-control"
-                           value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
-                           required />
-                    <span asp-validation-for="AsOfMonthYear" class="text-danger"></span>
-                    <div class="form-text text-muted">
-                        Select the month and year. The report will show all transactions <strong>up to and including</strong> the last day of the selected month.
-                    </div>
+                    <label asp-for="DateFrom" class="control-label"></label>
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateFrom" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateTo" class="control-label"></label>
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Customers" class="control-label">
@@ -40,15 +40,11 @@
                     </div>
                 </div>
                 <div class="row pt-2">
-                    @* <div class="col-6 col-md-3"> *@
-                    @*     <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedArPerCustomer')"> *@
-                    @*         <i class="bi bi-printer"></i> Generate *@
-                    @*     </button> *@
-                    @* </div> *@
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateArPerCustomerExcelFile')">
-                            <i class="bi bi-file-text"></i> Generate as Excel file
-                        </button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedArPerCustomer')"><i class="bi bi-printer"></i> Generate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateArPerCustomerExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>
                 </div>
             </div>
