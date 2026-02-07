@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using IBS.Utility.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace IBSWeb.Areas.Admin.Controllers
 {
@@ -237,7 +238,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                     user.Department = model.Department;
                     user.StationAccess = model.StationAccess;
                     user.IsActive = model.IsActive;
-                    user.ModifiedDate = DateTime.Now;
+                    user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     user.ModifiedBy = currentUser;
 
                     var result = await _userManager.UpdateAsync(user);
@@ -439,10 +440,14 @@ namespace IBSWeb.Areas.Admin.Controllers
     public class UserUpsertModel
     {
         public string? Id { get; set; }
+        [Required]
         public string Username { get; set; }
+        [Required]
         public string Name { get; set; }
+        [Required]
         public string Department { get; set; }
         public string? StationAccess { get; set; }
+        [Required]
         public string Role { get; set; }
         public string? Password { get; set; }
         public bool IsActive { get; set; }
@@ -450,7 +455,9 @@ namespace IBSWeb.Areas.Admin.Controllers
 
     public class PasswordResetModel
     {
+        [Required]
         public string UserId { get; set; }
+        [Required]
         public string NewPassword { get; set; }
     }
 
