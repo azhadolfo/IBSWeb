@@ -4959,9 +4959,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 grossOfLiftedThisMonth += rr.Amount;
                                             }
                                         }
+
                                         ewtPercentage = po.ReceivingReports!
                                             .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
-                                            .Average(r => r.TaxPercentage);
+                                            .Select(r => r.TaxPercentage)
+                                            .DefaultIfEmpty(0m)
+                                            .Average();
                                     }
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
@@ -5397,7 +5400,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 ewtPercentage = po.ReceivingReports!
                                     .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
-                                    .Average(r => r.TaxPercentage);
+                                    .Select(r => r.TaxPercentage)
+                                    .DefaultIfEmpty(0m)
+                                    .Average();
                             }
 
                             var netOfVat = isVatable

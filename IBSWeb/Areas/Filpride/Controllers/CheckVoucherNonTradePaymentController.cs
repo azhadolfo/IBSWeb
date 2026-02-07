@@ -1464,14 +1464,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Debit = 0m,
                 Credit = totalDebit
             });
-
+            var transactionDate = invoices
+                .Select(x => (DateOnly?)x.CheckVoucherHeader!.Date)
+                .Max();
             return Json(new
             {
                 JournalEntries = journalEntries,
                 TotalDebit = totalDebit,
                 TotalCredit = totalDebit,
                 Particulars = firstParticulars,
-                CvBalances = cvBalances
+                CvBalances = cvBalances,
+                TransactionDate = transactionDate
             });
         }
 
