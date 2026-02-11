@@ -211,21 +211,20 @@ class MasterFileSelector {
 
         $('body').append(modalHTML);
 
-        // Handle modal cleanup on close
+        // Handle modal cleanup and cancel on close
         $(`#${modalId}`).on('hidden.bs.modal', () => {
             const select = $(`#${type.id}Select`);
             if (select.data('select2')) {
                 select.select2('destroy');
             }
-        });
 
-        // Handle cancel button
-        $(`#${modalId}`).on('hidden.bs.modal', () => {
             const row = $(`#${modalId}`).data('row');
-            const accountSelect = row.find('.chart-of-accounts');
+            if (row){
+                const accountSelect = row.find('.chart-of-accounts');
 
-            if (!row.find(`input[name$="${type.inputName}"]`).length) {
-                accountSelect.val('').trigger('change');
+                if (!row.find(`input[name$="${type.inputName}"]`).length) {
+                    accountSelect.val('').trigger('change');
+                }
             }
         });
     }
