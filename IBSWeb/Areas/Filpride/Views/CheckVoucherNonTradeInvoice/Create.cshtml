@@ -201,6 +201,9 @@
 
         // Object to store accumulated journal entries
         let accumulatedEntries = {};
+        
+        // Store original chart of accounts HTML
+        let originalChartOfAccountsHTML = null;
 
         // Function to recalculate all rows
         function recalculateAllRows() {
@@ -388,10 +391,11 @@
             const newRowHTML = `
             <tr>
                 <td class="px-2">
-                    <select name="AccountingEntries[${rowCount}].AccountTitle" class="form-select form-select-sm chart-of-accounts js-select2" style="width: 100%" required>
-                        ${document.querySelector(".chart-of-accounts").innerHTML}
+                    <select name="AccountingEntries[${rowCount}].AccountTitle" 
+                            class="form-select form-select-sm chart-of-accounts js-select2" 
+                            style="width: 100%" required>
+                        ${originalChartOfAccountsHTML}
                     </select>
-                    <input type="hidden" name="AccountingEntries[${rowCount}].BankMasterFileId" class="bank-master-file-id" />
                 </td>
                 <td class="px-2">
                     <input type="number" name="AccountingEntries[${rowCount}].Amount" class="form-control form-control-sm text-end amount" value="0" />
@@ -447,6 +451,12 @@
         });
 
         $(document).ready(function () {
+            // Store the original chart of accounts HTML once on page load
+            const firstSelect = document.querySelector('.chart-of-accounts');
+            if (firstSelect) {
+                originalChartOfAccountsHTML = firstSelect.innerHTML;
+            }
+            
             // Attach event listener to the select field
             $('.supplier').on('change', function () {
                 var supplierId = $(this).val();
@@ -640,5 +650,6 @@
         }
         $(document).on("input change", "#totalAmount", validateDebitAndCredit);
     </script>
+}
 }
 

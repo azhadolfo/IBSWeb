@@ -29,7 +29,6 @@ class MasterFileSelector {
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
                 inputName: 'EmployeeMasterFileId'
             },
-            ///TODO change to actual trigger account
             CUSTOMER: {
                 id: 'customer',
                 title: 'Customer',
@@ -212,8 +211,6 @@ class MasterFileSelector {
 
         $('body').append(modalHTML);
 
-        // DO NOT initialize Select2 here - it will be done in showMasterFileModal
-
         // Handle modal cleanup on close
         $(`#${modalId}`).on('hidden.bs.modal', () => {
             const select = $(`#${type.id}Select`);
@@ -287,7 +284,6 @@ class MasterFileSelector {
         }
     }
 
-    // In masterFileSelector.js, update handleSelection
     handleSelection(type, row, selectedId, selectedText) {
         if (!selectedId) {
             Swal.fire({
@@ -307,9 +303,28 @@ class MasterFileSelector {
         row.append(`<input type="hidden" name="${inputName}" value="${selectedId}">`);
 
         const accountSelect = row.find('.chart-of-accounts');
-        accountSelect.find('option:selected').text(
-            `${accountSelect.find('option:selected').text().split('(')[0].trim()} (${selectedText})`
-        );
+        const currentText = accountSelect.find('option:selected').text();
+        
+        if (!accountSelect.data('original-text')) {
+            accountSelect.data('original-text', currentText);
+        }
+        
+        const originalText = accountSelect.data('original-text');
+        
+        const firstParenIndex = originalText.indexOf(')');
+        let newDisplayText;
+
+        if (firstParenIndex !== -1) {
+            const accountType = originalText.substring(0, firstParenIndex + 1); 
+            const accountInfo = originalText.substring(firstParenIndex + 1).trim();
+            
+            newDisplayText = `${accountType} ${accountInfo} (${selectedText})`;
+        } else {
+            // Fallback if format is different
+            newDisplayText = `${originalText} (${selectedText})`;
+        }
+
+        accountSelect.find('option:selected').text(newDisplayText);
 
         // Properly destroy and close modal
         const modalElement = document.getElementById(`${type.id}Modal`);
