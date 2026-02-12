@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.0.0] - 2026-02-12
+### Changed
+- Upgrade version to.NET10.
+
+---
+
 ## [v1.2.6] - 2025-01-17
 ### Added
 - Implement the subaccount in journal voucher.
