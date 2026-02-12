@@ -9,7 +9,6 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -173,7 +172,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(string code, CancellationToken cancellationToken)
         {
-            if (code.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(code))
             {
                 return NotFound();
             }
@@ -236,7 +235,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Delete(string code, CancellationToken cancellationToken)
         {
-            if (code.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(code))
             {
                 return BadRequest();
             }
