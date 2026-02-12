@@ -49,7 +49,11 @@ namespace IBS.Services
                         throw new FileNotFoundException($"Auth file not found: {_options.GCPStorageAuthFile}");
                     }
 
-                    credential = GoogleCredential.FromFile(_options.GCPStorageAuthFile);
+                    using var stream = File.OpenRead(_options.GCPStorageAuthFile);
+
+                    var serviceAccountCredential = CredentialFactory.FromStream<ServiceAccountCredential>(stream);
+
+                    credential = serviceAccountCredential.ToGoogleCredential();
                 }
 
                 // Create scoped credential for Drive API

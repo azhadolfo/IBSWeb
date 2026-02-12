@@ -53,7 +53,12 @@ namespace IBS.Services
                         throw new FileNotFoundException($"Auth file not found: {_options.GCPStorageAuthFile}");
                     }
 
-                    _googleCredential = GoogleCredential.FromFile(_options.GCPStorageAuthFile);
+                    using var stream = File.OpenRead(_options.GCPStorageAuthFile);
+
+                    var serviceAccountCredential = CredentialFactory.FromStream<ServiceAccountCredential>(stream);
+
+                    _googleCredential = serviceAccountCredential.ToGoogleCredential();
+
                 }
             }
             catch (Exception ex)
