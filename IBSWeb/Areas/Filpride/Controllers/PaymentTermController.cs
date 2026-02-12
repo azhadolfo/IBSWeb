@@ -233,6 +233,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<IActionResult> Delete(string code, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(code))
