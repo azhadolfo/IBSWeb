@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.0.1] - 2026-02-13
+### Fixed
+- Fixed discrepancy due to rounding 4 decimals.
+
+---
+
 ## [v2.0.0] - 2026-02-12
 ### Changed
 - Upgrade version to.NET10.
