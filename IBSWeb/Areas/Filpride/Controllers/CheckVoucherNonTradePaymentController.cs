@@ -1085,19 +1085,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = "Payment details are required.";
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 return View(viewModel);
             }
 
-            // Validate partial payment amounts
-            if (viewModel.PaymentDetails == null || !viewModel.PaymentDetails.Any())
-            {
-                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                TempData["error"] = "Payment details are required.";
-                return View(viewModel);
-            }
             {
                 var cvIds = viewModel.MultipleCvId ?? new int[0];
                 var cvBalances = await _dbContext.FilprideCheckVoucherHeaders
@@ -1110,6 +1102,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (!cvBalances.TryGetValue(payment.CVId, out var balance))
                     {
                         TempData["error"] = $"CV ID {payment.CVId} not found.";
+                        viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                        viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                        viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                        viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                         return View(viewModel);
                     }
 
@@ -1482,11 +1478,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             // Get the actual remaining balance by calculating posted payments only
-            // We need to calculate AmountPaid from FilprideMultipleCheckVoucherPayments where payment status is Posted
+            // IMPORTANT: In edit mode, exclude the current payment being edited to avoid double-counting
             var actualAmountPaidPerCV = await _dbContext.FilprideMultipleCheckVoucherPayments
                 .Include(p => p.CheckVoucherHeaderPayment)
                 .Where(p => cvId.Contains(p.CheckVoucherHeaderInvoiceId) &&
-                            p.CheckVoucherHeaderPayment!.Status == nameof(CheckVoucherPaymentStatus.Posted))
+                            p.CheckVoucherHeaderPayment!.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
+                            (!paymentId.HasValue || p.CheckVoucherHeaderPaymentId != paymentId.Value)) // Exclude current payment in edit mode
                 .GroupBy(p => p.CheckVoucherHeaderInvoiceId)
                 .Select(g => new
                 {
@@ -1517,11 +1514,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
             foreach (var invoice in dedupInvoices)
             {
                 decimal amountToDisplay;
+                decimal maxBalance;
 
                 if (paymentId.HasValue && savedPaymentAmounts.ContainsKey(invoice.CheckVoucherHeaderId))
                 {
-                    // Edit mode: use saved payment amount
+                    // Edit mode: use saved payment amount for display
                     amountToDisplay = savedPaymentAmounts[invoice.CheckVoucherHeaderId];
+
+                    // Calculate max balance: current remaining balance (already excludes this payment) + amount paid in this payment
+                    // Example: Invoice 5,075,276.78 - Other payments 0 = 5,075,276.78, then user can pay up to 5,075,276.78
+                    if (cvHeaders.TryGetValue(invoice.CheckVoucherHeaderId, out var header))
+                    {
+                        var otherPaymentsTotal = actualAmountPaidPerCV.GetValueOrDefault(invoice.CheckVoucherHeaderId, 0m);
+                        var remainingBalance = header.InvoiceAmount - otherPaymentsTotal;
+                        // The max is simply the remaining balance (since we already excluded this payment)
+                        maxBalance = remainingBalance;
+                    }
+                    else
+                    {
+                        maxBalance = amountToDisplay; // Fallback
+                    }
                 }
                 else
                 {
@@ -1530,10 +1542,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var postedAmount = actualAmountPaidPerCV.GetValueOrDefault(invoice.CheckVoucherHeaderId, 0m);
                         amountToDisplay = header.InvoiceAmount - postedAmount;
+                        maxBalance = amountToDisplay;
                     }
                     else
                     {
                         amountToDisplay = invoice.Amount; // Fallback
+                        maxBalance = invoice.Amount;
                     }
                 }
 
@@ -1543,7 +1557,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CvId = invoice.CheckVoucherHeaderId,
                     CvNumber = invoice.TransactionNo,
-                    Balance = amountToDisplay, // Shows saved payment in edit mode, remaining balance (excluding unposted) in create mode
+                    Balance = amountToDisplay, // Current/saved payment amount
+                    MaxBalance = maxBalance // Maximum amount user can pay (for edit: includes this payment's current amount)
                 });
             }
 

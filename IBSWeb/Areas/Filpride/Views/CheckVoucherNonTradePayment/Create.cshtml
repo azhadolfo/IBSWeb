@@ -244,16 +244,16 @@
                                                         <td class="text-center">${cv.cvNumber}</td>
                                                         <td class="text-center">
                                                             <input type="number" 
-                                                                   class="form-control amount-input" 
-                                                                   name="PaymentDetails[${index}].AmountPaid"
-                                                                   data-max-balance="${cv.balance}"
-                                                                   data-index="${index}"
-                                                                   value="${cv.balance}" 
-                                                                   min="0.0001" 
-                                                                   max="${cv.balance}" 
-                                                                   step="0.0001"
-                                                                   required />
-                                                            <small class="text-muted d-block">Max: ${formatNumberToFour(cv.balance)}</small>
+                                                                class="form-control amount-input" 
+                                                                name="PaymentDetails[${index}].AmountPaid"
+                                                                data-max-balance="${cv.maxBalance || cv.balance}"
+                                                                data-index="${index}"
+                                                                value="${cv.balance}" 
+                                                                min="0.0001" 
+                                                                max="${cv.maxBalance || cv.balance}" 
+                                                                step="0.0001"
+                                                                required />
+                                                            <small class="text-muted d-block">Max: ${formatNumberToFour(cv.maxBalance || cv.balance)}</small>
                                                             <span class="text-danger amount-error-${index}" style="display:none;"></span>
                                                         </td>
                                                         <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
@@ -277,7 +277,7 @@
                                         input.removeClass("is-invalid");
                                         
                                         if (val <= 0 || val > max) {
-                                            err.text(val <= 0 ? "Must not be zero or negative" : "Exceeds balance").show();
+                                            err.text(val <= 0 ? "Must be > 0" : "Exceeds balance").show();
                                             input.addClass("is-invalid");
                                         }
                                         
