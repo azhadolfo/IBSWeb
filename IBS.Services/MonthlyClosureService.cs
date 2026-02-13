@@ -218,11 +218,11 @@ namespace IBS.Services
                     return;
                 }
 
-                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Credit))
+                if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(generalLedgers))
                 {
                     throw new InvalidOperationException($"GL balance mismatch. " +
-                                                        $"Debit:{generalLedgers.Sum(g => g.Debit):N4}, " +
-                                                        $"Credit: {generalLedgers.Sum(g => g.Credit):N4}");
+                                                        $"Debit:{generalLedgers.Sum(g => g.Debit):N2}, " +
+                                                        $"Credit: {generalLedgers.Sum(g => g.Credit):N2}");
                 }
 
                 var groupByLevelOne = generalLedgers
