@@ -65,8 +65,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                var totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
-                var totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
+                var totalDebit = Math.Round(journals.Sum(j => j.Debit), 2, MidpointRounding.AwayFromZero);
+                var totalCredit = Math.Round(journals.Sum(j => j.Credit), 2, MidpointRounding.AwayFromZero);
 
                 return totalDebit == totalCredit;
             }
