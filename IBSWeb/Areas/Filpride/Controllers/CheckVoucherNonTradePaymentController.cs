@@ -667,6 +667,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
@@ -677,6 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = "Payment details are required.";
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 return View(viewModel);
             }
@@ -705,6 +707,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = $"CV ID {payment.CVId} not found.";
                     viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                     viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                     return View(viewModel);
                 }
@@ -719,6 +722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = $"Invalid amount for CV {payment.CVId}. Must be between 0 and {maxAllowedPayment:N4}.";
                     viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                     viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                     return View(viewModel);
                 }
@@ -1593,6 +1597,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Build amounts dictionary for use in journal entries
             var amountsToUse = new Dictionary<int, decimal>();
 
+            // Track which invoices were successfully processed
+            var processedInvoices = new HashSet<int>();
+
             // Build CV balances list
             foreach (var invoice in dedupInvoices)
             {
@@ -1600,6 +1607,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     continue;
                 }
+                processedInvoices.Add(invoice.CheckVoucherHeaderId);
 
                 decimal amountToDisplay;
                 decimal maxBalance;
@@ -1634,8 +1642,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var displayTotal = amountsToUse.Values.Sum();
 
             // Group by account for journal entries
-            var groupedInvoices = dedupInvoices.GroupBy(i => i.AccountNo);
-            
+            var groupedInvoices = dedupInvoices
+                    .Where(i => processedInvoices.Contains(i.CheckVoucherHeaderId))
+                    .GroupBy(i => i.AccountNo);
+
             foreach (var group in groupedInvoices)
             {
                 var balance = group.Sum(i => amountsToUse[i.CheckVoucherHeaderId]);

@@ -336,7 +336,7 @@
             
             if (hasInvalid || newTotal === 0) return;
             
-            var ratio = newTotal / window.originalTotal;
+            if (hasInvalid || newTotal === 0 || window.originalTotal === 0) return;
             
             $("#accountingEntriesBody").empty();
             var newDebitTotal = 0;
