@@ -679,7 +679,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(cvp => cvp.CheckVoucherHeaderPayment)
                     .ToListAsync(cancellationToken);
 
-                // First, revert all existing payments
                 foreach (var cv in getCVs)
                 {
                     var existingDetails = await _dbContext.FilprideCheckVoucherDetails
@@ -691,28 +690,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingDetail.AmountPaid = 0;
                     }
+
                 }
 
-                // Get all invoicing vouchers based on what user selected
                 var invoicingVoucher = (await _unitOfWork.FilprideCheckVoucher
                     .GetAllAsync(cv => viewModel.MultipleCvId!.Contains(cv.CheckVoucherHeaderId), cancellationToken))
                     .OrderBy(cv => cv.CheckVoucherHeaderId)
                     .ToList();
 
-                // Now apply new payments from viewModel.PaymentDetails
-                foreach (var paymentDetail in viewModel.PaymentDetails)
+                foreach (var invoice in invoicingVoucher)
                 {
+                    var cv = viewModel.PaymentDetails.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
+
+                    if (cv == null)
+                    {
+                        return NotFound();
+                    }
+
                     var getCvDetails = await _dbContext.FilprideCheckVoucherDetails
-                        .Where(i => paymentDetail.CVId == i.CheckVoucherHeaderId &&
+                        .Where(i => cv.CVId == i.CheckVoucherHeaderId &&
                                     i.SubAccountId == viewModel.MultipleSupplierId &&
                                     i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing))
                         .OrderBy(i => i.CheckVoucherHeaderId)
                         .FirstOrDefaultAsync(cancellationToken);
 
-                    if (getCvDetails != null)
+                    if (getCvDetails == null || getCvDetails.CheckVoucherHeaderId != cv.CVId)
                     {
-                        getCvDetails.AmountPaid += paymentDetail.AmountPaid;
+                        continue;
                     }
+
+                    getCvDetails.AmountPaid += cv.AmountPaid;
                 }
 
                 #endregion
@@ -762,17 +769,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Multiple Payment Storing --
 
-                // Revert old payment amounts from invoice headers
                 foreach (var cv in getCVs)
                 {
                     cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
                     cv.CheckVoucherHeaderInvoice.IsPaid = false;
                 }
 
-                // Remove old payment records
                 _dbContext.RemoveRange(getCVs);
 
-                // Add new payment records from user submission
                 foreach (var paymentDetail in viewModel.PaymentDetails)
                 {
                     FilprideMultipleCheckVoucherPayment multipleCheckVoucherPayment = new()
@@ -1079,48 +1083,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
-            // Validate PaymentDetails
-            if (viewModel.PaymentDetails == null || !viewModel.PaymentDetails.Any())
-            {
-                TempData["error"] = "Payment details are required.";
-                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                return View(viewModel);
-            }
-
-            {
-                var cvIds = viewModel.MultipleCvId ?? new int[0];
-                var cvBalances = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cv => cvIds.Contains(cv.CheckVoucherHeaderId))
-                    .Select(cv => new { cv.CheckVoucherHeaderId, Balance = cv.InvoiceAmount - cv.AmountPaid })
-                    .ToDictionaryAsync(x => x.CheckVoucherHeaderId, x => x.Balance, cancellationToken);
-
-                foreach (var payment in viewModel.PaymentDetails)
-                {
-                    if (!cvBalances.TryGetValue(payment.CVId, out var balance))
-                    {
-                        TempData["error"] = $"CV ID {payment.CVId} not found.";
-                        viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                        viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                        viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                        viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                        return View(viewModel);
-                    }
-
-                    if (payment.AmountPaid <= 0 || payment.AmountPaid > balance)
-                    {
-                        TempData["error"] = $"Invalid amount for CV {payment.CVId}. Must be between 0 and {balance:N4}.";
-                        viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                        viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                        viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                        viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-                        return View(viewModel);
-                    }
-                }
-            }
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -1134,7 +1096,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var invoice in invoicingVoucher)
                 {
-                    var cv = viewModel.PaymentDetails?.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
+                    var cv = viewModel.PaymentDetails.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
 
                     if (cv == null)
                     {
@@ -1223,7 +1185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Multiple Payment Storing --
 
-                foreach (var paymentDetail in viewModel.PaymentDetails!)
+                foreach (var paymentDetail in viewModel.PaymentDetails)
                 {
                     FilprideMultipleCheckVoucherPayment multipleCheckVoucherPayment = new()
                     {
@@ -1447,7 +1409,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, int? paymentId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, CancellationToken cancellationToken)
         {
             if (cvId.Length == 0)
             {
@@ -1468,138 +1430,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var totalDebit = 0m;
             var cvBalances = new List<object>();
 
-            // If this is an edit operation (paymentId is provided), get the saved payment amounts
-            Dictionary<int, decimal> savedPaymentAmounts = new Dictionary<int, decimal>();
-            if (paymentId.HasValue)
+            var groupedInvoices = invoices.GroupBy(i => i.AccountNo);
+
+            foreach (var invoice in invoices)
             {
-                savedPaymentAmounts = await _dbContext.FilprideMultipleCheckVoucherPayments
-                    .Where(p => p.CheckVoucherHeaderPaymentId == paymentId.Value)
-                    .ToDictionaryAsync(p => p.CheckVoucherHeaderInvoiceId, p => p.AmountPaid, cancellationToken);
-            }
-
-            // Get the actual remaining balance by calculating posted payments only
-            // IMPORTANT: In edit mode, exclude the current payment being edited to avoid double-counting
-            var actualAmountPaidPerCV = await _dbContext.FilprideMultipleCheckVoucherPayments
-                .Include(p => p.CheckVoucherHeaderPayment)
-                .Where(p => cvId.Contains(p.CheckVoucherHeaderInvoiceId) &&
-                            p.CheckVoucherHeaderPayment!.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
-                            (!paymentId.HasValue || p.CheckVoucherHeaderPaymentId != paymentId.Value)) // Exclude current payment in edit mode
-                .GroupBy(p => p.CheckVoucherHeaderInvoiceId)
-                .Select(g => new
-                {
-                    CheckVoucherHeaderId = g.Key,
-                    TotalPostedAmount = g.Sum(p => p.AmountPaid)
-                })
-                .ToDictionaryAsync(x => x.CheckVoucherHeaderId, x => x.TotalPostedAmount, cancellationToken);
-
-            // Get CV headers with invoice amounts
-            var cvHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(cv => cvId.Contains(cv.CheckVoucherHeaderId))
-                .Select(cv => new
-                {
-                    cv.CheckVoucherHeaderId,
-                    cv.CheckVoucherHeaderNo,
-                    cv.InvoiceAmount
-                })
-                .ToDictionaryAsync(cv => cv.CheckVoucherHeaderId, cancellationToken);
-
-            // Deduplicate invoices at the header level to avoid processing the same header multiple times
-            var dedupInvoices = invoices
-                .GroupBy(i => i.CheckVoucherHeaderId)
-                .Select(g => g.First())
-                .ToList();
-
-            // Build a mapping of header amounts to use (saved amounts for edit, remaining balance for create)
-            var amountsToUse = new Dictionary<int, decimal>();
-            foreach (var invoice in dedupInvoices)
-            {
-                decimal amountToDisplay;
-                decimal maxBalance;
-
-                if (paymentId.HasValue && savedPaymentAmounts.ContainsKey(invoice.CheckVoucherHeaderId))
-                {
-                    // Edit mode: use saved payment amount for display
-                    amountToDisplay = savedPaymentAmounts[invoice.CheckVoucherHeaderId];
-
-                    // Calculate max balance: current remaining balance (already excludes this payment) + amount paid in this payment
-                    // Example: Invoice 5,075,276.78 - Other payments 0 = 5,075,276.78, then user can pay up to 5,075,276.78
-                    if (cvHeaders.TryGetValue(invoice.CheckVoucherHeaderId, out var header))
-                    {
-                        var otherPaymentsTotal = actualAmountPaidPerCV.GetValueOrDefault(invoice.CheckVoucherHeaderId, 0m);
-                        var remainingBalance = header.InvoiceAmount - otherPaymentsTotal;
-                        // The max is simply the remaining balance (since we already excluded this payment)
-                        maxBalance = remainingBalance;
-                    }
-                    else
-                    {
-                        maxBalance = amountToDisplay; // Fallback
-                    }
-                }
-                else
-                {
-                    // Create mode: calculate remaining balance using only posted payments
-                    if (cvHeaders.TryGetValue(invoice.CheckVoucherHeaderId, out var header))
-                    {
-                        var postedAmount = actualAmountPaidPerCV.GetValueOrDefault(invoice.CheckVoucherHeaderId, 0m);
-                        amountToDisplay = header.InvoiceAmount - postedAmount;
-                        maxBalance = amountToDisplay;
-                    }
-                    else
-                    {
-                        amountToDisplay = invoice.Amount; // Fallback
-                        maxBalance = invoice.Amount;
-                    }
-                }
-
-                amountsToUse[invoice.CheckVoucherHeaderId] = amountToDisplay;
-
                 cvBalances.Add(new
                 {
                     CvId = invoice.CheckVoucherHeaderId,
                     CvNumber = invoice.TransactionNo,
-                    Balance = amountToDisplay, // Current/saved payment amount
-                    MaxBalance = maxBalance // Maximum amount user can pay (for edit: includes this payment's current amount)
+                    Balance = invoice.Amount,
                 });
             }
 
-            // Calculate total based on what we're displaying
-            var displayTotal = amountsToUse.Values.Sum();
 
-            // Group deduplicated invoices by account and calculate debit entries using the amounts to use
-            var groupedInvoices = dedupInvoices.GroupBy(i => i.AccountNo);
-
-            foreach (var group in groupedInvoices)
+            foreach (var invoice in groupedInvoices)
             {
-                // Sum using the amounts we determined above (saved payment or remaining balance)
-                var balance = group.Sum(i => amountsToUse[i.CheckVoucherHeaderId]);
+                var balance = invoice.Sum(i => i.Amount);
                 journalEntries.Add(new
                 {
-                    AccountNumber = group.First().AccountNo,
-                    AccountTitle = group.First().AccountName,
+                    AccountNumber = invoice.First().AccountNo,
+                    AccountTitle = invoice.First().AccountName,
                     Debit = balance,
                     Credit = 0m
                 });
                 totalDebit += balance;
             }
 
-            // Add the "Cash in Bank" entry - use displayTotal for consistency
+            // Add the "Cash in Bank" entry
             journalEntries.Add(new
             {
                 AccountNumber = "101010100",
                 AccountTitle = "Cash in Bank",
                 Debit = 0m,
-                Credit = displayTotal
+                Credit = totalDebit
             });
-
             var transactionDate = invoices
                 .Select(x => (DateOnly?)x.CheckVoucherHeader!.Date)
                 .Max();
-
             return Json(new
             {
                 JournalEntries = journalEntries,
-                TotalDebit = displayTotal,
-                TotalCredit = displayTotal,
+                TotalDebit = totalDebit,
+                TotalCredit = totalDebit,
                 Particulars = firstParticulars,
                 CvBalances = cvBalances,
                 TransactionDate = transactionDate

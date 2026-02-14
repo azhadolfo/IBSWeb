@@ -55,7 +55,7 @@
                     <thead>
                     <tr>
                         <th class="text-center">CV List</th>
-                        <th class="text-center">Amount to Pay</th>
+                        <th class="text-center">Amount</th>
                     </tr>
                     </thead>
                     <tbody class="cvAmountList">
@@ -113,19 +113,23 @@
                         <tr>
                             <th>Account No.</th>
                             <th>Account Title</th>
-                            <th>Debit</th>
-                            <th>Credit</th>
+                            <th>
+                                Debit
+                            </th>
+                            <th>
+                                Credit
+                            </th>
                         </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
                         </tbody>
-                        <tfoot>
+                        <tbody>
                         <tr>
                             <td class="text-end" colspan="2">TOTAL:</td>
                             <td class="totalDebit">0.0000</td>
                             <td class="totalCredit">0.0000</td>
                         </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
                 </div>
                 <br/>
@@ -155,7 +159,7 @@
         function getSupplierDetails(supplierId) {
             if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {
@@ -182,21 +186,25 @@
                 let paymentId = $("#CvId").val();
                 
                 if (suppId !== "") {
+                    // Make an AJAX request to get the POs based on the selected SupplierId
                     $.ajax({
                         url: "@Url.Action("GetCVs", "CheckVoucherNonTradePayment")",
                         method: "GET",
-                        data: { supplierId: suppId, paymentId: paymentId },
+                        data: { supplierId: suppId, paymentId: paymentId }, // Corrected parameter name
                         success: function (data) {
                             if (data) {
+                                // Clear existing options
                                 $(".multipleCvId").empty();
+                                // Add new options based on the fetched data
                                 $.each(data, function (index, cv) {
-                                    if (cv && cv.cvNumber) {
-                                        $('.multipleCvId').append('<option value="' + cv.id + '">' + cv.cvNumber + '</option>');
+                                    if (cv && cv.cvNumber) { // Adjust property name to poNumber
+                                        $('.multipleCvId').append('<option value="' + cv.id + '">' + cv.cvNumber + '</option>'); // Adjust property names
                                     } else {
                                         console.error("Invalid CV object:", cv);
                                     }
                                 });
                             } else {
+                                // Clear the fields if no POs are found
                                 $(".multipleCvId").empty();
                             }
                         },
@@ -205,6 +213,7 @@
                         }
                     });
                 } else {
+                    // Clear the fields if no supplier is selected
                     $(".multipleCvId").empty();
                 }
             });
@@ -214,74 +223,38 @@
             $("#MultipleCvId").change(function () {
                 let cvSelect = $("#MultipleCvId").val();
                 let supplierId = $(".GetCVList").val();
-                let paymentId = $("#CvId").val();
 
+                // Clear the table before adding new rows
                 $("#accountingEntriesBody").empty();
                 $(".cvAmountList").empty();
 
                 if (cvSelect && cvSelect.length > 0) {
+                    // Call the controller to get new journal entries
                     $.ajax({
                         url: '@Url.Action("GetMultipleInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                         method: "GET",
                         traditional: true,
-                        data: { 
-                            cvId: cvSelect, 
-                            supplierId: supplierId,
-                            paymentId: paymentId
-                        },
+                        data: { cvId: cvSelect, supplierId: supplierId, },
                         success: function (data) {
                             if (data && data.journalEntries) {
+                                
 
-                                // Add CV balance rows with editable inputs
+                                // Add CV balance rows and create payment details
                                 if (data.cvBalances && data.cvBalances.length > 0) {
                                     data.cvBalances.forEach(function(cv, index) {
+                                        // Add row to table
                                         var cvRow = `<tr>
                                                         <td class="text-center">${cv.cvNumber}</td>
-                                                        <td class="text-center">
-                                                            <input type="number" 
-                                                                   class="form-control amount-input" 
-                                                                   name="PaymentDetails[${index}].AmountPaid"
-                                                                   data-max-balance="${cv.maxBalance}"
-                                                                   data-index="${index}"
-                                                                   value="${cv.balance}" 
-                                                                   min="0.0001" 
-                                                                   max="${cv.maxBalance}" 
-                                                                   step="0.0001"
-                                                                   required />
-                                                            <small class="text-muted d-block">Max: ${formatNumberToFour(cv.maxBalance)}</small>
-                                                            <span class="text-danger amount-error-${index}" style="display:none;"></span>
-                                                        </td>
+                                                        <td class="text-center">${formatNumberToFour(cv.balance)}</td>
                                                         <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${formatNumberToFour(cv.balance)}" />
                                                     </tr>`;
                                         $(".cvAmountList").append(cvRow);
                                     });
-                                    
-                                    // Store original data for recalculation
-                                    window.originalTotal = data.totalCredit;
-                                    window.originalEntries = data.journalEntries;
-                                    
-                                    // Add validation and recalculation on amount change
-                                    $(".amount-input").on("input", function() {
-                                        var input = $(this);
-                                        var max = parseFloat(input.data("max-balance"));
-                                        var val = parseFloat(input.val()) || 0;
-                                        var idx = input.data("index");
-                                        var err = $(`.amount-error-${idx}`);
-                                        
-                                        err.hide();
-                                        input.removeClass("is-invalid");
-                                        
-                                        if (val <= 0 || val > max) {
-                                            err.text(val <= 0 ? "Must be > 0" : "Exceeds balance").show();
-                                            input.addClass("is-invalid");
-                                        }
-                                        
-                                        recalculateTotals();
-                                        validateDebitAndCredit();
-                                    });
                                 }
 
-                                // Add journal entries
+
+                                // Add new rows based on the data returned by the controller
                                 data.journalEntries.forEach(function (entry) {
                                     var newRow = `<tr>
                                             <td><input type="text" name="AccountNumber" value="${entry.accountNumber}" class="w-100" style='border:none' readonly /></td>
@@ -292,6 +265,7 @@
                                     $("#accountingEntriesBody").append(newRow);
                                 });
 
+                                // Update the total debit and credit
                                 $(".totalDebit").text(formatNumberToFour(data.totalDebit));
                                 $(".totalCredit").text(formatNumberToFour(data.totalCredit));
                                 $("#Total").val(formatNumberToFour(data.totalCredit));
@@ -309,6 +283,7 @@
                         }
                     });
                 } else {
+                    // If no CVs are selected, ensure the totals are reset
                     $(".totalDebit").text("0.0000");
                     $(".totalCredit").text("0.0000");
                 }
@@ -318,49 +293,6 @@
         $(document).ready(function () {
             $("#MultipleCvId").trigger("change");
         });
-        
-        // Recalculate totals and journal entries based on changed amounts
-        function recalculateTotals() {
-            if (!window.originalEntries || !window.originalTotal) return;
-            
-            var newTotal = 0;
-            var hasInvalid = false;
-            $(".amount-input").each(function() {
-                var val = parseFloat($(this).val()) || 0;
-                var max = parseFloat($(this).data("max-balance"));
-                if (val <= 0 || val > max) {
-                    hasInvalid = true;
-                }
-                newTotal += val;
-            });
-            
-            if (hasInvalid || newTotal === 0) return;
-            
-            var ratio = newTotal / window.originalTotal;
-            
-            $("#accountingEntriesBody").empty();
-            var newDebitTotal = 0;
-            var newCreditTotal = 0;
-            
-            window.originalEntries.forEach(function(entry) {
-                var newDebit = entry.debit * ratio;
-                var newCredit = entry.credit * ratio;
-                newDebitTotal += newDebit;
-                newCreditTotal += newCredit;
-                
-                var row = `<tr>
-                    <td><input type="text" name="AccountNumber" value="${entry.accountNumber}" class="w-100" style='border:none' readonly /></td>
-                    <td><input name='AccountTitle' value='${entry.accountTitle}' class="w-100" style='border:none' readonly /></td>
-                    <td><input name="Debit" value='${formatNumberToFour(newDebit)}' class="w-100 debit" style='border:none' readonly /></td>
-                    <td><input name="Credit" value='${formatNumberToFour(newCredit)}' class="w-100 credit" style='border:none' readonly /></td>
-                </tr>`;
-                $("#accountingEntriesBody").append(row);
-            });
-            
-            $(".totalDebit").text(formatNumberToFour(newDebitTotal));
-            $(".totalCredit").text(formatNumberToFour(newCreditTotal));
-            $("#Total").val(formatNumberToFour(newCreditTotal));
-        }
         
     </script>
     <script>
@@ -374,11 +306,7 @@
                 $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
             }
 
-            // Check if any amount inputs are invalid
-            if ($(".amount-input.is-invalid").length > 0) {
-                errorMessage = "Please fix invalid payment amounts.";
-                isValid = false;
-            } else if (totalDebit !== totalCredit) {
+            if (totalDebit !== totalCredit) {
                 errorMessage = "Debit and Credit totals must be equal.";
                 isValid = false;
             } else if (totalDebit === 0 && totalCredit === 0) {
@@ -389,7 +317,10 @@
                 isValid = false;
             }
 
+            // Display or clear the error message
             $("#balance-error-message").text(errorMessage);
+
+            // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
 
             return isValid;
@@ -398,26 +329,33 @@
         $('input[name="CheckNo"]').on('blur', function() {
             var checkNo = $(this).val();
             var cvId = $('input[name="CvId"]').val();
+            console.log(cvId);
             if (checkNo) {
                 $.ajax({
                     url: '@Url.Action("CheckNoIsExist", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     type: "GET",
                     data: { checkNo: checkNo, cvId: cvId },
                     success: function(exists) {
+
                         const submitButton = $('button[type="submit"]');
 
                         if (exists) {
                             alert("Check # already exists. Please enter a different number.");
                             $('input[name="CheckNo"]').addClass('is-invalid');
 
+                            // Optional: Add error message near the field
                             if ($('input[name="CheckNo"]').next('.text-danger.check-no-exists').length === 0) {
                                 $('input[name="CheckNo"]').after('<span class="text-danger check-no-exists">Check # already exists</span>');
                             }
 
+                            // Disable the submit button
                             submitButton.prop('disabled', true);
+
                         } else {
+                            // Clear any error styling/messages
                             $('input[name="CheckNo"]').removeClass('is-invalid');
                             $('.check-no-exists').remove();
+
                             submitButton.prop('disabled', false);
                         }
                     },

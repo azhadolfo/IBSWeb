@@ -55,7 +55,7 @@
                     <thead>
                     <tr>
                         <th class="text-center">CV List</th>
-                        <th class="text-center">Amount to Pay</th>
+                        <th class="text-center">Amount</th>
                     </tr>
                     </thead>
                     <tbody class="cvAmountList">
@@ -239,51 +239,14 @@
                                 // Add CV balance rows and create payment details
                                 if (data.cvBalances && data.cvBalances.length > 0) {
                                     data.cvBalances.forEach(function(cv, index) {
-                                        // Add row to table with editable amount input
+                                        // Add row to table
                                         var cvRow = `<tr>
                                                         <td class="text-center">${cv.cvNumber}</td>
-                                                        <td class="text-center">
-                                                            <input type="number" 
-                                                                class="form-control amount-input" 
-                                                                name="PaymentDetails[${index}].AmountPaid"
-                                                                data-max-balance="${cv.maxBalance || cv.balance}"
-                                                                data-index="${index}"
-                                                                value="${cv.balance}" 
-                                                                min="0.0001" 
-                                                                max="${cv.maxBalance || cv.balance}" 
-                                                                step="0.0001"
-                                                                required />
-                                                            <small class="text-muted d-block">Max: ${formatNumberToFour(cv.maxBalance || cv.balance)}</small>
-                                                            <span class="text-danger amount-error-${index}" style="display:none;"></span>
-                                                        </td>
+                                                        <td class="text-center">${formatNumberToFour(cv.balance)}</td>
                                                         <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${formatNumberToFour(cv.balance)}" />
                                                     </tr>`;
                                         $(".cvAmountList").append(cvRow);
-                                    });
-                                    
-                                    // Store original data for recalculation
-                                    window.originalTotal = data.totalCredit;
-                                    window.originalEntries = data.journalEntries;
-                                    
-                                    // Add validation and recalculation on amount change
-                                    $(".amount-input").on("input", function() {
-                                        var input = $(this);
-                                        var max = parseFloat(input.data("max-balance"));
-                                        var val = parseFloat(input.val()) || 0;
-                                        var idx = input.data("index");
-                                        var err = $(`.amount-error-${idx}`);
-                                        
-                                        err.hide();
-                                        input.removeClass("is-invalid");
-                                        
-                                        if (val <= 0 || val > max) {
-                                            err.text(val <= 0 ? "Must be > 0" : "Exceeds balance").show();
-                                            input.addClass("is-invalid");
-                                        }
-                                        
-                                        // Recalculate totals and journal entries
-                                        recalculateTotals();
-                                        validateDebitAndCredit();
                                     });
                                 }
                                 
@@ -327,53 +290,6 @@
         $(document).ready(function () {
             $("#MultipleCvId").trigger("change");
         });
-        
-        // Recalculate totals and journal entries based on changed amounts
-        function recalculateTotals() {
-            if (!window.originalEntries || !window.originalTotal) return;
-            
-            // Calculate new total from all amount inputs
-            var newTotal = 0;
-            var hasInvalid = false;
-            $(".amount-input").each(function() {
-                var val = parseFloat($(this).val()) || 0;
-                var max = parseFloat($(this).data("max-balance"));
-                if (val <= 0 || val > max) {
-                    hasInvalid = true;
-                }
-                newTotal += val;
-            });
-            
-            if (hasInvalid || newTotal === 0) return;
-            
-            // Calculate ratio
-            var ratio = newTotal / window.originalTotal;
-            
-            // Rebuild journal entries table
-            $("#accountingEntriesBody").empty();
-            var newDebitTotal = 0;
-            var newCreditTotal = 0;
-            
-            window.originalEntries.forEach(function(entry) {
-                var newDebit = entry.debit * ratio;
-                var newCredit = entry.credit * ratio;
-                newDebitTotal += newDebit;
-                newCreditTotal += newCredit;
-                
-                var row = `<tr>
-                    <td><input type="text" name="AccountNumber" value="${entry.accountNumber}" class="w-100" style='border:none' readonly /></td>
-                    <td><input name='AccountTitle' value='${entry.accountTitle}' class="w-100" style='border:none' readonly /></td>
-                    <td><input name="Debit" value='${formatNumberToFour(newDebit)}' class="w-100 debit" style='border:none' readonly /></td>
-                    <td><input name="Credit" value='${formatNumberToFour(newCredit)}' class="w-100 credit" style='border:none' readonly /></td>
-                </tr>`;
-                $("#accountingEntriesBody").append(row);
-            });
-            
-            // Update totals
-            $(".totalDebit").text(formatNumberToFour(newDebitTotal));
-            $(".totalCredit").text(formatNumberToFour(newCreditTotal));
-            $("#Total").val(formatNumberToFour(newCreditTotal));
-        }
     
     </script>
     <script>
@@ -387,11 +303,7 @@
                 $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
             }
 
-            // Check if any amount inputs are invalid
-            if ($(".amount-input.is-invalid").length > 0) {
-                errorMessage = "Please fix invalid payment amounts.";
-                isValid = false;
-            } else if (totalDebit !== totalCredit) {
+            if (totalDebit !== totalCredit) {
                 errorMessage = "Debit and Credit totals must be equal.";
                 isValid = false;
             } else if (totalDebit === 0 && totalCredit === 0) {
