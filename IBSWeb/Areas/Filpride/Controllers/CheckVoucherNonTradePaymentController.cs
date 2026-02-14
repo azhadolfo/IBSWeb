@@ -425,20 +425,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var existingDetail in existingDetails)
                     {
-                        existingDetail.AmountPaid = 0;
+                        existingDetail.AmountPaid -= cv.AmountPaid;
+                        
+                        // Ensure it doesn't go negative
+                        if (existingDetail.AmountPaid < 0)
+                        {
+                            existingDetail.AmountPaid = 0;
+                        }
                     }
 
                     cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                    cv.CheckVoucherHeaderInvoice.IsPaid = false;
-                    cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
-
+                    
+                    if (cv.CheckVoucherHeaderInvoice.AmountPaid <= 0)
+                    {
+                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                        cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                    }
+                    // If there are still other payments, keep it as partially paid
+                    else if (cv.CheckVoucherHeaderInvoice.AmountPaid < cv.CheckVoucherHeaderInvoice.InvoiceAmount)
+                    {
+                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                        cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                    }
                 }
 
                 existingHeaderModel.PostedBy = null;
                 existingHeaderModel.VoidedBy = GetUserFullName();
                 existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
-
 
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
