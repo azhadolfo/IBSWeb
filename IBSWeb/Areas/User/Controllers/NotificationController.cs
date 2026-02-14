@@ -127,7 +127,6 @@ namespace IBSWeb.Areas.User.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellation)
