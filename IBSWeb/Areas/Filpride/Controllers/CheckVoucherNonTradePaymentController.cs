@@ -306,9 +306,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var invoice in updateMultipleInvoicingVoucher)
                 {
-                    if (invoice.CheckVoucherHeaderInvoice!.IsPaid)
+                    var actualPostedAmount = await _dbContext.FilprideMultipleCheckVoucherPayments
+                        .Include(p => p.CheckVoucherHeaderPayment)
+                        .Where(p => p.CheckVoucherHeaderInvoiceId == invoice.CheckVoucherHeaderInvoiceId &&
+                                    (p.CheckVoucherHeaderPayment!.Status == nameof(CheckVoucherPaymentStatus.Posted) ||
+                                    p.CheckVoucherHeaderPaymentId == id)) // Include current payment being posted
+                        .SumAsync(p => p.AmountPaid, cancellationToken);
+
+                    if (actualPostedAmount >= invoice.CheckVoucherHeaderInvoice!.InvoiceAmount)
                     {
-                        invoice.CheckVoucherHeaderInvoice!.Status = nameof(CheckVoucherInvoiceStatus.Paid);
+                        invoice.CheckVoucherHeaderInvoice.IsPaid = true;
+                        invoice.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.Paid);
+                    }
+                    else
+                    {
+                        invoice.CheckVoucherHeaderInvoice.IsPaid = false;
+                        invoice.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
                     }
                 }
 
