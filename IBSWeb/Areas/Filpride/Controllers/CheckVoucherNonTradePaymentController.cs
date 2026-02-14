@@ -657,6 +657,59 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            // Validate PaymentDetails
+            if (viewModel.PaymentDetails == null || !viewModel.PaymentDetails.Any())
+            {
+                TempData["error"] = "Payment details are required.";
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                return View(viewModel);
+            }
+
+            // Get the current payment being edited
+            var existingPaymentAmounts = await _dbContext.FilprideMultipleCheckVoucherPayments
+                .Where(p => p.CheckVoucherHeaderPaymentId == viewModel.CvId)
+                .ToDictionaryAsync(p => p.CheckVoucherHeaderInvoiceId, p => p.AmountPaid, cancellationToken);
+
+            // Validate payment amounts
+            var cvIds = viewModel.MultipleCvId ?? new int[0];
+            var cvHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                .Where(cv => cvIds.Contains(cv.CheckVoucherHeaderId))
+                .Select(cv => new 
+                { 
+                    cv.CheckVoucherHeaderId, 
+                    cv.InvoiceAmount, 
+                    cv.AmountPaid 
+                })
+                .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
+
+            foreach (var payment in viewModel.PaymentDetails)
+            {
+                if (!cvHeaders.TryGetValue(payment.CVId, out var header))
+                {
+                    TempData["error"] = $"CV ID {payment.CVId} not found.";
+                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                    return View(viewModel);
+                }
+
+                // Calculate remaining balance excluding this payment's current amount
+                var currentPaymentAmount = existingPaymentAmounts.GetValueOrDefault(payment.CVId, 0m);
+                var otherPayments = header.AmountPaid - currentPaymentAmount;
+                var maxAllowedPayment = header.InvoiceAmount - otherPayments;
+
+                if (payment.AmountPaid <= 0 || payment.AmountPaid > maxAllowedPayment)
+                {
+                    TempData["error"] = $"Invalid amount for CV {payment.CVId}. Must be between 0 and {maxAllowedPayment:N4}.";
+                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                    return View(viewModel);
+                }
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -1082,6 +1135,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
+            // Validate PaymentDetails
+            if (viewModel.PaymentDetails == null || !viewModel.PaymentDetails.Any())
+            {
+                TempData["error"] = "Payment details are required.";
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                return View(viewModel);
+            }
+            // Validate payment amounts against remaining balances
+            var cvIds = viewModel.MultipleCvId ?? new int[0];
+            var cvHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                .Where(cv => cvIds.Contains(cv.CheckVoucherHeaderId))
+                .Select(cv => new
+                {
+                    cv.CheckVoucherHeaderId,
+                    cv.InvoiceAmount,
+                    cv.AmountPaid
+                })
+                .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
+
+            foreach (var payment in viewModel.PaymentDetails)
+            {
+                if (!cvHeaders.TryGetValue(payment.CVId, out var header))
+                {
+                    TempData["error"] = $"CV ID {payment.CVId} not found.";
+                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                    return View(viewModel);
+                }
+
+                var remainingBalance = header.InvoiceAmount - header.AmountPaid;
+
+                if (payment.AmountPaid <= 0 || payment.AmountPaid > remainingBalance)
+                {
+                    TempData["error"] = $"Invalid amount for CV {payment.CVId}. Must be between 0 and {remainingBalance:N4}.";
+                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                    return View(viewModel);
+                }
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -1409,7 +1508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, int? paymentId, CancellationToken cancellationToken)
         {
             if (cvId.Length == 0)
             {
@@ -1430,48 +1529,110 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var totalDebit = 0m;
             var cvBalances = new List<object>();
 
-            var groupedInvoices = invoices.GroupBy(i => i.AccountNo);
+            // Deduplicate invoices at header level to avoid duplicates
+            var dedupInvoices = invoices
+                .GroupBy(i => i.CheckVoucherHeaderId)
+                .Select(g => g.First())
+                .ToList();
 
-            foreach (var invoice in invoices)
+            // Get CV headers with invoice amounts
+            var cvHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                .Where(cv => cvId.Contains(cv.CheckVoucherHeaderId))
+                .Select(cv => new
+                {
+                    cv.CheckVoucherHeaderId,
+                    cv.CheckVoucherHeaderNo,
+                    cv.InvoiceAmount,
+                    cv.AmountPaid
+                })
+                .ToDictionaryAsync(cv => cv.CheckVoucherHeaderId, cancellationToken);
+
+            // If this is an edit operation, get saved payment amounts
+            Dictionary<int, decimal> savedPaymentAmounts = new Dictionary<int, decimal>();
+            if (paymentId.HasValue)
             {
+                savedPaymentAmounts = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(p => p.CheckVoucherHeaderPaymentId == paymentId.Value)
+                    .ToDictionaryAsync(p => p.CheckVoucherHeaderInvoiceId, p => p.AmountPaid, cancellationToken);
+            }
+
+            // Build amounts dictionary for use in journal entries
+            var amountsToUse = new Dictionary<int, decimal>();
+
+            // Build CV balances list
+            foreach (var invoice in dedupInvoices)
+            {
+                if (!cvHeaders.TryGetValue(invoice.CheckVoucherHeaderId, out var header))
+                {
+                    continue;
+                }
+
+                decimal amountToDisplay;
+                decimal maxBalance;
+
+                if (paymentId.HasValue && savedPaymentAmounts.ContainsKey(invoice.CheckVoucherHeaderId))
+                {
+                    // Edit mode: show saved amount, max = remaining + saved
+                    amountToDisplay = savedPaymentAmounts[invoice.CheckVoucherHeaderId];
+                    var otherPayments = header.AmountPaid - amountToDisplay;
+                    maxBalance = header.InvoiceAmount - otherPayments;
+                }
+                else
+                {
+                    // Create mode: show remaining balance
+                    var remainingBalance = header.InvoiceAmount - header.AmountPaid;
+                    amountToDisplay = remainingBalance;
+                    maxBalance = remainingBalance;
+                }
+
+                amountsToUse[invoice.CheckVoucherHeaderId] = amountToDisplay;
+
                 cvBalances.Add(new
                 {
                     CvId = invoice.CheckVoucherHeaderId,
                     CvNumber = invoice.TransactionNo,
-                    Balance = invoice.Amount,
+                    Balance = amountToDisplay,
+                    MaxBalance = maxBalance
                 });
             }
 
+            // Calculate total
+            var displayTotal = amountsToUse.Values.Sum();
 
-            foreach (var invoice in groupedInvoices)
+            // Group by account for journal entries
+            var groupedInvoices = dedupInvoices.GroupBy(i => i.AccountNo);
+            
+            foreach (var group in groupedInvoices)
             {
-                var balance = invoice.Sum(i => i.Amount);
+                var balance = group.Sum(i => amountsToUse[i.CheckVoucherHeaderId]);
                 journalEntries.Add(new
                 {
-                    AccountNumber = invoice.First().AccountNo,
-                    AccountTitle = invoice.First().AccountName,
+                    AccountNumber = group.First().AccountNo,
+                    AccountTitle = group.First().AccountName,
                     Debit = balance,
                     Credit = 0m
                 });
                 totalDebit += balance;
             }
 
-            // Add the "Cash in Bank" entry
+            // Add Cash in Bank entry
             journalEntries.Add(new
             {
                 AccountNumber = "101010100",
                 AccountTitle = "Cash in Bank",
                 Debit = 0m,
-                Credit = totalDebit
+                Credit = displayTotal
             });
+
             var transactionDate = invoices
                 .Select(x => (DateOnly?)x.CheckVoucherHeader!.Date)
                 .Max();
+
             return Json(new
             {
                 JournalEntries = journalEntries,
-                TotalDebit = totalDebit,
-                TotalCredit = totalDebit,
+                TotalDebit = displayTotal,
+                TotalCredit = displayTotal,
                 Particulars = firstParticulars,
                 CvBalances = cvBalances,
                 TransactionDate = transactionDate
