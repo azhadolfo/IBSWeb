@@ -1471,47 +1471,67 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var query = _dbContext.FilprideCheckVoucherDetails
-                    .Include(cvd => cvd.CheckVoucherHeader)
-                    .Where(cvd =>
-                        cvd.CheckVoucherHeader!.PostedBy != null &&
-                        cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
-                        !cvd.CheckVoucherHeader.IsPaid &&
-                        cvd.SubAccountId == supplierId &&
-                        cvd.Amount > cvd.AmountPaid);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var allCVs = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(cv => cv.SupplierId == supplierId &&
+                                cv.PostedBy != null &&
+                                cv.CvType == nameof(CVType.Invoicing) &&
+                                cv.Company == companyClaims)
+                    .Select(cv => new
+                    {
+                        cv.CheckVoucherHeaderId,
+                        cv.CheckVoucherHeaderNo,
+                        cv.InvoiceAmount,
+                        cv.AmountPaid
+                    })
+                    .ToListAsync(cancellationToken);
+
+                var availableCVs = allCVs
+                    .Where(cv => cv.InvoiceAmount > cv.AmountPaid)
+                    .Select(cv => new
+                    {
+                        Id = cv.CheckVoucherHeaderId,
+                        CVNumber = cv.CheckVoucherHeaderNo
+                    })
+                    .ToList();
 
                 if (paymentId != null)
                 {
-                    var existingInvoiceIds = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    var existingPaymentCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                         .Where(m => m.CheckVoucherHeaderPaymentId == paymentId)
-                        .Select(m => m.CheckVoucherHeaderInvoiceId)
+                        .Include(m => m.CheckVoucherHeaderInvoice)
+                        .Select(m => new
+                        {
+                            Id = m.CheckVoucherHeaderInvoiceId,
+                            CVNumber = m.CheckVoucherHeaderInvoice!.CheckVoucherHeaderNo
+                        })
                         .ToListAsync(cancellationToken);
 
-                    // Include existing records in the query
-                    query = query.Union(_dbContext.FilprideCheckVoucherDetails
-                        .Include(cvd => cvd.CheckVoucherHeader)
-                        .Where(cvd => cvd.SubAccountId == supplierId
-                                      && existingInvoiceIds.Contains(cvd.CheckVoucherHeaderId)));
+                    foreach (var cv in existingPaymentCVs)
+                    {
+                        if (!availableCVs.Any(a => a.Id == cv.Id))
+                        {
+                            availableCVs.Add(new
+                            {
+                                Id = cv.Id,
+                                CVNumber = cv.CVNumber
+                            });
+                        }
+                    }
                 }
 
-                var checkVouchers = await query.ToListAsync(cancellationToken);
-
-                if (!checkVouchers.Any())
+                if (!availableCVs.Any())
                 {
                     return Json(null);
                 }
 
-                var cvList = checkVouchers
-                    .OrderBy(cv => cv.CheckVoucherDetailId)
-                    .Select(cv => new
-                    {
-                        Id = cv.CheckVoucherHeader!.CheckVoucherHeaderId,
-                        CVNumber = cv.CheckVoucherHeader.CheckVoucherHeaderNo
-                    })
-                    .Distinct()
-                    .ToList();
-
-                return Json(cvList);
+                return Json(availableCVs);
             }
             catch (Exception ex)
             {
