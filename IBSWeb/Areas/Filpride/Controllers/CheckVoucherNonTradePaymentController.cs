@@ -448,14 +448,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                    
-                    if (cv.CheckVoucherHeaderInvoice.AmountPaid <= 0)
-                    {
-                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
-                        cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
-                    }
-                    // If there are still other payments, keep it as partially paid
-                    else if (cv.CheckVoucherHeaderInvoice.AmountPaid < cv.CheckVoucherHeaderInvoice.InvoiceAmount)
+                    cv.CheckVoucherHeaderInvoice.AmountPaid = Math.Max(0, cv.CheckVoucherHeaderInvoice.AmountPaid);
+
+                    if (cv.CheckVoucherHeaderInvoice.AmountPaid < cv.CheckVoucherHeaderInvoice.InvoiceAmount)
                     {
                         cv.CheckVoucherHeaderInvoice.IsPaid = false;
                         cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
@@ -699,6 +694,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Get the current payment being edited
             var existingPaymentAmounts = await _dbContext.FilprideMultipleCheckVoucherPayments
                 .Where(p => p.CheckVoucherHeaderPaymentId == viewModel.CvId)
+                .GroupBy(p => p.CheckVoucherHeaderInvoiceId)
+                .Select(g => g.First())
                 .ToDictionaryAsync(p => p.CheckVoucherHeaderInvoiceId, p => p.AmountPaid, cancellationToken);
 
             // Validate payment amounts
@@ -1620,7 +1617,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (!cvHeaders.TryGetValue(invoice.CheckVoucherHeaderId, out var header))
                 {
-                    continue;
+                    throw new InvalidOperationException(
+                        $"Invoice header not found for CV ID {invoice.CheckVoucherHeaderId}. Please verify the data integrity.");
                 }
                 processedInvoices.Add(invoice.CheckVoucherHeaderId);
 

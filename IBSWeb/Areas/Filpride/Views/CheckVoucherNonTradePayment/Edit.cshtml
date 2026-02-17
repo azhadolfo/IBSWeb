@@ -272,7 +272,7 @@
                                         input.removeClass("is-invalid");
                                         
                                         if (val <= 0 || val > max) {
-                                            err.text(val <= 0 ? "Must be > 0" : "Exceeds balance").show();
+                                            err.text(val <= 0 ? "Must not be 0 or negative" : "Exceeds balance").show();
                                             input.addClass("is-invalid");
                                         }
                                         
