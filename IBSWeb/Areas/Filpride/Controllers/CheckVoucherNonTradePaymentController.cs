@@ -1604,6 +1604,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 savedPaymentAmounts = await _dbContext.FilprideMultipleCheckVoucherPayments
                     .Where(p => p.CheckVoucherHeaderPaymentId == paymentId.Value)
+                    .GroupBy(p => p.CheckVoucherHeaderInvoiceId)
+                    .Select(g => g.First())
                     .ToDictionaryAsync(p => p.CheckVoucherHeaderInvoiceId, p => p.AmountPaid, cancellationToken);
             }
 
