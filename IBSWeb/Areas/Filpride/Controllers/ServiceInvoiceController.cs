@@ -1,21 +1,21 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using IBS.Models.Enums;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -158,7 +158,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken)
-
             };
 
             return View(viewModel);
@@ -246,7 +245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId;
                 }
 
-                #endregion
+                #endregion --Additional procedure for Transaction Fee
 
                 await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
 
@@ -345,7 +344,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
-
 
             if (model == null)
             {
@@ -603,7 +601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId;
                 }
 
-                #endregion
+                #endregion --Additional procedure for Transaction Fee
 
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -651,7 +649,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
             }
-
 
             return RedirectToAction(nameof(Print), new { id });
         }
@@ -760,9 +757,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetDRsByCustomer(int customerId, int previousSelectedDr)
         {
             var drs = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(x => x.CustomerId == customerId
-                                  && !x.HasAlreadyInvoiced
-                                  || x.DeliveryReceiptId == previousSelectedDr);
+                .GetAllAsync(x =>
+                x.CustomerId == customerId &&
+                x.Status == nameof(DRStatus.ForInvoicing) &&
+                (!x.HasAlreadyInvoiced || x.DeliveryReceiptId == previousSelectedDr));
 
             var result = new List<object>();
 
@@ -813,7 +811,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var reversalEntries = new List<FilprideGeneralLedgerBook>();
 
-            foreach (var originalEntry  in originalEntries)
+            foreach (var originalEntry in originalEntries)
             {
                 var reversalEntry = new FilprideGeneralLedgerBook
                 {
