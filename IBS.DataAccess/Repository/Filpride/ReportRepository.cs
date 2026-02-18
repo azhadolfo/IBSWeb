@@ -453,9 +453,12 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports.OrderBy(rr => rr.Date).ToList();
         }
 
-        public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(DateOnly dateFrom,
+        public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(
+            DateOnly dateFrom,
             DateOnly dateTo,
             string company,
+            List<int>? customers = null,
+            List<int>? commissionee = null,
             CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
@@ -470,22 +473,37 @@ namespace IBS.DataAccess.Repository.Filpride
                             && x.Status != nameof(Status.Canceled)
                             && x.Status != nameof(Status.Voided));
 
-            // Include necessary related entities
+            // Apply customer filter if provided
+            if (customers != null && customers.Count > 0)
+            {
+                deliveryReceiptsQuery = deliveryReceiptsQuery
+                    .Where(x => customers.Contains(x.CustomerId));
+            }
+
+            if (commissionee != null && commissionee.Count > 0)
+            {
+                deliveryReceiptsQuery = deliveryReceiptsQuery
+                    .Where(x => x.CustomerOrderSlip!.CommissioneeId.HasValue
+                            && commissionee.Contains(x.CustomerOrderSlip.CommissioneeId.Value));
+            }
+
             var deliveryReceipts = await deliveryReceiptsQuery
                 .Include(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Supplier)
                 .Include(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Product)
                 .Include(x => x.CustomerOrderSlip)
-                        .ThenInclude(x => x!.PickUpPoint)
+                    .ThenInclude(x => x!.PickUpPoint)
                 .Include(x => x.CustomerOrderSlip)
-                        .ThenInclude(x => x!.Commissionee)
+                    .ThenInclude(x => x!.Commissionee)
                 .Include(x => x.Customer)
                 .Include(x => x.Hauler)
                 .ToListAsync(cancellationToken);
 
-            return deliveryReceipts.OrderBy(x => x.DeliveredDate)
-                .ThenBy(x => x.DeliveryReceiptNo).ToList();
+            return deliveryReceipts
+                .OrderBy(x => x.DeliveredDate)
+                .ThenBy(x => x.DeliveryReceiptNo)
+                .ToList();
         }
 
         public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
