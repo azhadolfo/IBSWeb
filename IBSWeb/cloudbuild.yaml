@@ -12,7 +12,9 @@
     args:
         - push
         - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
     args:
         - run
         - deploy
@@ -23,10 +25,14 @@
         - $_DEPLOY_REGION
         - '--platform'
         - $_PLATFORM
-    entrypoint: gcloud
+        - '--labels'
+        - 'company=filpride'
+        
 timeout: 1200s
+
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: E2_HIGHCPU_8
