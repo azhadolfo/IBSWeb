@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -9,6 +8,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -230,7 +230,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -503,7 +502,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         ? ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount)
                         : totalFreightGrossAmount;
 
-
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -609,7 +607,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             ModuleType = nameof(ModuleType.Sales)
                         });
                     }
-
                 }
 
                 if (!IsJournalEntriesBalanced(ledgers))
@@ -916,9 +913,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
                 await _db.FilprideJournalBooks.AddRangeAsync(journalBooks, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
             }
-
         }
 
         public async Task<bool> CheckIfManualDrNoExists(string manualDrNo)
@@ -946,7 +941,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
 
                 await CreateEntriesForUpdatingPrice(deliveryReceipt, difference, userName, cancellationToken);
-
             }
         }
 
@@ -954,7 +948,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -1134,7 +1127,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = commissionTitle.AccountNumber,
                     AccountTitle = commissionTitle.AccountName,
                     Debit = isIncremental ? commissionGrossAmount : 0m,
-                    Credit = !isIncremental ? commissionEwtAmount : 0m,
+                    Credit = !isIncremental ? commissionGrossAmount : 0m,
                     Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
@@ -1186,7 +1179,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
             }
             catch (Exception ex)
             {
@@ -1312,7 +1304,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
             }
             catch (Exception ex)
             {
