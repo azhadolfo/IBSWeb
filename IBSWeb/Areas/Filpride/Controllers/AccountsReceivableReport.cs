@@ -2124,7 +2124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 18].Value = totalVat;
                 worksheet.Cells[row, 19].Value = totalSalesNetOfVat;
                 worksheet.Cells[row, 20].Value = totalFreightNetOfVat;
-                worksheet.Cells[row, 21].Value = totalCommissionRate;
+                worksheet.Cells[row, 21].Value = salesReport.Count > 0 ? totalCommissionRate / salesReport.Count : 0m;
 
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
