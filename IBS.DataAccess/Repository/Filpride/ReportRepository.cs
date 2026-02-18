@@ -483,10 +483,10 @@ namespace IBS.DataAccess.Repository.Filpride
             if (commissionee != null && commissionee.Count > 0)
             {
                 deliveryReceiptsQuery = deliveryReceiptsQuery
-                    .Where(x => x.CustomerOrderSlip!.CommissioneeId.HasValue
+                    .Where(x => x.CustomerOrderSlip != null
+                            && x.CustomerOrderSlip.CommissioneeId.HasValue
                             && commissionee.Contains(x.CustomerOrderSlip.CommissioneeId.Value));
             }
-
             var deliveryReceipts = await deliveryReceiptsQuery
                 .Include(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Supplier)

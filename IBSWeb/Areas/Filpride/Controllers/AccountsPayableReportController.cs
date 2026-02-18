@@ -2875,7 +2875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
                 var grossMarginReport = await _unitOfWork.FilprideReport
-                    .GetGrossMarginReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee, cancellationToken:cancellationToken);
+                    .GetGrossMarginReport(model.DateFrom, model.DateTo, companyClaims, model.Customers is { Count: > 0 } ? model.Customers : null, model.Commissionee is { Count: > 0 } ? model.Commissionee : null, cancellationToken:cancellationToken);
 
 
                 if (grossMarginReport.Count == 0)
