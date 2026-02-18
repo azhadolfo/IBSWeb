@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.1.0] - 2026-02-18
+### Changed
+- Redesign the CV Non Trade payment to accept partial payment.
+
+---
+
 ## [v2.0.1] - 2026-02-13
 ### Fixed
 - Fixed discrepancy due to rounding 4 decimals.
