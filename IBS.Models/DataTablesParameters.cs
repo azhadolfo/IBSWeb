@@ -27,7 +27,13 @@ namespace IBS.Models
 
     public class DataTablesSearch
     {
-        public string Value { get; set; }
+        private string _value;
+    
+        public string Value
+        {
+            get => _value;
+            set => _value = value?.Trim().ToLower() ?? string.Empty;
+        }
         public bool Regex { get; set; }
     }
 }

@@ -143,7 +143,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                     var newUser = new ApplicationUser
                     {
                         UserName = model.Username,
-                        Name = model.Name,
+                        Name = model.Name.ToUpper(),
                         Department = model.Department,
                         StationAccess = model.StationAccess,
                         IsActive = model.IsActive,
@@ -234,7 +234,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                     }
 
                     // Update user properties
-                    user.Name = model.Name;
+                    user.Name = model.Name.ToUpper();
                     user.Department = model.Department;
                     user.StationAccess = model.StationAccess;
                     user.IsActive = model.IsActive;
