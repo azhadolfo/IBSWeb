@@ -243,7 +243,7 @@
                                                                    name="PaymentDetails[${index}].AmountPaid"
                                                                    data-max-balance="${cv.maxBalance}"
                                                                    data-index="${index}"
-                                                                   value="${cv.balance}" 
+                                                                   value="${(cv.balance).toFixed(4)}"
                                                                    min="0.0001" 
                                                                    max="${cv.maxBalance}" 
                                                                    step="0.0001"
