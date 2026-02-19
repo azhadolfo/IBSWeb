@@ -6,6 +6,13 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.1.1] - 2026-02-18
+### Fixed
+- Fixed input type of payment to show the values in to 4 decimals.
+- Fixed general apis to allow anonymous.
+
+---
+
 ## [v2.1.0] - 2026-02-18
 ### Changed
 - Redesign the CV Non Trade payment to accept partial payment.
