@@ -104,7 +104,8 @@ app.MapPost("/jobs/start-of-the-month-service", async (
     var service = new StartOfTheMonthService(unitOfWork, logger, db);
     await service.Execute(null!);
     return Results.Ok("StartOfTheMonthService job executed.");
-});
+})
+.AllowAnonymous();
 
 app.MapPost("/jobs/daily-service", async (
     ApplicationDbContext db,
@@ -115,7 +116,8 @@ app.MapPost("/jobs/daily-service", async (
     var service = new DailyService(db, logger, userManager, unitOfWork);
     await service.Execute(null!);
     return Results.Ok("DailyService job executed.");
-});
+})
+.AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
