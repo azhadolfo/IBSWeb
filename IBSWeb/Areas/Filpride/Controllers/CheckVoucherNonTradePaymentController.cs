@@ -1,5 +1,3 @@
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -16,6 +14,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -439,7 +439,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach (var existingDetail in existingDetails)
                     {
                         existingDetail.AmountPaid -= cv.AmountPaid;
-                        
+
                         // Ensure it doesn't go negative
                         if (existingDetail.AmountPaid < 0)
                         {
@@ -702,11 +702,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var cvIds = viewModel.MultipleCvId ?? new int[0];
             var cvHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .Where(cv => cvIds.Contains(cv.CheckVoucherHeaderId))
-                .Select(cv => new 
-                { 
-                    cv.CheckVoucherHeaderId, 
-                    cv.InvoiceAmount, 
-                    cv.AmountPaid 
+                .Select(cv => new
+                {
+                    cv.CheckVoucherHeaderId,
+                    cv.InvoiceAmount,
+                    cv.AmountPaid
                 })
                 .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
 
@@ -771,7 +771,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingDetail.AmountPaid = 0;
                     }
-
                 }
 
                 var invoicingVoucher = (await _unitOfWork.FilprideCheckVoucher
@@ -1077,7 +1076,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvd.CheckVoucherHeader!.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
-
 
             // Ensure that cv is not null before proceeding
             if (supplier == null || credit == null)
@@ -2075,7 +2073,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-
         public async Task<IActionResult> GetEmployeeDetails(int? employeeId)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -2098,7 +2095,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 employee.Address,
                 employee.TinNo,
             });
-
         }
 
         [HttpGet]
@@ -2598,6 +2594,5 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
     }
 }

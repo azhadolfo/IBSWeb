@@ -8,10 +8,12 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Create" class="btn btn-light">
+        <div class="d-flex align-items-center">
+            <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        </div>
+        <button id="newJournalBtn" class="btn btn-light responsive-index-button">
             <i class="bi bi-plus-circle"></i> New Journal
-        </a>
+        </button>
     </div>
 
     <div class="card shadow border-0 mt-3">
@@ -26,9 +28,9 @@
                     <tr>
                         <th class="text-start">JV#</th>
                         <th class="text-start">Date</th>
-                        <th class="text-start">CV#</th>
-                        <th class="text-start">CR#</th>
-                        <th class="text-start">JV Reason</th>
+                        <th class="text-start">CV / INV</th>
+                        <th class="text-start">JV Type</th>
+                        <th class="text-start" style="max-width:200px">Reason</th>
                         <th class="text-start">Created By</th>
                         <th class="text-start">Status</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
@@ -144,7 +146,7 @@
                          }
                      },
                      { "data": "checkVoucherHeader.checkVoucherHeaderNo" },
-                     { "data": "crNo" },
+                     { "data": "jvType" },
                      { "data": "jvReason" },
                      { "data": "createdBy" },
                      {
@@ -171,7 +173,7 @@
                                                  </button>
                                                  <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                      ${row.postedBy == null ? `
-                                                         <li><a class="dropdown-item" href="@Url.Action("Edit", "JournalVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                        <li><a class="dropdown-item" href="@Url.Action("EditLiquidation", "JournalVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
                                                          <li><a class="dropdown-item" href="@Url.Action("Print", "JournalVoucher", new { area = "Filpride" })/${data}">Preview</a></li>
                                                          <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                      ` : `
@@ -197,5 +199,36 @@
                  table.ajax.reload();
              });
          });
+    </script>
+    <script>
+        document.getElementById("newJournalBtn").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Select Journal Type',
+                html: `
+                    <select id="journalSelect" class="swal2-select">
+                        <option value="liquidation">Liquidation</option>
+                        <option value="accrual">Accrual</option>
+                        <option value="amortization">Amortization</option>
+                        <option value="reclass">Re-class</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Proceed',
+                preConfirm: () => {
+                    let selectedKey = document.getElementById("journalSelect").value;
+                    if (selectedKey) {
+                        let routes = {
+                            'liquidation': '@Url.Action("CreateLiquidation", "JournalVoucher", new { area = "Filpride" })',
+                            'accrual': '@Url.Action("CreateCommissionPayment", "JournalVoucher", new { area = "Filpride" })',
+                            'amortization': '@Url.Action("CreateHaulerPayment", "JournalVoucher", new { area = "Filpride" })',
+                            'reclass': '@Url.Action("CreateHaulerPayment", "JournalVoucher", new { area = "Filpride" })'
+                        };
+                        window.location.href = routes[selectedKey];
+                    } else {
+                        Swal.showValidationMessage('You need to select a journal type');
+                    }
+                }
+            });
+        });
     </script>
 }

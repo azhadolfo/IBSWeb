@@ -2,7 +2,7 @@
 @model JournalVoucherViewModel
 
 @{
-    ViewData["Title"] = "Journal Voucher - Create";
+    ViewData["Title"] = "Journal Voucher - Create Liquidation";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -20,7 +20,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="row">
                 <div class="col-12 col-md-4">

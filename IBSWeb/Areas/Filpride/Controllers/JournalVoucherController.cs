@@ -1,9 +1,14 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,11 +16,6 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
-using IBS.Models.Enums;
-using IBS.Services.Attributes;
-using IBS.Utility.Constants;
-using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateLiquidation(CancellationToken cancellationToken)
         {
             var viewModel = new JournalVoucherViewModel();
 
@@ -176,7 +176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateLiquidation(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -199,7 +199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = cvh.CheckVoucherHeaderNo
                 })
                 .ToListAsync(cancellationToken);
-            viewModel.MinDate =  await _unitOfWork
+            viewModel.MinDate = await _unitOfWork
                 .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
 
             if (!ModelState.IsValid)
@@ -228,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     JVReason = viewModel.JVReason,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
+                    JvType = nameof(JvType.Liquidation)
                 };
 
                 await _dbContext.AddAsync(model, cancellationToken);
@@ -267,7 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     );
                 }
 
-                #endregion
+                #endregion Details
 
                 await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
 
@@ -513,7 +514,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditLiquidation(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -533,6 +534,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     throw new ArgumentException(
                         $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
+
+                switch (existingHeaderModel.JvType)
+                {
+                    case nameof(JvType.Accrual):
+                        {
+                            break;
+                        }
+                    case nameof(JvType.Amortization):
+                        {
+                            break;
+                        }
+                    case nameof(JvType.Reclass):
+                        {
+                            return RedirectToAction(nameof(Index));
+                        }
                 }
 
                 var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
@@ -575,7 +592,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     MinDate = minDate
                 };
 
-
                 return View(model);
             }
             catch (Exception ex)
@@ -589,7 +605,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditLiquidation(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -620,7 +636,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = cvh.CheckVoucherHeaderNo
                 })
                 .ToListAsync(cancellationToken);
-            viewModel.MinDate =  await _unitOfWork
+            viewModel.MinDate = await _unitOfWork
                 .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
 
             try
@@ -685,7 +701,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     );
                 }
 
-                #endregion
+                #endregion Details
 
                 await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
 
@@ -901,6 +917,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             using (var package = new ExcelPackage())
             {
                 // Add a new worksheet to the Excel package
+
                 #region -- Purchase Order Table Header --
 
                 var worksheet3 = package.Workbook.Worksheets.Add("PurchaseOrder");
@@ -1023,7 +1040,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet7.Cells["D1"].Value = "CheckVoucherId";
                 worksheet7.Cells["E1"].Value = "AmountPaid";
 
-                #endregion -- Check Voucher Header Table Header --
+                #endregion -- Check Voucher Trade Payments Table Header --
 
                 #region -- Check Voucher Multiple Payment Table Header --
 
@@ -1034,7 +1051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet8.Cells["C1"].Value = "CheckVoucherHeaderInvoiceId";
                 worksheet8.Cells["D1"].Value = "AmountPaid";
 
-                #endregion
+                #endregion -- Check Voucher Multiple Payment Table Header --
 
                 #region -- Journal Voucher Header Table Header --
 
@@ -1178,7 +1195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvRow++;
                 }
 
-                #endregion
+                #endregion -- Check Voucher Header Export (Non-Trade Payment or Trade Payment)--
 
                 #region -- Get Check Voucher Multiple Payment --
 
@@ -1201,7 +1218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvn++;
                 }
 
-                #endregion
+                #endregion -- Get Check Voucher Multiple Payment --
 
                 #region -- Journal Voucher Details Export --
 
@@ -1257,7 +1274,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvdRow++;
                 }
 
-                #endregion -- Check Voucher Details Export (Trade and Invoicing) --
+                #endregion -- Check Voucher Details Export (Non-Trade or Trade Payment) --
 
                 #region -- Receving Report Export --
 

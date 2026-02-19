@@ -1,7 +1,7 @@
 ﻿@model JournalVoucherViewModel
 
 @{
-    ViewData["Title"] = "Journal Voucher - Edit";
+    ViewData["Title"] = "Journal Voucher - Edit Liquidation";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -129,27 +129,27 @@
                         </div>
 
                         <div class="table-responsive" style="margin-top:20px;">
-                            <table style="min-width: 600px;">
+                            <table class="w-100">
                                 <thead>
-                                <tr style="border: 1px solid black;">
-                                    <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
-                                </tr>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <td style="padding-left:20px;"></td>
-                                    <th class="text-end">DEBIT</th>
-                                    <th class="text-end">CREDIT</th>
-                                </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;"></td>
+                                        <th class="text-end">DEBIT</th>
+                                        <th class="text-end">CREDIT</th>
+                                    </tr>
                                 </tbody>
                                 <tbody id="tableBody"></tbody>
                                 <tbody>
-                                <tr style="border-bottom:double;"></tr>
-                                <tr>
-                                    <td class="text-end">TOTAL</td>
-                                    <td class="text-end" id="totalDebit"></td>
-                                    <td class="text-end" id="totalCredit"></td>
-                                </tr>
+                                    <tr style="border-bottom:double;"></tr>
+                                    <tr>
+                                        <td class="text-end">TOTAL</td>
+                                        <td class="text-end" id="totalDebit"></td>
+                                        <td class="text-end" id="totalCredit"></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
