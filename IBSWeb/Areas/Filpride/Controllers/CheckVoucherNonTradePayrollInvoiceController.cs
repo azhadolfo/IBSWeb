@@ -636,8 +636,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Uploading file --
 
-                
-
                 var wasForPosting = existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting);
 
                 if (existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
@@ -653,7 +651,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ? $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval"
                     : $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}";
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval", "Check Voucher", existingHeaderModel.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Check Voucher", existingHeaderModel.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
