@@ -1184,11 +1184,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cv.AmountPaid
                 })
                 .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
-            var cvDetailBalances = await _dbContext.FilprideCheckVoucherDetails
+            var cvDetailBalances = (await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvIds.Contains(cvd.CheckVoucherHeaderId) &&
-                            cvd.SubAccountId == viewModel.MultipleSupplierId)
+                            cvd.SubAccountId == viewModel.MultipleSupplierId &&
+                            cvd.Amount > 0)
                 .Select(cvd => new { cvd.CheckVoucherHeaderId, cvd.Amount, cvd.AmountPaid })
-                .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
+                .ToListAsync(cancellationToken))
+                .GroupBy(x => x.CheckVoucherHeaderId)
+                .ToDictionary(g => g.Key, g => g.First());
 
             foreach (var payment in viewModel.PaymentDetails)
             {
