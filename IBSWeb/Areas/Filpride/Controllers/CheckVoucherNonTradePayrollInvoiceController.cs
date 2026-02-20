@@ -636,12 +636,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Uploading file --
 
-                #region --Audit Trail Recording
                 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval", "Check Voucher", existingHeaderModel.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                #endregion --Audit Trail Recording
+                var wasForPosting = existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting);
 
                 if (existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
                 {
@@ -651,6 +648,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _unitOfWork.SaveAsync(cancellationToken);
 
+                #region --Audit Trail Recording
+                var auditMessage = wasForPosting
+                    ? $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval"
+                    : $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}";
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check voucher invoicing edited successfully.";
                 return RedirectToAction(nameof(Index));
@@ -668,7 +674,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
         }
-
+        
         [Authorize(Roles = "Admin,AccountingManager")]
         public async Task<IActionResult> Approve(int id, int? supplierId, CancellationToken cancellationToken)
         {
@@ -714,7 +720,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideCheckVoucher
@@ -966,7 +971,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
             {
-                throw new ArgumentException("This invoice must be approved before it can be posted.");
+                TempData["error"] = "This invoice must be approved before it can be posted.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
             }
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
