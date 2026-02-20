@@ -476,8 +476,18 @@
                 confirmButtonText: 'Approve'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Approve", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(supplierId)}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Approve", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, supplierId: supplierId },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() {
+                            window.location.reload();
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Something went wrong.', 'error');
+                        }
+                    });
                 }
             })
         }
@@ -494,8 +504,14 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@(supplier?.SupplierId ?? 0))}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Post", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, supplierId: @(supplier?.SupplierId ?? 0) },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
@@ -512,8 +528,14 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Unpost", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Unpost", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
