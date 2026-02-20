@@ -287,11 +287,19 @@
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
-                alert('Please input amount');
+                alert('Please input amount.');
                 return;
-            } else if (accountNumberText === "") {
+            }
+
+            if (debit !== 0 && credit !== 0) {
                 event.preventDefault();
-                alert('Please select Account No.!');
+                alert('Invalid please input to debit or credit only.');
+                return;
+            }
+
+            if (accountNumberText === "") {
+                event.preventDefault();
+                alert('Please select Account No.');
                 return;
             }
 
