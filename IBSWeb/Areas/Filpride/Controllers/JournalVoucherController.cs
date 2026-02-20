@@ -1651,5 +1651,123 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAccrual(JvEditAccrualViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
+                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .Where(c =>
+                            c.Company == companyClaims &&
+                            c.CvType == nameof(CVType.Invoicing) &&
+                            c.PostedBy != null)
+                        .Select(cvh => new SelectListItem
+                        {
+                            Value = cvh.CheckVoucherHeaderId.ToString(),
+                            Text = cvh.CheckVoucherHeaderNo
+                        })
+                        .ToListAsync(cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+            try
+            {
+                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
+                    .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == viewModel.JvId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                await _dbContext.FilprideJournalVoucherDetails
+                    .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region --Saving the default entries
+
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.References = viewModel.References;
+                existingHeaderModel.CVId = viewModel.CvId;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.CRNo = viewModel.CrNo;
+                existingHeaderModel.JVReason = viewModel.Reason;
+                existingHeaderModel.EditedBy = GetUserFullName();
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #endregion --Saving the default entries
+
+                #region Details
+
+                var cvDetails = new List<FilprideJournalVoucherDetail>();
+
+                foreach (var acctNo in viewModel.Details)
+                {
+                    var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                                           .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+
+                    cvDetails.Add(
+                        new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = acctNo.AccountNo,
+                            AccountName = accountTitle.AccountName,
+                            TransactionNo = existingHeaderModel.JournalVoucherHeaderNo!,
+                            JournalVoucherHeaderId = existingHeaderModel.JournalVoucherHeaderId,
+                            Debit = acctNo.Debit,
+                            Credit = acctNo.Credit,
+                            SubAccountType = null,
+                            SubAccountId = null,
+                            SubAccountName = null
+                        }
+                    );
+
+                    ///TODO waiting for the actual credit account
+                }
+
+                #endregion Details
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", existingHeaderModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
+        }
     }
 }
