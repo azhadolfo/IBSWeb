@@ -6,6 +6,12 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.1.2] - 2026-02-20
+### Fixed
+- Fixed CV payment showing not accurate payable amount.
+
+---
+
 ## [v2.1.1] - 2026-02-18
 ### Fixed
 - Fixed input type of payment to show the values in to 4 decimals.
