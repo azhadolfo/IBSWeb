@@ -71,9 +71,13 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Void", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/' + id,
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { table.ajax.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
@@ -82,8 +86,7 @@
         function confirmCancel(id) {
             Swal.fire({
                 title: "Please Input Remarks",
-                html:
-                    "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
+                html: "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
                 focusConfirm: false,
                 allowEscapeKey: false,
                 allowOutsideClick: false,
@@ -94,12 +97,14 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var cancellationRemarks = $("#cancellationRemarks").val();
-                    // Encode the cancellationRemarks to make it URL safe
-                    var encodedRemarks = encodeURIComponent(cancellationRemarks);
-                    // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Cancel", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, cancellationRemarks: $("#cancellationRemarks").val() },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { table.ajax.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
