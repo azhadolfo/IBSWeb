@@ -345,7 +345,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = viewModel.Total,
                     SupplierName = supplier.SupplierName,
                     TaxType = string.Empty,
-                    VatType = string.Empty
+                    VatType = string.Empty,
+                    Status = nameof(CheckVoucherInvoiceStatus.ForApproval)
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
@@ -584,6 +585,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(viewModel);
+            }
+        }
+
+        [Authorize(Roles = "Admin,AccountingManager")]
+        public async Task<IActionResult> Approve(int id, int? supplierId, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            if (model.Status != nameof(CheckVoucherInvoiceStatus.ForApproval))
+            {
+                TempData["error"] = "This invoice is not pending for approval.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.ApprovedBy = GetUserFullName();
+                model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Approved.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to approve invoice check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -957,10 +1004,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingModel.CheckVoucherHeaderNo}", "Check Voucher", existingModel.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingModel.CheckVoucherHeaderNo} and reverted to For Approval", "Check Voucher", existingModel.Company);
 
                 #endregion --Audit Trail Recording
+
+                // Reset approval if the invoice is being edited after approval
+                if (existingModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
+                {
+                    existingModel.Status = nameof(CheckVoucherInvoiceStatus.ForApproval);
+                    existingModel.ApprovedBy = null;
+                    existingModel.ApprovedDate = null;
+                }
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Non-trade invoicing edited successfully";
@@ -1051,6 +1106,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+            if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
+            {
+                throw new ArgumentException("This invoice must be approved before it can be posted.");
+            }
             try
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))

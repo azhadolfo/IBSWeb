@@ -210,5 +210,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsPayroll { get; set; }
 
         public DateOnly? LiquidationDate { get; set; }
+
+        public string? ApprovedBy { get; set; }
+        public DateTime? ApprovedDate { get; set; }
     }
 }
