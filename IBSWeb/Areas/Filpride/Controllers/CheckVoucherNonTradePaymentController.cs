@@ -1184,9 +1184,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cv.AmountPaid
                 })
                 .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
+            var cvDetailBalances = await _dbContext.FilprideCheckVoucherDetails
+                .Where(cvd => cvIds.Contains(cvd.CheckVoucherHeaderId) &&
+                            cvd.SubAccountId == viewModel.MultipleSupplierId)
+                .Select(cvd => new { cvd.CheckVoucherHeaderId, cvd.Amount, cvd.AmountPaid })
+                .ToDictionaryAsync(x => x.CheckVoucherHeaderId, cancellationToken);
 
             foreach (var payment in viewModel.PaymentDetails)
             {
+                if (!cvDetailBalances.TryGetValue(payment.CVId, out var detail))
+                {
+                    TempData["error"] = $"CV Detail for CV ID {payment.CVId} not found.";
+                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                    return View(viewModel);
+                }
+
                 if (!cvHeaders.TryGetValue(payment.CVId, out var header))
                 {
                     TempData["error"] = $"CV ID {payment.CVId} not found.";
@@ -1197,7 +1212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
 
-                var remainingBalance = header.InvoiceAmount - header.AmountPaid;
+                var remainingBalance = detail.Amount - detail.AmountPaid;
 
                 if (payment.AmountPaid <= 0 || payment.AmountPaid > remainingBalance)
                 {
@@ -1512,6 +1527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cv.Id,
                         cv.CVNumber
                     })
+                    .Distinct()
                     .ToListAsync(cancellationToken);
 
                 if (paymentId != null)
@@ -1635,8 +1651,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     // Create mode: show remaining balance
                     var remainingBalance = invoice.Amount - invoice.AmountPaid;
-                        amountToDisplay = remainingBalance;
-                        maxBalance = remainingBalance;
+                    amountToDisplay = remainingBalance;
+                    maxBalance = remainingBalance;
                 }
 
                 amountsToUse[invoice.CheckVoucherHeaderId] = amountToDisplay;
