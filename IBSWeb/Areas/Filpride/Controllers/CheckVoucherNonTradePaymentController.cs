@@ -1492,28 +1492,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var allCVs = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cv => cv.SupplierId == supplierId &&
-                                cv.PostedBy != null &&
-                                cv.CvType == nameof(CVType.Invoicing) &&
-                                cv.Company == companyClaims)
+                var availableCVs = await _dbContext.FilprideCheckVoucherDetails
+                    .Include(cvd => cvd.CheckVoucherHeader)
+                    .Where(cvd => cvd.SubAccountId == supplierId && 
+                                cvd.CheckVoucherHeader!.PostedBy != null &&
+                                cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
+                                cvd.CheckVoucherHeader.Company == companyClaims &&
+                                cvd.Amount > cvd.AmountPaid)  // Only show if this supplier's portion is unpaid
+                    .Select(cvd => new
+                    {
+                        Id = cvd.CheckVoucherHeaderId,
+                        CVNumber = cvd.CheckVoucherHeader!.CheckVoucherHeaderNo,
+                        RemainingBalance = cvd.Amount - cvd.AmountPaid
+                    })
+                    .Distinct()
+                    .Where(cv => cv.RemainingBalance > 0)  // Only CVs with remaining balance
                     .Select(cv => new
                     {
-                        cv.CheckVoucherHeaderId,
-                        cv.CheckVoucherHeaderNo,
-                        cv.InvoiceAmount,
-                        cv.AmountPaid
+                        cv.Id,
+                        cv.CVNumber
                     })
                     .ToListAsync(cancellationToken);
-
-                var availableCVs = allCVs
-                    .Where(cv => cv.InvoiceAmount > cv.AmountPaid)
-                    .Select(cv => new
-                    {
-                        Id = cv.CheckVoucherHeaderId,
-                        CVNumber = cv.CheckVoucherHeaderNo
-                    })
-                    .ToList();
 
                 if (paymentId != null)
                 {
@@ -1635,9 +1634,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else
                 {
                     // Create mode: show remaining balance
-                    var remainingBalance = header.InvoiceAmount - header.AmountPaid;
-                    amountToDisplay = remainingBalance;
-                    maxBalance = remainingBalance;
+                    var remainingBalance = invoice.Amount - invoice.AmountPaid;
+                        amountToDisplay = remainingBalance;
+                        maxBalance = remainingBalance;
                 }
 
                 amountsToUse[invoice.CheckVoucherHeaderId] = amountToDisplay;
