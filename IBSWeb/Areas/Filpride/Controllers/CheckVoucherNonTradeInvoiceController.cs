@@ -1004,20 +1004,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Uploading file --
 
-                #region --Audit Trail Recording
+                // Capture BEFORE mutation
+                var wasForPosting = existingModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting);
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingModel.CheckVoucherHeaderNo} and reverted to For Approval", "Check Voucher", existingModel.Company);
-
-                #endregion --Audit Trail Recording
-
-                // Reset approval if the invoice is being edited after approval
                 if (existingModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
                 {
                     existingModel.Status = nameof(CheckVoucherInvoiceStatus.ForApproval);
                     existingModel.ApprovedBy = null;
                     existingModel.ApprovedDate = null;
                 }
+
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var auditMessage = wasForPosting
+                    ? $"Edited check voucher# {existingModel.CheckVoucherHeaderNo} and reverted to For Approval"
+                    : $"Edited check voucher# {existingModel.CheckVoucherHeaderNo}";
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Check Voucher", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Non-trade invoicing edited successfully";
@@ -1148,7 +1156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
