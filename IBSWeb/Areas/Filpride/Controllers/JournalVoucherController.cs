@@ -399,6 +399,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
+                if (modelHeader.JvType == nameof(JvType.Accrual))
+                {
+                    if (!await IsAccrualReversed(modelHeader.JournalVoucherHeaderId, cancellationToken))
+                    {
+                        throw new InvalidOperationException(
+                            $"Cannot post this record because the related accrual journal voucher has not been reversed yet.");
+                    }
+                }
+
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", modelHeader.Company);
@@ -775,7 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var journalVoucherHeaders = await _unitOfWork.FilprideJournalVoucher
                     .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken);
 
-                // Apply date range filter if provided
+                // Apply firstDayOfNextMonth range filter if provided
                 if (dateFrom.HasValue)
                 {
                     journalVoucherHeaders = journalVoucherHeaders
@@ -1768,6 +1777,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
+        }
+
+        private async Task<bool> IsAccrualReversed(int id, CancellationToken cancellationToken)
+        {
+            var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return false;
+            }
+
+            var accountTitlesDto = await _unitOfWork.FilprideJournalVoucher.GetListOfAccountTitleDto(cancellationToken);
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+            var firstDayOfNextMonth = new DateOnly(existingHeaderModel.Date.Year, existingHeaderModel.Date.AddMonths(1).Month, 1);
+
+            foreach (var detail in existingHeaderModel.Details!)
+            {
+                var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
+                    ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = firstDayOfNextMonth,
+                        Reference = existingHeaderModel.JournalVoucherHeaderNo!,
+                        Description = existingHeaderModel.Particulars,
+                        AccountId = account.AccountId,
+                        AccountNo = account.AccountNumber,
+                        AccountTitle = account.AccountName,
+                        Debit = detail.Credit,
+                        Credit = detail.Debit,
+                        Company = existingHeaderModel.Company,
+                        CreatedBy = existingHeaderModel.CreatedBy!,
+                        CreatedDate = existingHeaderModel.CreatedDate,
+                        SubAccountType = detail.SubAccountType,
+                        SubAccountId = detail.SubAccountId,
+                        SubAccountName = detail.SubAccountName,
+                        ModuleType = nameof(ModuleType.Journal)
+                    }
+                );
+            }
+
+            if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+            return true;
         }
     }
 }
