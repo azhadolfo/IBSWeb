@@ -246,6 +246,7 @@
 
             if (cvId === "") {
                 clearFields();
+                return;
             }
 
             $.ajax({
@@ -260,6 +261,7 @@
 
                     if (data === null) {
                         clearFields();
+                        return;
                     }
 
                     $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));

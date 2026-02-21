@@ -81,9 +81,10 @@
                         <span asp-validation-for="SelectedExpenseAccount" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="NumberOfMonths" type="text" class="form-control" placeholder="" />
+                        <input asp-for="NumberOfMonths" type="number" min="1" max="120" class="form-control" placeholder="" />
                         <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
                         <label asp-for="NumberOfMonths" class="control-label"># of Months</label>
+                        <small class="text-muted" id="monthlyAmountHint"></small>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -260,6 +261,7 @@
 
             if (cvId === "") {
                 clearFields();
+                return;
             }
 
             $.ajax({
@@ -272,6 +274,7 @@
 
                     if (data === null) {
                         clearFields();
+                        return;
                     }
 
                     $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
@@ -306,10 +309,10 @@
                     expenseAccountDropdown.append("<option value=''></option>");
 
                     for (let i = 0; i < data.accountNo.length; i++) {
-                        if (data.credit[i] > 0) {
+                        if (data.debit[i] > 0) {
                             let accountTitle = data.accountNo[i] + " " + data.accountName[i];
                             expenseAccountDropdown.append(
-                                `<option value="${data.accountNo[i]}" data-credit="${data.credit[i]}">${accountTitle}</option>`
+                                `<option value="${data.accountNo[i]}" data-debit="${data.debit[i]}">${accountTitle}</option>`
                             );
                         }
                     }
@@ -340,25 +343,27 @@
             $("#totalDebit").text("");
             $("#totalCredit").text("");
             $("#tableBody").empty();
-            $("select[name='SelectedAccount']").empty().append("<option value=''></option>").trigger("change.select2");
+            $("select[name='SelectedExpenseAccount']").empty().append("<option value=''></option>").trigger("change.select2");
         }
 
-        function calculateAmortizationEntries() {
-            var selectedCreditOption = $("select[name='SelectedExpenseAccount'] option:selected");
+         function calculateAmortizationEntries() {
+            var selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
             var numberOfMonths = parseInt($("#NumberOfMonths").val());
-            var selectedDebitOption = $("select[name='SelectedAccount'] option:selected");
             var debitAmount = parseFloat(selectedDebitOption.data("debit"));
+            var monnthlyAmountHint = $("#monthlyAmountHint").text("");
 
-            if (!selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
+            if (!selectedDebitOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
 
             var monthlyAmount = debitAmount / numberOfMonths;
+
+            monnthlyAmountHint.text(`Monthly amortization: ${formatNumber(monthlyAmount)} over ${numberOfMonths} month(s)`);
 
             // Static AP Non-Trade Payable debit account
             var debitAccountNo = "202010200";
             var debitAccountTitle = "202010200 AP-Non Trade Payable";
 
-            var creditAccountNo = selectedCreditOption.val();
-            var creditAccountTitle = selectedCreditOption.text();
+            var creditAccountNo = selectedDebitOption.val();
+            var creditAccountTitle = selectedDebitOption.text();
 
             let accountingEntriesBody = $("#accountingEntriesBody");
             accountingEntriesBody.empty();
