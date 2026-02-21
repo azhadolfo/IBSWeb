@@ -1112,6 +1112,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
+            {
+                TempData["error"] = "This invoice must be approved before it can be posted.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
+            }
+
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId && !cvd.IsDisplayEntry)
                 .ToListAsync(cancellationToken);
@@ -1119,13 +1125,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
-            {
-                if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
-                {
-                    throw new ArgumentException("This invoice must be approved before it can be posted.");
-                }
-
-                if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
