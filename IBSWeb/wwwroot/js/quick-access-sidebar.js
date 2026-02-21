@@ -226,7 +226,7 @@
         if (topItems.length > 0) {
             const label = document.createElement('div');
             label.className = 'qa-section-label';
-            label.innerHTML = 'Most Used';
+            label.textContent = 'Most Used';
             list.appendChild(label);
 
             topItems.forEach(([url, v]) => {
@@ -251,7 +251,7 @@
             }
             const label = document.createElement('div');
             label.className = 'qa-section-label';
-            label.innerHTML = 'Recent';
+            label.textContent = 'Recent';
             list.appendChild(label);
 
             recentFiltered.forEach(r => {
@@ -261,10 +261,18 @@
 
         // ── Empty state ──
         if (topItems.length === 0 && recentFiltered.length === 0) {
-            list.innerHTML = `
-                <div class="qa-empty">
-                    ${filter ? 'No matches found.' : 'Click nav links to start<br>building quick access.'}
-                </div>`;
+            list.innerHTML = '';
+            const empty = document.createElement('div');
+            empty.className = 'qa-empty';
+            if (filter) {
+                empty.textContent = 'No matches found.';
+            } else {
+                // Preserve the line break: "Click nav links to start<br>building quick access."
+                empty.appendChild(document.createTextNode('Click nav links to start'));
+                empty.appendChild(document.createElement('br'));
+                empty.appendChild(document.createTextNode('building quick access.'));
+            }
+            list.appendChild(empty);
         }
     }
 
