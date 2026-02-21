@@ -1118,11 +1118,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
-            {
-                throw new ArgumentException("This invoice must be approved before it can be posted.");
-            }
             try
+            {
+                if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
+                {
+                    throw new ArgumentException("This invoice must be approved before it can be posted.");
+                }
+
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
