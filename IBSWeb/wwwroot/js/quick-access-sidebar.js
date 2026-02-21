@@ -88,6 +88,38 @@
         return '';
     }
 
+    /**
+     * Sanitize URLs before using them in href attributes to prevent XSS via
+     * dangerous schemes like "javascript:" or cross-origin URLs.
+     * Returns a safe, normalized URL string, or null if the URL is not allowed.
+     */
+    function sanitizeUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+
+        try {
+            // Support relative URLs by resolving against the current origin
+            const base = window.location.origin;
+            const parsed = new URL(url, base);
+
+            const protocol = parsed.protocol.toLowerCase();
+
+            // Only allow HTTP(S) URLs on the same origin
+            if (protocol !== 'http:' && protocol !== 'https:') {
+                return null;
+            }
+
+            if (parsed.origin !== window.location.origin) {
+                return null;
+            }
+
+            // Return the path/query/fragment relative to origin to preserve existing behavior
+            return parsed.pathname + parsed.search + parsed.hash;
+        } catch {
+            // Malformed URLs are treated as unsafe
+            return null;
+        }
+    }
+
     function recordClick(url, label) {
         const data    = getClicks();
         const company = getCompanyFromUrl(url);
@@ -238,7 +270,9 @@
 
     function makeItem(url, label, count, entry) {
         const a = document.createElement('a');
-        a.href      = url;
+        const safeUrl = sanitizeUrl(url);
+        // If the URL is not considered safe, fall back to a non-navigating link
+        a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
 
