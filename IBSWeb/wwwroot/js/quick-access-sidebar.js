@@ -25,7 +25,7 @@
     }
 
     function saveClicks(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
     }
 
     function clearClicks() {
@@ -181,7 +181,8 @@
             const panel      = document.getElementById('qa-panel');
             const toggleBtn  = document.getElementById('qa-toggle-btn');
             const navTrigger = document.getElementById('qa-nav-trigger');
-            if (!panel.classList.contains('qa-hidden') &&
+            if (panel && toggleBtn &&
+                !panel.classList.contains('qa-hidden') &&
                 !panel.contains(e.target) &&
                 !toggleBtn.contains(e.target) &&
                 !(navTrigger && navTrigger.contains(e.target))) {
@@ -207,7 +208,8 @@
 
         if (filter) {
             topItems = topItems.filter(([, v]) =>
-                v.label.toLowerCase().includes(filter)
+                v.label.toLowerCase().includes(filter) ||
+                v.url.toLowerCase().includes(filter)
             );
         }
 
@@ -260,7 +262,8 @@
     function makeItem(url, label, count, entry) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
-        a.href      = safeUrl !== null ? safeUrl : '#';
+        // CodeQL[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
+        a.href = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
 
