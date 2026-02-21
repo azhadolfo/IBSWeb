@@ -768,7 +768,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var cosPrice = dr.CustomerOrderSlip!.DeliveredPrice;
                 var cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)dr.PurchaseOrderId!);
-                var freight = dr.Freight;
+                var freight = dr.Freight / 1.12m;
                 var commission = dr.CommissionRate;
                 var grossMargin = cosPrice - (cost + freight + commission);
                 var total = dr.Quantity * grossMargin;
