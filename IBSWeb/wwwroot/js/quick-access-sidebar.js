@@ -43,7 +43,11 @@
         let recent    = getRecent().filter(r => r.url !== url);
         recent.unshift({ url, label, company });
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        localStorage.setItem('qa_recent', JSON.stringify(recent));
+        try {
+            localStorage.setItem('qa_recent', JSON.stringify(recent));
+        } catch (e) {
+            console.warn('Quick Access: Failed to save recent items', e);
+        }
     }
 
     function isPanelOpen() {
@@ -94,7 +98,7 @@
     function attachTracking() {
         const navLinks = document.querySelectorAll(
             'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"])'
         );
 
         navLinks.forEach(anchor => {
@@ -209,7 +213,7 @@
         if (filter) {
             topItems = topItems.filter(([, v]) =>
                 v.label.toLowerCase().includes(filter) ||
-                v.url.toLowerCase().includes(filter)
+                url.toLowerCase().includes(filter)
             );
         }
 
@@ -262,7 +266,7 @@
     function makeItem(url, label, count, entry) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
-        // CodeQL[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
+        // codeql[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
         a.href = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;

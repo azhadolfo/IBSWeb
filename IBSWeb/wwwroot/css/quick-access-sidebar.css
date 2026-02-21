@@ -7,7 +7,7 @@
     position: fixed;
     top: 72px;
     left: 0;
-    z-index: 1051;
+    z-index: 1058;
     width: 14px;
     height: calc(100vh - 72px);
     background: linear-gradient(to right, rgba(160,160,160,0.2), rgba(160,160,160,0.04));
@@ -28,7 +28,7 @@
     position: fixed;
     top: 72px;
     left: 0;
-    z-index: 1050;
+    z-index: 1057;
     background: #fff;
     border-right: 1px solid #dee2e6;
     border-bottom: 1px solid #dee2e6;
