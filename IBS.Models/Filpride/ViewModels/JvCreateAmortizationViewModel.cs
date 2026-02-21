@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class JvCreateAccrualViewModel
+    public class JvCreateAmortizationViewModel
     {
         [Required]
         public string Type { get; set; } = string.Empty;
@@ -31,9 +31,13 @@ namespace IBS.Models.Filpride.ViewModels
         public string Reason { get; set; }
 
         public List<JvCreateAccrualDetailViewModel> Details { get; set; }
+
+        public int NumberOfMonths { get; set; }
+
+        public string SelectedExpenseAccount { get; set; }
     }
 
-    public class JvCreateAccrualDetailViewModel
+    public class JvCreateAmortizationDetailViewModel
     {
         public string AccountNo { get; set; } = string.Empty;
         public string AccountTitle { get; set; } = string.Empty;

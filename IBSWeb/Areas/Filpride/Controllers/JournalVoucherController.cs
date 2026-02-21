@@ -1830,5 +1830,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return true;
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateAmortization(CancellationToken cancellationToken)
+        {
+            var viewModel = new JvCreateAmortizationViewModel();
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
+                .OrderBy(c => c.CheckVoucherHeaderId)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.CvType == nameof(CVType.Invoicing) &&
+                    c.PostedBy != null)
+                .Select(cvh => new SelectListItem
+                {
+                    Value = cvh.CheckVoucherHeaderId.ToString(),
+                    Text = cvh.CheckVoucherHeaderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+            return View(viewModel);
+        }
     }
 }

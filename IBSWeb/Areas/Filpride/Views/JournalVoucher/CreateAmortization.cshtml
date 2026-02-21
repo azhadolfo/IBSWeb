@@ -1,8 +1,8 @@
 ﻿@using IBS.Models.Enums
-@model JvEditAccrualViewModel
+@model JvCreateAmortizationViewModel
 
 @{
-    ViewData["Title"] = "Journal Voucher - Edit Accrual";
+    ViewData["Title"] = "Journal Voucher - Create Amortization";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -25,7 +25,7 @@
             <div class="row">
                 <div class="col-12 col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input asp-for="JvId" type="hidden" />
+
                     <div class="form-group mb-3">
                         <label class="control-label">Type<span class="required">*</span></label>
                         <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
@@ -42,6 +42,7 @@
                         <input asp-for="TransactionDate"
                                type="Date"
                                class="form-control"
+                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"
                                min="@Model.MinDate.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
@@ -71,6 +72,18 @@
                         <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
                         <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
                         <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Expense Account</label><span class="required">*</span>
+                        <select asp-for="SelectedExpenseAccount" class="form-select js-select2" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="SelectedExpenseAccount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="NumberOfMonths" type="text" class="form-control" placeholder="" />
+                        <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
+                        <label asp-for="NumberOfMonths" class="control-label"># of Months</label>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -184,7 +197,8 @@
                                 <th class="w-25">Credit</th>
                             </tr>
                         </thead>
-                        <tbody id="accountingEntriesBody"></tbody>
+                        <tbody id="accountingEntriesBody">
+                        </tbody>
                         <tbody>
                             <tr>
                                 <td class="text-end">TOTAL:</td>
@@ -254,9 +268,7 @@
                 data: { id: cvId },
                 success: function (data) {
                     let tableBody = $("#tableBody");
-                    let accountingEntriesBody = $("#accountingEntriesBody");
                     tableBody.empty();
-                    accountingEntriesBody.empty();
 
                     if (data === null) {
                         clearFields();
@@ -272,44 +284,39 @@
                     $("#amount").text(formatNumber(data.amount));
                     $("#particulars").text(data.particulars);
                     $("#checkNo").text(data.checkNo);
-                    $("#totalDebit").text(formatNumberToFour(data.totalDebit));
-                    $("#totalCredit").text(formatNumberToFour(data.totalCredit));
+                    $("#totalDebit").text(formatNumber(data.totalDebit));
+                    $("#totalCredit").text(formatNumber(data.totalCredit));
 
                     for (let i = 0; i < data.accountNo.length; i++) {
                         let row = $("<tr></tr>");
                         let accountNumber = data.accountNo[i];
                         let accountTitle = data.accountNo[i] + " " + data.accountName[i];
-                        let debit = formatNumberToFour(data.debit[i]);
-                        let credit = formatNumberToFour(data.credit[i]);
+                        let debit = formatNumber(data.debit[i]);
+                        let credit = formatNumber(data.credit[i]);
 
                         row.append("<td style='width:60%; padding-left:20px;'>" + accountTitle + "</td>");
                         row.append("<td class='text-end' style='width:7%;'>" + debit + "</td>");
                         row.append("<td class='text-end' style='width:7%;'>" + credit + "</td>");
                         tableBody.append(row);
-
-                        var newRow = `<tr>
-                            <td>
-                                <input type='hidden' name='Details[${i}].AccountNo' value='${data.accountNo[i]}'/>
-                                <input type='text' name='Details[${i}].AccountTitle' value='${accountTitle}' style='border:none' class='w-100' readonly />
-                            </td>
-                            <td><input name='Details[${i}].Debit'
-                                id='debit_${accountNumber}'
-                                value='${debit}'
-                                style='border:none'
-                                class='w-100 money editable-amount'
-                                readonly />
-                            </td>
-                            <td><input name='Details[${i}].Credit'
-                                id='credit_${accountNumber}'
-                                value='${credit}'
-                                style='border:none'
-                                class='w-100 money editable-amount'
-                                readonly />
-                            </td>
-                        </tr>`;
-
-                        accountingEntriesBody.append(newRow);
                     }
+
+                    // Inside your AJAX success callback, after the existing loop
+                    let expenseAccountDropdown = $("select[name='SelectedExpenseAccount']");
+                    expenseAccountDropdown.empty();
+                    expenseAccountDropdown.append("<option value=''></option>");
+
+                    for (let i = 0; i < data.accountNo.length; i++) {
+                        if (data.credit[i] > 0) {
+                            let accountTitle = data.accountNo[i] + " " + data.accountName[i];
+                            expenseAccountDropdown.append(
+                                `<option value="${data.accountNo[i]}" data-credit="${data.credit[i]}">${accountTitle}</option>`
+                            );
+                        }
+                    }
+                    expenseAccountDropdown.trigger("change.select2");
+
+                    // Reinitialize select2 if you're using it
+                    expenseAccountDropdown.trigger("change.select2");
 
                     updateTotalDebitAndCredit();
                 },
@@ -333,7 +340,62 @@
             $("#totalDebit").text("");
             $("#totalCredit").text("");
             $("#tableBody").empty();
-            $("#accountingEntriesBody").empty();
+            $("select[name='SelectedAccount']").empty().append("<option value=''></option>").trigger("change.select2");
+        }
+
+        function calculateAmortizationEntries() {
+            var selectedCreditOption = $("select[name='SelectedExpenseAccount'] option:selected");
+            var numberOfMonths = parseInt($("#NumberOfMonths").val());
+            var selectedDebitOption = $("select[name='SelectedAccount'] option:selected");
+            var debitAmount = parseFloat(selectedDebitOption.data("debit"));
+
+            if (!selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
+
+            var monthlyAmount = debitAmount / numberOfMonths;
+
+            // Static AP Non-Trade Payable debit account
+            var debitAccountNo = "202010200";
+            var debitAccountTitle = "202010200 AP-Non Trade Payable";
+
+            var creditAccountNo = selectedCreditOption.val();
+            var creditAccountTitle = selectedCreditOption.text();
+
+            let accountingEntriesBody = $("#accountingEntriesBody");
+            accountingEntriesBody.empty();
+
+            // Static debit row
+            accountingEntriesBody.append(`
+                <tr>
+                    <td>
+                        <input type='hidden' name='Details[0].AccountNo' value='${debitAccountNo}'/>
+                        <input type='text' name='Details[0].AccountTitle' value='${debitAccountTitle}' style='border:none' class='w-100' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[0].Credit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                </tr>
+            `);
+
+            // Credit row from selected expense account
+            accountingEntriesBody.append(`
+                <tr>
+                    <td>
+                        <input type='hidden' name='Details[1].AccountNo' value='${creditAccountNo}'/>
+                        <input type='text' name='Details[1].AccountTitle' value='${creditAccountTitle}' style='border:none' class='w-100' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[1].Debit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                </tr>
+            `);
+
+            updateTotalDebitAndCredit();
         }
 
         $(".checkVoucher").each(function () {
@@ -346,9 +408,19 @@
             cvDetails(cvId);
         });
 
+        $("select[name='SelectedExpenseAccount']").on("change", function () {
+            calculateAmortizationEntries();
+        });
+
+        $(document).on("input", "#NumberOfMonths", function () {
+            calculateAmortizationEntries();
+        });
+
+
+
     </script>
     <script>
-        
+
     </script>
     <script>
         function validateDebitAndCredit(event) {
@@ -378,7 +450,7 @@
             return isValid;
         }
     </script>
-    <script>    
+    <script>
         // Recalculate on any input change
         $(document).on("input", ".editable-amount", function() {
             updateTotalDebitAndCredit();

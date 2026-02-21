@@ -244,115 +244,6 @@
             validateDebitAndCredit();
         }
 
-        $(function () {
-            $(".checkVoucher").change(function () {
-                var cvId = $(this).val();
-                if (cvId !== "") {
-                    $("#supplierAddress").text("");
-                    $("#supplierTinNo").text("");
-                    $("#cvNo").text("");
-                    $("#date").text("");
-                    $("#name").text("");
-                    $("#address").text("");
-                    $("#tinNo").text("");
-                    $("#poNo").text("");
-                    $("#siNo").text("");
-                    $("#payee").text("");
-                    $("#amount").text("");
-                    $("#particulars").text("");
-                    $("#checkNo").text("");
-                    $("#tableBody").empty();
-                    $("#totalDebit").text("");
-                    $("#totalCredit").text("");
-                }
-
-                $.ajax({
-                    url: '@Url.Action("GetCV", "JournalVoucher", new { area = "Filpride" })',
-                    method: "GET",
-                    data: { id: cvId },
-                    success: function (data) {
-                        let tableBody = $("#tableBody");
-                        let accountingEntriesBody = $("#accountingEntriesBody");
-                        tableBody.empty();
-                        accountingEntriesBody.empty();
-
-                        if (data === null) {
-                            $("#supplierAddress").text("");
-                            $("#supplierTinNo").text("");
-                            $("#cvNo").text("");
-                            $("#date").text("");
-                            $("#name").text("");
-                            $("#address").text("");
-                            $("#tinNo").text("");
-                            $("#poNo").text("");
-                            $("#siNo").text("");
-                            $("#payee").text("");
-                            $("#amount").text("");
-                            $("#particulars").text("");
-                            $("#checkNo").text("");
-                            $("#totalDebit").text("");
-                            $("#totalCredit").text("");
-                        }
-
-                        $("#cvNo").text(data.cvNo);
-                        $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
-                        $("#name").text(data.name);
-                        $("#address").text(data.address);
-                        $("#tinNo").text(data.tinNo);
-                        $("#poNo").text(data.poNo);
-                        $("#siNo").text(data.siNo);
-                        $("#payee").text(data.payee);
-                        $("#amount").text(formatNumber(data.amount));
-                        $("#particulars").text(data.particulars);
-                        $("#checkNo").text(data.checkNo);
-                        $("#totalDebit").text(formatNumberToFour(data.totalDebit));
-                        $("#totalCredit").text(formatNumberToFour(data.totalCredit));
-
-                        for (let i = 0; i < data.accountNo.length; i++) {
-                            let row = $("<tr></tr>");
-                            let accountNumber = data.accountNo[i];
-                            let accountTitle = data.accountNo[i] + " " + data.accountName[i];
-                            let debit = formatNumberToFour(data.debit[i]);
-                            let credit = formatNumberToFour(data.credit[i]);
-
-                            row.append("<td style='width:60%; padding-left:20px;'>" + accountTitle + "</td>");
-                            row.append("<td class='text-end' style='width:7%;'>" + debit + "</td>");
-                            row.append("<td class='text-end' style='width:7%;'>" + credit + "</td>");
-                            tableBody.append(row);
-
-                             var newRow = `<tr>
-                                    <td>
-                                        <input type='hidden' name='Details[${i}].AccountNo' value='${data.accountNo[i]}'/>
-                                        <input type='text' name='Details[${i}].AccountTitle' value='${accountTitle}' style='border:none' class='w-100' readonly />
-                                    </td>
-                                    <td><input name='Details[${i}].Debit'
-                                        id='debit_${accountNumber}'
-                                        value='${debit}'
-                                        style='border:none'
-                                        class='w-100 money editable-amount'
-                                        readonly />
-                                    </td>
-                                    <td><input name='Details[${i}].Credit'
-                                        id='credit_${accountNumber}'
-                                        value='${credit}'
-                                        style='border:none'
-                                        class='w-100 money editable-amount'
-                                        readonly />
-                                    </td>
-                             </tr>`;
-
-                             accountingEntriesBody.append(newRow);
-                        }
-
-                        updateTotalDebitAndCredit();
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching cv:', error);
-                    }
-                });
-            });
-        });
-
         function cvDetails(cvId) {
 
             if (cvId === "") {
@@ -373,7 +264,6 @@
                         clearFields();
                     }
 
-                    $("#cvNo").text(data.cvNo);
                     $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
                     $("#name").text(data.name);
                     $("#address").text(data.address);
@@ -432,7 +322,6 @@
         }
 
         function clearFields() {
-            $("#cvNo").text("");
             $("#date").text("");
             $("#name").text("");
             $("#address").text("");
@@ -492,13 +381,6 @@
         }
     </script>
     <script>
-        // Format number on blur (when user leaves the field)
-        $(document).on("blur", ".editable-amount", function() {
-            var value = parseNumber($(this).val());
-            $(this).val(formatNumber(value));
-            updateTotalDebitAndCredit();
-        });
-    
         // Recalculate on any input change
         $(document).on("input", ".editable-amount", function() {
             updateTotalDebitAndCredit();

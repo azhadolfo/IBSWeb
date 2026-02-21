@@ -7,4 +7,13 @@ namespace IBS.Models.Enums
         Amortization,
         Reclass
     }
+
+    public enum JvFrequency
+    {
+        Monthly,
+        Daily,
+        Weekly,
+        Quarterly,
+        Annually
+    }
 }
