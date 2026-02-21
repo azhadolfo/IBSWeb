@@ -75,7 +75,7 @@
                         url: '@Url.Action("Void", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/' + id,
                         type: 'POST',
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { table.ajax.reload(); },
+                        success: function() { window.location.reload(); },
                         error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
                     });
                 }
@@ -102,7 +102,7 @@
                         type: 'POST',
                         data: { id: id, cancellationRemarks: $("#cancellationRemarks").val() },
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { table.ajax.reload(); },
+                        success: function() { window.location.reload(); },
                         error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
                     });
                 }
