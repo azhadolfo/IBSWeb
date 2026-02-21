@@ -1,7 +1,7 @@
 /**
  * Quick Access Sidebar
  * Tracks frequently clicked nav links via localStorage and surfaces them
- * in a collapsible sidebar panel on the right edge of the screen.
+ * in a collapsible sidebar panel on the left edge of the screen.
  *
  * Storage keys:
  *   qa_clicks   — JSON object { url: { label, count, company } }
@@ -45,35 +45,12 @@
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
         localStorage.setItem('qa_recent', JSON.stringify(recent));
     }
+
     function isPanelOpen() {
         return localStorage.getItem(STATE_KEY) !== 'false';
     }
 
-    /* ─── Track clicks on all existing nav links ─── */
-
-    // Keep a WeakSet so we never double-attach a listener to the same element
-    const _tracked = new WeakSet();
-
-    function attachTracking() {
-        const navLinks = document.querySelectorAll(
-            'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
-        );
-
-        navLinks.forEach(anchor => {
-            if (_tracked.has(anchor)) return; // already listening
-            _tracked.add(anchor);
-
-            anchor.addEventListener('click', function () {
-                const url   = this.getAttribute('href') || this.href;
-                const label = (this.textContent || '').trim();
-                if (!url || url === '#' || !label) return;
-                if (url === '/' || url.toLowerCase().includes('/home/')) return;
-
-                recordClick(url, label);
-            });
-        });
-    }
+    /* ─── URL helpers ─── */
 
     function getCurrentCompany() {
         return (document.getElementById('hfCompany')?.value || '').trim();
@@ -89,35 +66,49 @@
     }
 
     /**
-     * Sanitize URLs before using them in href attributes to prevent XSS via
-     * dangerous schemes like "javascript:" or cross-origin URLs.
-     * Returns a safe, normalized URL string, or null if the URL is not allowed.
+     * Sanitize URLs — only allow same-origin HTTP(S) relative paths.
+     * Prevents XSS via javascript: or cross-origin hrefs.
      */
     function sanitizeUrl(url) {
         if (!url || typeof url !== 'string') return null;
-
         try {
-            // Support relative URLs by resolving against the current origin
-            const base = window.location.origin;
-            const parsed = new URL(url, base);
-
+            const parsed = new URL(url, window.location.origin);
             const protocol = parsed.protocol.toLowerCase();
-
-            // Only allow HTTP(S) URLs on the same origin
-            if (protocol !== 'http:' && protocol !== 'https:') {
-                return null;
-            }
-
-            if (parsed.origin !== window.location.origin) {
-                return null;
-            }
-
-            // Return the path/query/fragment relative to origin to preserve existing behavior
+            if (protocol !== 'http:' && protocol !== 'https:') return null;
+            if (parsed.origin !== window.location.origin) return null;
             return parsed.pathname + parsed.search + parsed.hash;
         } catch {
-            // Malformed URLs are treated as unsafe
             return null;
         }
+    }
+
+    function isAvailable(entry) {
+        if (!entry.company) return true;
+        return entry.company === getCurrentCompany();
+    }
+
+    /* ─── Track clicks on all existing nav links ─── */
+
+    const _tracked = new WeakSet();
+
+    function attachTracking() {
+        const navLinks = document.querySelectorAll(
+            'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
+        );
+
+        navLinks.forEach(anchor => {
+            if (_tracked.has(anchor)) return;
+            _tracked.add(anchor);
+
+            anchor.addEventListener('click', function () {
+                const url   = this.getAttribute('href') || this.href;
+                const label = (this.textContent || '').trim();
+                if (!url || url === '#' || !label) return;
+                if (url === '/' || url.toLowerCase().includes('/home/')) return;
+                recordClick(url, label);
+            });
+        });
     }
 
     function recordClick(url, label) {
@@ -133,11 +124,6 @@
         pushRecent(url, label);
     }
 
-    function isAvailable(entry) {
-        if (!entry.company) return true;
-        return entry.company === getCurrentCompany();
-    }
-
     /* ─── Build sidebar HTML ─── */
 
     function buildSidebar() {
@@ -149,7 +135,7 @@
         panel.innerHTML = `
             <div class="qa-panel-header">
                 <span>Quick Access</span>
-                <button id="qa-close-btn" title="Close">
+                <button id="qa-close-btn" title="Close" aria-label="Close Quick Access sidebar">
                     <i class="bi bi-x"></i>
                 </button>
             </div>
@@ -168,6 +154,8 @@
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'qa-toggle-btn';
         toggleBtn.title = 'Quick Access';
+        toggleBtn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
+        toggleBtn.setAttribute('aria-expanded', String(isPanelOpen()));
         toggleBtn.innerHTML = '';
 
         document.body.appendChild(panel);
@@ -188,11 +176,11 @@
 
         renderList();
 
-        // Close when clicking outside
+        // Close when clicking outside — exclude both toggle buttons
         document.addEventListener('click', function (e) {
-            const panel       = document.getElementById('qa-panel');
-            const toggleBtn   = document.getElementById('qa-toggle-btn');
-            const navTrigger  = document.getElementById('qa-nav-trigger');
+            const panel      = document.getElementById('qa-panel');
+            const toggleBtn  = document.getElementById('qa-toggle-btn');
+            const navTrigger = document.getElementById('qa-nav-trigger');
             if (!panel.classList.contains('qa-hidden') &&
                 !panel.contains(e.target) &&
                 !toggleBtn.contains(e.target) &&
@@ -205,9 +193,9 @@
     /* ─── Render list ─── */
 
     function renderList(filter) {
-        const list    = document.getElementById('qa-list');
-        const clicks  = getClicks();
-        const recent  = getRecent();
+        const list   = document.getElementById('qa-list');
+        const clicks = getClicks();
+        const recent = getRecent();
 
         list.innerHTML = '';
 
@@ -226,7 +214,7 @@
         if (topItems.length > 0) {
             const label = document.createElement('div');
             label.className = 'qa-section-label';
-            label.innerHTML = 'Most Used';
+            label.textContent = 'Most Used';
             list.appendChild(label);
 
             topItems.forEach(([url, v]) => {
@@ -235,9 +223,10 @@
         }
 
         // ── Recent ──
+        // Fix: filter by availability first, THEN apply search filter on the result
         let recentFiltered = recent.filter(r => isAvailable(r));
         if (filter) {
-            recentFiltered = recent.filter(r =>
+            recentFiltered = recentFiltered.filter(r =>
                 r.label.toLowerCase().includes(filter) ||
                 r.url.toLowerCase().includes(filter)
             );
@@ -251,7 +240,7 @@
             }
             const label = document.createElement('div');
             label.className = 'qa-section-label';
-            label.innerHTML = 'Recent';
+            label.textContent = 'Recent';
             list.appendChild(label);
 
             recentFiltered.forEach(r => {
@@ -261,24 +250,22 @@
 
         // ── Empty state ──
         if (topItems.length === 0 && recentFiltered.length === 0) {
-            list.innerHTML = `
-                <div class="qa-empty">
-                    ${filter ? 'No matches found.' : 'Click nav links to start<br>building quick access.'}
-                </div>`;
+            const empty = document.createElement('div');
+            empty.className = 'qa-empty';
+            empty.textContent = filter ? 'No matches found.' : 'Click nav links to start building quick access.';
+            list.appendChild(empty);
         }
     }
 
     function makeItem(url, label, count, entry) {
-        const a = document.createElement('a');
         const safeUrl = sanitizeUrl(url);
-        // If the URL is not considered safe, fall back to a non-navigating link
+        const a = document.createElement('a');
         a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
 
         const labelEl = document.createElement('span');
         labelEl.textContent = label;
-
         a.appendChild(labelEl);
 
         a.addEventListener('click', function () {
@@ -291,9 +278,13 @@
     /* ─── Toggle ─── */
 
     function togglePanel() {
-        const panel = document.getElementById('qa-panel');
+        const panel     = document.getElementById('qa-panel');
+        const toggleBtn = document.getElementById('qa-toggle-btn');
         const isNowHidden = panel.classList.toggle('qa-hidden');
         localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
+
+        // Keep aria-expanded in sync
+        if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
 
         if (!isNowHidden) {
             // Refresh list when opening
@@ -320,6 +311,7 @@
         btn.className = 'nav-link';
         btn.href = '#';
         btn.title = 'Quick Access';
+        btn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
         btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i>';
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -337,8 +329,12 @@
         injectNavbarTrigger();
         attachTracking();
 
-        const observer = new MutationObserver(() => attachTracking());
-        observer.observe(document.body, { childList: true, subtree: true });
+        // Fix: scope observer to navbar only, not entire body
+        const navbar = document.querySelector('nav.navbar');
+        if (navbar) {
+            const observer = new MutationObserver(() => attachTracking());
+            observer.observe(navbar, { childList: true, subtree: true });
+        }
     }
 
     if (document.readyState === 'loading') {

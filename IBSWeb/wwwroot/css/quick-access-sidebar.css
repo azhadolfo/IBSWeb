@@ -137,9 +137,13 @@
     color: #212529;
     font-size: 0.84rem;
     transition: background 0.15s;
-    white-space: nowrap;
+}
+
+.qa-item span {
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .qa-item:hover {
