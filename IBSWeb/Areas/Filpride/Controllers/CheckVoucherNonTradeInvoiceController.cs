@@ -1306,7 +1306,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var cv = await _unitOfWork.FilprideCheckVoucher
