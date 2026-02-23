@@ -117,4 +117,19 @@
             toggleStationDiv();
         });
     </script>
+
+    <script>
+        const COMPANY_KEY = 'lastSelectedCompany';
+
+        // Restore last selected company using Select2's API
+        const lastCompany = localStorage.getItem(COMPANY_KEY);
+        if (lastCompany) {
+            $('#company-select').val(lastCompany).trigger('change');
+        }
+
+        // Save on change
+        $('#company-select').on('change', function () {
+            if (this.value) localStorage.setItem(COMPANY_KEY, this.value);
+        });
+    </script>
 }
