@@ -211,7 +211,7 @@
             .slice(0, MAX_TOP);
 
         if (filter) {
-            topItems = topItems.filter(([, v]) =>
+            topItems = topItems.filter(([url, v]) =>
                 v.label.toLowerCase().includes(filter) ||
                 url.toLowerCase().includes(filter)
             );
