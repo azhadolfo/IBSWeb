@@ -59,11 +59,6 @@
                         <span asp-validation-for="CvId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Particulars" type="text" class="form-control" placeholder="" />
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
-                        <span asp-validation-for="Particulars" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
                         <input asp-for="CrNo" type="text" class="form-control" placeholder="" />
                         <label asp-for="CrNo" class="control-label">CR No.</label>
                         <span asp-validation-for="CrNo" class="text-danger"></span>
@@ -236,8 +231,8 @@
             });
 
             // Display the total debit value
-            $(".totalDebit").text(formatNumber(totalDebit));
-            $(".totalCredit").text(formatNumber(totalCredit));
+            $(".totalDebit").text(formatNumberToFour(totalDebit));
+            $(".totalCredit").text(formatNumberToFour(totalCredit));
             $("#debit").val("0.0000");
             $("#credit").val("0.0000");
 
@@ -276,44 +271,88 @@
                     $("#amount").text(formatNumber(data.amount));
                     $("#particulars").text(data.particulars);
                     $("#checkNo").text(data.checkNo);
-                    $("#totalDebit").text(formatNumber(data.totalDebit));
-                    $("#totalCredit").text(formatNumber(data.totalCredit));
+                    $("#totalDebit").text(formatNumberToFour(data.totalDebit));
+                    $("#totalCredit").text(formatNumberToFour(data.totalCredit));
+
+                    const ACCRUAL_ACCOUNT_NO = "201020300";
+                    const ACCRUAL_ACCOUNT_NAME = "AP - Accrued Expenses";
+                    const ACCRUAL_ACCOUNT_TITLE = `${ACCRUAL_ACCOUNT_NO} ${ACCRUAL_ACCOUNT_NAME}`;
+
+                    let rowIndex = 0;
+                    let totalDebitSum = 0;
 
                     for (let i = 0; i < data.accountNo.length; i++) {
-                        let row = $("<tr></tr>");
-                        let accountNumber = data.accountNo[i];
-                        let accountTitle = data.accountNo[i] + " " + data.accountName[i];
-                        let debit = formatNumber(data.debit[i]);
-                        let credit = formatNumber(data.credit[i]);
 
-                        row.append("<td style='width:60%; padding-left:20px;'>" + accountTitle + "</td>");
-                        row.append("<td class='text-end' style='width:7%;'>" + debit + "</td>");
-                        row.append("<td class='text-end' style='width:7%;'>" + credit + "</td>");
-                        tableBody.append(row);
+                        const accountNumber  = data.accountNo[i];
+                        const accountTitle   = `${accountNumber} ${data.accountName[i]}`;
+                        const debitFormatted = formatNumberToFour(parseNumber(String(data.debit[i] ?? "")));
+                        const creditFormatted = formatNumberToFour(parseNumber(String(data.credit[i] ?? "")));
 
-                        var newRow = `<tr>
-                            <td>
-                                <input type='hidden' name='Details[${i}].AccountNo' value='${data.accountNo[i]}'/>
-                                <input type='text' name='Details[${i}].AccountTitle' value='${accountTitle}' style='border:none' class='w-100' readonly />
-                            </td>
-                            <td><input name='Details[${i}].Debit'
-                                id='debit_${accountNumber}'
-                                value='${debit}'
-                                style='border:none'
-                                class='w-100 money editable-amount'
-                                readonly />
-                            </td>
-                            <td><input name='Details[${i}].Credit'
-                                id='credit_${accountNumber}'
-                                value='${credit}'
-                                style='border:none'
-                                class='w-100 money editable-amount'
-                                readonly />
-                            </td>
-                        </tr>`;
+                        let previewRow = $("<tr></tr>");
+                        previewRow.append(`<td style='width:60%; padding-left:20px;'>${accountTitle}</td>`);
+                        previewRow.append(`<td class='text-end' style='width:7%;'>${debitFormatted}</td>`);
+                        previewRow.append(`<td class='text-end' style='width:7%;'>${creditFormatted}</td>`);
+                        tableBody.append(previewRow);
 
-                        accountingEntriesBody.append(newRow);
+                        const debitVal = parseNumber(String(data.debit[i] ?? ""));
+                        if (debitVal === 0) continue;
+
+                        totalDebitSum += debitVal;
+
+                        accountingEntriesBody.append(`
+                            <tr>
+                                <td>
+                                    <input type='hidden' name='Details[${rowIndex}].AccountNo' value='${accountNumber}'/>
+                                    <input type='text'   name='Details[${rowIndex}].AccountTitle' value='${accountTitle}'
+                                           style='border:none' class='w-100' readonly />
+                                </td>
+                                <td>
+                                    <input name='Details[${rowIndex}].Debit'
+                                           id='debit_${accountNumber}'
+                                           value='${debitFormatted}'
+                                           style='border:none'
+                                           class='w-100 money'
+                                           readonly />
+                                </td>
+                                <td>
+                                    <input name='Details[${rowIndex}].Credit'
+                                           id='credit_${accountNumber}'
+                                           value='0.0000'
+                                           style='border:none'
+                                           class='w-100 money'
+                                           readonly />
+                                </td>
+                            </tr>`);
+
+                        rowIndex++;
                     }
+
+                    const creditTotal = formatNumberToFour(totalDebitSum);
+
+                    accountingEntriesBody.append(`
+                        <tr>
+                            <td>
+                                <input type='hidden' name='Details[${rowIndex}].AccountNo' value='${ACCRUAL_ACCOUNT_NO}'/>
+                                <input type='text'   name='Details[${rowIndex}].AccountTitle' value='${ACCRUAL_ACCOUNT_TITLE}'
+                                       style='border:none' class='w-100' readonly />
+                            </td>
+                            <td>
+                                <input name='Details[${rowIndex}].Debit'
+                                       id='debit_${ACCRUAL_ACCOUNT_NO}'
+                                       value='0.0000'
+                                       style='border:none'
+                                       class='w-100 money'
+                                       readonly />
+                            </td>
+                            <td>
+                                <input name='Details[${rowIndex}].Credit'
+                                       id='credit_${ACCRUAL_ACCOUNT_NO}'
+                                       value='${creditTotal}'
+                                       style='border:none'
+                                       class='w-100 money'
+                                       readonly />
+                            </td>
+                        </tr>`);
 
                     updateTotalDebitAndCredit();
                 },
@@ -381,11 +420,5 @@
 
             return isValid;
         }
-    </script>
-    <script>
-        // Recalculate on any input change
-        $(document).on("input", ".editable-amount", function() {
-            updateTotalDebitAndCredit();
-        });
     </script>
 }

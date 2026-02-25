@@ -20,10 +20,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? CvList { get; set; }
 
-        [Required]
-        [StringLength(200)]
-        public string Particulars { get; set; } = string.Empty;
-
         public string? CrNo { get; set; }
 
         [Required]

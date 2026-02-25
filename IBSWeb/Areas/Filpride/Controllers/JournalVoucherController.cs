@@ -1509,9 +1509,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(x => x.CheckVoucherHeaderId == viewModel.CvId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {viewModel.CvId} not found");
+
                 #region --Saving the default entries
 
                 var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken);
+                var particulars = $"Accrual of '{viewModel.Details.First(d => d.Debit > 0).AccountTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
                     Type = viewModel.Type,
@@ -1519,7 +1524,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = viewModel.TransactionDate,
                     References = viewModel.References,
                     CVId = viewModel.CvId,
-                    Particulars = viewModel.Particulars,
+                    Particulars = particulars,
                     CRNo = viewModel.CrNo,
                     JVReason = viewModel.Reason,
                     CreatedBy = GetUserFullName(),
@@ -1542,6 +1547,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
                                        ?? throw new NullReferenceException($"Account number {acctNo} not found");
 
+                    var isAccrualAccount = accountTitle.AccountName.Contains("AP - Accrued Expenses");
+
                     cvDetails.Add(
                         new FilprideJournalVoucherDetail
                         {
@@ -1551,9 +1558,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             JournalVoucherHeaderId = model.JournalVoucherHeaderId,
                             Debit = acctNo.Debit,
                             Credit = acctNo.Credit,
-                            SubAccountType = null,
-                            SubAccountId = null,
-                            SubAccountName = null
+                            SubAccountType = isAccrualAccount ? SubAccountType.Supplier : null,
+                            SubAccountId = isAccrualAccount ? cv.SupplierId : null,
+                            SubAccountName = isAccrualAccount ? cv.Payee : null,
                         }
                     );
 
@@ -1621,7 +1628,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TransactionDate = existingHeaderModel.Date,
                     References = existingHeaderModel.References,
                     CvId = (int)existingHeaderModel.CVId!,
-                    Particulars = existingHeaderModel.Particulars,
                     CrNo = existingHeaderModel.CRNo,
                     Reason = existingHeaderModel.JVReason,
                     CvList = await _dbContext.FilprideCheckVoucherHeaders
@@ -1706,6 +1712,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(x => x.CheckVoucherHeaderId == viewModel.CvId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {viewModel.CvId} not found");
+
                 await _dbContext.FilprideJournalVoucherDetails
                     .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
                     .ExecuteDeleteAsync(cancellationToken);
@@ -1714,10 +1724,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
+                var particulars = $"Accrual of '{viewModel.Details.First(d => d.Debit > 0).AccountTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
+
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.References = viewModel.References;
                 existingHeaderModel.CVId = viewModel.CvId;
-                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.Particulars = particulars;
                 existingHeaderModel.CRNo = viewModel.CrNo;
                 existingHeaderModel.JVReason = viewModel.Reason;
                 existingHeaderModel.EditedBy = GetUserFullName();
@@ -1735,6 +1747,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
                                        ?? throw new NullReferenceException($"Account number {acctNo} not found");
 
+                    var isAccrualAccount = accountTitle.AccountName.Contains("AP - Accrued Expenses");
+
                     cvDetails.Add(
                         new FilprideJournalVoucherDetail
                         {
@@ -1744,9 +1758,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             JournalVoucherHeaderId = existingHeaderModel.JournalVoucherHeaderId,
                             Debit = acctNo.Debit,
                             Credit = acctNo.Credit,
-                            SubAccountType = null,
-                            SubAccountId = null,
-                            SubAccountName = null
+                            SubAccountType = isAccrualAccount ? SubAccountType.Supplier : null,
+                            SubAccountId = isAccrualAccount ? cv.SupplierId : null,
+                            SubAccountName = isAccrualAccount ? cv.Payee : null,
                         }
                     );
 
@@ -1799,12 +1813,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
                     ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
 
+                var particulars = $"Reversal of accrued '{existingHeaderModel.Details.First(d => d.Debit > 0).AccountName}' for the month of {firstDayOfNextMonth:MMM yyy}.";
+
                 ledgers.Add(
                     new FilprideGeneralLedgerBook
                     {
                         Date = firstDayOfNextMonth,
                         Reference = existingHeaderModel.JournalVoucherHeaderNo!,
-                        Description = existingHeaderModel.Particulars,
+                        Description = $"Reversal of {existingHeaderModel.Particulars}",
                         AccountId = account.AccountId,
                         AccountNo = account.AccountNumber,
                         AccountTitle = account.AccountName,
