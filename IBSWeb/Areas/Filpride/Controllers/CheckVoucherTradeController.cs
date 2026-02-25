@@ -1,5 +1,3 @@
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -17,6 +15,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -298,9 +298,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion --Retrieve Supplier
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -310,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cvh = new FilprideCheckVoucherHeader
                 {
@@ -363,7 +363,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -419,7 +418,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional journal entry in details
 
-                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ',2) ?? [];
+                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ', 2) ?? [];
 
                 var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                     .FirstOrDefaultAsync(x => x.AccountNumber == ewtTitle.FirstOrDefault(), cancellationToken);
@@ -523,7 +522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
-                #endregion
+                #endregion -- Additional journal entry in details
 
                 #region -- Uploading file --
 
@@ -532,7 +531,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
                     cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
                 }
-
 
                 #region --Audit Trail Recording
 
@@ -824,9 +822,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -836,7 +834,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
@@ -888,7 +886,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -966,7 +963,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional details entry
 
-                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ',2) ?? [];
+                var ewtTitle = supplier.WithholdingTaxTitle?.Split(' ', 2) ?? [];
 
                 var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                     .FirstOrDefaultAsync(x => x.AccountNumber == ewtTitle.FirstOrDefault(), cancellationToken);
@@ -1006,7 +1003,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var netOfEwt = grossAmount - ewt;
 
-                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
                         details.Add(
                         new FilprideCheckVoucherDetail
@@ -1077,7 +1074,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
 
-                #endregion
+                #endregion -- Additional details entry
 
                 #region -- Uploading file --
 
@@ -1165,8 +1162,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         .ToArray()
                                     ?? Array.Empty<string>();
             }
-
-
 
             var viewModel = new CheckVoucherVM
             {
@@ -1297,10 +1292,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     advances.AmountPaid += advances.Total;
-
                 }
 
-                #endregion
+                #endregion Add amount paid for the advances if applicable
 
                 await _unitOfWork.FilprideCheckVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
@@ -1431,7 +1425,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     advances.AmountPaid -= advances.AmountPaid;
                 }
 
-                #endregion
+                #endregion Revert the amount paid of advances
 
                 #region --Audit Trail Recording
 
@@ -1532,7 +1526,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     advances.AmountPaid -= advances.AmountPaid;
                 }
 
-                #endregion
+                #endregion -- Revert the amount paid of advances
 
                 #region --Audit Trail Recording
 
@@ -1615,7 +1609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                #endregion -- Recalculate payment of RR's or DR's
+                #endregion -- Revert the tagging of RR's or DR's
 
                 #region -- Revert the amount paid of advances
 
@@ -1635,7 +1629,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     advances.AmountPaid -= advances.AmountPaid;
                 }
 
-                #endregion
+                #endregion -- Revert the amount paid of advances
 
                 #region --Audit Trail Recording
 
@@ -1659,6 +1653,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         //Download as .xlsx file.(Export)
+
         #region -- export xlsx record --
 
         [HttpPost]
@@ -1681,6 +1676,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Create the Excel package
                 using var package = new ExcelPackage();
                 // Add a new worksheet to the Excel package
+
                 #region -- Purchase Order Table Header --
 
                 var worksheet3 = package.Workbook.Worksheets.Add("PurchaseOrder");
@@ -1809,7 +1805,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet5.Cells["D1"].Value = "CheckVoucherId";
                 worksheet5.Cells["E1"].Value = "AmountPaid";
 
-                #endregion -- Check Voucher Header Table Header --
+                #endregion -- Check Voucher Trade Payments Table Header --
 
                 #region -- Check Voucher Multiple Payment Table Header --
 
@@ -1820,7 +1816,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet6.Cells["C1"].Value = "CheckVoucherHeaderInvoiceId";
                 worksheet6.Cells["D1"].Value = "AmountPaid";
 
-                #endregion
+                #endregion -- Check Voucher Multiple Payment Table Header --
 
                 #region -- Check Voucher Header Export (Trade and Invoicing)--
 
@@ -1894,7 +1890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvRow++;
                 }
 
-                #endregion -- Check Voucher Header Export (Trade and Invoicing) --
+                #endregion -- Check Voucher Header Export (Trade and Invoicing)--
 
                 #region -- Check Voucher Header Export (Payment) --
 
@@ -1907,7 +1903,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Split(',', StringSplitOptions.TrimEntries)
                             .Any(r => cvNos.Contains(r)))
                     .ToList();
-
 
                 foreach (var item in checkVoucherPayment)
                 {
@@ -2206,7 +2201,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
@@ -2290,9 +2284,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion --Retrieve Supplier
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -2302,7 +2296,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cvh = new FilprideCheckVoucherHeader
                 {
@@ -2355,7 +2349,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -2661,9 +2654,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -2673,7 +2666,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cvh = new FilprideCheckVoucherHeader
                 {
@@ -2727,7 +2720,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -2893,7 +2885,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
                 }
 
-
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
@@ -2949,7 +2940,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (query.Any())
             {
                 var drList = deliverReceipt
-                    .OrderBy(x => x.ManualDrNo)
+                    .OrderBy(x => x.DeliveryReceiptNo)
                     .Select(dr =>
                     {
                         var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
@@ -3012,7 +3003,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var drList = deliverReceipt
-                .OrderBy(x => x.ManualDrNo)
+                .OrderBy(x => x.DeliveryReceiptNo)
                 .Select(dr =>
                 {
                     var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
@@ -3161,9 +3152,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion --Retrieve Supplier
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -3173,7 +3164,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
@@ -3226,7 +3217,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -3293,7 +3283,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var netOfEwt = grossAmount - ewt;
 
-                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
                         details.Add(
                         new FilprideCheckVoucherDetail
@@ -3364,7 +3354,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
 
-                #endregion
+                #endregion -- Additional details entry
 
                 #region -- Partial payment
 
@@ -3414,7 +3404,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                #endregion -- Partial payment of RR's
+                #endregion -- Partial payment
 
                 #region -- Uploading file --
 
@@ -3569,9 +3559,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion --Retrieve Supplier
+                #endregion -- Get Supplier
 
-                #region  -- Get bank account
+                #region -- Get bank account
 
                 var bank = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
@@ -3581,7 +3571,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                #endregion
+                #endregion -- Get bank account
 
                 var cashInBank = viewModel.Credit[1];
                 existingHeaderModel.Date = viewModel.TransactionDate;
@@ -3634,7 +3624,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subAccountType = SubAccountType.BankAccount;
                         subAccountId = viewModel.BankId!;
                         subAccountName = $"{bank.AccountNo} {bank.AccountName}";
-
                     }
                     else
                     {
@@ -3701,7 +3690,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var netOfEwt = grossAmount - ewt;
 
-                    if(existingHeaderModel.CheckVoucherHeaderNo != null)
+                    if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
                         details.Add(
                         new FilprideCheckVoucherDetail
@@ -3772,7 +3761,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
 
-                #endregion
+                #endregion -- Additional details entry
 
                 #region -- Partial payment
 
@@ -3822,7 +3811,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                #endregion -- Partial payment of RR's
+                #endregion -- Partial payment
 
                 #region -- Uploading file --
 
@@ -3887,7 +3876,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return Json(new { hasCodOrPrepaid, advanceAmount, advanceCVNo = advanceCvNo });
-
         }
 
         private async Task<(string CVNo, decimal Amount)> CalculateAdvanceAmount(int supplierId)
