@@ -272,6 +272,7 @@
 
     function renderList(filter) {
         const list   = document.getElementById('qa-list');
+        if (!list) return;
         const clicks = getClicks();
         const recent = getRecent();
 
