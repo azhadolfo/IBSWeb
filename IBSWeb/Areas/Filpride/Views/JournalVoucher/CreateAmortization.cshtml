@@ -59,11 +59,6 @@
                         <span asp-validation-for="CvId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Particulars" type="text" class="form-control" placeholder="" />
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
-                        <span asp-validation-for="Particulars" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
                         <input asp-for="CrNo" type="text" class="form-control" placeholder="" />
                         <label asp-for="CrNo" class="control-label">CR No.</label>
                         <span asp-validation-for="CrNo" class="text-danger"></span>
@@ -80,11 +75,26 @@
                         </select>
                         <span asp-validation-for="SelectedExpenseAccount" class="text-danger"></span>
                     </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="NumberOfMonths" type="number" min="1" max="120" class="form-control" placeholder="" />
-                        <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
-                        <label asp-for="NumberOfMonths" class="control-label"># of Months</label>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Prepaid Account</label><span class="required">*</span>
+                        <select asp-for="SelectedPrepaidAccount" asp-items="@Model.PrepaidExpenseAccounts" class="form-select js-select2" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="SelectedPrepaidAccount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label"># of Months<span class="required">*</span></label>
+                        <select asp-for="NumberOfMonths" class="form-select js-select2" style="width:100%">
+                            <option value="">Select period</option>
+                            <option value="3">3 Months (Quarterly)</option>
+                            <option value="6">6 Months (Semi-Annual)</option>
+                            <option value="12" selected>12 Months (Annual)</option>
+                            <option value="24">24 Months (2 Years)</option>
+                            <option value="36">36 Months (3 Years)</option>
+                            <option value="60">60 Months (5 Years)</option>
+                        </select>
                         <small class="text-muted" id="monthlyAmountHint"></small>
+                        <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -249,8 +259,8 @@
             });
 
             // Display the total debit value
-            $(".totalDebit").text(formatNumber(totalDebit));
-            $(".totalCredit").text(formatNumber(totalCredit));
+            $(".totalDebit").text(formatNumberToFour(totalDebit));
+            $(".totalCredit").text(formatNumberToFour(totalCredit));
             $("#debit").val("0.0000");
             $("#credit").val("0.0000");
 
@@ -287,15 +297,15 @@
                     $("#amount").text(formatNumber(data.amount));
                     $("#particulars").text(data.particulars);
                     $("#checkNo").text(data.checkNo);
-                    $("#totalDebit").text(formatNumber(data.totalDebit));
-                    $("#totalCredit").text(formatNumber(data.totalCredit));
+                    $("#totalDebit").text(formatNumberToFour(data.totalDebit));
+                    $("#totalCredit").text(formatNumberToFour(data.totalCredit));
 
                     for (let i = 0; i < data.accountNo.length; i++) {
                         let row = $("<tr></tr>");
                         let accountNumber = data.accountNo[i];
                         let accountTitle = data.accountNo[i] + " " + data.accountName[i];
-                        let debit = formatNumber(data.debit[i]);
-                        let credit = formatNumber(data.credit[i]);
+                        let debit = formatNumberToFour(data.debit[i]);
+                        let credit = formatNumberToFour(data.credit[i]);
 
                         row.append("<td style='width:60%; padding-left:20px;'>" + accountTitle + "</td>");
                         row.append("<td class='text-end' style='width:7%;'>" + debit + "</td>");
@@ -346,24 +356,25 @@
             $("select[name='SelectedExpenseAccount']").empty().append("<option value=''></option>").trigger("change.select2");
         }
 
-         function calculateAmortizationEntries() {
+        function calculateAmortizationEntries() {
             var selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
+            var selectedCreditOption = $("select[name='SelectedPrepaidAccount'] option:selected");
             var numberOfMonths = parseInt($("#NumberOfMonths").val());
             var debitAmount = parseFloat(selectedDebitOption.data("debit"));
             var monnthlyAmountHint = $("#monthlyAmountHint").text("");
 
-            if (!selectedDebitOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
+            if (!selectedDebitOption.val() || !selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
 
             var monthlyAmount = debitAmount / numberOfMonths;
 
             monnthlyAmountHint.text(`Monthly amortization: ${formatNumber(monthlyAmount)} over ${numberOfMonths} month(s)`);
 
             // Static AP Non-Trade Payable debit account
-            var debitAccountNo = "202010200";
-            var debitAccountTitle = "202010200 AP-Non Trade Payable";
+            var debitAccountNo = selectedDebitOption.val();
+            var debitAccountTitle = selectedDebitOption.text();
 
-            var creditAccountNo = selectedDebitOption.val();
-            var creditAccountTitle = selectedDebitOption.text();
+            var creditAccountNo = selectedCreditOption.val();
+            var creditAccountTitle = selectedCreditOption.text();
 
             let accountingEntriesBody = $("#accountingEntriesBody");
             accountingEntriesBody.empty();
@@ -414,6 +425,10 @@
         });
 
         $("select[name='SelectedExpenseAccount']").on("change", function () {
+            calculateAmortizationEntries();
+        });
+
+        $("select[name='SelectedPrepaidAccount']").on("change", function () {
             calculateAmortizationEntries();
         });
 

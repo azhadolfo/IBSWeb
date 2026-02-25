@@ -1,8 +1,8 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
@@ -113,30 +113,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "Check Date")]
         [Column(TypeName = "date")]
         public DateOnly? CheckDate { get; set; }
-
-        [Display(Name = "Start Date:")]
-        [Column(TypeName = "date")]
-        public DateOnly? StartDate { get; set; }
-
-        [Display(Name = "End Date:")]
-        [Column(TypeName = "date")]
-        public DateOnly? EndDate { get; set; }
-
-        public int NumberOfMonths { get; set; }
-
-        public int NumberOfMonthsCreated { get; set; }
-
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime? LastCreatedDate { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal AmountPerMonth { get; set; }
-
-        public bool IsComplete { get; set; }
-
-        [StringLength(50)]
-        public string? AccruedType { get; set; }
 
         [StringLength(1000)]
         public string? Reference { get; set; }

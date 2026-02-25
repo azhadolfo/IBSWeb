@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225045527_RemoveUnusedFieldsInCV")]
+    partial class RemoveUnusedFieldsInCV
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4300,11 +4303,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("end_date");
 
-                    b.Property<string>("ExpenseAccount")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("expense_account");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -4317,26 +4315,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("jv_id");
 
-                    b.Property<DateOnly?>("LastRunDate")
-                        .HasColumnType("date")
-                        .HasColumnName("last_run_date");
-
-                    b.Property<DateOnly?>("NextRunDate")
-                        .HasColumnType("date")
-                        .HasColumnName("next_run_date");
-
-                    b.Property<int>("OccurrenceRemaining")
-                        .HasColumnType("integer")
-                        .HasColumnName("occurrence_remaining");
-
                     b.Property<int>("OccurrenceTotal")
                         .HasColumnType("integer")
                         .HasColumnName("occurrence_total");
-
-                    b.Property<string>("PrepaidAccount")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("prepaid_account");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date")

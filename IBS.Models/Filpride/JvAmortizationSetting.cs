@@ -15,14 +15,24 @@ namespace IBS.Models.Filpride
         [ForeignKey(nameof(JvId))]
         public FilprideJournalVoucherHeader JvHeader { get; set; }
 
-        public JvFrequency JvFrequency { get; set; }
+        public JvFrequency JvFrequency { get; set; } = JvFrequency.Monthly;
 
         public DateOnly StartDate { get; set; }
 
         public DateOnly EndDate { get; set; }
 
+        public DateOnly? NextRunDate { get; set; }
+
+        public DateOnly? LastRunDate { get; set; }
+
         public int OccurrenceTotal { get; set; }
 
+        public int OccurrenceRemaining { get; set; }
+
         public bool IsActive { get; set; }
+
+        public string ExpenseAccount { get; set; } = string.Empty;
+
+        public string PrepaidAccount { get; set; } = string.Empty;
     }
 }

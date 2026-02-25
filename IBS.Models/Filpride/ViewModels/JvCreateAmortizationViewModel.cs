@@ -20,10 +20,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? CvList { get; set; }
 
-        [Required]
-        [StringLength(200)]
-        public string Particulars { get; set; } = string.Empty;
-
         public string? CrNo { get; set; }
 
         [Required]
@@ -34,7 +30,13 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int NumberOfMonths { get; set; }
 
+        [Required]
         public string SelectedExpenseAccount { get; set; }
+
+        [Required]
+        public string SelectedPrepaidAccount { get; set; }
+
+        public List<SelectListItem>? PrepaidExpenseAccounts { get; set; }
     }
 
     public class JvCreateAmortizationDetailViewModel
