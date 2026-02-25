@@ -18,7 +18,63 @@
     const MAX_TOP     = 8;
     const MIN_COUNT   = 1;
 
-    /* ─── Helpers ─── */
+    /* ─── Safe Storage Helpers ─── */
+
+    /**
+     * Safely retrieve a value from localStorage with a fallback.
+     * Catches SecurityError, QuotaExceededError, or any other exception.
+     */
+    function safeLocalGet(key, defaultValue) {
+        try {
+            return localStorage.getItem(key) ?? defaultValue;
+        } catch (err) {
+            // SecurityError, QuotaExceededError, or other storage access exceptions
+            console.warn(`Cannot access localStorage['${key}']:`, err);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Safely retrieve a value from sessionStorage with a fallback.
+     * Catches SecurityError, QuotaExceededError, or any other exception.
+     */
+    function safeSessionGet(key, defaultValue) {
+        try {
+            return sessionStorage.getItem(key) ?? defaultValue;
+        } catch (err) {
+            // SecurityError, QuotaExceededError, or other storage access exceptions
+            console.warn(`Cannot access sessionStorage['${key}']:`, err);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Safely write a value to localStorage.
+     * Catches SecurityError, QuotaExceededError, or any other exception.
+     */
+    function safeLocalSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (err) {
+            // SecurityError, QuotaExceededError, or other storage access exceptions
+            console.warn(`Cannot write to localStorage['${key}']:`, err);
+        }
+    }
+
+    /**
+     * Safely write a value to sessionStorage.
+     * Catches SecurityError, QuotaExceededError, or any other exception.
+     */
+    function safeSessionSet(key, value) {
+        try {
+            sessionStorage.setItem(key, value);
+        } catch (err) {
+            // SecurityError, QuotaExceededError, or other storage access exceptions
+            console.warn(`Cannot write to sessionStorage['${key}']:`, err);
+        }
+    }
+
+    /* ─── Data Helpers ─── */
 
     function getClicks() {
         try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
@@ -26,7 +82,7 @@
     }
 
     function saveClicks(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        safeLocalSet(STORAGE_KEY, JSON.stringify(data));
     }
 
     function clearClicks() {
@@ -46,11 +102,11 @@
         let recent    = getRecent().filter(r => r.url !== url);
         recent.unshift({ url, label, company, breadcrumb: breadcrumb || '' });
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        localStorage.setItem('qa_recent', JSON.stringify(recent));
+        safeLocalSet('qa_recent', JSON.stringify(recent));
     }
 
     function isPanelOpen() {
-        return localStorage.getItem(STATE_KEY) !== 'false';
+        return safeLocalGet(STATE_KEY, '') !== 'false';
     }
 
     function isHomePage() {
@@ -245,12 +301,12 @@
         });
         document.getElementById('qa-search').addEventListener('input', function () {
             const term = this.value.trim().toLowerCase();
-            try { sessionStorage.setItem('qa_search', this.value.trim()); } catch { /* ignore */ }
+            safeSessionSet('qa_search', this.value.trim());
             renderList(term);
         });
 
         // Restore saved search term from session
-        const savedSearch = sessionStorage.getItem('qa_search') || '';
+        const savedSearch = safeSessionGet('qa_search', '');
         const searchInput = document.getElementById('qa-search');
         searchInput.value = savedSearch;
         renderList(savedSearch.toLowerCase());
@@ -385,9 +441,7 @@
         const toggleBtn = document.getElementById('qa-toggle-btn');
         if (!panel) return;
         const isNowHidden = panel.classList.toggle('qa-hidden');
-        try {
-            localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
-        } catch { /* quota/security error */ }
+        safeLocalSet(STATE_KEY, isNowHidden ? 'false' : 'true');
 
         if (toggleBtn) {
             toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
@@ -397,7 +451,7 @@
         if (!isNowHidden) {
             const search = document.getElementById('qa-search');
             if (search) {
-                const savedSearch = sessionStorage.getItem('qa_search') || '';
+                const savedSearch = safeSessionGet('qa_search', '');
                 search.value = savedSearch;
                 renderList(savedSearch.toLowerCase());
                 search.focus();
