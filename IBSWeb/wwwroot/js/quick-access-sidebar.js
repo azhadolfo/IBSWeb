@@ -351,6 +351,7 @@
     function makeItem(url, label, count, breadcrumb) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
+        // codeql[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
         a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
@@ -369,7 +370,7 @@
 
         a.addEventListener('click', function (e) {
             e.stopPropagation();
-            recordClick(url, label, breadcrumb);
+            if (safeUrl) recordClick(safeUrl, label, breadcrumb);
             togglePanel();
         });
 
