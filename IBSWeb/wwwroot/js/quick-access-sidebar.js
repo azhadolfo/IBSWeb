@@ -26,12 +26,14 @@
     }
 
     function saveClicks(data) {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* quota/security error */ }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
     function clearClicks() {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem('qa_recent');
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('qa_recent');
+        } catch { /* quota/security error */ }
     }
 
     function getRecent() {
@@ -44,7 +46,7 @@
         let recent    = getRecent().filter(r => r.url !== url);
         recent.unshift({ url, label, company, breadcrumb: breadcrumb || '' });
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        try { localStorage.setItem('qa_recent', JSON.stringify(recent)); } catch (e) { /* quota/security error */ }
+        localStorage.setItem('qa_recent', JSON.stringify(recent));
     }
 
     function isPanelOpen() {
@@ -58,7 +60,13 @@
     /* ─── URL helpers ─── */
 
     function getCurrentCompany() {
-        return (document.getElementById('hfCompany')?.value || '').trim();
+        const fromInput = (document.getElementById('hfCompany')?.value || '').trim();
+        const fromData  = (
+            document.documentElement.dataset.selectedCompany ||
+            document.body.dataset.selectedCompany ||
+            ''
+        ).trim();
+        return fromInput || fromData;
     }
 
     function getCompanyFromUrl(url) {
@@ -124,14 +132,14 @@
         const links = [];
 
         document.querySelectorAll(
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"])'
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]),' +
+            'nav.navbar a.nav-link:not([href="#"]):not([href=""])'
         ).forEach(anchor => {
-            const url   = anchor.getAttribute('href') || '';
-            const label = (anchor.textContent || '').trim();
+            const rawUrl  = anchor.getAttribute('href') || '';
+            const url     = sanitizeUrl(rawUrl);
+            const label   = (anchor.textContent || '').trim();
             if (!url || !label || isHomeUrl(url)) return;
             if (anchor.classList.contains('dropdown-toggle')) return;
-            // Deduplicate by url+company combo so same-named links across companies both appear
             const company = getCompanyFromUrl(url);
             const key     = url + '|' + company;
             if (seen.has(key)) return;
@@ -153,8 +161,8 @@
 
     function attachTracking() {
         const navLinks = document.querySelectorAll(
-            'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"])'
+            'nav.navbar a.nav-link:not([href="#"]):not([href=""]),' +
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
         );
 
         navLinks.forEach(anchor => {
@@ -162,10 +170,11 @@
             _tracked.add(anchor);
 
             anchor.addEventListener('click', function () {
-                const url        = this.getAttribute('href') || this.href;
+                const rawUrl     = this.getAttribute('href') || this.href;
+                const url        = sanitizeUrl(rawUrl);
                 const label      = (this.textContent || '').trim();
                 const breadcrumb = getBreadcrumb(this);
-                if (!url || url === '#' || !label) return;
+                if (!url || !label) return;
                 if (isHomeUrl(url)) return;
                 recordClick(url, label, breadcrumb);
             });
@@ -250,8 +259,7 @@
             const panel      = document.getElementById('qa-panel');
             const toggleBtn  = document.getElementById('qa-toggle-btn');
             const navTrigger = document.getElementById('qa-nav-trigger');
-            if (panel && toggleBtn &&
-                !panel.classList.contains('qa-hidden') &&
+            if (!panel.classList.contains('qa-hidden') &&
                 !panel.contains(e.target) &&
                 !toggleBtn.contains(e.target) &&
                 !(navTrigger && navTrigger.contains(e.target))) {
@@ -343,7 +351,6 @@
     function makeItem(url, label, count, breadcrumb) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
-        // codeql[js/xss-through-dom] safeUrl is a same-origin relative path from sanitizeUrl()
         a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
@@ -375,7 +382,9 @@
         const panel     = document.getElementById('qa-panel');
         const toggleBtn = document.getElementById('qa-toggle-btn');
         const isNowHidden = panel.classList.toggle('qa-hidden');
-        localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
+        try {
+            localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
+        } catch { /* quota/security error */ }
 
         if (toggleBtn) {
             toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
