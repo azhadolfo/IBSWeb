@@ -26,7 +26,7 @@
     }
 
     function saveClicks(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* quota/security error */ }
     }
 
     function clearClicks() {
@@ -44,7 +44,7 @@
         let recent    = getRecent().filter(r => r.url !== url);
         recent.unshift({ url, label, company, breadcrumb: breadcrumb || '' });
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        localStorage.setItem('qa_recent', JSON.stringify(recent));
+        try { localStorage.setItem('qa_recent', JSON.stringify(recent)); } catch (e) { /* quota/security error */ }
     }
 
     function isPanelOpen() {
@@ -154,7 +154,7 @@
     function attachTracking() {
         const navLinks = document.querySelectorAll(
             'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"])'
         );
 
         navLinks.forEach(anchor => {
@@ -250,7 +250,8 @@
             const panel      = document.getElementById('qa-panel');
             const toggleBtn  = document.getElementById('qa-toggle-btn');
             const navTrigger = document.getElementById('qa-nav-trigger');
-            if (!panel.classList.contains('qa-hidden') &&
+            if (panel && toggleBtn &&
+                !panel.classList.contains('qa-hidden') &&
                 !panel.contains(e.target) &&
                 !toggleBtn.contains(e.target) &&
                 !(navTrigger && navTrigger.contains(e.target))) {
@@ -342,6 +343,7 @@
     function makeItem(url, label, count, breadcrumb) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
+        // codeql[js/xss-through-dom] safeUrl is a same-origin relative path from sanitizeUrl()
         a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
