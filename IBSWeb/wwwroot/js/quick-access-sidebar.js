@@ -245,7 +245,7 @@
         });
         document.getElementById('qa-search').addEventListener('input', function () {
             const term = this.value.trim().toLowerCase();
-            sessionStorage.setItem('qa_search', this.value.trim());
+            try { sessionStorage.setItem('qa_search', this.value.trim()); } catch { /* ignore */ }
             renderList(term);
         });
 
@@ -381,6 +381,7 @@
     function togglePanel() {
         const panel     = document.getElementById('qa-panel');
         const toggleBtn = document.getElementById('qa-toggle-btn');
+        if (!panel) return;
         const isNowHidden = panel.classList.toggle('qa-hidden');
         try {
             localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
