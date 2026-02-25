@@ -1,7 +1,8 @@
 /**
  * Quick Access Sidebar
- * Tracks frequently clicked nav links via localStorage and surfaces them
- * in a collapsible sidebar panel on the left edge of the screen.
+ * - Tracks frequently clicked nav links via localStorage
+ * - Search scans ALL nav links in the DOM (not just tracked ones)
+ * - Auto-opens on the home page (/)
  *
  * Storage keys:
  *   qa_clicks   — JSON object { url: { label, count, company } }
@@ -13,9 +14,9 @@
 
     const STORAGE_KEY = 'qa_clicks';
     const STATE_KEY   = 'qa_open';
-    const MAX_RECENT  = 5;   // "Recent" section cap
-    const MAX_TOP     = 8;   // "Most Used" section cap
-    const MIN_COUNT   = 1;   // minimum clicks to appear in Most Used
+    const MAX_RECENT  = 5;
+    const MAX_TOP     = 8;
+    const MIN_COUNT   = 1;
 
     /* ─── Helpers ─── */
 
@@ -25,7 +26,7 @@
     }
 
     function saveClicks(data) {
-       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
     function clearClicks() {
@@ -38,20 +39,20 @@
         catch { return []; }
     }
 
-    function pushRecent(url, label) {
+    function pushRecent(url, label, breadcrumb) {
         const company = getCompanyFromUrl(url);
         let recent    = getRecent().filter(r => r.url !== url);
-        recent.unshift({ url, label, company });
+        recent.unshift({ url, label, company, breadcrumb: breadcrumb || '' });
         if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        try {
-            localStorage.setItem('qa_recent', JSON.stringify(recent));
-        } catch (e) {
-            console.warn('Quick Access: Failed to save recent items', e);
-        }
+        localStorage.setItem('qa_recent', JSON.stringify(recent));
     }
 
     function isPanelOpen() {
         return localStorage.getItem(STATE_KEY) !== 'false';
+    }
+
+    function isHomePage() {
+        return window.location.pathname === '/';
     }
 
     /* ─── URL helpers ─── */
@@ -69,10 +70,6 @@
         return '';
     }
 
-    /**
-     * Sanitize URLs — only allow same-origin HTTP(S) relative paths.
-     * Prevents XSS via javascript: or cross-origin hrefs.
-     */
     function sanitizeUrl(url) {
         if (!url || typeof url !== 'string') return null;
         try {
@@ -91,14 +88,67 @@
         return entry.company === getCurrentCompany();
     }
 
-    /* ─── Track clicks on all existing nav links ─── */
+    function isHomeUrl(url) {
+        return url === '/' || url.toLowerCase().includes('/home/');
+    }
+
+    /* ─── Collect all nav links from the DOM ─── */
+
+    /* ─── Breadcrumb resolver ─── */
+
+    function getBreadcrumb(anchor) {
+        const parts = [];
+        let el = anchor.parentElement;
+
+        while (el && !el.classList.contains('navbar-nav')) {
+            // If this element is a dropdown-menu, find its toggle label
+            if (el.classList.contains('dropdown-menu')) {
+                const toggle = el.previousElementSibling || el.parentElement?.querySelector(':scope > .dropdown-toggle, :scope > .nav-link.dropdown-toggle');
+                if (toggle) {
+                    const text = (toggle.textContent || '').trim();
+                    if (text) parts.unshift(text);
+                }
+            }
+            el = el.parentElement;
+        }
+
+        return parts.join(' › ');
+    }
+
+    /* ─── Collect all nav links from the DOM ─── */
+
+    function getAllNavLinks() {
+        const seen  = new Set();
+        const links = [];
+
+        document.querySelectorAll(
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"]),' +
+            'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"])'
+        ).forEach(anchor => {
+            const url   = anchor.getAttribute('href') || '';
+            const label = (anchor.textContent || '').trim();
+            if (!url || !label || isHomeUrl(url) || seen.has(url)) return;
+            if (anchor.classList.contains('dropdown-toggle')) return;
+            seen.add(url);
+            links.push({
+                url,
+                label,
+                breadcrumb : getBreadcrumb(anchor),
+                company    : getCompanyFromUrl(url),
+            });
+        });
+
+        return links;
+    }
+
+    /* ─── Track clicks ─── */
 
     const _tracked = new WeakSet();
 
     function attachTracking() {
         const navLinks = document.querySelectorAll(
             'nav.navbar a.nav-link:not([href="#"]):not([href=""]):not([href^="http"]),' +
-            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""]):not([href^="http"])'
+            'nav.navbar a.dropdown-item:not([href="#"]):not([href=""])'
         );
 
         navLinks.forEach(anchor => {
@@ -106,35 +156,40 @@
             _tracked.add(anchor);
 
             anchor.addEventListener('click', function () {
-                const url   = this.getAttribute('href') || this.href;
-                const label = (this.textContent || '').trim();
+                const url        = this.getAttribute('href') || this.href;
+                const label      = (this.textContent || '').trim();
+                const breadcrumb = getBreadcrumb(this);
                 if (!url || url === '#' || !label) return;
-                if (url === '/' || url.toLowerCase().includes('/home/')) return;
-                recordClick(url, label);
+                if (isHomeUrl(url)) return;
+                recordClick(url, label, breadcrumb);
             });
         });
     }
 
-    function recordClick(url, label) {
+    function recordClick(url, label, breadcrumb) {
         const data    = getClicks();
         const company = getCompanyFromUrl(url);
         if (!data[url]) {
-            data[url] = { label, count: 0, company };
+            data[url] = { label, count: 0, company, breadcrumb: breadcrumb || '' };
         }
         data[url].count++;
-        data[url].label   = label;
-        data[url].company = company;
+        data[url].label     = label;
+        data[url].company   = company;
+        data[url].breadcrumb = breadcrumb || data[url].breadcrumb || '';
         saveClicks(data);
-        pushRecent(url, label);
+        pushRecent(url, label, breadcrumb);
     }
 
     /* ─── Build sidebar HTML ─── */
 
     function buildSidebar() {
-        // Panel
         const panel = document.createElement('div');
         panel.id = 'qa-panel';
-        if (!isPanelOpen()) panel.classList.add('qa-hidden');
+
+        // Auto-open on home page, otherwise restore saved state
+        if (!isHomePage() && !isPanelOpen()) {
+            panel.classList.add('qa-hidden');
+        }
 
         panel.innerHTML = `
             <div class="qa-panel-header">
@@ -144,7 +199,7 @@
                 </button>
             </div>
             <div class="qa-search-wrap">
-                <input type="text" id="qa-search" placeholder="Search links…" autocomplete="off" />
+                <input type="text" id="qa-search" placeholder="Search all links…" autocomplete="off" />
             </div>
             <div class="qa-list-area" id="qa-list"></div>
             <div class="qa-footer">
@@ -154,18 +209,16 @@
             </div>
         `;
 
-        // Toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'qa-toggle-btn';
         toggleBtn.title = 'Quick Access';
         toggleBtn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
-        toggleBtn.setAttribute('aria-expanded', String(isPanelOpen()));
+        toggleBtn.setAttribute('aria-expanded', String(isHomePage() || isPanelOpen()));
         toggleBtn.innerHTML = '';
 
         document.body.appendChild(panel);
         document.body.appendChild(toggleBtn);
 
-        // Events
         toggleBtn.addEventListener('click', togglePanel);
         document.getElementById('qa-close-btn').addEventListener('click', togglePanel);
         document.getElementById('qa-clear').addEventListener('click', () => {
@@ -175,18 +228,22 @@
             }
         });
         document.getElementById('qa-search').addEventListener('input', function () {
-            renderList(this.value.trim().toLowerCase());
+            const term = this.value.trim().toLowerCase();
+            sessionStorage.setItem('qa_search', this.value.trim());
+            renderList(term);
         });
 
-        renderList();
+        // Restore saved search term from session
+        const savedSearch = sessionStorage.getItem('qa_search') || '';
+        const searchInput = document.getElementById('qa-search');
+        searchInput.value = savedSearch;
+        renderList(savedSearch.toLowerCase());
 
-        // Close when clicking outside — exclude both toggle buttons
         document.addEventListener('click', function (e) {
             const panel      = document.getElementById('qa-panel');
             const toggleBtn  = document.getElementById('qa-toggle-btn');
             const navTrigger = document.getElementById('qa-nav-trigger');
-            if (panel && toggleBtn &&
-                !panel.classList.contains('qa-hidden') &&
+            if (!panel.classList.contains('qa-hidden') &&
                 !panel.contains(e.target) &&
                 !toggleBtn.contains(e.target) &&
                 !(navTrigger && navTrigger.contains(e.target))) {
@@ -204,18 +261,39 @@
 
         list.innerHTML = '';
 
-        // ── Most Used ──
+        // ── Search mode: scan all nav links from the DOM ──
+        if (filter) {
+            const allLinks = getAllNavLinks()
+                .filter(l => isAvailable(l))
+                .filter(l =>
+                    l.label.toLowerCase().includes(filter) ||
+                    l.url.toLowerCase().includes(filter)
+                );
+
+            if (allLinks.length > 0) {
+                const label = document.createElement('div');
+                label.className = 'qa-section-label';
+                label.textContent = `Results (${allLinks.length})`;
+                list.appendChild(label);
+
+                allLinks.forEach(l => {
+                    const clickData = clicks[l.url];
+                    list.appendChild(makeItem(l.url, l.label, clickData?.count || null, l.breadcrumb));
+                });
+            } else {
+                const empty = document.createElement('div');
+                empty.className = 'qa-empty';
+                empty.textContent = 'No links found.';
+                list.appendChild(empty);
+            }
+            return;
+        }
+
+        // ── Default mode: Most Used + Recent ──
         let topItems = Object.entries(clicks)
             .filter(([, v]) => v.count >= MIN_COUNT && isAvailable(v))
             .sort((a, b) => b[1].count - a[1].count)
             .slice(0, MAX_TOP);
-
-        if (filter) {
-            topItems = topItems.filter(([url, v]) =>
-                v.label.toLowerCase().includes(filter) ||
-                url.toLowerCase().includes(filter)
-            );
-        }
 
         if (topItems.length > 0) {
             const label = document.createElement('div');
@@ -224,19 +302,11 @@
             list.appendChild(label);
 
             topItems.forEach(([url, v]) => {
-                list.appendChild(makeItem(url, v.label, v.count, v));
+                list.appendChild(makeItem(url, v.label, v.count, v.breadcrumb));
             });
         }
 
-        // ── Recent ──
-        // Fix: filter by availability first, THEN apply search filter on the result
         let recentFiltered = recent.filter(r => isAvailable(r));
-        if (filter) {
-            recentFiltered = recentFiltered.filter(r =>
-                r.label.toLowerCase().includes(filter) ||
-                r.url.toLowerCase().includes(filter)
-            );
-        }
 
         if (recentFiltered.length > 0) {
             if (topItems.length > 0) {
@@ -250,33 +320,39 @@
             list.appendChild(label);
 
             recentFiltered.forEach(r => {
-                list.appendChild(makeItem(r.url, r.label, null, r));
+                list.appendChild(makeItem(r.url, r.label, null, r.breadcrumb));
             });
         }
 
-        // ── Empty state ──
         if (topItems.length === 0 && recentFiltered.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'qa-empty';
-            empty.textContent = filter ? 'No matches found.' : 'Click nav links to start building quick access.';
+            empty.textContent = 'Click nav links to start building quick access.';
             list.appendChild(empty);
         }
     }
 
-    function makeItem(url, label, count, entry) {
+    function makeItem(url, label, count, breadcrumb) {
         const safeUrl = sanitizeUrl(url);
         const a = document.createElement('a');
-        // codeql[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
-        a.href = safeUrl !== null ? safeUrl : '#';
+        a.href      = safeUrl !== null ? safeUrl : '#';
         a.className = 'qa-item';
         a.title     = count > 1 ? `${label} — visited ${count}×` : label;
 
         const labelEl = document.createElement('span');
+        labelEl.className = 'qa-item-label';
         labelEl.textContent = label;
         a.appendChild(labelEl);
 
+        if (breadcrumb) {
+            const crumbEl = document.createElement('span');
+            crumbEl.className = 'qa-item-crumb';
+            crumbEl.textContent = breadcrumb;
+            a.appendChild(crumbEl);
+        }
+
         a.addEventListener('click', function () {
-            recordClick(url, label);
+            recordClick(url, label, breadcrumb);
         });
 
         return a;
@@ -290,15 +366,14 @@
         const isNowHidden = panel.classList.toggle('qa-hidden');
         localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
 
-        // Keep aria-expanded in sync
         if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
 
         if (!isNowHidden) {
-            // Refresh list when opening
             const search = document.getElementById('qa-search');
             if (search) {
-                search.value = '';
-                renderList();
+                const savedSearch = sessionStorage.getItem('qa_search') || '';
+                search.value = savedSearch;
+                renderList(savedSearch.toLowerCase());
                 search.focus();
             }
         }
@@ -336,7 +411,6 @@
         injectNavbarTrigger();
         attachTracking();
 
-        // Fix: scope observer to navbar only, not entire body
         const navbar = document.querySelector('nav.navbar');
         if (navbar) {
             const observer = new MutationObserver(() => attachTracking());

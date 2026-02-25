@@ -7,7 +7,7 @@
     position: fixed;
     top: 72px;
     left: 0;
-    z-index: 1058;
+    z-index: 1051;
     width: 14px;
     height: calc(100vh - 72px);
     background: linear-gradient(to right, rgba(160,160,160,0.2), rgba(160,160,160,0.04));
@@ -28,13 +28,13 @@
     position: fixed;
     top: 72px;
     left: 0;
-    z-index: 1057;
+    z-index: 1050;
     background: #fff;
     border-right: 1px solid #dee2e6;
     border-bottom: 1px solid #dee2e6;
     border-radius: 0 0 8px 0;
     box-shadow: 4px 4px 16px rgba(0,0,0,0.1);
-    width: 220px;
+    width: 280px;
     height: calc(100vh - 72px);
     display: flex;
     flex-direction: column;
@@ -44,7 +44,7 @@
 }
 
 #qa-panel.qa-hidden {
-    transform: translateX(-220px);
+    transform: translateX(-280px);
     opacity: 0;
     pointer-events: none;
     transition: transform 0.25s ease, opacity 0.15s ease;
@@ -131,7 +131,8 @@
 /* Link item */
 .qa-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 7px 14px 7px 28px;
     text-decoration: none;
     color: #212529;
@@ -139,11 +140,28 @@
     transition: background 0.15s;
 }
 
-.qa-item span {
+.qa-item-label {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     min-width: 0;
+    display: block;
+}
+
+.qa-item-crumb {
+    display: block;
+    font-size: 0.72rem;
+    color: #adb5bd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    margin-top: 1px;
+}
+
+.qa-item:hover .qa-item-crumb {
+    color: inherit;
+    opacity: 0.7;
 }
 
 .qa-item:hover {
