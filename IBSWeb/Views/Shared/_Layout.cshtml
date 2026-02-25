@@ -58,8 +58,8 @@
                 </button>
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <input type="hidden" id="hfCompany" value="@selectedCompany" />
-                    <input type="hidden" id="hfStation" value="@selectedStation" />
+                    selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
+                    selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? string.Empty;
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">

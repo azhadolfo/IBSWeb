@@ -84,15 +84,17 @@
     }
 
     function isAvailable(entry) {
+        const current = getCurrentCompany();
+        // If no company is selected yet (e.g. home page), show everything
+        if (!current) return true;
+        // If the link has no company in its URL, always show it
         if (!entry.company) return true;
-        return entry.company === getCurrentCompany();
+        return entry.company === current;
     }
 
     function isHomeUrl(url) {
         return url === '/' || url.toLowerCase().includes('/home/');
     }
-
-    /* ─── Collect all nav links from the DOM ─── */
 
     /* ─── Breadcrumb resolver ─── */
 
@@ -101,9 +103,9 @@
         let el = anchor.parentElement;
 
         while (el && !el.classList.contains('navbar-nav')) {
-            // If this element is a dropdown-menu, find its toggle label
             if (el.classList.contains('dropdown-menu')) {
-                const toggle = el.previousElementSibling || el.parentElement?.querySelector(':scope > .dropdown-toggle, :scope > .nav-link.dropdown-toggle');
+                const toggle = el.previousElementSibling ||
+                    el.parentElement?.querySelector(':scope > .dropdown-toggle, :scope > .nav-link.dropdown-toggle');
                 if (toggle) {
                     const text = (toggle.textContent || '').trim();
                     if (text) parts.unshift(text);
@@ -127,14 +129,18 @@
         ).forEach(anchor => {
             const url   = anchor.getAttribute('href') || '';
             const label = (anchor.textContent || '').trim();
-            if (!url || !label || isHomeUrl(url) || seen.has(url)) return;
+            if (!url || !label || isHomeUrl(url)) return;
             if (anchor.classList.contains('dropdown-toggle')) return;
-            seen.add(url);
+            // Deduplicate by url+company combo so same-named links across companies both appear
+            const company = getCompanyFromUrl(url);
+            const key     = url + '|' + company;
+            if (seen.has(key)) return;
+            seen.add(key);
             links.push({
                 url,
                 label,
                 breadcrumb : getBreadcrumb(anchor),
-                company    : getCompanyFromUrl(url),
+                company,
             });
         });
 
@@ -215,6 +221,7 @@
         toggleBtn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
         toggleBtn.setAttribute('aria-expanded', String(isHomePage() || isPanelOpen()));
         toggleBtn.innerHTML = '';
+        if (isHomePage() || isPanelOpen()) toggleBtn.classList.add('qa-panel-open');
 
         document.body.appendChild(panel);
         document.body.appendChild(toggleBtn);
@@ -351,8 +358,10 @@
             a.appendChild(crumbEl);
         }
 
-        a.addEventListener('click', function () {
+        a.addEventListener('click', function (e) {
+            e.stopPropagation();
             recordClick(url, label, breadcrumb);
+            togglePanel();
         });
 
         return a;
@@ -366,7 +375,10 @@
         const isNowHidden = panel.classList.toggle('qa-hidden');
         localStorage.setItem(STATE_KEY, isNowHidden ? 'false' : 'true');
 
-        if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
+        if (toggleBtn) {
+            toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
+            toggleBtn.classList.toggle('qa-panel-open', !isNowHidden);
+        }
 
         if (!isNowHidden) {
             const search = document.getElementById('qa-search');

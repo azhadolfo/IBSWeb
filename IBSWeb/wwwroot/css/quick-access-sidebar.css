@@ -120,9 +120,9 @@
 
 /* Section label */
 .qa-section-label {
-    font-size: 0.68rem;
+    font-size: .8rem;
     font-weight: 700;
-    color: #adb5bd;
+    color: #62a1e0;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 8px 14px 2px 28px;
