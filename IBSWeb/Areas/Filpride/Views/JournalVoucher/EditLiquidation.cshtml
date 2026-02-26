@@ -372,77 +372,79 @@
 
     </script>
     <script>
-        $(function () {
-            function cvDetails(cvId) {
-                if (cvId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetCV", "JournalVoucher", new { area = "Filpride" })',
-                        method: "GET",
-                        data: { id: cvId },
-                        success: function (data) {
-                            let tableBody = $("#tableBody");
-                            tableBody.empty();
-                            if (data !== null) {
-                                $("#cvNo").text(data.cvNo);
-                                $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
-                                $("#name").text(data.name);
-                                $("#address").text(data.address);
-                                $("#tinNo").text(data.tinNo);
-                                $("#poNo").text(data.poNo);
-                                $("#siNo").text(data.siNo);
-                                $("#payee").text(data.payee);
-                                $("#amount").text(formatNumber(data.amount));
-                                $("#particulars").text(data.particulars);
-                                $("#checkNo").text(data.checkNo);
-                                $("#totalDebit").text(formatNumber(data.totalDebit));
-                                $("#totalCredit").text(formatNumber(data.totalCredit));
-                                
-                                for (let i = 0; i < data.accountNo.length; i++) {
-                                    let row = $("<tr></tr>");
-                                    row.append("<td style='width:60%; padding-left:20px;'>" + data.accountNo[i] + " " + data.accountName[i] + "</td>");
-                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.debit[i]) + "</td>");
-                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.credit[i]) + "</td>");
-                                    tableBody.append(row);
-                                }
-                            } else {
-                                clearFields();
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error fetching TaxType:', error);
-                        }
-                    });
-                } else {
-                    clearFields();
+        function cvDetails(cvId) {
+
+            if (cvId === "") {
+                clearFields();
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetCV", "JournalVoucher", new { area = "Filpride" })',
+                method: "GET",
+                data: { id: cvId },
+                success: function (data) {
+                    let tableBody = $("#tableBody");
+                    tableBody.empty();
+
+                    if (data === null) {
+                        clearFields();
+                        return;
+                    }
+
+                    $("#cvNo").text(data.cvNo);
+                    $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
+                    $("#name").text(data.name);
+                    $("#address").text(data.address);
+                    $("#tinNo").text(data.tinNo);
+                    $("#poNo").text(data.poNo);
+                    $("#siNo").text(data.siNo);
+                    $("#payee").text(data.payee);
+                    $("#amount").text(formatNumber(data.amount));
+                    $("#particulars").text(data.particulars);
+                    $("#checkNo").text(data.checkNo);
+                    $("#totalDebit").text(formatNumber(data.totalDebit));
+                    $("#totalCredit").text(formatNumber(data.totalCredit));
+
+                    for (let i = 0; i < data.accountNo.length; i++) {
+                        let row = $("<tr></tr>");
+                        row.append("<td style='width:60%; padding-left:20px;'>" + data.accountNo[i] + " " + data.accountName[i] + "</td>");
+                        row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.debit[i]) + "</td>");
+                        row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.credit[i]) + "</td>");
+                        tableBody.append(row);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching TaxType:', error);
                 }
-            }
-
-            function clearFields() {
-                $("#cvNo").text("");
-                $("#date").text("");
-                $("#name").text("");
-                $("#address").text("");
-                $("#tinNo").text("");
-                $("#poNo").text("");
-                $("#siNo").text("");
-                $("#payee").text("");
-                $("#amount").text("");
-                $("#particulars").text("");
-                $("#checkNo").text("");
-                $("#totalDebit").text("");
-                $("#totalCredit").text("");
-                $("#tableBody").empty();
-            }
-
-            $(".checkVoucher").each(function () {
-                var cvId = $(this).val();
-                cvDetails(cvId);
             });
+        }
 
-            $(".checkVoucher").change(function () {
-                var cvId = $(this).val();
-                cvDetails(cvId);
-            });
+        function clearFields() {
+            $("#cvNo").text("");
+            $("#date").text("");
+            $("#name").text("");
+            $("#address").text("");
+            $("#tinNo").text("");
+            $("#poNo").text("");
+            $("#siNo").text("");
+            $("#payee").text("");
+            $("#amount").text("");
+            $("#particulars").text("");
+            $("#checkNo").text("");
+            $("#totalDebit").text("");
+            $("#totalCredit").text("");
+            $("#tableBody").empty();
+        }
+
+        $(".checkVoucher").each(function () {
+            var cvId = $(this).val();
+            cvDetails(cvId);
+        });
+
+        $(".checkVoucher").change(function () {
+            var cvId = $(this).val();
+            cvDetails(cvId);
         });
     </script>
     <script>

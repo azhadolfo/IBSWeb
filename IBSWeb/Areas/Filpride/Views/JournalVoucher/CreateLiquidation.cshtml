@@ -372,6 +372,7 @@
 
             if (cvId === "") {
                 clearFields();
+                return;
             }
 
             $.ajax({
@@ -384,6 +385,7 @@
 
                     if (data === null) {
                         clearFields();
+                        return;
                     }
 
                     $("#cvNo").text(data.cvNo);
