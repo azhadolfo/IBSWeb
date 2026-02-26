@@ -58,8 +58,6 @@
                 </button>
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
-                    selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? string.Empty;
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">
