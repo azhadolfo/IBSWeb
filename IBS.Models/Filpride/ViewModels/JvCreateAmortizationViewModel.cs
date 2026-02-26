@@ -26,7 +26,7 @@ namespace IBS.Models.Filpride.ViewModels
         [StringLength(200)]
         public string Reason { get; set; }
 
-        public List<JvCreateAccrualDetailViewModel> Details { get; set; }
+        public List<JvCreateAmortizationDetailViewModel> Details { get; set; }
 
         public int NumberOfMonths { get; set; }
 
