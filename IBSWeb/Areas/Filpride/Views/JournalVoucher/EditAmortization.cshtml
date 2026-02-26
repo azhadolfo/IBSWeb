@@ -1,8 +1,8 @@
 ﻿@using IBS.Models.Enums
-@model JvCreateAmortizationViewModel
+@model JvEditAmortizationViewModel
 
 @{
-    ViewData["Title"] = "Journal Voucher - Create Amortization";
+    ViewData["Title"] = "Journal Voucher - Edit Amortization";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -25,7 +25,7 @@
             <div class="row">
                 <div class="col-12 col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
+                    <input asp-for="JvId" type="hidden" />
                     <div class="form-group mb-3">
                         <label class="control-label">Type<span class="required">*</span></label>
                         <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
@@ -88,7 +88,7 @@
                             <option value="">Select period</option>
                             <option value="3">3 Months (Quarterly)</option>
                             <option value="6">6 Months (Semi-Annual)</option>
-                            <option value="12" selected>12 Months (Annual)</option>
+                            <option value="12">12 Months (Annual)</option>
                             <option value="24">24 Months (2 Years)</option>
                             <option value="36">36 Months (3 Years)</option>
                             <option value="60">60 Months (5 Years)</option>
@@ -238,6 +238,8 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        let defaultExpenseAccount = "@Model.SelectedExpenseAccount";
+
         function updateTotalDebitAndCredit() {
             var totalDebit = 0;
             var totalCredit = 0;
@@ -327,7 +329,14 @@
                         }
                     }
 
-                    expenseAccountDropdown.trigger("change.select2");
+                    if (defaultExpenseAccount) {
+                        expenseAccountDropdown.val(defaultExpenseAccount).trigger("change.select2");
+                        defaultExpenseAccount = null;
+                        calculateAmortizationEntries();
+                    } else {
+                        expenseAccountDropdown.trigger("change.select2");
+                    }
+
 
                     updateTotalDebitAndCredit();
                 },

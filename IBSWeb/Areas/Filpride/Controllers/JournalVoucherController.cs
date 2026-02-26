@@ -554,7 +554,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     case nameof(JvType.Amortization):
                         {
-                            break;
+                            return RedirectToAction(nameof(EditAmortization), new { id = existingHeaderModel.JournalVoucherHeaderId });
                         }
                     case nameof(JvType.Reclass):
                         {
@@ -1662,12 +1662,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditAccrual(JvEditAccrualViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "The information provided was invalid.";
-                return View(viewModel);
-            }
-
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -1692,6 +1686,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.MinDate = await _unitOfWork
                 .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
+            }
 
             try
             {
@@ -1754,8 +1754,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             SubAccountName = isAccrualAccount ? cv.Payee : null,
                         }
                     );
-
-                    ///TODO waiting for the actual credit account
                 }
 
                 #endregion Details
@@ -1931,7 +1929,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
                 var prepaidAccount = viewModel.Details.First(d => d.Credit > 0).AccountTitle;
 
-                var particulars = $"Amortization of '{expenseAccount}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
+                var particulars = $"Amortization of '{expenseAccount.Split(" ")[1]}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
                     Type = viewModel.Type,
@@ -2015,6 +2013,250 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditAmortization(int id, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            try
+            {
+                var existingAmortizationSetting = await _dbContext.JvAmortizationSettings
+                    .Include(jv => jv.JvHeader)
+                    .ThenInclude(jv => jv.CheckVoucherHeader)
+                    .FirstOrDefaultAsync(jv => jv.JvId == id, cancellationToken);
+
+                if (existingAmortizationSetting == null)
+                {
+                    return NotFound();
+                }
+
+                var header = existingAmortizationSetting.JvHeader;
+
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.JournalVoucher, header.Date, cancellationToken))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {header.Date:MMM yyyy} is already closed.");
+                }
+
+                var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
+                    .Where(cvd => cvd.JournalVoucherHeaderId == header.JournalVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                JvEditAmortizationViewModel model = new()
+                {
+                    JvId = header.JournalVoucherHeaderId,
+                    TransactionDate = header.Date,
+                    References = header.References,
+                    CvId = (int)header.CVId!,
+                    CrNo = header.CRNo,
+                    Reason = header.JVReason,
+                    MinDate = minDate,
+                    SelectedExpenseAccount = existingAmortizationSetting.ExpenseAccount.Split(" ")[0],
+                    SelectedPrepaidAccount = existingAmortizationSetting.PrepaidAccount.Split(" ")[0],
+                    NumberOfMonths = existingAmortizationSetting.OccurrenceTotal
+                };
+
+                model.CvList = await _dbContext.FilprideCheckVoucherHeaders
+                    .OrderBy(c => c.CheckVoucherHeaderId)
+                    .Where(c =>
+                        c.Company == companyClaims &&
+                        c.CvType == nameof(CVType.Invoicing) &&
+                        c.PostedBy != null)
+                    .Select(cvh => new SelectListItem
+                    {
+                        Value = cvh.CheckVoucherHeaderId.ToString(),
+                        Text = cvh.CheckVoucherHeaderNo
+                    })
+                    .ToListAsync(cancellationToken);
+
+                model.MinDate = await _unitOfWork
+                    .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+                model.PrepaidExpenseAccounts = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.AccountName.Contains("Prepaid Expenses") && !coa.HasChildren)
+                    .Select(coa => new SelectListItem
+                    {
+                        Value = coa.AccountNumber,
+                        Text = $"{coa.AccountNumber} - {coa.AccountName}"
+                    })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var detail in existingDetailsModel)
+                {
+                    model.Details.Add(new JvCreateAccrualDetailViewModel
+                    {
+                        AccountNo = detail.AccountNo,
+                        AccountTitle = detail.AccountName,
+                        Debit = detail.Debit,
+                        Credit = detail.Credit
+                    });
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch JV. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAmortization(JvEditAmortizationViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
+                .OrderBy(c => c.CheckVoucherHeaderId)
+                .Where(c =>
+                    c.Company == companyClaims &&
+                    c.CvType == nameof(CVType.Invoicing) &&
+                    c.PostedBy != null)
+                .Select(cvh => new SelectListItem
+                {
+                    Value = cvh.CheckVoucherHeaderId.ToString(),
+                    Text = cvh.CheckVoucherHeaderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork
+                .GetMinimumPeriodBasedOnThePostedPeriods(Module.JournalVoucher, cancellationToken);
+
+            viewModel.PrepaidExpenseAccounts = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => coa.AccountName.Contains("Prepaid Expenses") && !coa.HasChildren)
+                .Select(coa => new SelectListItem
+                {
+                    Value = coa.AccountNumber,
+                    Text = $"{coa.AccountNumber} - {coa.AccountName}"
+                })
+                .ToListAsync(cancellationToken);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
+                    .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == viewModel.JvId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var cv = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(x => x.CheckVoucherHeaderId == viewModel.CvId, cancellationToken)
+                         ?? throw new NullReferenceException($"CV id {viewModel.CvId} not found");
+
+                var amortizationSetting = await _dbContext.JvAmortizationSettings
+                   .FirstOrDefaultAsync(jv => jv.JvId == existingHeaderModel.JournalVoucherHeaderId && jv.IsActive, cancellationToken)
+                        ?? throw new NullReferenceException($"JV#{existingHeaderModel.JournalVoucherHeaderId} amortization settings not ");
+
+                await _dbContext.FilprideJournalVoucherDetails
+                    .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region --Saving the default entries
+
+                var startingMonth = new DateOnly(viewModel.TransactionDate.Year, viewModel.TransactionDate.Month, 1);
+                var endingMonth = startingMonth.AddMonths(viewModel.NumberOfMonths - 1);
+                var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
+                var prepaidAccount = viewModel.Details.First(d => d.Credit > 0).AccountTitle;
+
+                var particulars = $"Amortization of '{expenseAccount.Split(" ")[1]}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
+
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.References = viewModel.References;
+                existingHeaderModel.CVId = viewModel.CvId;
+                existingHeaderModel.Particulars = particulars;
+                existingHeaderModel.CRNo = viewModel.CrNo;
+                existingHeaderModel.JVReason = viewModel.Reason;
+                existingHeaderModel.EditedBy = GetUserFullName();
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                amortizationSetting.StartDate = startingMonth;
+                amortizationSetting.EndDate = endingMonth;
+                amortizationSetting.OccurrenceTotal = viewModel.NumberOfMonths;
+                amortizationSetting.OccurrenceRemaining = viewModel.NumberOfMonths;
+                amortizationSetting.IsActive = true;
+                amortizationSetting.ExpenseAccount = expenseAccount;
+                amortizationSetting.PrepaidAccount = prepaidAccount;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #endregion --Saving the default entries
+
+                #region Details
+
+                var cvDetails = new List<FilprideJournalVoucherDetail>();
+
+                foreach (var acctNo in viewModel.Details)
+                {
+                    var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                                           .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
+                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+
+                    var isPrepaidAccount = accountTitle.AccountName.Contains("Prepaid Expenses");
+
+                    cvDetails.Add(
+                        new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = acctNo.AccountNo,
+                            AccountName = accountTitle.AccountName,
+                            TransactionNo = existingHeaderModel.JournalVoucherHeaderNo!,
+                            JournalVoucherHeaderId = existingHeaderModel.JournalVoucherHeaderId,
+                            Debit = acctNo.Debit,
+                            Credit = acctNo.Credit,
+                            SubAccountType = isPrepaidAccount ? SubAccountType.Supplier : null,
+                            SubAccountId = isPrepaidAccount ? cv.SupplierId : null,
+                            SubAccountName = isPrepaidAccount ? cv.Payee : null,
+                        }
+                    );
+                }
+
+                #endregion Details
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", existingHeaderModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
