@@ -215,7 +215,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Saving the default entries
 
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
                 //JV Header Entry
                 var model = new FilprideJournalVoucherHeader
                 {
@@ -400,13 +400,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
-                if (modelHeader.JvType == nameof(JvType.Accrual))
+                if (modelHeader.JvType == nameof(JvType.Accrual) && !await IsAccrualReversed(modelHeader.JournalVoucherHeaderId, cancellationToken))
                 {
-                    if (!await IsAccrualReversed(modelHeader.JournalVoucherHeaderId, cancellationToken))
-                    {
-                        throw new InvalidOperationException(
-                            $"Cannot post this record because the related accrual journal voucher has not been reversed yet.");
-                    }
+                    throw new InvalidOperationException(
+                        $"Cannot post this record because the related accrual journal voucher has not been reversed yet.");
+                }
+
+                if (modelHeader.JvType == nameof(JvType.Amortization) && !await ProcessAmortizationAsync(modelHeader.JournalVoucherHeaderId, cancellationToken))
+                {
+                    throw new InvalidOperationException($"Cannot post this record because the amortization has not been completed yet.");
                 }
 
                 #region --Audit Trail Recording
@@ -1508,7 +1510,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
                 var particulars = $"Accrual of '{viewModel.Details.First(d => d.Debit > 0).AccountTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
@@ -1923,7 +1925,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
                 var startingMonth = new DateOnly(viewModel.TransactionDate.Year, viewModel.TransactionDate.Month, 1);
                 var endingMonth = startingMonth.AddMonths(viewModel.NumberOfMonths - 1);
                 var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
@@ -1954,7 +1956,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     StartDate = startingMonth,
                     EndDate = endingMonth,
                     OccurrenceTotal = viewModel.NumberOfMonths,
-                    OccurrenceRemaining = viewModel.NumberOfMonths,
+                    OccurrenceRemaining = viewModel.NumberOfMonths - 1,
                     IsActive = true,
                     ExpenseAccount = expenseAccount,
                     PrepaidAccount = prepaidAccount,
@@ -2034,7 +2036,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (existingAmortizationSetting == null)
                 {
-                    return NotFound();
+                    TempData["info"] = "This record cannot be edited because it is automatically generated based on the amortization settings.";
+                    return RedirectToAction(nameof(Index));
                 }
 
                 var header = existingAmortizationSetting.JvHeader;
@@ -2262,6 +2265,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
+        }
+
+        private async Task<bool> ProcessAmortizationAsync(int id, CancellationToken cancellationToken)
+        {
+            var existingAmortizationSetting = await _dbContext.JvAmortizationSettings
+                .Include(x => x.JvHeader)
+                    .ThenInclude(x => x.Details)
+                .FirstOrDefaultAsync(x => x.JvId == id && x.IsActive, cancellationToken);
+
+            if (existingAmortizationSetting == null)
+                return true;
+
+            var sourceJv = existingAmortizationSetting.JvHeader;
+
+            var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
+
+            for (var i = 1; i <= existingAmortizationSetting.OccurrenceRemaining; i++)
+            {
+                var generatedCode = await _unitOfWork
+                    .FilprideJournalVoucher
+                    .GenerateCodeAsync(sourceJv.Company, sourceJv.Type, i, cancellationToken);
+
+                var newHeader = new FilprideJournalVoucherHeader
+                {
+                    Type = sourceJv.Type,
+                    JournalVoucherHeaderNo = generatedCode,
+                    Date = existingAmortizationSetting.StartDate.AddMonths(i),
+                    References = sourceJv.References,
+                    CVId = sourceJv.CVId,
+                    Particulars = sourceJv.Particulars,
+                    CRNo = sourceJv.CRNo,
+                    JVReason = sourceJv.JVReason,
+                    CreatedBy = GetUserFullName(),
+                    Company = sourceJv.Company,
+                    JvType = nameof(JvType.Amortization),
+                    Details = new List<FilprideJournalVoucherDetail>()
+                };
+
+                foreach (var detail in sourceJv.Details!)
+                {
+                    newHeader.Details.Add(new FilprideJournalVoucherDetail
+                    {
+                        AccountNo = detail.AccountNo,
+                        AccountName = detail.AccountName,
+                        TransactionNo = generatedCode,
+                        Debit = detail.Debit,
+                        Credit = detail.Credit,
+                        SubAccountType = detail.SubAccountType,
+                        SubAccountId = detail.SubAccountId,
+                        SubAccountName = detail.SubAccountName
+                    });
+                }
+
+                newJournalVouchers.Add(newHeader);
+            }
+
+            await _dbContext.FilprideJournalVoucherHeaders
+                .AddRangeAsync(newJournalVouchers, cancellationToken);
+
+            existingAmortizationSetting.OccurrenceRemaining = 0;
+            existingAmortizationSetting.IsActive = false;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
     }
 }

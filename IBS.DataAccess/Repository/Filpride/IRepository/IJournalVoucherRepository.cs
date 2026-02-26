@@ -5,7 +5,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IJournalVoucherRepository : IRepository<FilprideJournalVoucherHeader>
     {
-        Task<string> GenerateCodeAsync(string company, string? type, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string company, string? type, int additionalIncrement = 0, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideJournalVoucherHeader header,
             IEnumerable<FilprideJournalVoucherDetail> details,
