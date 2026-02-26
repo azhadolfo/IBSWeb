@@ -2924,7 +2924,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (query.Any())
             {
                 var drList = deliverReceipt
-                    .OrderBy(x => x.ManualDrNo)
+                    .OrderBy(x => x.DeliveryReceiptNo)
                     .Select(dr =>
                     {
                         var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
@@ -2987,7 +2987,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var drList = deliverReceipt
-                .OrderBy(x => x.ManualDrNo)
+                .OrderBy(x => x.DeliveryReceiptNo)
                 .Select(dr =>
                 {
                     var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable

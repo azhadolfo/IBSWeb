@@ -296,7 +296,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     InvoiceAmount = apNonTradeTotal,
                     TaxType = string.Empty,
                     VatType = string.Empty,
-                    IsPayroll = true
+                    IsPayroll = true,
+                    Status = nameof(CheckVoucherInvoiceStatus.ForApproval)
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
@@ -635,13 +636,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Uploading file --
 
-                #region --Audit Trail Recording
+                var wasForPosting = existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting);
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                if (existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
+                {
+                    existingHeaderModel.Status = nameof(CheckVoucherInvoiceStatus.ForApproval);
+                    existingHeaderModel.ApprovedBy = null;
+                    existingHeaderModel.ApprovedDate = null;
+                }
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+                var auditMessage = wasForPosting
+                    ? $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo} and reverted to For Approval"
+                    : $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}";
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Check Voucher", existingHeaderModel.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
-
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check voucher invoicing edited successfully.";
                 return RedirectToAction(nameof(Index));
@@ -659,7 +672,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,AccountingManager")]
+        public async Task<IActionResult> Approve(int id, int? supplierId, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            if (model.Status != nameof(CheckVoucherInvoiceStatus.ForApproval))
+            {
+                TempData["error"] = "This invoice is not pending for approval.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.ApprovedBy = GetUserFullName();
+                model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+                
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Approved.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to approve payroll invoice check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideCheckVoucher
@@ -700,6 +763,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
@@ -745,6 +810,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -805,6 +872,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var cv = await _unitOfWork.FilprideCheckVoucher
@@ -900,6 +969,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(selectList);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
@@ -907,6 +978,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (modelHeader == null)
             {
                 return NotFound();
+            }
+
+            if (modelHeader.Status != nameof(CheckVoucherInvoiceStatus.ForPosting))
+            {
+                TempData["error"] = "This invoice must be approved before it can be posted.";
+                return RedirectToAction(nameof(Print), new { id, supplierId });
             }
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
