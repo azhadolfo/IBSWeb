@@ -455,7 +455,7 @@
             if (isAdminOrManager && !Model.Header!.IsPaid)
             {
                 <div class="col-6 col-md-3">
-                    <a class="btn btn-warning form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
+                    <a class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
                 </div>
             }
         }
@@ -485,7 +485,9 @@
                         data: { id: id, supplierId: supplierId },
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                         success: function() {
-                            window.location.reload();
+                            Swal.fire('Success', 'Invoice approved successfully.', 'success').then(() => {
+                                window.location.reload();
+                            });
                         },
                         error: function() {
                             Swal.fire('Error', 'Something went wrong.', 'error');
@@ -512,7 +514,11 @@
                         type: 'POST',
                         data: { id: id, supplierId: @(supplier?.SupplierId ?? 0) },
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { window.location.reload(); },
+                        success: function() { 
+                            Swal.fire('Success', 'Invoice posted successfully.', 'success').then(() => {
+                                window.location.reload();
+                            });
+                         },
                         error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
                     });
                 }
@@ -536,7 +542,11 @@
                         type: 'POST',
                         data: { id: id },
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { window.location.reload(); },
+                        success: function() { 
+                            Swal.fire('Success', 'Invoice unposted successfully.', 'success').then(() => {
+                                window.location.reload();
+                            });
+                         },
                         error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
                     });
                 }
