@@ -186,5 +186,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsPayroll { get; set; }
 
         public DateOnly? LiquidationDate { get; set; }
+
+        public string? ApprovedBy { get; set; }
+        
+        [Column(TypeName = "timestamp without time zone")]
+        public DateTime? ApprovedDate { get; set; }
     }
 }

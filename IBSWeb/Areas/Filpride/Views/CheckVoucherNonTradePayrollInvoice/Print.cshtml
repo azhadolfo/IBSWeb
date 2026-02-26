@@ -424,20 +424,34 @@
 
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        var isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("AccountingManager");
+
+        if (Model.Header!.Status == nameof(CheckVoucherInvoiceStatus.ForApproval))
+        {
+            if (isAdminOrManager)
+            {
+                <div class="col-6 col-md-3">
+                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.CheckVoucherHeaderId, @(supplier?.SupplierId ?? 0))">Approve</a>
+                </div>
+            }
+        }
+        else if (Model.Header.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
         {
             <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.CheckVoucherHeaderId)">Post</a>
+                <a class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.CheckVoucherHeaderId)">Post</a>
             </div>
         }
-        else
+        else if (Model.Header.PostedBy != null)
         {
             <div class="col-6 col-md-3">
                 <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplier?.SupplierId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
-            </div>
+            if (isAdminOrManager && !Model.Header!.IsPaid)
+            {
+                <div class="col-6 col-md-3">
+                    <a class="btn btn-warning form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
+                </div>
+            }
         }
     }
 
@@ -447,6 +461,34 @@
 </div>
 
 @section Scripts {
+    <script>
+        function confirmApprove(id, supplierId) {
+            Swal.fire({
+                title: 'Approve this invoice?',
+                text: "This will mark the invoice as For Posting.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Approve", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, supplierId: supplierId },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() {
+                            window.location.reload();
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Something went wrong.', 'error');
+                        }
+                    });
+                }
+            })
+        }
+    </script>
     <script>
         function confirmPost(id) {
             Swal.fire({
@@ -459,8 +501,14 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@(supplier?.SupplierId ?? 0))}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Post", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, supplierId: @(supplier?.SupplierId ?? 0) },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
@@ -477,8 +525,14 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var url = `@Url.Action("Unpost", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Unpost", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }

@@ -1,12 +1,12 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using IBS.Models.Enums;
-using IBS.Utility.Constants;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -75,7 +75,6 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public override async Task<FilpridePurchaseOrder?> GetAsync(Expression<Func<FilpridePurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
@@ -295,7 +294,7 @@ namespace IBS.DataAccess.Repository.Filpride
                                 ?? throw new NullReferenceException("PurchaseOrder not found");
 
             return purchaseOrder.ActualPrices!.Count != 0
-                ? purchaseOrder.ActualPrices!.First().TriggeredPrice
+                ? purchaseOrder.ActualPrices!.OrderByDescending(x => x.ApprovedDate).First(x => x.IsApproved).TriggeredPrice
                 : purchaseOrder.Price;
         }
     }

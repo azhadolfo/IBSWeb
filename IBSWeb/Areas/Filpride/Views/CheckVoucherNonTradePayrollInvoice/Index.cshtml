@@ -71,9 +71,13 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Void", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/' + id,
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
@@ -82,8 +86,7 @@
         function confirmCancel(id) {
             Swal.fire({
                 title: "Please Input Remarks",
-                html:
-                    "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
+                html: "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
                 focusConfirm: false,
                 allowEscapeKey: false,
                 allowOutsideClick: false,
@@ -94,12 +97,14 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var cancellationRemarks = $("#cancellationRemarks").val();
-                    // Encode the cancellationRemarks to make it URL safe
-                    var encodedRemarks = encodeURIComponent(cancellationRemarks);
-                    // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
-                    window.location.href = url;
+                    $.ajax({
+                        url: '@Url.Action("Cancel", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: { id: id, cancellationRemarks: $("#cancellationRemarks").val() },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function() { window.location.reload(); },
+                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
+                    });
                 }
             })
         }
@@ -196,10 +201,11 @@
                         "data": "status",
                         "name": "status",
                         "render": function (data, type, row) {
-                            var statusClass = data === "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
-                                data === "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
-                                    data === "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
-                                        data === "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
+                            var statusClass = data === "@nameof(CheckVoucherInvoiceStatus.ForApproval)" ? "bg-secondary" :
+                                data === "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
+                                    data === "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
+                                        data === "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
+                                            data === "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
@@ -210,14 +216,18 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                             return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
-                                    <button class="btn btn-light btn-sm dropdown-toggle w-100" 
-                                                        type="button" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-expanded="false">
-                                                    <i class="bi bi-three-dots"></i>
+                                    <button class="btn btn-light btn-sm dropdown-toggle w-100"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        ${row.postedBy == null ? `
+                                        ${row.status === "@nameof(CheckVoucherInvoiceStatus.ForApproval)" ? `
+                                            <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.subAccountId}">Preview</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
+                                        ` : row.status === "@nameof(CheckVoucherInvoiceStatus.ForPosting)" ? `
                                             <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                             <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.subAccountId}">Preview</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>

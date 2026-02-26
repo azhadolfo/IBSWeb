@@ -6,6 +6,8 @@ namespace IBS.Models.Enums
         ForPayment,
         Paid,
         Canceled,
-        Voided
+        Voided,
+
+        ForApproval
     }
 }
