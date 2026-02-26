@@ -1798,7 +1798,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var accountTitlesDto = await _unitOfWork.FilprideJournalVoucher.GetListOfAccountTitleDto(cancellationToken);
             var ledgers = new List<FilprideGeneralLedgerBook>();
-            var firstDayOfNextMonth = new DateOnly(existingHeaderModel.Date.Year, existingHeaderModel.Date.AddMonths(1).Month, 1);
+            var nextMonth = existingHeaderModel.Date.AddMonths(1);
+            var firstDayOfNextMonth = new DateOnly(nextMonth.Year, nextMonth.Month, 1);
 
             foreach (var detail in existingHeaderModel.Details!)
             {
