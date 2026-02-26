@@ -2176,7 +2176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var amortizationSetting = await _dbContext.JvAmortizationSettings
                    .FirstOrDefaultAsync(jv => jv.JvId == existingHeaderModel.JournalVoucherHeaderId && jv.IsActive, cancellationToken)
-                        ?? throw new NullReferenceException($"JV#{existingHeaderModel.JournalVoucherHeaderId} amortization settings not ");
+                        ?? throw new NullReferenceException($"JV#{existingHeaderModel.JournalVoucherHeaderId} amortization settings not found.");
 
                 await _dbContext.FilprideJournalVoucherDetails
                     .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
