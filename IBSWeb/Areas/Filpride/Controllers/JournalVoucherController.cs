@@ -341,6 +341,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var header = await _dbContext.FilprideJournalVoucherHeaders
                 .Include(cv => cv.CheckVoucherHeader)
                 .ThenInclude(supplier => supplier!.Supplier)
+                .Include(jv => jv.Details)
                 .FirstOrDefaultAsync(jvh => jvh.JournalVoucherHeaderId == id.Value, cancellationToken);
 
             if (header == null)
@@ -348,15 +349,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var details = await _dbContext.FilprideJournalVoucherDetails
-                .Where(jvd => jvd.JournalVoucherHeaderId == header.JournalVoucherHeaderId)
-                .ToListAsync(cancellationToken);
-
             var viewModel = new JournalVoucherVM
             {
                 Header = header,
-                Details = details
+                Details = header.Details!.ToList(),
             };
+
+            viewModel.IsAmortization = await _dbContext
+                .JvAmortizationSettings
+                .AnyAsync(jv => jv.JvId == id.Value && jv.IsActive, cancellationToken);
 
             var companyClaims = await GetCompanyClaimAsync();
 

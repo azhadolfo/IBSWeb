@@ -31,15 +31,15 @@ $(document).ready(function () {
     let devtoolsOpen = false;
     const originalContent = document.body.innerHTML;
 
-    // function detectDevTools() {
-    //     const before = new Date();
-    //     debugger;
-    //     const after = new Date();
-    //     if (after - before > 100) {
-    //         return true;
-    //     }
-    //     return false;
-    // }
+    function detectDevTools() {
+        const before = new Date();
+        debugger;
+        const after = new Date();
+        if (after - before > 100) {
+            return true;
+        }
+        return false;
+    }
 
     function checkDevTools() {
         if (detectDevTools()) {
