@@ -399,8 +399,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
-
                 if (modelHeader.JvType == nameof(JvType.Accrual) && !await IsAccrualReversed(modelHeader.JournalVoucherHeaderId, cancellationToken))
                 {
                     throw new InvalidOperationException(
@@ -411,6 +409,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     throw new InvalidOperationException($"Cannot post this record because the amortization has not been completed yet.");
                 }
+
+                await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording
 
