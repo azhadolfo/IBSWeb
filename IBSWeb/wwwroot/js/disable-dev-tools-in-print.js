@@ -32,13 +32,11 @@ $(document).ready(function () {
     const originalContent = document.body.innerHTML;
 
     function detectDevTools() {
-        const before = new Date();
-        debugger;
-        const after = new Date();
-        if (after - before > 100) {
-            return true;
-        }
-        return false;
+        const threshold = 160;
+        return (
+            window.outerWidth - window.innerWidth > threshold ||
+            window.outerHeight - window.innerHeight > threshold
+        );
     }
 
     function checkDevTools() {
