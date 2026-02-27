@@ -228,26 +228,24 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form>
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label class="control-label">Account No.</label>
-                        <select asp-items="@Model.CoaList" class="form-select js-select2" style="width: 100%" id="AccountNo">
-                            <option></option>
-                        </select>
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="form-group pt-4">
-                        <label class="control-label">Debit</label>
-                        <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="form-group pt-4">
-                        <label class="control-label">Credit</label>
-                        <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
-                        <span class="text-danger"></span>
-                    </div>
-                </form>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label class="control-label">Account No.</label>
+                    <select asp-items="@Model.CoaList" class="form-select js-select2" style="width: 100%" id="AccountNo">
+                        <option></option>
+                    </select>
+                    <span class="text-danger"></span>
+                </div>
+                <div class="form-group pt-4">
+                    <label class="control-label">Debit</label>
+                    <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
+                    <span class="text-danger"></span>
+                </div>
+                <div class="form-group pt-4">
+                    <label class="control-label">Credit</label>
+                    <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
+                    <span class="text-danger"></span>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
