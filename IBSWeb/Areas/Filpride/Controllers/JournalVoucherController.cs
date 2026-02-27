@@ -549,22 +549,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
                 }
 
-                switch (existingHeaderModel.JvType)
-                {
-                    case nameof(JvType.Accrual):
-                        {
-                            return RedirectToAction(nameof(EditAccrual), new { id = existingHeaderModel.JournalVoucherHeaderId });
-                        }
-                    case nameof(JvType.Amortization):
-                        {
-                            return RedirectToAction(nameof(EditAmortization), new { id = existingHeaderModel.JournalVoucherHeaderId });
-                        }
-                    case nameof(JvType.Reclass):
-                        {
-                            return RedirectToAction(nameof(EditReclass), new { id = existingHeaderModel.JournalVoucherHeaderId });
-                        }
-                }
-
                 var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
                     .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
                     .ToListAsync(cancellationToken);
