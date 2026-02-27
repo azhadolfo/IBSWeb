@@ -156,7 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.IsAdvances &&
@@ -188,7 +188,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.IsAdvances &&
@@ -573,7 +573,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Debit = debit,
                     Credit = credit,
                     CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
                             c.Company == companyClaims &&
                             c.IsAdvances &&
@@ -621,7 +621,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.IsAdvances &&
@@ -1434,7 +1434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.CvType == nameof(CVType.Invoicing) &&
@@ -1464,7 +1464,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.CvType == nameof(CVType.Invoicing) &&
@@ -1609,7 +1609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CrNo = existingHeaderModel.CRNo,
                     Reason = existingHeaderModel.JVReason,
                     CvList = await _dbContext.FilprideCheckVoucherHeaders
-                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
                             c.Company == companyClaims &&
                             c.CvType == nameof(CVType.Invoicing) &&
@@ -1659,7 +1659,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
                             c.Company == companyClaims &&
                             c.CvType == nameof(CVType.Invoicing) &&
@@ -1832,7 +1832,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.CvType == nameof(CVType.Invoicing) &&
@@ -1871,7 +1871,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.CvType == nameof(CVType.Invoicing) &&
@@ -2055,7 +2055,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 };
 
                 model.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                    .OrderBy(c => c.CheckVoucherHeaderId)
+                    .OrderBy(c => c.CheckVoucherHeaderNo)
                     .Where(c =>
                         c.Company == companyClaims &&
                         c.CvType == nameof(CVType.Invoicing) &&
@@ -2113,7 +2113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     c.CvType == nameof(CVType.Invoicing) &&
@@ -2326,7 +2326,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
@@ -2358,7 +2358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
@@ -2491,7 +2491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CrNo = existingHeaderModel.CRNo,
                     Reason = existingHeaderModel.JVReason,
                     CvList = await _dbContext.FilprideCheckVoucherHeaders
-                        .OrderBy(c => c.CheckVoucherHeaderId)
+                        .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
                             c.Company == companyClaims &&
                             (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
@@ -2538,7 +2538,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
+                .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
                     c.Company == companyClaims &&
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
