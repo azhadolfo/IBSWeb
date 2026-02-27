@@ -1524,7 +1524,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     var isAccrualAccount = accountTitle.AccountName.Contains("AP - Accrued Expenses");
 
@@ -1722,7 +1722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     var isAccrualAccount = accountTitle.AccountName.Contains("AP - Accrued Expenses");
 
@@ -1954,7 +1954,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     var isPrepaidAccount = accountTitle.AccountName.Contains("Prepaid Expenses");
 
@@ -2200,7 +2200,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     var isPrepaidAccount = accountTitle.AccountName.Contains("Prepaid Expenses");
 
@@ -2409,7 +2409,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     jvDetails.Add(
                         new FilprideJournalVoucherDetail
@@ -2593,7 +2593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var accountTitle = await _unitOfWork.FilprideChartOfAccount
                                            .GetAsync(coa => coa.AccountNumber == acctNo.AccountNo, cancellationToken)
-                                       ?? throw new NullReferenceException($"Account number {acctNo} not found");
+                                       ?? throw new NullReferenceException($"Account number {acctNo.AccountNo} not found");
 
                     jvDetails.Add(
                         new FilprideJournalVoucherDetail
