@@ -2258,6 +2258,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var sourceJv = existingAmortizationSetting.JvHeader;
 
+            if (sourceJv == null || sourceJv.Details == null || !sourceJv.Details.Any())
+            {
+                throw new InvalidOperationException($"The source journal voucher for amortization with ID {id} is missing or has no details.");
+            }
+
             var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
 
             for (var i = 1; i <= existingAmortizationSetting.OccurrenceRemaining; i++)
@@ -2282,7 +2287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Details = new List<FilprideJournalVoucherDetail>()
                 };
 
-                foreach (var detail in sourceJv.Details!)
+                foreach (var detail in sourceJv.Details)
                 {
                     newHeader.Details.Add(new FilprideJournalVoucherDetail
                     {
