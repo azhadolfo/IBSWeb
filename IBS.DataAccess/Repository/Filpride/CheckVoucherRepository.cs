@@ -33,7 +33,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Category == "Trade" &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -57,7 +58,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Category == "Trade" &&
                         x.Type == nameof(DocumentType.Undocumented) &&
@@ -153,7 +155,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Invoicing) &&
                         x.Type == nameof(DocumentType.Documented) &&
@@ -177,7 +180,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Invoicing) &&
                         x.Type == nameof(DocumentType.Undocumented) &&
@@ -211,7 +215,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Payment) &&
                         x.Type == nameof(DocumentType.Documented) &&
@@ -235,7 +240,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCv = await _db
                 .FilprideCheckVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.CheckVoucherHeaderNo)
+                .OrderByDescending(x => x.CheckVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Payment) &&
                         x.Type == nameof(DocumentType.Undocumented) &&

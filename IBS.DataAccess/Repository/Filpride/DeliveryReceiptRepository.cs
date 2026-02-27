@@ -36,7 +36,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .OrderByDescending(x => x.DeliveryReceiptNo.Length)
+                .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == companyClaims &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -60,7 +61,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .OrderByDescending(x => x.DeliveryReceiptNo.Length)
+                .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == companyClaims &&
                         x.Type == nameof(DocumentType.Undocumented) &&

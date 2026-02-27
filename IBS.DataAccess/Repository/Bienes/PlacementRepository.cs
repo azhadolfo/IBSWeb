@@ -26,7 +26,8 @@ namespace IBS.DataAccess.Repository.Bienes
 
             var lastRecord = await _db.BienesPlacements
                 .Where(p => p.CompanyId == companyId)
-                .OrderByDescending(p => p.ControlNumber)
+                .OrderByDescending(p => p.ControlNumber.Length)
+                .ThenByDescending(p => p.ControlNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRecord == null)

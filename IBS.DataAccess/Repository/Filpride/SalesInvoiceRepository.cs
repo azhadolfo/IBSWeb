@@ -80,7 +80,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastSi = await _db
                 .FilprideSalesInvoices
                 .AsNoTracking()
-                .OrderByDescending(x => x.SalesInvoiceNo)
+                .OrderByDescending(x => x.SalesInvoiceNo!.Length)
+                .ThenByDescending(x => x.SalesInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -103,7 +104,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastSi = await _db
                 .FilprideSalesInvoices
                 .AsNoTracking()
-                .OrderByDescending(x => x.SalesInvoiceNo)
+                .OrderByDescending(x => x.SalesInvoiceNo!.Length)
+                .ThenByDescending(x => x.SalesInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Undocumented),

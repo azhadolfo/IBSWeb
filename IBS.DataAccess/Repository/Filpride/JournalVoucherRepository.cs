@@ -34,7 +34,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.JournalVoucherHeaderNo)
+                .OrderByDescending(x => x.JournalVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.JournalVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -57,7 +58,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.JournalVoucherHeaderNo)
+                .OrderByDescending(x => x.JournalVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.JournalVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented),

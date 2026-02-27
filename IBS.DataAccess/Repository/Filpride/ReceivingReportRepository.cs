@@ -35,7 +35,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastRr = await _db
                 .FilprideReceivingReports
                 .AsNoTracking()
-                .OrderByDescending(x => x.ReceivingReportNo)
+                .OrderByDescending(x => x.ReceivingReportNo!.Length)
+                .ThenByDescending(x => x.ReceivingReportNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -59,7 +60,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastRr = await _db
                 .FilprideReceivingReports
                 .AsNoTracking()
-                .OrderByDescending(x => x.ReceivingReportNo)
+                .OrderByDescending(x => x.ReceivingReportNo!.Length)
+                .ThenByDescending(x => x.ReceivingReportNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented) &&

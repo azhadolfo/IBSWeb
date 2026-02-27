@@ -31,7 +31,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCm = await _db
                 .FilprideCreditMemos
                 .AsNoTracking()
-                .OrderByDescending(x => x.CreditMemoNo)
+                .OrderByDescending(x => x.CreditMemoNo!.Length)
+                .ThenByDescending(x => x.CreditMemoNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),

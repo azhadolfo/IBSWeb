@@ -34,7 +34,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastSv = await _db
                 .FilprideServiceInvoices
                 .AsNoTracking()
-                .OrderByDescending(x => x.ServiceInvoiceNo)
+                .OrderByDescending(x => x.ServiceInvoiceNo!.Length)
+                .ThenByDescending(x => x.ServiceInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -57,7 +58,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastSv = await _db
                 .FilprideServiceInvoices
                 .AsNoTracking()
-                .OrderByDescending(x => x.ServiceInvoiceNo)
+                .OrderByDescending(x => x.ServiceInvoiceNo!.Length)
+                .ThenByDescending(x => x.ServiceInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented),

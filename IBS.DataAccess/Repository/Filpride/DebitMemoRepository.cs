@@ -31,7 +31,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDm = await _db
                 .FilprideDebitMemos
                 .AsNoTracking()
-                .OrderByDescending(x => x.DebitMemoNo)
+                .OrderByDescending(x => x.DebitMemoNo!.Length)
+                .ThenByDescending(x => x.DebitMemoNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -54,7 +55,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDm = await _db
                 .FilprideDebitMemos
                 .AsNoTracking()
-                .OrderByDescending(x => x.DebitMemoNo)
+                .OrderByDescending(x => x.DebitMemoNo!.Length)
+                .ThenByDescending(x => x.DebitMemoNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented),

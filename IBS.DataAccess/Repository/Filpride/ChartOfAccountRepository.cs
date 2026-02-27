@@ -124,7 +124,8 @@ namespace IBS.DataAccess.Repository.Filpride
         private async Task<string> GenerateNumberAsync(int? parentId, string thirdLevel, CancellationToken cancellationToken = default)
         {
             var lastAccount = await _db.FilprideChartOfAccounts
-                .OrderByDescending(c => c.AccountNumber)
+                .OrderByDescending(c => c.AccountNumber!.Length)
+                .ThenByDescending(c => c.AccountNumber)
                 .FirstOrDefaultAsync(coa => coa.ParentAccountId == parentId, cancellationToken);
 
             if (lastAccount == null)

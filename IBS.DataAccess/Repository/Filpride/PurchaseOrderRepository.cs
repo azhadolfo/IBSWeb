@@ -34,7 +34,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastPo = await _db
                 .FilpridePurchaseOrders
                 .AsNoTracking()
-                .OrderByDescending(x => x.PurchaseOrderNo)
+                .OrderByDescending(x => x.PurchaseOrderNo!.Length)
+                .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -58,7 +59,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastPo = await _db
                 .FilpridePurchaseOrders
                 .AsNoTracking()
-                .OrderByDescending(x => x.PurchaseOrderNo)
+                .OrderByDescending(x => x.PurchaseOrderNo!.Length)
+                .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented) &&

@@ -25,7 +25,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
                 .AsNoTracking()
-                .OrderByDescending(x => x.CustomerOrderSlipNo)
+                .OrderByDescending(x => x.CustomerOrderSlipNo.Length)
+                .ThenByDescending(x => x.CustomerOrderSlipNo)
                 .FirstOrDefaultAsync(x => x.Company == companyClaims, cancellationToken);
 
             if (lastCos == null)
