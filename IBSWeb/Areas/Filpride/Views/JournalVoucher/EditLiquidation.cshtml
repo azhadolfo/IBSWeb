@@ -251,7 +251,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="saveAccountingEntry()">Create</button>
+                <button type="button" class="btn btn-primary" onclick="saveAccountingEntry(event)">Create</button>
             </div>
         </div>
     </div>
@@ -278,7 +278,7 @@
         });
     </script>
     <script>
-        function saveAccountingEntry() {
+        function saveAccountingEntry(event) {
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
             var accountNumberText = $("#AccountNo option:selected").text();

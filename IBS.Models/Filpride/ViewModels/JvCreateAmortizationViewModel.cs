@@ -15,7 +15,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? References { get; set; }
 
-        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a check voucher.")]
         public int CvId { get; set; }
 
         public List<SelectListItem>? CvList { get; set; }
