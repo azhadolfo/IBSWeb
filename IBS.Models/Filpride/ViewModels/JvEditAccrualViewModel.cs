@@ -26,7 +26,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         [Required]
         [StringLength(200)]
-        public string Reason { get; set; }
+        public string Reason { get; set; } = string.Empty;
 
         public List<JvEditAccrualDetailViewModel> Details { get; set; } = [];
     }

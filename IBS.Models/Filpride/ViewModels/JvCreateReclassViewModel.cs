@@ -23,11 +23,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         [Required]
         [StringLength(200)]
-        public string Particulars { get; set; }
+        public string Particulars { get; set; } = string.Empty;
 
         [Required]
         [StringLength(200)]
-        public string Reason { get; set; }
+        public string Reason { get; set; } = string.Empty;
 
         public List<JvCreateReclassDetailViewModel> Details { get; set; } = [];
 
