@@ -17,8 +17,10 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, string? type, int additionalIncrement = default, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string? type, int additionalIncrement = 0, CancellationToken cancellationToken = default)
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(additionalIncrement);
+
             return type switch
             {
                 nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, additionalIncrement, cancellationToken),
@@ -27,7 +29,7 @@ namespace IBS.DataAccess.Repository.Filpride
             };
         }
 
-        private async Task<string> GenerateCodeForDocumented(string company, int additionalIncrement = 0, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(string company, int additionalIncrement, CancellationToken cancellationToken = default)
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
@@ -45,12 +47,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastJv.JournalVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1 + additionalIncrement;
+            var incrementedNumber = long.Parse(numericPart) + 1 + additionalIncrement;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
-        private async Task<string> GenerateCodeForUnDocumented(string company, int additionalIncrement = 0, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForUnDocumented(string company, int additionalIncrement, CancellationToken cancellationToken = default)
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
@@ -68,7 +70,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastJv.JournalVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1 + additionalIncrement;
+            var incrementedNumber = long.Parse(numericPart) + 1 + additionalIncrement;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
