@@ -30,6 +30,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<JvEditAmortizationDetailViewModel> Details { get; set; } = [];
 
+        [Range(1, int.MaxValue, ErrorMessage = "Number of months must be greater than zero.")]
         public int NumberOfMonths { get; set; }
 
         [Required]
