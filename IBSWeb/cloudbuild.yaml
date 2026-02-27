@@ -4,14 +4,15 @@
         - build
         - '--no-cache'
         - '-t'
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+        - '$_AR_HOSTNAME/$PROJECT_ID/filpride/$_SERVICE_NAME:$COMMIT_SHA'
         - '-f'
         - 'IBSWeb/Dockerfile'
         - .
+
   - name: gcr.io/cloud-builders/docker
     args:
         - push
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+        - '$_AR_HOSTNAME/$PROJECT_ID/filpride/$_SERVICE_NAME:$COMMIT_SHA'
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -20,18 +21,19 @@
         - deploy
         - $_SERVICE_NAME
         - '--image'
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+        - '$_AR_HOSTNAME/$PROJECT_ID/filpride/$_SERVICE_NAME:$COMMIT_SHA'
         - '--region'
         - $_DEPLOY_REGION
         - '--platform'
         - $_PLATFORM
         - '--labels'
         - 'company=filpride'
-        
+        - '--quiet'
+
 timeout: 1200s
 
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+  - '$_AR_HOSTNAME/$PROJECT_ID/filpride/$_SERVICE_NAME:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
