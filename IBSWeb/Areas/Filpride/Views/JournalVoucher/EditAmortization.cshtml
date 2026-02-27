@@ -42,7 +42,6 @@
                         <input asp-for="TransactionDate"
                                type="month"
                                class="form-control"
-                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
                                min="@Model.MinDate.ToString("yyyy-MM")" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
