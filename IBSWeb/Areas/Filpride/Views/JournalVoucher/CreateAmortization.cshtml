@@ -351,17 +351,25 @@
             $("#totalDebit").text("");
             $("#totalCredit").text("");
             $("#tableBody").empty();
+            $("#accountingEntriesBody").empty();
+            $(".totalDebit, .totalCredit").text("0.0000");
+            $("#monthlyAmountHint").text("");
             $("select[name='SelectedExpenseAccount']").empty().append("<option value=''></option>").trigger("change.select2");
         }
 
         function calculateAmortizationEntries() {
+            let accountingEntriesBody = $("#accountingEntriesBody");
             var selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
             var selectedCreditOption = $("select[name='SelectedPrepaidAccount'] option:selected");
             var numberOfMonths = parseInt($("#NumberOfMonths").val());
             var debitAmount = parseFloat(selectedDebitOption.data("debit"));
             var monnthlyAmountHint = $("#monthlyAmountHint").text("");
 
-            if (!selectedDebitOption.val() || !selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) return;
+            if (!selectedDebitOption.val() || !selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) {
+                accountingEntriesBody.empty();
+                $(".totalDebit, .totalCredit").text("0.0000");
+                return;
+            }
 
             var monthlyAmount = debitAmount / numberOfMonths;
 
@@ -374,7 +382,6 @@
             var creditAccountNo = selectedCreditOption.val();
             var creditAccountTitle = selectedCreditOption.text();
 
-            let accountingEntriesBody = $("#accountingEntriesBody");
             accountingEntriesBody.empty();
 
             // Static debit row
