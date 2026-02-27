@@ -222,7 +222,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
+                        <button type="submit" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event)">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -480,6 +480,10 @@
 
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
+
+            if (!isValid && event) {
+                event.preventDefault();
+            }
 
             return isValid;
         }
