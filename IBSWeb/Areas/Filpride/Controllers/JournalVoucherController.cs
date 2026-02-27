@@ -399,10 +399,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                if (modelHeader.JvType == nameof(JvType.Accrual) && !await IsAccrualReversed(modelHeader.JournalVoucherHeaderId, cancellationToken))
+                if (modelHeader.JvType == nameof(JvType.Accrual))
                 {
-                    throw new InvalidOperationException(
-                        $"Cannot post this record because the related accrual journal voucher has not been reversed yet.");
+                    await ReverseAccrual(modelHeader.JournalVoucherHeaderId, cancellationToken);
                 }
 
                 if (modelHeader.JvType == nameof(JvType.Amortization) && !await ProcessAmortizationAsync(modelHeader.JournalVoucherHeaderId, cancellationToken))
@@ -1769,16 +1768,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        private async Task<bool> IsAccrualReversed(int id, CancellationToken cancellationToken)
+        private async Task ReverseAccrual(int id, CancellationToken cancellationToken)
         {
             var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
                 .Include(x => x.Details)
-                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
-            {
-                return false;
-            }
+                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken)
+                ?? throw new InvalidOperationException($"Journal voucher header {id} not found.");
 
             var accountTitlesDto = await _unitOfWork.FilprideJournalVoucher.GetListOfAccountTitleDto(cancellationToken);
             var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -1820,8 +1815,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-            return true;
         }
 
         [HttpGet]
