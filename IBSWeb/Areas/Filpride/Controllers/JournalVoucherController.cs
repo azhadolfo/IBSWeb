@@ -1785,7 +1785,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
                     ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
 
-                var particulars = $"Reversal of accrued '{existingHeaderModel.Details.First(d => d.Debit > 0).AccountName}' for the month of {firstDayOfNextMonth:MMM yyy}.";
+                var particulars = $"Reversal of accrued '{existingHeaderModel.Details.First(d => d.Debit > 0).AccountName}' for the month of {firstDayOfNextMonth:MMM yyyy}.";
 
                 ledgers.Add(
                     new FilprideGeneralLedgerBook
