@@ -293,7 +293,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == purchaseOrderId, cancellationToken)
                                 ?? throw new NullReferenceException("PurchaseOrder not found");
 
-            return purchaseOrder.ActualPrices!.Count != 0
+            var hasTriggeredPrice = purchaseOrder.ActualPrices?.Count > 0 && purchaseOrder.ActualPrices.Any(x => x.IsApproved);
+
+            return hasTriggeredPrice
                 ? purchaseOrder.ActualPrices!.OrderByDescending(x => x.ApprovedDate).First(x => x.IsApproved).TriggeredPrice
                 : purchaseOrder.Price;
         }
