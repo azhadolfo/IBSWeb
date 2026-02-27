@@ -259,7 +259,7 @@
 
         function cvDetails(cvId) {
 
-            if (cvId === "") {
+            if (!cvId) {
                 clearFields();
                 return;
             }
