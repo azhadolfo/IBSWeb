@@ -2190,7 +2190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 amortizationSetting.StartDate = startingMonth;
                 amortizationSetting.EndDate = endingMonth;
                 amortizationSetting.OccurrenceTotal = viewModel.NumberOfMonths;
-                amortizationSetting.OccurrenceRemaining = viewModel.NumberOfMonths;
+                amortizationSetting.OccurrenceRemaining = viewModel.NumberOfMonths - 1;
                 amortizationSetting.IsActive = true;
                 amortizationSetting.ExpenseAccount = expenseAccount;
                 amortizationSetting.PrepaidAccount = prepaidAccount;
