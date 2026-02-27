@@ -10,9 +10,9 @@ namespace IBS.Models.Enums
 
     public enum JvFrequency
     {
-        Monthly,
         Daily,
         Weekly,
+        Monthly,
         Quarterly,
         Annually
     }
