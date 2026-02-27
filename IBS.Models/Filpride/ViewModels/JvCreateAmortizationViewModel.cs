@@ -32,10 +32,10 @@ namespace IBS.Models.Filpride.ViewModels
         public int NumberOfMonths { get; set; }
 
         [Required]
-        public string SelectedExpenseAccount { get; set; }
+        public string SelectedExpenseAccount { get; set; } = string.Empty;
 
         [Required]
-        public string SelectedPrepaidAccount { get; set; }
+        public string SelectedPrepaidAccount { get; set; } = string.Empty;
 
         public List<SelectListItem>? PrepaidExpenseAccounts { get; set; }
     }
