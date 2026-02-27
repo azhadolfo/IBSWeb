@@ -26,7 +26,7 @@ namespace IBS.Models.Filpride.ViewModels
         [StringLength(200)]
         public string Reason { get; set; } = string.Empty;
 
-        public List<JvCreateAmortizationDetailViewModel> Details { get; set; }
+        public List<JvCreateAmortizationDetailViewModel> Details { get; set; } = [];
 
         [Range(1, int.MaxValue, ErrorMessage = "Number of months must be greater than zero.")]
         public int NumberOfMonths { get; set; }
