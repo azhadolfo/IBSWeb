@@ -8,9 +8,6 @@ namespace IBS.Models.Filpride.ViewModels
         public int JvId { get; set; }
 
         [Required]
-        public string Type { get; set; } = string.Empty;
-
-        [Required]
         public DateOnly TransactionDate { get; set; }
 
         public DateTime MinDate { get; set; }
