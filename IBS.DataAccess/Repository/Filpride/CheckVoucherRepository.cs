@@ -1,11 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride.AccountsPayable;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -47,7 +47,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -71,7 +71,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
@@ -167,7 +167,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
@@ -191,7 +191,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(4);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
         }
@@ -225,7 +225,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
@@ -249,7 +249,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCv.CheckVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(4);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
         }

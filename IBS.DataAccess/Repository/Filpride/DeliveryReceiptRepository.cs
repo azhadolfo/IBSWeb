@@ -50,7 +50,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastDr.DeliveryReceiptNo;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -74,7 +74,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastDr.DeliveryReceiptNo;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }

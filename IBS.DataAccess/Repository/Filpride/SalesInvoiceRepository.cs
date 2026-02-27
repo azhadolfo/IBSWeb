@@ -1,11 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride.AccountsReceivable;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -40,10 +40,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     salesBook.VatAmount = ComputeVatAmount(salesBook.VatableSales);
                     salesBook.NetSales = salesBook.VatableSales - salesBook.Discount;
                     break;
+
                 case SD.VatType_Exempt:
                     salesBook.VatExemptSales = salesBook.Amount;
                     salesBook.NetSales = salesBook.VatExemptSales - salesBook.Discount;
                     break;
+
                 default:
                     salesBook.ZeroRated = salesBook.Amount;
                     salesBook.NetSales = salesBook.ZeroRated - salesBook.Discount;
@@ -91,10 +93,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastSi.SalesInvoiceNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
@@ -115,10 +116,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastSi.SalesInvoiceNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public override async Task<FilprideSalesInvoice?> GetAsync(Expression<Func<FilprideSalesInvoice, bool>> filter, CancellationToken cancellationToken = default)

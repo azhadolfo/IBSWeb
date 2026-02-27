@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DTOs;
@@ -6,6 +5,7 @@ using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -132,11 +132,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 return thirdLevel + "01";
             }
 
-            var accountNo = int.Parse(lastAccount.AccountNumber!);
+            var accountNo = long.Parse(lastAccount.AccountNumber!);
             var generatedNo = accountNo + 1;
 
             return generatedNo.ToString();
-
         }
 
         public override async Task<FilprideChartOfAccount?> GetAsync(Expression<Func<FilprideChartOfAccount, bool>> filter, CancellationToken cancellationToken = default)

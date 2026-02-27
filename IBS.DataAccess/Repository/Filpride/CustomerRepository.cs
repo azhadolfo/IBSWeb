@@ -1,12 +1,11 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
-using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -45,7 +44,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Format the incremented number with leading zeros and concatenate with the letter part
             return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
-
         }
 
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
@@ -121,7 +119,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     .Include(c => c.Commissionee)
                     .FirstOrDefaultAsync(cancellationToken);
         }
-
 
         public override async Task<IEnumerable<FilprideCustomer>> GetAllAsync(Expression<Func<FilprideCustomer, bool>>? filter, CancellationToken cancellationToken = default)
         {

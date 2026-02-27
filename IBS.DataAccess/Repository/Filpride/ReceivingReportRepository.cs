@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -8,6 +7,7 @@ using IBS.Models.Filpride.Integrated;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -49,7 +49,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastRr.ReceivingReportNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -73,10 +73,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastRr.ReceivingReportNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
@@ -253,7 +252,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 salesInvoice.ReceivingReportId = model.ReceivingReportId;
             }
 
-            #endregion
+            #endregion Update the invoice if any
 
             await PostAsync(model, cancellationToken);
 
@@ -608,7 +607,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (model.DeliveryReceipt?.DeliveredDate != null)
             {
                 var priceAdjustment = difference / model.QuantityReceived;
-                var cogsAmount = model.DeliveryReceipt.Quantity *  priceAdjustment;
+                var cogsAmount = model.DeliveryReceipt.Quantity * priceAdjustment;
                 var cogsNetOfVat = ComputeNetOfVat(cogsAmount);
 
                 ledgers.Add(new FilprideGeneralLedgerBook

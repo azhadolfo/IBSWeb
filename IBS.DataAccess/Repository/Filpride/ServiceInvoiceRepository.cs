@@ -1,12 +1,12 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride.AccountsReceivable;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -29,7 +29,6 @@ namespace IBS.DataAccess.Repository.Filpride
             };
         }
 
-
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
             var lastSv = await _db
@@ -48,10 +47,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastSv.ServiceInvoiceNo;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
@@ -72,7 +70,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastSv.ServiceInvoiceNo;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
@@ -156,9 +154,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     sales.VatAmount = vatAmount;
                     sales.VatableSales = netOfVatAmount;
                     break;
+
                 case SD.VatType_Exempt:
                     sales.VatExemptSales = model.Total;
                     break;
+
                 default:
                     sales.ZeroRated = model.Total;
                     break;
@@ -292,8 +292,6 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
 
             #endregion --General Ledger Book Recording
-
         }
-
     }
 }
