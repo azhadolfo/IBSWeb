@@ -1,9 +1,9 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using IBS.Models.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -31,7 +31,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCm = await _db
                 .FilprideCreditMemos
                 .AsNoTracking()
-                .OrderByDescending(x => x.CreditMemoNo)
+                .OrderByDescending(x => x.CreditMemoNo!.Length)
+                .ThenByDescending(x => x.CreditMemoNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -44,7 +45,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCm.CreditMemoNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -67,10 +68,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCm.CreditMemoNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public override async Task<FilprideCreditMemo?> GetAsync(Expression<Func<FilprideCreditMemo, bool>> filter, CancellationToken cancellationToken = default)

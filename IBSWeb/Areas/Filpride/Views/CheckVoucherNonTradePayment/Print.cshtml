@@ -284,10 +284,7 @@
             <tr>
                 <td style="padding-left:20px;">Check Date:</td>
                 <td>
-                    @if (Model.Header.AccruedType != "Invoicing")
-                    {
-                        @Model.Header.CheckDate?.ToString(SD.Date_Format)
-                    }
+                    @Model.Header.CheckDate?.ToString(SD.Date_Format)
                 </td>
                 <td></td>
             </tr>

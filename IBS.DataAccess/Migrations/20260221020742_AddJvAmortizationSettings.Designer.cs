@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260221020742_AddJvAmortizationSettings")]
+    partial class AddJvAmortizationSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -521,6 +524,11 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherHeaderId"));
 
+                    b.Property<string>("AccruedType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("accrued_type");
+
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -535,13 +543,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_paid");
 
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("approved_by");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("approved_date");
+                    b.Property<decimal>("AmountPerMonth")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_per_month");
 
                     b.Property<string>("BankAccountName")
                         .HasMaxLength(200)
@@ -636,6 +640,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("employee_id");
 
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
                     b.Property<decimal>("InvoiceAmount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("invoice_amount");
@@ -643,6 +651,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsAdvances")
                         .HasColumnType("boolean")
                         .HasColumnName("is_advances");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_complete");
 
                     b.Property<bool>("IsPaid")
                         .HasColumnType("boolean")
@@ -656,9 +668,21 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
+                    b.Property<DateTime?>("LastCreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_created_date");
+
                     b.Property<DateOnly?>("LiquidationDate")
                         .HasColumnType("date")
                         .HasColumnName("liquidation_date");
+
+                    b.Property<int>("NumberOfMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("number_of_months");
+
+                    b.Property<int>("NumberOfMonthsCreated")
+                        .HasColumnType("integer")
+                        .HasColumnName("number_of_months_created");
 
                     b.Property<string>("OldCvNo")
                         .HasMaxLength(100)
@@ -699,6 +723,10 @@ namespace IBS.DataAccess.Migrations
                     b.PrimitiveCollection<string[]>("SINo")
                         .HasColumnType("varchar[]")
                         .HasColumnName("si_no");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -4308,11 +4336,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("end_date");
 
-                    b.Property<string>("ExpenseAccount")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("expense_account");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -4325,26 +4348,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("jv_id");
 
-                    b.Property<DateOnly?>("LastRunDate")
-                        .HasColumnType("date")
-                        .HasColumnName("last_run_date");
-
-                    b.Property<DateOnly?>("NextRunDate")
-                        .HasColumnType("date")
-                        .HasColumnName("next_run_date");
-
-                    b.Property<int>("OccurrenceRemaining")
-                        .HasColumnType("integer")
-                        .HasColumnName("occurrence_remaining");
-
                     b.Property<int>("OccurrenceTotal")
                         .HasColumnType("integer")
                         .HasColumnName("occurrence_total");
-
-                    b.Property<string>("PrepaidAccount")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("prepaid_account");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date")

@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.Models.Bienes;
@@ -7,6 +6,7 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Bienes
 {
@@ -26,7 +26,8 @@ namespace IBS.DataAccess.Repository.Bienes
 
             var lastRecord = await _db.BienesPlacements
                 .Where(p => p.CompanyId == companyId)
-                .OrderByDescending(p => p.ControlNumber)
+                .OrderByDescending(p => p.ControlNumber.Length)
+                .ThenByDescending(p => p.ControlNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRecord == null)
@@ -36,7 +37,7 @@ namespace IBS.DataAccess.Repository.Bienes
 
             var lastSeries = lastRecord.ControlNumber;
             var numericPart = lastSeries.Substring(company.CompanyName.Length + 1);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, company.CompanyName.Length) + "-" + incrementedNumber.ToString("D6");
         }
@@ -89,7 +90,6 @@ namespace IBS.DataAccess.Repository.Bienes
             {
                 throw new InvalidOperationException("No data changes!");
             }
-
         }
 
         public async Task RollOverAsync(BienesPlacement model, string user, CancellationToken cancellationToken = default)
@@ -130,7 +130,6 @@ namespace IBS.DataAccess.Repository.Bienes
 
         public async Task<string> SwappingAsync(BienesPlacement model, int companyId, string user, CancellationToken cancellationToken = default)
         {
-
             BienesPlacement newPlacement = new()
             {
                 ControlNumber = await GenerateControlNumberAsync(companyId, cancellationToken),

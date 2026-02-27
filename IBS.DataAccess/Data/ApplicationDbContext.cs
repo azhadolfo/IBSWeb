@@ -12,7 +12,6 @@ using IBS.Models.MMSI.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -148,7 +147,7 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideMonthlyNibit> FilprideMonthlyNibits { get; set; }
 
-        public DbSet<FilprideSalesLockedRecordsQueue>  FilprideSalesLockedRecordsQueues { get; set; }
+        public DbSet<FilprideSalesLockedRecordsQueue> FilprideSalesLockedRecordsQueues { get; set; }
 
         public DbSet<FilpridePurchaseLockedRecordsQueue> FilpridePurchaseLockedRecordsQueues { get; set; }
 
@@ -242,6 +241,8 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideMultipleCheckVoucherPayment> FilprideMultipleCheckVoucherPayments { get; set; }
 
         public DbSet<FilprideCVTradePayment> FilprideCVTradePayments { get; set; }
+
+        public DbSet<JvAmortizationSetting> JvAmortizationSettings { get; set; }
 
         #endregion
 
@@ -984,7 +985,6 @@ namespace IBS.DataAccess.Data
                 crd.HasIndex(d => d.InvoiceNo);
 
                 crd.HasIndex(d => d.CollectionReceiptNo);
-
             });
 
             #endregion -- Collection Receipt --
@@ -1009,7 +1009,6 @@ namespace IBS.DataAccess.Data
                     dm.Company
                 })
                 .IsUnique();
-
             });
 
             #endregion -- Debit Memo --
@@ -1177,7 +1176,19 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            #endregion -- Check Voucher --
+            #endregion
+
+            #region
+
+            builder.Entity<JvAmortizationSetting>(jv =>
+            {
+                jv.HasOne(jv => jv.JvHeader)
+                    .WithMany()
+                    .HasForeignKey(jv => jv.JvId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            #endregion
 
             #region -- Multiple Check Voucher Payment --
 

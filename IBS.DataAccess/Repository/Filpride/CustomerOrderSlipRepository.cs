@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -9,6 +7,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -26,7 +25,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
                 .AsNoTracking()
-                .OrderByDescending(x => x.CustomerOrderSlipNo)
+                .OrderByDescending(x => x.CustomerOrderSlipNo.Length)
+                .ThenByDescending(x => x.CustomerOrderSlipNo)
                 .FirstOrDefaultAsync(x => x.Company == companyClaims, cancellationToken);
 
             if (lastCos == null)
@@ -36,10 +36,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCos.CustomerOrderSlipNo;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
-
         }
 
         public override async Task<IEnumerable<FilprideCustomerOrderSlip>> GetAllAsync(Expression<Func<FilprideCustomerOrderSlip, bool>>? filter, CancellationToken cancellationToken = default)
@@ -80,7 +79,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
             var customer = await _db.FilprideCustomers
-                .FirstOrDefaultAsync(x => x.CustomerId ==  viewModel.CustomerId, cancellationToken)
+                .FirstOrDefaultAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken)
                 ?? throw new ArgumentException("Customer not found");
 
             var product = await _db.Products

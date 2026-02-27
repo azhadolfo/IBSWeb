@@ -80,5 +80,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string? Type { get; set; }
 
         public ICollection<FilprideJournalVoucherDetail>? Details { get; set; }
+
+        public string JvType { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,488 @@
+﻿@using IBS.Models.Enums
+@model JvCreateAmortizationViewModel
+
+@{
+    ViewData["Title"] = "Journal Voucher - Create Amortization";
+}
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="row">
+                <div class="col-12 col-md-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label">Type<span class="required">*</span></label>
+                        <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
+                            <option value="" selected disabled>Select document type</option>
+                            @foreach (var journalVoucherType in Enum.GetValues<DocumentType>())
+                            {
+                                <option value="@journalVoucherType" selected="@(journalVoucherType == DocumentType.Undocumented)">@journalVoucherType.ToString()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="TransactionDate"
+                               type="month"
+                               class="form-control"
+                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
+                               min="@Model.MinDate.ToString("yyyy-MM")" />
+                        <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="References" type="text" class="form-control" placeholder="" />
+                        <span asp-validation-for="References" class="text-danger"></span>
+                        <label asp-for="References" class="control-label"></label>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">CV No.</label><span class="required">*</span>
+                        <select asp-for="CvId" asp-items="@Model.CvList" class="form-select js-select2 checkVoucher" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="CvId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="CrNo" type="text" class="form-control" placeholder="" />
+                        <label asp-for="CrNo" class="control-label">CR No.</label>
+                        <span asp-validation-for="CrNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
+                        <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Expense Account</label><span class="required">*</span>
+                        <select asp-for="SelectedExpenseAccount" class="form-select js-select2" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="SelectedExpenseAccount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Prepaid Account</label><span class="required">*</span>
+                        <select asp-for="SelectedPrepaidAccount" asp-items="@Model.PrepaidExpenseAccounts" class="form-select js-select2" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="SelectedPrepaidAccount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label"># of Months<span class="required">*</span></label>
+                        <select asp-for="NumberOfMonths" class="form-select js-select2" style="width:100%">
+                            <option value="">Select period</option>
+                            <option value="3">3 Months (Quarterly)</option>
+                            <option value="6">6 Months (Semi-Annual)</option>
+                            <option value="12" selected>12 Months (Annual)</option>
+                            <option value="24">24 Months (2 Years)</option>
+                            <option value="36">36 Months (3 Years)</option>
+                            <option value="60">60 Months (5 Years)</option>
+                        </select>
+                        <small class="text-muted" id="monthlyAmountHint"></small>
+                        <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8 tradeList">
+                    <div class="row pb-3 overflow-auto">
+
+                        <div class="table-responsive">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
+                                        <th colspan="1" class="text-end"><b>Date : </b></th>
+                                        <td id="date"></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="width:11%; padding-left:20px;">Name :</td>
+                                        <td id="name"></td>
+                                        <td style="width:50%;" colspan="2" class="text-nowrap">Other References:</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Address :</td>
+                                        <td id="address"></td>
+                                        <td style="width:6%;">PO # :</td>
+                                        <td id="poNo"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">TIN # :</td>
+                                        <td id="tinNo"></td>
+                                        <td>SI # :</td>
+                                        <td id="siNo"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;" class="text-nowrap"></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-responsive" style="margin-top:20px;">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="4" style="padding-left:20px;">II. CHECK DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="width:15%; padding-left:20px;">Payee :</td>
+                                        <td style="width:65%;" id="payee"></td>
+                                        <td class="text-end" id="amount"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;"></td>
+
+                                        <td class="w-25"></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Particulars :</td>
+                                        <td id="particulars"></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Check #:</td>
+                                        <td id="checkNo"></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-responsive" style="margin-top:20px;">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding-left:20px;"></td>
+                                        <th class="text-end">DEBIT</th>
+                                        <th class="text-end">CREDIT</th>
+                                    </tr>
+                                </tbody>
+                                <tbody id="tableBody"></tbody>
+                                <tbody>
+                                    <tr style="border-bottom:double;"></tr>
+                                    <tr>
+                                        <td class="text-end">TOTAL</td>
+                                        <td class="text-end" id="totalDebit"></td>
+                                        <td class="text-end" id="totalCredit"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
+                <br />
+                <div class="form-group table-responsive">
+                    <table class="table" style="min-width: 800px">
+                        <thead>
+                            <tr>
+                                <th class="w-50">Account No.</th>
+                                <th class="w-25">Debit</th>
+                                <th class="w-25">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountingEntriesBody">
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td class="text-end">TOTAL:</td>
+                                <td class="totalDebit">0.0000</td>
+                                <td class="totalCredit">0.0000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event)">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function updateTotalDebitAndCredit() {
+            var totalDebit = 0;
+            var totalCredit = 0;
+
+            // Loop through each row in the table body and sum up the debit values
+            $("#accountingEntriesBody tr").each(function () {
+                var debitInput = $(this).find("td:eq(1) input").val();
+                var creditInput = $(this).find("td:eq(2) input").val();
+
+                // Ensure debitInput and creditInput are strings before using replace
+                debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
+                creditInput = creditInput ? String(creditInput) : "";
+
+                var debit = parseNumber(debitInput);
+                var credit = parseNumber(creditInput);
+
+                totalDebit += debit;
+                totalCredit += credit;
+            });
+
+            // Display the total debit value
+            $(".totalDebit").text(formatNumberToFour(totalDebit));
+            $(".totalCredit").text(formatNumberToFour(totalCredit));
+            $("#debit").val("0.0000");
+            $("#credit").val("0.0000");
+
+            validateDebitAndCredit();
+        }
+
+        function cvDetails(cvId) {
+
+            if (!cvId) {
+                clearFields();
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetCV", "JournalVoucher", new { area = "Filpride" })',
+                method: "GET",
+                data: { id: cvId },
+                success: function (data) {
+                    let tableBody = $("#tableBody");
+                    tableBody.empty();
+
+                    if (data === null) {
+                        clearFields();
+                        return;
+                    }
+
+                    $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
+                    $("#name").text(data.name);
+                    $("#address").text(data.address);
+                    $("#tinNo").text(data.tinNo);
+                    $("#poNo").text(data.poNo);
+                    $("#siNo").text(data.siNo);
+                    $("#payee").text(data.payee);
+                    $("#amount").text(formatNumber(data.amount));
+                    $("#particulars").text(data.particulars);
+                    $("#checkNo").text(data.checkNo);
+                    $("#totalDebit").text(formatNumberToFour(data.totalDebit));
+                    $("#totalCredit").text(formatNumberToFour(data.totalCredit));
+
+                    for (let i = 0; i < data.accountNo.length; i++) {
+                        let row = $("<tr></tr>");
+                        let accountNumber = data.accountNo[i];
+                        let accountTitle = data.accountNo[i] + " " + data.accountName[i];
+                        let debit = formatNumberToFour(data.debit[i]);
+                        let credit = formatNumberToFour(data.credit[i]);
+
+                        row.append("<td style='width:60%; padding-left:20px;'>" + accountTitle + "</td>");
+                        row.append("<td class='text-end' style='width:7%;'>" + debit + "</td>");
+                        row.append("<td class='text-end' style='width:7%;'>" + credit + "</td>");
+                        tableBody.append(row);
+                    }
+
+                    // Inside your AJAX success callback, after the existing loop
+                    let expenseAccountDropdown = $("select[name='SelectedExpenseAccount']");
+                    expenseAccountDropdown.empty();
+                    expenseAccountDropdown.append("<option value=''></option>");
+
+                    for (let i = 0; i < data.accountNo.length; i++) {
+                        if (data.debit[i] > 0) {
+                            let accountTitle = data.accountNo[i] + " " + data.accountName[i];
+                            expenseAccountDropdown.append(
+                                `<option value="${data.accountNo[i]}" data-debit="${data.debit[i]}">${accountTitle}</option>`
+                            );
+                        }
+                    }
+
+                    expenseAccountDropdown.trigger("change.select2");
+
+                    updateTotalDebitAndCredit();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching cv:', error);
+                }
+            });
+        }
+
+        function clearFields() {
+            $("#date").text("");
+            $("#name").text("");
+            $("#address").text("");
+            $("#tinNo").text("");
+            $("#poNo").text("");
+            $("#siNo").text("");
+            $("#payee").text("");
+            $("#amount").text("");
+            $("#particulars").text("");
+            $("#checkNo").text("");
+            $("#totalDebit").text("");
+            $("#totalCredit").text("");
+            $("#tableBody").empty();
+            $("#accountingEntriesBody").empty();
+            $(".totalDebit, .totalCredit").text("0.0000");
+            $("#monthlyAmountHint").text("");
+            $("select[name='SelectedExpenseAccount']").empty().append("<option value=''></option>").trigger("change.select2");
+        }
+
+        function calculateAmortizationEntries() {
+            let accountingEntriesBody = $("#accountingEntriesBody");
+            var selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
+            var selectedCreditOption = $("select[name='SelectedPrepaidAccount'] option:selected");
+            var numberOfMonths = parseInt($("#NumberOfMonths").val());
+            var debitAmount = parseFloat(selectedDebitOption.data("debit"));
+            var monnthlyAmountHint = $("#monthlyAmountHint").text("");
+
+            if (!selectedDebitOption.val() || !selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) {
+                accountingEntriesBody.empty();
+                $(".totalDebit, .totalCredit").text("0.0000");
+                return;
+            }
+
+            var monthlyAmount = debitAmount / numberOfMonths;
+
+            monnthlyAmountHint.text(`Monthly amortization: ${formatNumber(monthlyAmount)} over ${numberOfMonths} month(s)`);
+
+            // Static AP Non-Trade Payable debit account
+            var debitAccountNo = selectedDebitOption.val();
+            var debitAccountTitle = selectedDebitOption.text();
+
+            var creditAccountNo = selectedCreditOption.val();
+            var creditAccountTitle = selectedCreditOption.text();
+
+            accountingEntriesBody.empty();
+
+            // Static debit row
+            accountingEntriesBody.append(`
+                <tr>
+                    <td>
+                        <input type='hidden' name='Details[0].AccountNo' value='${debitAccountNo}'/>
+                        <input type='text' name='Details[0].AccountTitle' value='${debitAccountTitle}' style='border:none' class='w-100' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[0].Credit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                </tr>
+            `);
+
+            // Credit row from selected expense account
+            accountingEntriesBody.append(`
+                <tr>
+                    <td>
+                        <input type='hidden' name='Details[1].AccountNo' value='${creditAccountNo}'/>
+                        <input type='text' name='Details[1].AccountTitle' value='${creditAccountTitle}' style='border:none' class='w-100' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[1].Debit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                    <td>
+                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                    </td>
+                </tr>
+            `);
+
+            updateTotalDebitAndCredit();
+        }
+
+        $(".checkVoucher").each(function () {
+            var cvId = $(this).val();
+            cvDetails(cvId);
+        });
+
+        $(".checkVoucher").change(function () {
+            var cvId = $(this).val();
+            cvDetails(cvId);
+        });
+
+        $("select[name='SelectedExpenseAccount']").on("change", function () {
+            calculateAmortizationEntries();
+        });
+
+        $("select[name='SelectedPrepaidAccount']").on("change", function () {
+            calculateAmortizationEntries();
+        });
+
+        $(document).on("change", "#NumberOfMonths", function () {
+            calculateAmortizationEntries();
+        });
+
+
+
+    </script>
+    <script>
+
+    </script>
+    <script>
+        function validateDebitAndCredit(event) {
+            var totalDebit = parseNumber($(".totalDebit").text());
+            var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
+
+            if (totalDebit !== totalCredit) {
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
+            }
+
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
+
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            if (!isValid && event) {
+                event.preventDefault();
+            }
+
+            return isValid;
+        }
+    </script>
+    <script>
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
+        });
+    </script>
+}

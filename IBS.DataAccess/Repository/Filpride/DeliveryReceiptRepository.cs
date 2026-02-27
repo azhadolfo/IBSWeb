@@ -36,7 +36,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .OrderByDescending(x => x.DeliveryReceiptNo.Length)
+                .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == companyClaims &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -50,7 +51,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastDr.DeliveryReceiptNo;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -60,7 +61,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.DeliveryReceiptNo)
+                .OrderByDescending(x => x.DeliveryReceiptNo.Length)
+                .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == companyClaims &&
                         x.Type == nameof(DocumentType.Undocumented) &&
@@ -74,7 +76,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastDr.DeliveryReceiptNo;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }

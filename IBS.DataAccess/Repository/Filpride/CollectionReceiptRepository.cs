@@ -1,14 +1,14 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -36,7 +36,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCr = await _db
                 .FilprideCollectionReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.CollectionReceiptNo)
+                .OrderByDescending(x => x.CollectionReceiptNo!.Length)
+                .ThenByDescending(x => x.CollectionReceiptNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -49,10 +50,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
@@ -60,7 +60,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastCr = await _db
                 .FilprideCollectionReceipts
                 .AsNoTracking()
-                .OrderByDescending(x => x.CollectionReceiptNo)
+                .OrderByDescending(x => x.CollectionReceiptNo!.Length)
+                .ThenByDescending(x => x.CollectionReceiptNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented),
@@ -73,10 +74,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastCr.CollectionReceiptNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public async Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, string company, CancellationToken cancellationToken = default)
@@ -424,8 +424,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.AddRangeAsync(crb, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
-            #endregion
-
+            #endregion Cash Receipt Book Recording
         }
 
         public async Task DepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default)
@@ -769,7 +768,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var reversalEntries = new List<FilprideGeneralLedgerBook>();
 
-            foreach (var originalEntry  in originalEntries)
+            foreach (var originalEntry in originalEntries)
             {
                 var reversalEntry = new FilprideGeneralLedgerBook
                 {
@@ -1065,7 +1064,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
-
         }
     }
 }

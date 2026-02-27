@@ -34,7 +34,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastPo = await _db
                 .FilpridePurchaseOrders
                 .AsNoTracking()
-                .OrderByDescending(x => x.PurchaseOrderNo)
+                .OrderByDescending(x => x.PurchaseOrderNo!.Length)
+                .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented) &&
@@ -48,7 +49,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastPo.PurchaseOrderNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
@@ -58,7 +59,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var lastPo = await _db
                 .FilpridePurchaseOrders
                 .AsNoTracking()
-                .OrderByDescending(x => x.PurchaseOrderNo)
+                .OrderByDescending(x => x.PurchaseOrderNo!.Length)
+                .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented) &&
@@ -72,7 +74,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastPo.PurchaseOrderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }

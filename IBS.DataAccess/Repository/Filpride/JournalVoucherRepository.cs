@@ -1,10 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using IBS.Models.Enums;
-using IBS.Models.Filpride.Books;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -17,22 +17,25 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, string? type, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string? type, int additionalIncrement = 0, CancellationToken cancellationToken = default)
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(additionalIncrement);
+
             return type switch
             {
-                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
-                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, additionalIncrement, cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, additionalIncrement, cancellationToken),
                 _ => throw new ArgumentException("Invalid type")
             };
         }
 
-        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(string company, int additionalIncrement, CancellationToken cancellationToken = default)
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.JournalVoucherHeaderNo)
+                .OrderByDescending(x => x.JournalVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.JournalVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Company == company &&
                     x.Type == nameof(DocumentType.Documented),
@@ -45,18 +48,18 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastJv.JournalVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(2);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1 + additionalIncrement;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-
         }
 
-        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForUnDocumented(string company, int additionalIncrement, CancellationToken cancellationToken = default)
         {
             var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .AsNoTracking()
-                .OrderByDescending(x => x.JournalVoucherHeaderNo)
+                .OrderByDescending(x => x.JournalVoucherHeaderNo!.Length)
+                .ThenByDescending(x => x.JournalVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Company == company &&
                         x.Type == nameof(DocumentType.Undocumented),
@@ -69,10 +72,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var lastSeries = lastJv.JournalVoucherHeaderNo!;
             var numericPart = lastSeries.Substring(3);
-            var incrementedNumber = int.Parse(numericPart) + 1;
+            var incrementedNumber = long.Parse(numericPart) + 1 + additionalIncrement;
 
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-
         }
 
         public override async Task<FilprideJournalVoucherHeader?> GetAsync(Expression<Func<FilprideJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)

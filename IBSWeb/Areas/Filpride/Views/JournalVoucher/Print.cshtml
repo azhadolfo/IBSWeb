@@ -98,7 +98,7 @@
             </tr>
             <tr>
                 <td><div>CATEGORY :</div></td>
-                <td><div>@Model.Header!.CheckVoucherHeader!.Category.ToUpper()</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader?.Category.ToUpper()</div></td>
                 <td></td>
                 <td></td>
             </tr>
@@ -110,25 +110,25 @@
             </tr>
             <tr>
                 <td><div>CV # :</div></td>
-                <td><div>@Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckVoucherHeaderNo)</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader?.CheckVoucherHeaderNo</div></td>
                 <td><div>CR # :</div> </td>
-                <td></td>
+                <td><div>@Model.Header!.CRNo?.ToUpper()</div></td>
             </tr>
             <tr>
                 <td><div>CHECK # :</div></td>
-                <td><div>@Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckNo)</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader?.CheckNo</div></td>
                 <td><div>AMOUNT :</div></td>
-                <td><div>@Model.Header.CheckVoucherHeader.Total.ToString(SD.Two_Decimal_Format)</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader?.Total.ToString(SD.Two_Decimal_Format)</div></td>
             </tr>
             <tr>
                 <td><div>CV DATE :</div></td>
-                <td><div>@Model.Header.CheckVoucherHeader.Date.ToString(SD.Date_Format)</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader?.Date.ToString(SD.Date_Format)</div></td>
                 <td><div>DATE :</div></td>
-                <td><div>@Model.Header.CheckVoucherHeader.CheckDate?.ToString(SD.Date_Format)</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader?.CheckDate?.ToString(SD.Date_Format)</div></td>
             </tr>
             <tr>
                 <td><div>PAYEE :</div></td>
-                <td><div>@Model.Header!.CheckVoucherHeader!.Payee!.ToUpper()</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader?.Payee?.ToUpper()</div></td>
                 <td><div>JV Reason :</div></td>
                 <td><div>@Model.Header!.JVReason.ToUpper()</div></td>
             </tr>
@@ -272,9 +272,21 @@
 @section Scripts {
     <script>
         function confirmPost(id) {
+            let jvType = "@Model.Header.JvType";
+            let isAmortization = "@Model.IsAmortization";
+            let message = "You won't be able to revert this!";
+            
+            if (jvType === "@JvType.Accrual") {
+                message = "This journal voucher will be automatically reversed in the following month. " + message;
+            }
+
+            if (jvType === "@JvType.Amortization" && isAmortization.toLowerCase() === "true") {
+                message = "This journal voucher will generate amortization schedules. " + message; 
+            }
+
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                text: message,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
