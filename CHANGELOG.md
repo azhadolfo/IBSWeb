@@ -6,6 +6,18 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.2.0] - 2026-02-28
+### Added
+- Added quick access feature.
+- Added new module for JV (Accrual, Amortization, and Reclass)
+- Added approval flow for CV invoice and JV.
+- Added unpost feature for JV.
+
+### Changed
+- Rename the prinout heading from "Invoicing" to "Invoicing / AP Voucher"
+
+---
+
 ## [v2.1.2] - 2026-02-20
 ### Fixed
 - Fixed CV payment showing not accurate payable amount.
