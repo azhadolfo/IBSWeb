@@ -18,6 +18,13 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
+
+    var jvType = Model.Header!.JvType;
+
+    var isApprover =
+        User.IsInRole("Admin") ||
+        (User.IsInRole("AccountingManager") && jvType == nameof(JvType.Liquidation)) ||
+        User.IsInRole("ManagementAccountingManager");
 }
 
 <style>
@@ -250,11 +257,9 @@
 }
 <div class="row pt-2">
     @{
-        var isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager");
-
         if (Model.Header.Status == nameof(JvStatus.ForApproval))
         {
-            if (isAdminOrManager)
+            if (isApprover)
             {
                 <div class="col-6 col-md-3">
                     <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.JournalVoucherHeaderId)">Approve</a>
@@ -286,7 +291,7 @@
 @section Scripts {
     <script>
         function confirmPost(id) {
-            let jvType = "@Model.Header.JvType";
+            let jvType = "@jvType";
             let isAmortization = "@Model.IsAmortization";
             let message = "You won't be able to revert this!";
             

@@ -2708,6 +2708,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Print), new { id });
             }
 
+            var isApprover =
+                User.IsInRole("Admin") ||
+                (User.IsInRole("AccountingManager") && model.JvType == nameof(JvType.Liquidation)) ||
+                User.IsInRole("ManagementAccountingManager");
+
+            if (!isApprover)
+            {
+                TempData["error"] = "You have no access to do this action.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
