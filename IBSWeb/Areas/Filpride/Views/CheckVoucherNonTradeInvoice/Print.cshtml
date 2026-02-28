@@ -513,7 +513,6 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     var url = `@Url.Action("Unpost", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${@supplierId}`;
-                    console.log(url);
                     window.location.href = url;                          
                 }
             })
