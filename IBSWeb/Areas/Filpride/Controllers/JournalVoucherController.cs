@@ -2642,5 +2642,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
         }
+
+        public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
+        {
+            var jvHeader = await _unitOfWork.FilprideJournalVoucher.GetAsync(jv => jv.JournalVoucherHeaderId == id, cancellationToken);
+
+            if (jvHeader == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.JournalVoucher, jvHeader.Date, cancellationToken))
+                {
+                    throw new ArgumentException($"Cannot unpost this record because the period {jvHeader.Date:MMM yyyy} is already closed.");
+                }
+
+                jvHeader.PostedBy = null;
+                jvHeader.PostedDate = null;
+                jvHeader.Status = nameof(Status.Pending);
+
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == jvHeader.JournalVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideJournalBook>(d => d.Reference == jvHeader.JournalVoucherHeaderNo, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted journal voucher# {jvHeader.JournalVoucherHeaderNo}", "Journal Voucher", jvHeader.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher has been unposted.";
+
+                return RedirectToAction(nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to unpost journal voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Unposted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Print), new { id });
+            }
+        }
     }
 }
