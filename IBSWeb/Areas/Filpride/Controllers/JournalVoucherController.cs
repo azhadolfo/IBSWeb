@@ -1495,7 +1495,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Saving the default entries
 
                 var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
-                var particulars = $"Accrual of '{viewModel.Details.First(d => d.Debit > 0).AccountTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
+                var expenseTitle = string.Join(" ", viewModel.Details.First(d => d.Debit > 0).AccountTitle.Split(' ').Skip(1));
+                var particulars = $"Accrual of '{expenseTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
                     Type = viewModel.Type,
@@ -1701,7 +1702,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var particulars = $"Accrual of '{viewModel.Details.First(d => d.Debit > 0).AccountTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
+                var expenseTitle = string.Join(" ", viewModel.Details.First(d => d.Debit > 0).AccountTitle.Split(' ').Skip(1));
+                var particulars = $"Accrual of '{expenseTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
 
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.References = viewModel.References;
@@ -1909,8 +1911,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var endingMonth = startingMonth.AddMonths(viewModel.NumberOfMonths - 1);
                 var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
                 var prepaidAccount = viewModel.Details.First(d => d.Credit > 0).AccountTitle;
+                var expenseTitle = string.Join(" ", expenseAccount.Split(' ').Skip(1));
 
-                var particulars = $"Amortization of '{expenseAccount.Split(" ")[1]}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
+                var particulars = $"Amortization of '{expenseTitle}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
                     Type = viewModel.Type,
@@ -2168,8 +2171,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var endingMonth = startingMonth.AddMonths(viewModel.NumberOfMonths - 1);
                 var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
                 var prepaidAccount = viewModel.Details.First(d => d.Credit > 0).AccountTitle;
+                var expenseTitle = string.Join(" ", expenseAccount.Split(' ').Skip(1));
 
-                var particulars = $"Amortization of '{expenseAccount.Split(" ")[1]}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
+                var particulars = $"Amortization of '{expenseTitle}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
 
                 existingHeaderModel.Date = viewModel.TransactionDate;
                 existingHeaderModel.References = viewModel.References;
