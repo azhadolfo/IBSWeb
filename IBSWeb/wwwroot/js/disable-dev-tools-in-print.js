@@ -1,57 +1,57 @@
-document.addEventListener("keydown", function (event) {
-    // Disable Ctrl+P (Print)
-    if (event.ctrlKey && event.key.toLowerCase() === "p") {
-        event.preventDefault();
-    }
+//document.addEventListener("keydown", function (event) {
+//    // Disable Ctrl+P (Print)
+//    if (event.ctrlKey && event.key.toLowerCase() === "p") {
+//        event.preventDefault();
+//    }
 
-    // Disable F12
-    if (event.key === "F12" || event.keyCode === 123) {
-        event.preventDefault();
-    }
+//    // Disable F12
+//    if (event.key === "F12" || event.keyCode === 123) {
+//        event.preventDefault();
+//    }
 
-    // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-    if (event.ctrlKey && event.shiftKey) {
-        const key = event.key.toUpperCase();
-        if (["I", "J", "C"].includes(key)) {
-            event.preventDefault();
-        }
-    }
+//    // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+//    if (event.ctrlKey && event.shiftKey) {
+//        const key = event.key.toUpperCase();
+//        if (["I", "J", "C"].includes(key)) {
+//            event.preventDefault();
+//        }
+//    }
 
-    // Disable Ctrl+U (View Source)
-    if (event.ctrlKey && event.key.toLowerCase() === "u") {
-        event.preventDefault();
-    }
-});
+//    // Disable Ctrl+U (View Source)
+//    if (event.ctrlKey && event.key.toLowerCase() === "u") {
+//        event.preventDefault();
+//    }
+//});
 
-document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-});
+//document.addEventListener("contextmenu", function (e) {
+//    e.preventDefault();
+//});
 
-$(document).ready(function () {
-    let devtoolsOpen = false;
-    const originalContent = document.body.innerHTML;
+//$(document).ready(function () {
+//    let devtoolsOpen = false;
+//    const originalContent = document.body.innerHTML;
 
-    function detectDevTools() {
-        const threshold = 160;
-        return (
-            window.outerWidth - window.innerWidth > threshold ||
-            window.outerHeight - window.innerHeight > threshold
-        );
-    }
+//    function detectDevTools() {
+//        const threshold = 160;
+//        return (
+//            window.outerWidth - window.innerWidth > threshold ||
+//            window.outerHeight - window.innerHeight > threshold
+//        );
+//    }
 
-    function checkDevTools() {
-        if (detectDevTools()) {
-            if (!devtoolsOpen) {
-                devtoolsOpen = true;
-                document.body.innerHTML = '';
-            }
-        } else {
-            if (devtoolsOpen) {
-                devtoolsOpen = false;
-                document.body.innerHTML = originalContent;
-            }
-        }
-    }
+//    function checkDevTools() {
+//        if (detectDevTools()) {
+//            if (!devtoolsOpen) {
+//                devtoolsOpen = true;
+//                document.body.innerHTML = '';
+//            }
+//        } else {
+//            if (devtoolsOpen) {
+//                devtoolsOpen = false;
+//                document.body.innerHTML = originalContent;
+//            }
+//        }
+//    }
 
-    setInterval(checkDevTools, 500);
-});
+//    setInterval(checkDevTools, 500);
+//});

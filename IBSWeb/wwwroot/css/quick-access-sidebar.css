@@ -2,27 +2,6 @@
    Quick Access Sidebar
    ========================================================= */
 
-/* Toggle - full height strip flush to left edge */
-#qa-toggle-btn {
-    position: fixed;
-    top: 72px;
-    left: 0;
-    z-index: 1051;
-    width: 14px;
-    height: calc(100vh - 72px);
-    background: linear-gradient(to right, rgba(160,160,160,0.2), rgba(160,160,160,0.04));
-    border: none;
-    border-right: 1px solid rgba(0,0,0,0.07);
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.2s;
-    user-select: none;
-}
-
-#qa-toggle-btn:hover {
-    background: linear-gradient(to right, rgba(160,160,160,0.35), rgba(160,160,160,0.1));
-}
-
 /* Panel */
 #qa-panel {
     position: fixed;
@@ -43,12 +22,12 @@
     transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-#qa-panel.qa-hidden {
-    transform: translateX(-280px);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.25s ease, opacity 0.15s ease;
-}
+    #qa-panel.qa-hidden {
+        transform: translateX(-280px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.25s ease, opacity 0.15s ease;
+    }
 
 /* Panel header */
 .qa-panel-header {
@@ -60,13 +39,13 @@
     flex-shrink: 0;
 }
 
-.qa-panel-header span {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
+    .qa-panel-header span {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
 
 /* Close button - sits inline in the header */
 #qa-close-btn {
@@ -86,9 +65,9 @@
     padding: 0;
 }
 
-#qa-close-btn:hover {
-    background: rgba(255,255,255,0.3);
-}
+    #qa-close-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
 
 /* Search */
 .qa-search-wrap {
@@ -97,19 +76,19 @@
     flex-shrink: 0;
 }
 
-.qa-search-wrap input {
-    width: 100%;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.82rem;
-    outline: none;
-}
+    .qa-search-wrap input {
+        width: 100%;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.82rem;
+        outline: none;
+    }
 
-.qa-search-wrap input:focus {
-    border-color: #3A595C;
-    box-shadow: 0 0 0 2px rgba(58,89,92,0.15);
-}
+        .qa-search-wrap input:focus {
+            border-color: #3A595C;
+            box-shadow: 0 0 0 2px rgba(58,89,92,0.15);
+        }
 
 /* Scrollable list area */
 .qa-list-area {
@@ -198,9 +177,9 @@
     transition: color 0.15s;
 }
 
-.qa-clear-btn:hover {
-    color: #dc3545;
-}
+    .qa-clear-btn:hover {
+        color: #dc3545;
+    }
 
 /* Empty state */
 .qa-empty {
