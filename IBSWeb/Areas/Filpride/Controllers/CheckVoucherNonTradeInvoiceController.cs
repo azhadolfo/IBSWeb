@@ -1,14 +1,9 @@
-using System.Diagnostics;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -19,8 +14,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -492,7 +487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -509,7 +504,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -526,7 +521,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -543,7 +538,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -587,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
         }
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,AccountingManager")]
@@ -621,6 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
+
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Approved.";
@@ -934,7 +930,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtOnePercentAmount,
                         Amount = ewtOnePercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -951,7 +947,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtTwoPercentAmount,
                         Amount = ewtTwoPercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -968,7 +964,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtFivePercentAmount,
                         Amount = ewtFivePercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -985,7 +981,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = ewtTenPercentAmount,
                         Amount = ewtTenPercentAmount,
                         SubAccountType = SubAccountType.Supplier,
-                        SubAccountId =  bir!.SupplierId,
+                        SubAccountId = bir!.SupplierId,
                         SubAccountName = bir.SupplierName,
                     });
                 }
@@ -1101,8 +1097,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
@@ -1128,7 +1122,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id, supplierId });
                 }
 
                 modelHeader.PostedBy = GetUserFullName();
@@ -1247,9 +1242,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
+
+        public async Task<IActionResult> Unpost(int id, int? supplierId, CancellationToken cancellationToken)
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -1257,27 +1251,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var cvHeader = await _dbContext.FilprideCheckVoucherHeaders
                     .Include(cv => cv.Details)
-                    .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-
-                if (cvHeader == null)
-                {
-                    throw new NullReferenceException("CV Header not found.");
-                }
+                    .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken)
+                    ?? throw new NullReferenceException("CV Header not found.");
 
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
-                }
-
-                var userName = _userManager.GetUserName(this.User);
-                if (userName == null)
-                {
-                    throw new NullReferenceException("User not found.");
+                    TempData["error"] = $"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id, supplierId });
                 }
 
                 if (cvHeader.Details!.Any(x => x.AmountPaid != 0) || cvHeader.AmountPaid != 0m)
                 {
-                    throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
+                    TempData["error"] = "Payment for this invoice already exists, CV cannot be unposted.";
+                    return RedirectToAction(nameof(Print), new { id, supplierId });
                 }
 
                 cvHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
@@ -1297,7 +1283,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Unposted.";
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Print), new { id, supplierId });
             }
             catch (Exception ex)
             {
@@ -1308,9 +1294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-        
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var cv = await _unitOfWork.FilprideCheckVoucher

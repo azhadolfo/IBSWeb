@@ -7,7 +7,6 @@ namespace IBS.Models.Enums
         Paid,
         Canceled,
         Voided,
-
         ForApproval
     }
 }

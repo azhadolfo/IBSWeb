@@ -18,6 +18,13 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
+
+    var jvType = Model.Header!.JvType;
+
+    var isApprover =
+        User.IsInRole("Admin") ||
+        (User.IsInRole("AccountingManager") && jvType == nameof(JvType.Liquidation)) ||
+        User.IsInRole("ManagementAccountingManager");
 }
 
 <style>
@@ -250,7 +257,16 @@
 }
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.Header.Status == nameof(JvStatus.ForApproval))
+        {
+            if (isApprover)
+            {
+                <div class="col-6 col-md-3">
+                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.JournalVoucherHeaderId)">Approve</a>
+                </div>
+            }
+        }
+        else if (Model.Header.Status == nameof(JvStatus.Pending))
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.JournalVoucherHeaderId)">Post</a>
@@ -260,6 +276,9 @@
         {
             <div class="col-6 col-md-3">
                 <a onclick="confirmPrint(@Model.Header.JournalVoucherHeaderId)" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a class="btn btn-secondary form-control buttons" onclick="confirmUnpost(@Model.Header.JournalVoucherHeaderId)">Unpost</a>
             </div>
         }
     }
@@ -272,7 +291,7 @@
 @section Scripts {
     <script>
         function confirmPost(id) {
-            let jvType = "@Model.Header.JvType";
+            let jvType = "@jvType";
             let isAmortization = "@Model.IsAmortization";
             let message = "You won't be able to revert this!";
             
@@ -294,8 +313,41 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
                     var url = `@Url.Action("Post", "JournalVoucher", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+
+        function confirmUnpost(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will revert its status to Pending",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = `@Url.Action("Unpost", "JournalVoucher", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+
+        function confirmApprove(id) {
+            Swal.fire({
+                title: 'Approve this record?',
+                text: "This will mark the journal voucher as Pending.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = `@Url.Action("Approve", "JournalVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
