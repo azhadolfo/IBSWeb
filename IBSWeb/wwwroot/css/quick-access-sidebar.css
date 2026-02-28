@@ -2,6 +2,11 @@
    Quick Access Sidebar
    ========================================================= */
 
+/* Toggle */
+#qa-toggle-btn {
+    display: none !important;
+}
+
 /* Panel */
 #qa-panel {
     position: fixed;
