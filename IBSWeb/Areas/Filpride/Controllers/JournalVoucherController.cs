@@ -451,7 +451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.PostedBy = null;
                 model.VoidedBy = GetUserFullName();
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Voided);
+                model.Status = nameof(JvStatus.Voided);
 
                 await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo, cancellationToken);
                 await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo, cancellationToken);
@@ -500,7 +500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.CanceledBy = GetUserFullName();
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Canceled);
+                model.Status = nameof(JvStatus.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
 
                 #region --Audit Trail Recording
@@ -1713,6 +1713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.JVReason = viewModel.Reason;
                 existingHeaderModel.EditedBy = GetUserFullName();
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Status = nameof(JvStatus.ForApproval);
 
                 #endregion --Saving the default entries
 
@@ -2663,7 +2664,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 jvHeader.PostedBy = null;
                 jvHeader.PostedDate = null;
-                jvHeader.Status = nameof(Status.Pending);
+                jvHeader.Status = nameof(JvStatus.Pending);
 
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == jvHeader.JournalVoucherHeaderNo, cancellationToken);
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideJournalBook>(d => d.Reference == jvHeader.JournalVoucherHeaderNo, cancellationToken);
@@ -2687,6 +2688,53 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Print), new { id });
+            }
+        }
+
+        [Authorize(Roles = "Admin,AccountingManager,ManagementAccountingManager")]
+        public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideJournalVoucher
+                .GetAsync(cv => cv.JournalVoucherHeaderId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            if (model.Status != nameof(JvStatus.ForApproval))
+            {
+                TempData["error"] = "This record is not pending for approval.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.ApprovedBy = GetUserFullName();
+                model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(JvStatus.Pending);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher has been Approved.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to approve journal voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
     }

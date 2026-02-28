@@ -250,7 +250,18 @@
 }
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        var isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager");
+
+        if (Model.Header.Status == nameof(JvStatus.ForApproval))
+        {
+            if (isAdminOrManager)
+            {
+                <div class="col-6 col-md-3">
+                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.JournalVoucherHeaderId)">Approve</a>
+                </div>
+            }
+        }
+        else if (Model.Header.Status == nameof(JvStatus.Pending))
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.JournalVoucherHeaderId)">Post</a>
@@ -297,7 +308,6 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
                     var url = `@Url.Action("Post", "JournalVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
@@ -316,6 +326,23 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     var url = `@Url.Action("Unpost", "JournalVoucher", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+
+        function confirmApprove(id) {
+            Swal.fire({
+                title: 'Approve this record?',
+                text: "This will mark the invoice as Pending.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = `@Url.Action("Approve", "JournalVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

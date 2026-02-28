@@ -16,4 +16,13 @@ namespace IBS.Models.Enums
         Quarterly,
         Annually
     }
+
+    public enum JvStatus
+    {
+        Pending,
+        ForApproval,
+        Posted,
+        Canceled,
+        Voided,
+    }
 }

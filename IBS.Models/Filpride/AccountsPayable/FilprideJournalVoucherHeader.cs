@@ -1,3 +1,4 @@
+using IBS.Models.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -74,7 +75,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsPrinted { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = nameof(Enums.Status.Pending);
+        public string Status { get; set; } = nameof(JvStatus.ForApproval);
 
         [StringLength(13)]
         public string? Type { get; set; }
@@ -82,5 +83,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         public ICollection<FilprideJournalVoucherDetail>? Details { get; set; }
 
         public string JvType { get; set; } = string.Empty;
+
+        public string? ApprovedBy { get; set; }
+
+        [Column(TypeName = "timestamp without time zone")]
+        public DateTime? ApprovedDate { get; set; }
     }
 }
