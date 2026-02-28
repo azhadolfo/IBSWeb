@@ -20,7 +20,14 @@
     }
 }
 
-<link href="~/css/print.css" rel="stylesheet" />
+<style>
+    @@media print {
+        /* Reduce spacing for compact layout */
+        .compact-section {
+            margin-top: 10px !important;
+        }
+    }
+</style>
 
 <br class="br-top" />
 <table class="w-100 mb-2">
