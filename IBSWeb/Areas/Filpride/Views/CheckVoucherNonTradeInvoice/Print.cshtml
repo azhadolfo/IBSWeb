@@ -430,14 +430,12 @@
 
         if (Model.Header!.Status == nameof(CheckVoucherInvoiceStatus.ForApproval))
         {
-            // Only Admin/Manager can approve
             if (isAdminOrManager)
             {
                 <div class="col-6 col-md-3">
                     <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.CheckVoucherHeaderId)">Approve</a>
                 </div>
             }
-            // Everyone else sees only Back to List
         }
         else if (Model.Header.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
         {
