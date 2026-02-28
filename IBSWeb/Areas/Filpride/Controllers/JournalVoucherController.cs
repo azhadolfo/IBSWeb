@@ -1494,12 +1494,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, cv.Type, cancellationToken: cancellationToken);
                 var expenseTitle = string.Join(" ", viewModel.Details.First(d => d.Debit > 0).AccountTitle.Split(' ').Skip(1));
                 var particulars = $"Accrual of '{expenseTitle}' for the month of {viewModel.TransactionDate:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
-                    Type = viewModel.Type,
+                    Type = cv.Type,
                     JournalVoucherHeaderNo = generateJvNo,
                     Date = viewModel.TransactionDate,
                     References = viewModel.References,
@@ -1906,7 +1906,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken: cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, cv.Type, cancellationToken: cancellationToken);
                 var startingMonth = new DateOnly(viewModel.TransactionDate.Year, viewModel.TransactionDate.Month, 1);
                 var endingMonth = startingMonth.AddMonths(viewModel.NumberOfMonths - 1);
                 var expenseAccount = viewModel.Details.First(d => d.Debit > 0).AccountTitle;
@@ -1916,7 +1916,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var particulars = $"Amortization of '{expenseTitle}' from {startingMonth:MMM yyyy} to {endingMonth:MMM yyyy}.";
                 var model = new FilprideJournalVoucherHeader
                 {
-                    Type = viewModel.Type,
+                    Type = cv.Type,
                     JournalVoucherHeaderNo = generateJvNo,
                     Date = viewModel.TransactionDate,
                     References = viewModel.References,
