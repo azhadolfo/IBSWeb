@@ -250,7 +250,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 modelHeader.PostedBy = GetUserFullName();
@@ -502,7 +503,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 cvHeader.PostedBy = null;
