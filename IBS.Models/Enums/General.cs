@@ -50,7 +50,6 @@ namespace IBS.Models.Enums
         Voided,
         Canceled,
         Closed,
-        ForApprovalOfOM
     }
 
     public enum DRStatus
@@ -130,5 +129,4 @@ namespace IBS.Models.Enums
         BankAccount = 4,
         Company = 5
     }
-
 }

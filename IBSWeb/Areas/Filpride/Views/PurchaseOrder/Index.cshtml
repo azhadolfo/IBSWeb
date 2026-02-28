@@ -300,7 +300,7 @@
                         var dropdownContent = '';
                         const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
 
-                        if (row.status === "@nameof(Status.ForApprovalOfOM)") {
+                        if (row.status === "@nameof(CosStatus.ForApprovalOfOM)") {
                             // Show only the "Preview" option when status is "ForApprovalOfOM"
                             dropdownContent = `
                                 <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Preview</a></li>

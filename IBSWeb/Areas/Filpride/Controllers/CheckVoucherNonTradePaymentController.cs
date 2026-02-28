@@ -250,7 +250,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 modelHeader.PostedBy = GetUserFullName();
@@ -493,14 +494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (cvHeader == null)
             {
-                throw new NullReferenceException("CV Header not found.");
-            }
-
-            var userName = _userManager.GetUserName(this.User);
-
-            if (userName == null)
-            {
-                throw new NullReferenceException("User not found.");
+                return NotFound();
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -509,10 +503,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 cvHeader.PostedBy = null;
+                cvHeader.PostedDate = null;
                 cvHeader.Status = nameof(CheckVoucherPaymentStatus.ForPosting);
 
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo, cancellationToken);
@@ -539,13 +535,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Check Voucher has been Unposted.";
+                TempData["success"] = "Check Voucher has been unposted.";
 
                 return RedirectToAction(nameof(Print), new { id });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to unpost check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                _logger.LogError(ex, "Failed to unpost check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Unposted by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
@@ -1510,7 +1506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var availableCVs = await _dbContext.FilprideCheckVoucherDetails
                     .Include(cvd => cvd.CheckVoucherHeader)
-                    .Where(cvd => cvd.SubAccountId == supplierId && 
+                    .Where(cvd => cvd.SubAccountId == supplierId &&
                                 cvd.CheckVoucherHeader!.PostedBy != null &&
                                 cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
                                 cvd.CheckVoucherHeader.Company == companyClaims &&

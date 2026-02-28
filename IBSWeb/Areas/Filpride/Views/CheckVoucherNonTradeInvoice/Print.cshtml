@@ -12,6 +12,7 @@
 @{
     ViewData["Title"] = "Check Voucher Non-Trade Invoice - Preview";
     var supplier = Model.Supplier ?? Model.Header!.Supplier!;
+    var supplierId = supplier.SupplierId;
         
     var selectedCompany = string.Empty;
 
@@ -429,14 +430,12 @@
 
         if (Model.Header!.Status == nameof(CheckVoucherInvoiceStatus.ForApproval))
         {
-            // Only Admin/Manager can approve
             if (isAdminOrManager)
             {
                 <div class="col-6 col-md-3">
-                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.CheckVoucherHeaderId, @(supplier?.SupplierId ?? 0))">Approve</a>
+                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.Header.CheckVoucherHeaderId)">Approve</a>
                 </div>
             }
-            // Everyone else sees only Back to List
         }
         else if (Model.Header.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
         {
@@ -447,12 +446,13 @@
         else if (Model.Header.PostedBy != null)
         {
             <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplier?.SupplierId)" class="btn btn-primary form-control buttons">Print</a>
+                <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
-            if (isAdminOrManager && !Model.Header!.IsPaid)
+
+            if (Model.Header!.AmountPaid == 0)
             {
                 <div class="col-6 col-md-3">
-                    <a class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
+                    <a class="btn btn-secondary form-control buttons" onclick="confirmUnpost(@Model.Header!.CheckVoucherHeaderId)">Unpost</a>
                 </div>
             }
         }
@@ -465,7 +465,7 @@
 
 @section Scripts {
     <script>
-        function confirmApprove(id, supplierId) {
+        function confirmApprove(id) {
             Swal.fire({
                 title: 'Approve this invoice?',
                 text: "This will mark the invoice as For Posting.",
@@ -476,20 +476,8 @@
                 confirmButtonText: 'Approve'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("Approve", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'POST',
-                        data: { id: id, supplierId: supplierId },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() {
-                            Swal.fire('Success', 'Invoice approved successfully.', 'success').then(() => {
-                                window.location.reload();
-                            });
-                        },
-                        error: function() {
-                            Swal.fire('Error', 'Something went wrong.', 'error');
-                        }
-                    });
+                    var url = `@Url.Action("Approve", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${@supplierId}`;
+                    window.location.href = url;
                 }
             })
         }
@@ -506,18 +494,8 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("Post", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'POST',
-                        data: { id: id, supplierId: @(supplier?.SupplierId ?? 0) },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { 
-                            Swal.fire('Success', 'Invoice posted successfully.', 'success').then(() => {
-                                window.location.reload();
-                            });
-                         },
-                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
-                    });
+                    var url = `@Url.Action("Post", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${@supplierId}`;
+                    window.location.href = url;
                 }
             })
         }
@@ -534,18 +512,8 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("Unpost", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'POST',
-                        data: { id: id },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function() { 
-                            Swal.fire('Success', 'Invoice unposted successfully.', 'success').then(() => {
-                                window.location.reload();
-                            });
-                         },
-                        error: function() { Swal.fire('Error', 'Something went wrong.', 'error'); }
-                    });
+                    var url = `@Url.Action("Unpost", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${@supplierId}`;
+                    window.location.href = url;                          
                 }
             })
         }
@@ -554,7 +522,7 @@
     @if (Model.Header?.Type == nameof(DocumentType.Documented) && !Model.Header.IsPrinted)
     {
         <script>
-            function confirmPrint(id, supplierId)
+            function confirmPrint(id)
             {
                 Swal.fire({
                     title: 'Are you sure?',
@@ -571,7 +539,7 @@
                         const afterPrintHandler  = () =>
                         {
                             window.removeEventListener('afterprint', afterPrintHandler);
-                            controllerThenPrint(id, supplierId);
+                            controllerThenPrint(id);
                         };
                         window.addEventListener('afterprint', afterPrintHandler);
 
@@ -585,11 +553,11 @@
     else
     {
         <script>
-            function confirmPrint(id, supplierId)
+            function confirmPrint(id)
             {
                 const afterPrintHandler = () => {
                     window.removeEventListener('afterprint', afterPrintHandler);
-                    controllerThenPrint(id, supplierId);
+                    controllerThenPrint(id);
                 };
                 window.addEventListener('afterprint', afterPrintHandler);
 
@@ -598,8 +566,8 @@
         </script>
     }
     <script>
-        function controllerThenPrint(id, supplierId) {
-            var url = `@Url.Action("Printed", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${supplierId}`;
+        function controllerThenPrint(id) {
+            var url = `@Url.Action("Printed", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&supplierId=${@supplierId}`;
             window.location.href = url;
         }
     </script>

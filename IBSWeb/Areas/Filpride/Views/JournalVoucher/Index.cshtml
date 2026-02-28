@@ -152,9 +152,10 @@
                      {
                         "data": "status",
                         "render": function(data, type, row) {
-                            var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                              row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
-                                              row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var statusClass = row.status === "@nameof(JvStatus.Posted)" ? "bg-info" :
+                                             row.status === "@nameof(JvStatus.Voided)"  ? "bg-danger" :
+                                             row.status === "@nameof(JvStatus.ForApproval)"  ? "bg-secondary" :
+                                             row.status === "@nameof(JvStatus.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }

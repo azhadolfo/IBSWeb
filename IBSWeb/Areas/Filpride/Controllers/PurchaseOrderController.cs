@@ -1,5 +1,3 @@
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -18,6 +16,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -121,7 +121,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!string.IsNullOrEmpty(filterTypeClaim))
                 {
                     purchaseOrders = purchaseOrders
-                        .Where(po => po.Status == nameof(Status.ForApprovalOfOM))
+                        .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM))
                         .ToList();
                 }
 
@@ -129,9 +129,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     switch (filterTypeClaim)
                     {
-                        case nameof(Status.ForApprovalOfOM):
+                        case nameof(CosStatus.ForApprovalOfOM):
                             purchaseOrders = purchaseOrders
-                                .Where(rr => rr.Status == nameof(Status.ForApprovalOfOM))
+                                .Where(rr => rr.Status == nameof(CosStatus.ForApprovalOfOM))
                                 .ToList();
                             break;
                             // Add other cases as needed
@@ -346,7 +346,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
         }
-
 
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
@@ -567,7 +566,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to post purchase order. Error: {ErrorMessage}", ex.Message);
                 return RedirectToAction(nameof(Print), new { id });
             }
-
         }
 
         [Authorize(Roles = "Admin")]
@@ -702,6 +700,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         //Download as .xlsx file.(Export)
+
         #region -- export xlsx record --
 
         [HttpPost]
@@ -854,10 +853,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                existingRecord.Status = nameof(Status.ForApprovalOfOM);
+                existingRecord.Status = nameof(CosStatus.ForApprovalOfOM);
 
                 await _dbContext.FilpridePOActualPrices.AddAsync(actualPrice, cancellationToken);
-                #endregion
+
+                #endregion Notification
 
                 #region --Audit Trail Recording
 
@@ -914,7 +914,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
 
-                existingRecord.FinalPrice =  actualPrices.TriggeredPrice;
+                existingRecord.FinalPrice = actualPrices.TriggeredPrice;
                 existingRecord.Status = nameof(Status.Posted);
 
                 #region --Audit Trail Recording
@@ -959,7 +959,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> ProcessProductTransfer(int purchaseOrderId, int pickupPointId, string notes, CancellationToken cancellationToken)
         {
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -996,7 +995,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return Json(new { success = false, message = TempData["error"] });
             }
-
         }
 
         [HttpPost]
