@@ -127,6 +127,7 @@ namespace IBS.Services
                         CreatedBy = "SYSTEM",
                         Company = sourceJv.Company,
                         JvType = nameof(JvType.Amortization),
+                        Status = nameof(JvStatus.Pending),
                         Details = new List<FilprideJournalVoucherDetail>()
                     };
 
