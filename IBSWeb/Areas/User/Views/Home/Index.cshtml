@@ -280,6 +280,57 @@
                         </div>
                     </div>
                 }
+
+                @* Accounting - For Approval Cards (Filpride/Mobility with Accounting role) *@
+                if ((selectedCompany == "Filpride" || selectedCompany == "Mobility" && selectedStation == "S00") 
+                    && (User.IsInRole("Admin") || User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager")))
+                {
+                    <div class="mt-5">
+                        <h2 class="fw-semibold text-secondary mb-4">Accounting</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-receipt me-2 text-primary"></i>CV Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-file-earmark-text me-2 text-primary"></i>JV Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.JournalVoucherForApprovalCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            
+
+                            @* <div class="col-md-4">
+                                <a href="@Url.Action("Index", "CheckVoucherNonTradePayrollInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-cash-stack me-2 text-primary"></i>CV Payroll for Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.CheckVoucherNonTradePayrollInvoiceForApprovalCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div> *@
+                        </div>
+                    </div>
+                }
             }
         </div>
     </div>

@@ -1,5 +1,3 @@
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -15,6 +13,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -144,7 +144,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         si.VoidedBy,
                         si.CanceledBy,
                         si.PaymentStatus,
-
                     })
                     .ToList();
 
@@ -200,7 +199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                viewModel.MinDate =  await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -338,11 +337,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
-                if (await _unitOfWork.IsPeriodPostedAsync(Module.ReceivingReport, existingModel.TransactionDate, cancellationToken))
+                if (await _unitOfWork.IsPeriodPostedAsync(Module.SalesInvoice, existingModel.TransactionDate, cancellationToken))
                 {
                     throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
                 }
-
 
                 var viewModel = new SalesInvoiceViewModel
                 {
@@ -725,7 +723,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Remarks = $"Customer PO# {dr.CustomerOrderSlip!.CustomerPoNo}" +
                           (!dr.Customer!.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
             });
-
         }
 
         [HttpPost]
