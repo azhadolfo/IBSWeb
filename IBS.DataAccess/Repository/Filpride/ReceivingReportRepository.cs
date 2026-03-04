@@ -111,28 +111,23 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.FilpridePurchaseOrders
-                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+                         .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken)
+                     ?? throw new ArgumentException("No record found.");
 
-            if (po != null)
+            var updatedQty = po.QuantityReceived + quantityReceived;
+            if (updatedQty > po.Quantity)
             {
-                po.QuantityReceived += quantityReceived;
-
-                if (po.QuantityReceived == po.Quantity)
-                {
-                    po.IsReceived = true;
-                    po.ReceivedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
-                if (po.QuantityReceived > po.Quantity)
-                {
-                    throw new ArgumentException("Input is exceed to remaining quantity received");
-                }
+                throw new ArgumentException("Input is exceed to remaining quantity received");
             }
-            else
+
+            po.QuantityReceived = updatedQty;
+            po.IsReceived = po.QuantityReceived == po.Quantity;
+            if (po.IsReceived)
             {
-                throw new ArgumentException("No record found.");
+                po.ReceivedDate = DateTimeHelper.GetCurrentPhilippineTime();
             }
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public override async Task<FilprideReceivingReport?> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
