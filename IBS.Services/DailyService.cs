@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +10,7 @@ using Quartz;
 
 namespace IBS.Services
 {
+    [DisallowConcurrentExecution]
     public class DailyService : IJob
     {
         private readonly ApplicationDbContext _dbContext;
@@ -41,7 +41,6 @@ namespace IBS.Services
                 await CosExpiration(today);
 
                 await transaction.CommitAsync();
-
             }
             catch (Exception ex)
             {

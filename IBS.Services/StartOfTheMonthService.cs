@@ -10,6 +10,7 @@ using Quartz;
 
 namespace IBS.Services
 {
+    [DisallowConcurrentExecution]
     public class StartOfTheMonthService : IJob
     {
         private readonly IUnitOfWork _unitOfWork;
