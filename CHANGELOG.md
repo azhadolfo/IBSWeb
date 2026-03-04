@@ -6,6 +6,16 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v2.3.0] - 2026-03-04
+### Added
+- Added a navigation feature to provide an overview of tasks pending approval for CV and JV.
+
+### Changed
+- Implement enhanced amortization functionality to automatically generate a new JV each month.
+- Remove the approval requirement for CV Invoice Payroll processing.
+
+---
+
 ## [v2.2.0] - 2026-02-28
 ### Added
 - Added quick access feature.
