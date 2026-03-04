@@ -101,57 +101,61 @@ namespace IBS.Services
 
                 var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
 
-                foreach (var amortization in amortizationSetting)
+                var groupedAmortizations = amortizationSetting
+                    .GroupBy(a => new { a.JvHeader.Company, a.JvHeader.Type })
+                    .ToList();
+
+                foreach (var group in groupedAmortizations)
                 {
-                    var sourceJv = amortization.JvHeader;
+                    var baseCode = await _unitOfWork.FilprideJournalVoucher
+                        .GenerateCodeAsync(group.Key.Company, group.Key.Type);
 
-                    if (sourceJv?.Details == null || sourceJv.Details.Count == 0)
+                    var offset = 0;
+                    foreach (var amortization in group)
                     {
-                        throw new InvalidOperationException($"The source journal voucher for amortization with ID {amortization.JvId} is missing or has no details.");
-                    }
+                        var sourceJv = amortization.JvHeader;
 
-                    var generatedCode = await _unitOfWork
-                    .FilprideJournalVoucher
-                    .GenerateCodeAsync(sourceJv.Company, sourceJv.Type);
-
-                    var newHeader = new FilprideJournalVoucherHeader
-                    {
-                        Type = sourceJv.Type,
-                        JournalVoucherHeaderNo = generatedCode,
-                        Date = dateToday,
-                        References = sourceJv.References,
-                        CVId = sourceJv.CVId,
-                        Particulars = sourceJv.Particulars,
-                        CRNo = sourceJv.CRNo,
-                        JVReason = sourceJv.JVReason,
-                        CreatedBy = "SYSTEM",
-                        Company = sourceJv.Company,
-                        JvType = nameof(JvType.Amortization),
-                        Status = nameof(JvStatus.Pending),
-                        Details = new List<FilprideJournalVoucherDetail>()
-                    };
-
-                    foreach (var detail in sourceJv.Details)
-                    {
-                        var newDetail = new FilprideJournalVoucherDetail
+                        if (sourceJv?.Details == null || sourceJv.Details.Count == 0)
                         {
-                            AccountNo = detail.AccountNo,
-                            AccountName = detail.AccountName,
-                            TransactionNo = detail.TransactionNo,
-                            Debit = detail.Debit,
-                            Credit = detail.Credit,
-                            SubAccountType = detail.SubAccountType,
-                            SubAccountId = detail.SubAccountId,
-                            SubAccountName = detail.SubAccountName
-                        };
-                        newHeader.Details.Add(newDetail);
-                    }
+                            throw new InvalidOperationException(
+                                $"The source journal voucher for amortization with ID {amortization.JvId} is missing or has no details.");
+                        }
 
-                    newJournalVouchers.Add(newHeader);
-                    amortization.NextRunDate = dateToday.AddMonths(1);
-                    amortization.LastRunDate = dateToday;
-                    amortization.OccurrenceRemaining--;
-                    amortization.IsActive = amortization.OccurrenceRemaining > 0;
+                        var generatedCode = IncrementCode(baseCode, offset++);
+
+                        var newHeader = new FilprideJournalVoucherHeader
+                        {
+                            Type = sourceJv.Type,
+                            JournalVoucherHeaderNo = generatedCode,
+                            Date = dateToday,
+                            References = sourceJv.References,
+                            CVId = sourceJv.CVId,
+                            Particulars = sourceJv.Particulars,
+                            CRNo = sourceJv.CRNo,
+                            JVReason = sourceJv.JVReason,
+                            CreatedBy = "SYSTEM",
+                            Company = sourceJv.Company,
+                            JvType = nameof(JvType.Amortization),
+                            Status = nameof(JvStatus.Pending),
+                            Details = sourceJv.Details.Select(detail => new FilprideJournalVoucherDetail
+                            {
+                                AccountNo = detail.AccountNo,
+                                AccountName = detail.AccountName,
+                                TransactionNo = detail.TransactionNo,
+                                Debit = detail.Debit,
+                                Credit = detail.Credit,
+                                SubAccountType = detail.SubAccountType,
+                                SubAccountId = detail.SubAccountId,
+                                SubAccountName = detail.SubAccountName
+                            }).ToList()
+                        };
+
+                        newJournalVouchers.Add(newHeader);
+                        amortization.NextRunDate = dateToday.AddMonths(1);
+                        amortization.LastRunDate = dateToday;
+                        amortization.OccurrenceRemaining--;
+                        amortization.IsActive = amortization.OccurrenceRemaining > 0;
+                    }
                 }
 
                 await _dbContext.FilprideJournalVoucherHeaders.AddRangeAsync(newJournalVouchers);
@@ -161,6 +165,22 @@ namespace IBS.Services
             {
                 _logger.LogError(ex, "Error while processing amortization for {Date}", dateToday);
                 throw;
+            }
+        }
+
+        private static string IncrementCode(string baseCode, int offset)
+        {
+            if (baseCode.StartsWith("JVU"))
+            {
+                var numericPart = baseCode.Substring(3);
+                var incremented = long.Parse(numericPart) + offset;
+                return "JVU" + incremented.ToString("D9");
+            }
+            else
+            {
+                var numericPart = baseCode.Substring(2);
+                var incremented = long.Parse(numericPart) + offset;
+                return "JV" + incremented.ToString("D10");
             }
         }
     }
