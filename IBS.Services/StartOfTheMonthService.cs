@@ -151,10 +151,13 @@ namespace IBS.Services
                         };
 
                         newJournalVouchers.Add(newHeader);
-                        amortization.NextRunDate = dateToday.AddMonths(1);
                         amortization.LastRunDate = dateToday;
-                        amortization.OccurrenceRemaining--;
+                        if (amortization.OccurrenceRemaining > 0)
+                        {
+                            amortization.OccurrenceRemaining--;
+                        }
                         amortization.IsActive = amortization.OccurrenceRemaining > 0;
+                        amortization.NextRunDate = amortization.IsActive ? dateToday.AddMonths(1) : null;
                     }
                 }
 
