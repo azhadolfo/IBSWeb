@@ -343,7 +343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TaxType = string.Empty,
                     VatType = string.Empty,
                     IsPayroll = true,
-                    Status = nameof(CheckVoucherInvoiceStatus.ForApproval)
+                    Status = nameof(CheckVoucherInvoiceStatus.ForPosting)
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
@@ -686,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (existingHeaderModel.Status == nameof(CheckVoucherInvoiceStatus.ForPosting))
                 {
-                    existingHeaderModel.Status = nameof(CheckVoucherInvoiceStatus.ForApproval);
+                    existingHeaderModel.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
                     existingHeaderModel.ApprovedBy = null;
                     existingHeaderModel.ApprovedDate = null;
                 }
