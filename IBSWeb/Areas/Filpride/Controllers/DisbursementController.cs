@@ -1,5 +1,3 @@
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -9,7 +7,8 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -107,6 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     ? disbursements.Where(s => s.DcpDate != null).ToList()
                                     : disbursements.Where(s => s.DcpDate == null).ToList();
                                 break;
+
                             case "dcrDate":
                                 disbursements = searchValue == "not-null"
                                     ? disbursements.Where(s => s.DcrDate != null).ToList()
@@ -143,7 +143,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     recordsFiltered = totalRecords,
                     data = pagedData
                 });
-
             }
             catch (Exception ex)
             {
@@ -164,12 +163,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
+            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
 
-            if (isPeriodClosed)
-            {
-                return Json(new { success = false, message = "Book already closed." });
-            }
+            //if (isPeriodClosed)
+            //{
+            //    return Json(new { success = false, message = "Book already closed." });
+            //}
 
             cv.DcpDate = dcpDate;
 
@@ -192,12 +191,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
+            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
 
-            if (isPeriodClosed)
-            {
-                return Json(new { success = false, message = "Book already closed." });
-            }
+            //if (isPeriodClosed)
+            //{
+            //    return Json(new { success = false, message = "Book already closed." });
+            //}
 
             cv.DcrDate = dcrDate;
 
