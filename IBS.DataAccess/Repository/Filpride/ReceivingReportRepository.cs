@@ -258,6 +258,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await PostAsync(model, cancellationToken);
 
+            await UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId,
+                model.QuantityReceived, cancellationToken);
+
             return model.ReceivingReportNo;
         }
 
