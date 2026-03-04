@@ -574,7 +574,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
 
                 await _unitOfWork.FilprideReceivingReport.UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId,
-                    model.QuantityReceived, cancellationToken);;
+                    model.QuantityReceived, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Receiving Report has been posted.";
@@ -1122,6 +1122,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     await _unitOfWork.FilprideReceivingReport
                         .PostAsync(receivingReport, cancellationToken);
+
+                    await _unitOfWork.FilprideReceivingReport.UpdatePoAsync(receivingReport.PurchaseOrder!.PurchaseOrderId,
+                        receivingReport.QuantityReceived, cancellationToken);
                 }
 
                 await transaction.CommitAsync(cancellationToken);
