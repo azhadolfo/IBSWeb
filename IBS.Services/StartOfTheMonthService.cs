@@ -89,7 +89,7 @@ namespace IBS.Services
                 .Include(x => x.JvHeader)
                     .ThenInclude(x => x.Details)
                 .Where(x =>
-                (x.NextRunDate == null || x.NextRunDate == dateToday) &&
+                (x.NextRunDate == null || x.NextRunDate <= dateToday) &&
                 x.IsActive &&
                 x.JvHeader.PostedBy != null)
                 .ToListAsync();
