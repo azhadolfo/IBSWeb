@@ -1,5 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -30,11 +32,11 @@ namespace IBS.Services
 
             try
             {
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
-                var previousMonthDate =  today.AddMonths(-1);
+                var today = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+                var previousMonthDate = today.AddMonths(-1);
 
-                // This method will capture the unlifted DR, send the notification to TNS if found any.
                 await GetTheUnliftedDrs(previousMonthDate);
+                await ProcessAmortization(today);
 
                 await transaction.CommitAsync();
             }
@@ -46,7 +48,7 @@ namespace IBS.Services
             }
         }
 
-        private async Task GetTheUnliftedDrs(DateTime previousMonthDate)
+        private async Task GetTheUnliftedDrs(DateOnly previousMonthDate)
         {
             try
             {
@@ -74,7 +76,90 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("An error occurred while getting the unlifted DRs.", ex);
+                _logger.LogError(ex, "Error while getting the unlifted DRs for {Date}", previousMonthDate);
+                throw;
+            }
+        }
+
+        private async Task ProcessAmortization(DateOnly dateToday)
+        {
+            try
+            {
+                var amortizationSetting = await _dbContext.JvAmortizationSettings
+                .Include(x => x.JvHeader)
+                    .ThenInclude(x => x.Details)
+                .Where(x =>
+                (x.NextRunDate == null || x.NextRunDate == dateToday) &&
+                x.IsActive &&
+                x.JvHeader.PostedBy != null)
+                .ToListAsync();
+
+                if (amortizationSetting.Count == 0)
+                {
+                    return;
+                }
+
+                var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
+
+                foreach (var amortization in amortizationSetting)
+                {
+                    var sourceJv = amortization.JvHeader;
+
+                    if (sourceJv?.Details == null || sourceJv.Details.Count == 0)
+                    {
+                        throw new InvalidOperationException($"The source journal voucher for amortization with ID {amortization.JvId} is missing or has no details.");
+                    }
+
+                    var generatedCode = await _unitOfWork
+                    .FilprideJournalVoucher
+                    .GenerateCodeAsync(sourceJv.Company, sourceJv.Type);
+
+                    var newHeader = new FilprideJournalVoucherHeader
+                    {
+                        Type = sourceJv.Type,
+                        JournalVoucherHeaderNo = generatedCode,
+                        Date = dateToday,
+                        References = sourceJv.References,
+                        CVId = sourceJv.CVId,
+                        Particulars = sourceJv.Particulars,
+                        CRNo = sourceJv.CRNo,
+                        JVReason = sourceJv.JVReason,
+                        CreatedBy = "SYSTEM",
+                        Company = sourceJv.Company,
+                        JvType = nameof(JvType.Amortization),
+                        Details = new List<FilprideJournalVoucherDetail>()
+                    };
+
+                    foreach (var detail in sourceJv.Details)
+                    {
+                        var newDetail = new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = detail.AccountNo,
+                            AccountName = detail.AccountName,
+                            TransactionNo = detail.TransactionNo,
+                            Debit = detail.Debit,
+                            Credit = detail.Credit,
+                            SubAccountType = detail.SubAccountType,
+                            SubAccountId = detail.SubAccountId,
+                            SubAccountName = detail.SubAccountName
+                        };
+                        newHeader.Details.Add(newDetail);
+                    }
+
+                    newJournalVouchers.Add(newHeader);
+                    amortization.NextRunDate = dateToday.AddMonths(1);
+                    amortization.LastRunDate = dateToday;
+                    amortization.OccurrenceRemaining--;
+                    amortization.IsActive = amortization.OccurrenceRemaining > 0;
+                }
+
+                await _dbContext.FilprideJournalVoucherHeaders.AddRangeAsync(newJournalVouchers);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing amortization for {Date}", dateToday);
+                throw;
             }
         }
     }

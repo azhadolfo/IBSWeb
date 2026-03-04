@@ -404,11 +404,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await ReverseAccrual(modelHeader.JournalVoucherHeaderId, cancellationToken);
                 }
 
-                if (modelHeader.JvType == nameof(JvType.Amortization) && !await ProcessAmortizationAsync(modelHeader.JournalVoucherHeaderId, cancellationToken))
-                {
-                    throw new InvalidOperationException($"Cannot post this record because the amortization has not been completed yet.");
-                }
-
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording
@@ -2249,76 +2244,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
-        }
-
-        private async Task<bool> ProcessAmortizationAsync(int id, CancellationToken cancellationToken)
-        {
-            var existingAmortizationSetting = await _dbContext.JvAmortizationSettings
-                .Include(x => x.JvHeader)
-                    .ThenInclude(x => x.Details)
-                .FirstOrDefaultAsync(x => x.JvId == id && x.IsActive, cancellationToken);
-
-            if (existingAmortizationSetting == null)
-                return true;
-
-            var sourceJv = existingAmortizationSetting.JvHeader;
-
-            if (sourceJv == null || sourceJv.Details == null || !sourceJv.Details.Any())
-            {
-                throw new InvalidOperationException($"The source journal voucher for amortization with ID {id} is missing or has no details.");
-            }
-
-            var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
-
-            for (var i = 1; i <= existingAmortizationSetting.OccurrenceRemaining; i++)
-            {
-                var generatedCode = await _unitOfWork
-                    .FilprideJournalVoucher
-                    .GenerateCodeAsync(sourceJv.Company, sourceJv.Type, i, cancellationToken);
-
-                var newHeader = new FilprideJournalVoucherHeader
-                {
-                    Type = sourceJv.Type,
-                    JournalVoucherHeaderNo = generatedCode,
-                    Date = existingAmortizationSetting.StartDate.AddMonths(i),
-                    References = sourceJv.References,
-                    CVId = sourceJv.CVId,
-                    Particulars = sourceJv.Particulars,
-                    CRNo = sourceJv.CRNo,
-                    JVReason = sourceJv.JVReason,
-                    CreatedBy = GetUserFullName(),
-                    Company = sourceJv.Company,
-                    JvType = nameof(JvType.Amortization),
-                    Details = new List<FilprideJournalVoucherDetail>()
-                };
-
-                foreach (var detail in sourceJv.Details)
-                {
-                    newHeader.Details.Add(new FilprideJournalVoucherDetail
-                    {
-                        AccountNo = detail.AccountNo,
-                        AccountName = detail.AccountName,
-                        TransactionNo = generatedCode,
-                        Debit = detail.Debit,
-                        Credit = detail.Credit,
-                        SubAccountType = detail.SubAccountType,
-                        SubAccountId = detail.SubAccountId,
-                        SubAccountName = detail.SubAccountName
-                    });
-                }
-
-                newJournalVouchers.Add(newHeader);
-            }
-
-            await _dbContext.FilprideJournalVoucherHeaders
-                .AddRangeAsync(newJournalVouchers, cancellationToken);
-
-            existingAmortizationSetting.OccurrenceRemaining = 0;
-            existingAmortizationSetting.IsActive = false;
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            return true;
         }
 
         [HttpGet]

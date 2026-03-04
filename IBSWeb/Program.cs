@@ -68,6 +68,8 @@ builder.Services.AddScoped<IMonthlyClosureService, MonthlyClosureService>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
+builder.Services.AddScoped<StartOfTheMonthService>();
+builder.Services.AddScoped<DailyService>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -96,28 +98,21 @@ if (builder.Environment.IsProduction())
 
 var app = builder.Build();
 
-app.MapPost("/jobs/start-of-the-month-service", async (
-    IUnitOfWork unitOfWork,
-    ILogger<StartOfTheMonthService> logger,
-    ApplicationDbContext db) =>
-{
-    var service = new StartOfTheMonthService(unitOfWork, logger, db);
-    await service.Execute(null!);
-    return Results.Ok("StartOfTheMonthService job executed.");
-})
-.AllowAnonymous();
+app.MapPost("/jobs/start-of-the-month-service",
+    async (StartOfTheMonthService service) =>
+    {
+        await service.Execute(null!);
+        return Results.Ok("StartOfTheMonthService job executed.");
+    })
+    .AllowAnonymous();
 
-app.MapPost("/jobs/daily-service", async (
-    ApplicationDbContext db,
-    ILogger<DailyService> logger,
-    UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork) =>
-{
-    var service = new DailyService(db, logger, userManager, unitOfWork);
-    await service.Execute(null!);
-    return Results.Ok("DailyService job executed.");
-})
-.AllowAnonymous();
+app.MapPost("/jobs/daily-service",
+    async (DailyService service) =>
+    {
+        await service.Execute(null!);
+        return Results.Ok("DailyService job executed.");
+    })
+    .AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
