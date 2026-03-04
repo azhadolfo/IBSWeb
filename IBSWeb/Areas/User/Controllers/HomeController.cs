@@ -163,6 +163,29 @@ namespace IBSWeb.Areas.User.Controllers
                         .CountAsync(),
 
                 #endregion -- MMSI
+
+                #region -- Accounting - For Approval
+
+                JournalVoucherForApprovalCount = await _dbContext.FilprideJournalVoucherHeaders
+                        .Where(jv => jv.Status == nameof(JvStatus.ForApproval)
+                                     && jv.Company == companyClaims)
+                        .CountAsync(),
+
+                CheckVoucherNonTradeInvoiceForApprovalCount = await _dbContext.FilprideCheckVoucherHeaders
+                        .Where(cv => cv.Status == nameof(CheckVoucherInvoiceStatus.ForApproval)
+                                     && cv.Company == companyClaims
+                                     && cv.CvType == nameof(CVType.Invoicing)
+                                     && !cv.IsPayroll)
+                        .CountAsync(),
+
+                CheckVoucherNonTradePayrollInvoiceForApprovalCount = await _dbContext.FilprideCheckVoucherHeaders
+                        .Where(cv => cv.Status == nameof(CheckVoucherInvoiceStatus.ForApproval)
+                                     && cv.Company == companyClaims
+                                     && cv.CvType == nameof(CVType.Invoicing)
+                                     && cv.IsPayroll)
+                        .CountAsync(),
+
+                #endregion -- Accounting - For Approval
             };
 
             return View(dashboardCounts);
