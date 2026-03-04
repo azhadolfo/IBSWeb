@@ -1,3 +1,4 @@
+using System.Globalization;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -17,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using CsvHelper;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -4053,6 +4055,61 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> UploadRecordsToTagDcrAndDcpDate(CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                throw new ArgumentException("Company claims not found!");
+            }
+
+            using var reader = new StreamReader(@"C:\Users\Administrator\Downloads\need-to-tag.csv");
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<UploadRecordsToTagDcrAndDcpDateViewModel>().OrderBy(x => x.CheckVoucherHeaderNo).ToList();
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var checkVouchers = records.Select(x => x.CheckVoucherHeaderNo.Trim()).Distinct().ToList();
+
+                var checkVouchersHeaders = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(x => checkVouchers.Contains(x.CheckVoucherHeaderNo!))
+                    .GroupBy(x => x.CheckVoucherHeaderNo)
+                    .Select(x => x.First())
+                    .ToDictionaryAsync(x => x.CheckVoucherHeaderNo!, cancellationToken);
+
+                if (checkVouchersHeaders == null)
+                {
+                    throw new ArgumentException("No sales invoice found");
+                }
+
+                foreach (var record in records)
+                {
+                    checkVouchersHeaders.TryGetValue(record.CheckVoucherHeaderNo.Trim(), out var existingCheckVoucherHeader);
+
+                    existingCheckVoucherHeader?.DcpDate = record.DcpDate;
+                    existingCheckVoucherHeader?.DcrDate = record.DcrDate;
+                }
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Dcr and dcp date updated successfully.";
+
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to update dcr and dcp date. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
     }
