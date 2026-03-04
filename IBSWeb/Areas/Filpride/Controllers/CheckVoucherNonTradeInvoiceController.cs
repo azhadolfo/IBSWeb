@@ -38,6 +38,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ISubAccountResolver _subAccountResolver;
 
+        private const string FilterTypeClaimType = "CheckVoucherNonTradeInvoice.FilterType";
+
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
@@ -74,6 +76,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private async Task UpdateFilterTypeClaim(string filterType)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string?> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+        }
+
         private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
@@ -81,8 +115,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string filterType)
         {
+            await UpdateFilterTypeClaim(filterType);
+            ViewBag.FilterType = await GetCurrentFilterType();
             return View();
         }
 
@@ -92,12 +128,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
-                var checkVoucher = await _dbContext.FilprideCheckVoucherHeaders
-                    .Include(cvh => cvh.Supplier)
+                var filterTypeClaim = await GetCurrentFilterType();
+
+                var baseQuery = _dbContext.FilprideCheckVoucherHeaders
                     .Where(cvh => cvh.Company == companyClaims &&
                                   cvh.CvType == nameof(CVType.Invoicing) &&
-                                  !cvh.IsPayroll)
-                    .ToListAsync(cancellationToken);
+                                  !cvh.IsPayroll);
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterTypeClaim) && filterTypeClaim == "ForApproval")
+                {
+                    baseQuery = baseQuery.Where(cv => cv.Status == nameof(CheckVoucherInvoiceStatus.ForApproval));
+                }
+
+                var query = baseQuery
+                    .Include(cvh => cvh.Supplier);
+
+                var checkVoucher = await query.ToListAsync(cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -180,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to get invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -566,7 +613,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Check voucher invoicing #{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -627,7 +674,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -718,7 +765,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to fetch cv non trade invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1024,7 +1071,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Non-trade invoicing edited successfully";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -1149,7 +1196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
 
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1183,7 +1230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Cancelled.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -1191,7 +1238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to cancel invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1230,7 +1277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Voided.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -1238,7 +1285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1290,7 +1337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 

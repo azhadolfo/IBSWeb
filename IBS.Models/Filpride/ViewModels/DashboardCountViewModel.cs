@@ -21,5 +21,11 @@ namespace IBS.Models.Filpride.ViewModels
         public int MMSIDispatchTicketForApproval { get; set; }
         public int MMSIDispatchTicketForBilling { get; set; }
         public int MMSIBillingForCollection { get; set; }
+        
+        // Accounting - For Approval Counts
+        public int JournalVoucherForApprovalCount { get; set; }
+        public int CheckVoucherNonTradeInvoiceForApprovalCount { get; set; }
+        public int CheckVoucherNonTradePayrollInvoiceForApprovalCount { get; set; }
+
     }
 }
