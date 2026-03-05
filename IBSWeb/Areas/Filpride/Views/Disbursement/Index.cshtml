@@ -167,6 +167,13 @@
                                 }
                             }
 
+                            if (row.category === "Non-Trade") {
+                                actions += `<li><a target="_blank" class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a></li>`;
+                            }
+                            else{
+                                 actions += `<li><a target="_blank" class="dropdown-item" href="@Url.Action("Print", "CheckVoucherTrade", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a></li>`;
+                            }
+
                             actions += `</ul></div>`;
                             return actions;
                         }

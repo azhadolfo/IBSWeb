@@ -163,6 +163,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
+            if (cv.DcrDate is not null)
+            {
+                TempData["error"] = "Cannot update DCP date when DCR date is already set.";
+                return RedirectToAction(nameof(Index));
+            }
+
             //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
 
             //if (isPeriodClosed)
