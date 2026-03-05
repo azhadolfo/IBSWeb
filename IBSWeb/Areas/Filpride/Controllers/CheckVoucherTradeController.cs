@@ -1636,7 +1636,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
