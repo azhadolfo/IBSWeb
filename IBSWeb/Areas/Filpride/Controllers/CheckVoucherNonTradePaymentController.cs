@@ -509,7 +509,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (cvHeader.DcrDate != null)
                 {
-                    TempData["error"] = "Cannot unpost this record because it is have a DCR.";
+                    TempData["error"] = "This record cannot be unposted because it already has a DCR date. Please contact Finance to resolve.";
                     return RedirectToAction(nameof(Print), new { id });
                 }
 
