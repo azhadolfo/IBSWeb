@@ -1,4 +1,5 @@
-﻿@using IBS.Models.Enums
+﻿@using Google.Type
+@using IBS.Models.Enums
 @model IEnumerable<FilprideDeliveryReceipt>
 
 @{
@@ -291,8 +292,17 @@
             // Calculate minimum date (today - 2 days)
             let minDate = new Date();
             minDate.setDate(minDate.getDate() - 2);
-            let minDateString = minDate.toISOString().split('T')[0];
-
+            let minDateString;
+            
+            if (@User.IsInRole("Admin").ToString().ToLower())
+            {
+                minDateString = "1900-01-01";
+            }
+            else
+            {
+                minDateString = minDate.toISOString().split('T')[0];
+            }
+            
             // Get the 3rd day of the following month
             let currentDate = new Date();
             let thirdDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 3).toISOString().split('T')[0];
@@ -367,7 +377,7 @@
             let thirdDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 3).toISOString().split('T')[0];
 
             // Convert ViewBag.MinDate to JavaScript date string format
-            let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
+            let minDate = new Date('@(!User.IsInRole("Admin") ? ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01" : "1900-01-01")').toISOString().split('T')[0];
 
             Swal.fire({
                 title: "Please confirm the lifting date",
