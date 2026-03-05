@@ -398,6 +398,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
                     if (getReceivingReport != null)
                     {
+                        // Validate payment amount
+                        var remainingBalance = getReceivingReport.Amount - getReceivingReport.AmountPaid;
+                        if (item.Amount < 0)
+                        {
+                            TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot be negative.";
+                            return View(viewModel);
+                        }
+                        if (item.Amount > remainingBalance)
+                        {
+                            TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot exceed remaining balance of {remainingBalance:N4}.";
+                            return View(viewModel);
+                        }
+
                         getReceivingReport.AmountPaid += item.Amount;
                         cvh.TaxPercent = getReceivingReport.TaxPercentage;
 
@@ -943,6 +956,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount
+                    var remainingBalance = getReceivingReport.Amount - getReceivingReport.AmountPaid;
+                    if (item.Amount < 0)
+                    {
+                        TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot be negative.";
+                        return View(viewModel);
+                    }
+                    if (item.Amount > remainingBalance)
+                    {
+                        TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot exceed remaining balance of {remainingBalance:N4}.";
+                        return View(viewModel);
+                    }
+
                     getReceivingReport.AmountPaid += item.Amount;
                     existingHeaderModel.TaxPercent = getReceivingReport.TaxPercentage;
 
@@ -1255,10 +1281,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        if (receivingReport != null && receivingReport.AmountPaid >= receivingReport.Amount)
+                        if (receivingReport != null)
                         {
-                            receivingReport.IsPaid = true;
-                            receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                            if (receivingReport.AmountPaid >= receivingReport.Amount)
+                            {
+                                receivingReport.IsPaid = true;
+                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                            }
+                            else
+                            {
+                                receivingReport.IsPaid = false;
+                                // PaidDate is non-nullable, leave it as-is or set to DateTime.MinValue if needed
+                                // For now, we'll leave it since the IsPaid flag indicates the true status
+                            }
                         }
                     }
                     if (item.DocumentType == "DR")

@@ -457,13 +457,15 @@
         $(document).on('input', '.inputAmount', function () {
             const row = $(this).closest('tr');
             const grossAmount = parseNumber(row.find('.grossAmount').text());
+            const balanceText = row.find('.balance').text().trim();
+            const remainingBalance = parseNumber(balanceText);
             let paymentAmount = parseNumber($(this).val());
             
-            // Prevent exceeding the gross amount (balance)
-            if (paymentAmount > grossAmount) {
-                paymentAmount = grossAmount;
+            // Prevent exceeding the remaining balance
+            if (paymentAmount > remainingBalance) {
+                paymentAmount = remainingBalance;
                 $(this).val(formatNumberToFour(paymentAmount));
-                alert('Payment amount cannot exceed the balance!');
+                alert('Payment amount cannot exceed the remaining balance!');
             }
             
             // Prevent negative values
