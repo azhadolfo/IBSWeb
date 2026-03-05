@@ -274,7 +274,7 @@
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
-                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" readonly style="${display}" value="${amountPaid}"></td>
+                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${dr.netOfEwtAmount}"></td>
                                             <td class="text-end balance">${formatNumberToFour(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
                                         </tr>
                                     `);
@@ -373,6 +373,23 @@
         }
 
         $(document).on('input', '.inputAmount', function () {
+            const row = $(this).closest('tr');
+            const grossAmount = parseNumber(row.find('.grossAmount').text());
+            let paymentAmount = parseNumber($(this).val());
+            
+            // Prevent exceeding the gross amount (balance)
+            if (paymentAmount > grossAmount) {
+                paymentAmount = grossAmount;
+                $(this).val(formatNumberToFour(paymentAmount));
+                alert('Payment amount cannot exceed the balance!');
+            }
+            
+            // Prevent negative values
+            if (paymentAmount < 0) {
+                paymentAmount = 0;
+                $(this).val(formatNumberToFour(paymentAmount));
+            }
+            
             updateAmounts();
         });
 

@@ -587,7 +587,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                                                         && rr.AmountPaid == 0
+                                                         && rr.AmountPaid < rr.Amount
                                                          && poNumber.Contains(rr.PONo)
                                                          && rr.PostedBy != null);
 
@@ -1255,8 +1255,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = true;
-                        receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        if (receivingReport != null && receivingReport.AmountPaid >= receivingReport.Amount)
+                        {
+                            receivingReport.IsPaid = true;
+                            receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
