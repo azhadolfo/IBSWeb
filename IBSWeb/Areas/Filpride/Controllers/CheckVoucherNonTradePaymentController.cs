@@ -507,6 +507,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(Print), new { id });
                 }
 
+                if (cvHeader.DcrDate != null)
+                {
+                    TempData["error"] = "Cannot unpost this record because it is have a DCR.";
+                    return RedirectToAction(nameof(Print), new { id });
+                }
+
                 cvHeader.PostedBy = null;
                 cvHeader.PostedDate = null;
                 cvHeader.Status = nameof(CheckVoucherPaymentStatus.ForPosting);
