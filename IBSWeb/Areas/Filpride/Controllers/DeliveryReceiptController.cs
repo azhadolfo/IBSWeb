@@ -937,6 +937,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            var minDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).AddDays(-2);
+
+            if (deliveredDate < minDate && !User.IsInRole("Admin"))
+            {
+                TempData["error"] = "The selected date cannot be more than 2 days in the past.";
+                return RedirectToAction("Index");
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -1224,6 +1232,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model == null)
             {
                 return NotFound();
+            }
+
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken);
+
+            if (liftingDate < DateOnly.FromDateTime(minDate) && !User.IsInRole("Admin"))
+            {
+                TempData["error"] = $"The selected date cannot be before {minDate:MM/dd/yyyy}.";
+                return RedirectToAction("Index");
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
