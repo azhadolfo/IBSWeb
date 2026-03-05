@@ -942,7 +942,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (deliveredDate < minDate && !User.IsInRole("Admin"))
             {
                 TempData["error"] = "The selected date cannot be more than 2 days in the past.";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1239,7 +1239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (liftingDate < DateOnly.FromDateTime(minDate) && !User.IsInRole("Admin"))
             {
                 TempData["error"] = $"The selected date cannot be before {minDate:MM/dd/yyyy}.";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
