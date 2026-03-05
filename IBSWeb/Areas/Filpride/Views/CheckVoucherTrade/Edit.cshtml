@@ -473,8 +473,7 @@
         }
 
         $(document).on('input', '.inputAmount', function () {
-            const row = $(this).closest('tr');
-            const remainingBalance = parseNumber(row.attr('data-max'));
+            const remainingBalance = parseNumber($(this).attr('data-max'));
             let paymentAmount = parseNumber($(this).val());
 
             // Prevent exceeding the remaining balance
