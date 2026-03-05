@@ -374,17 +374,16 @@
 
         $(document).on('input', '.inputAmount', function () {
             const row = $(this).closest('tr');
-            const balanceText = row.find('.balance').text().trim();
-            const remainingBalance = parseNumber(balanceText);
+            const remainingBalance = parseNumber(row.attr('data-max'));
             let paymentAmount = parseNumber($(this).val());
-            
+
             // Prevent exceeding the remaining balance
             if (paymentAmount > remainingBalance) {
                 paymentAmount = remainingBalance;
                 $(this).val(formatNumberToFour(paymentAmount));
                 alert('Payment amount cannot exceed the remaining balance!');
             }
-            
+
             // Prevent negative values
             if (paymentAmount < 0) {
                 paymentAmount = 0;
