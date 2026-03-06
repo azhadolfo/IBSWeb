@@ -1031,7 +1031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Filter for "Update Price" in description (case-insensitive)
                 var filteredData = generalBooks
-                    .Where(gb => gb.Description != null && gb.Description.ToLower().Contains("update price"))
+                    .Where(gb => gb.Description != null && gb.Description.Contains("update price", StringComparison.CurrentCultureIgnoreCase))
                     .ToList();
 
                 if (filteredData.Count == 0)
@@ -1207,7 +1207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Filter for "Update Cost" in description (case-insensitive)
                 var filteredData = generalBooks
-                    .Where(gb => gb.Description != null && gb.Description.ToLower().Contains("update cost"))
+                    .Where(gb => gb.Description != null && gb.Description.Contains("update cost", StringComparison.CurrentCultureIgnoreCase))
                     .ToList();
 
                 if (filteredData.Count == 0)
@@ -1444,7 +1444,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     "Account No", "Account Name", "Sub-Account Type",
                     "Sub-Account Name", "Period Start", "Period End",
-                    "Fiscal Year", "Fiscal Period",
                     "Beginning Balance", "Debit Total", "Credit Total", "Ending Balance"
                 };
 
@@ -1494,17 +1493,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 4].Value = record.SubAccountName;
                             worksheet.Cells[row, 5].Value = record.PeriodStartDate.ToString("dd-MMM-yyyy");
                             worksheet.Cells[row, 6].Value = record.PeriodEndDate.ToString("dd-MMM-yyyy");
-                            worksheet.Cells[row, 7].Value = record.FiscalYear;
-                            worksheet.Cells[row, 8].Value = record.FiscalPeriod;
-                            worksheet.Cells[row, 9].Value = record.BeginningBalance;
-                            worksheet.Cells[row, 10].Value = record.DebitTotal;
-                            worksheet.Cells[row, 11].Value = record.CreditTotal;
-                            worksheet.Cells[row, 12].Value = record.EndingBalance;
+                            worksheet.Cells[row, 7].Value = record.BeginningBalance;
+                            worksheet.Cells[row, 8].Value = record.DebitTotal;
+                            worksheet.Cells[row, 9].Value = record.CreditTotal;
+                            worksheet.Cells[row, 10].Value = record.EndingBalance;
 
+                            worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                            worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
                             worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
                             worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-                            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
 
                             subBeginning += record.BeginningBalance;
                             subDebit += record.DebitTotal;
@@ -1516,10 +1513,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         // Sub-Account subtotal row
                         worksheet.Cells[row, 4].Value = $"Subtotal – {subGroup.Key.SubAccountName}";
-                        worksheet.Cells[row, 9].Value = subBeginning;
-                        worksheet.Cells[row, 10].Value = subDebit;
-                        worksheet.Cells[row, 11].Value = subCredit;
-                        worksheet.Cells[row, 12].Value = subEnding;
+                        worksheet.Cells[row, 7].Value = subBeginning;
+                        worksheet.Cells[row, 8].Value = subDebit;
+                        worksheet.Cells[row, 9].Value = subCredit;
+                        worksheet.Cells[row, 10].Value = subEnding;
 
                         ApplyCurrencyFormat(worksheet, row, currencyFormat);
                         ApplySubtotalStyle(worksheet, row, headers.Length,
@@ -1535,16 +1532,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Account subtotal row
                     worksheet.Cells[row, 3].Value = $"Total – {accountGroup.Key.AccountName}";
-                    worksheet.Cells[row, 9].Value = acctBeginning;
-                    worksheet.Cells[row, 10].Value = acctDebit;
-                    worksheet.Cells[row, 11].Value = acctCredit;
-                    worksheet.Cells[row, 12].Value = acctEnding;
+                    worksheet.Cells[row, 7].Value = acctBeginning;
+                    worksheet.Cells[row, 8].Value = acctDebit;
+                    worksheet.Cells[row, 9].Value = acctCredit;
+                    worksheet.Cells[row, 10].Value = acctEnding;
 
                     ApplyCurrencyFormat(worksheet, row, currencyFormat);
                     ApplySubtotalStyle(worksheet, row, headers.Length,
                         System.Drawing.Color.FromArgb(172, 185, 202));
 
-                    using (var range = worksheet.Cells[row, 9, row, 12])
+                    using (var range = worksheet.Cells[row, 7, row, 10])
                     {
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -1560,10 +1557,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Grand Total row
                 worksheet.Cells[row, 3].Value = "GRAND TOTAL";
-                worksheet.Cells[row, 9].Value = grandBeginning;
-                worksheet.Cells[row, 10].Value = grandDebit;
-                worksheet.Cells[row, 11].Value = grandCredit;
-                worksheet.Cells[row, 12].Value = grandEnding;
+                worksheet.Cells[row, 7].Value = grandBeginning;
+                worksheet.Cells[row, 8].Value = grandDebit;
+                worksheet.Cells[row, 9].Value = grandCredit;
+                worksheet.Cells[row, 10].Value = grandEnding;
 
                 ApplyCurrencyFormat(worksheet, row, currencyFormat);
 
@@ -1607,7 +1604,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private static void ApplyCurrencyFormat(ExcelWorksheet ws, int row, string format)
         {
-            foreach (int col in new[] { 9, 10, 11, 12 })
+            foreach (int col in new[] { 7, 8, 9, 10 })
                 ws.Cells[row, col].Style.Numberformat.Format = format;
         }
 
