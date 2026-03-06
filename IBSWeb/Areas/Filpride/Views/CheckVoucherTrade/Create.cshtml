@@ -313,12 +313,12 @@
                         let currentPO = null;
 
                         data.forEach((rr, index) => {
-                            const remainingBalance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
+                            const remainingBalance = parseNumber(rr.netOfEwtAmount);
                             
-                            // Skip RRs that are already fully paid (no remaining balance)
+                            @* // Skip RRs that are already fully paid (no remaining balance)
                             if (remainingBalance <= 0) {
                                 return;
-                            }
+                            } *@
 
                             currentPO = rr.purchaseOrderNo;
 
@@ -482,7 +482,7 @@
             }
 
             // Update the balance column for this row
-            row.find('.balance').text(formatNumberToFour(grossAmount - paymentAmount));
+            row.find('.balance').text(formatNumberToFour(remainingBalance - paymentAmount));
 
             updateAmounts();
         });

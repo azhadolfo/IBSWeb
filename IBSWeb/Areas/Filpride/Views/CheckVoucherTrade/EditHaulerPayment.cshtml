@@ -255,7 +255,7 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            const remainingBalance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
+                            const remainingBalance = parseNumber(dr.netOfEwtAmount);
                             const isPartOfCurrentVoucher = modelDRs.has(dr.id);
 
                             // Skip DRs that are already fully paid AND not part of current voucher
@@ -278,15 +278,14 @@
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
-                                            <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
+                                            <td class="text-end grossAmount">${formatNumberToFour(remainingBalance)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
                                             <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(dr.netOfEwtAmount);
-                            totalAmountPaid += parseNumber(dr.amountPaid);
+                            totalGross += remainingBalance;
                             totalBalance += remainingBalance;
                         });
                         reindexSelected();

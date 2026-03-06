@@ -599,7 +599,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && rr.AmountPaid < rr.Amount
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
+                                                         && rr.AmountPaid < ((rr.Amount / 1.12m) * rr.TaxPercentage) 
                                                          && poNumber.Contains(rr.PONo)
                                                          && rr.PostedBy != null);
 
@@ -647,7 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
+                        NetOfEwtAmount = (netOfEwtAmount - rr.AmountPaid).ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
 
@@ -2954,6 +2955,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(dr => companyClaims != null
                              && dr.Company == companyClaims
                              && commissioneeId == dr.CommissioneeId
+                             && !dr.IsCommissionPaid
                              && dr.CommissionAmountPaid < dr.CommissionAmount
                              && dr.PostedBy != null);
 
@@ -2998,7 +3000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             dr.DeliveryReceiptNo,
                             dr.ManualDrNo,
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
+                            NetOfEwtAmount = (netOfEwtAmount - dr.CommissionAmountPaid).ToString(SD.Four_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);
@@ -3014,6 +3016,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
                              && dr.HaulerId == haulerId
+                             && !dr.IsFreightPaid
                              && dr.FreightAmountPaid < dr.FreightAmount
                              && dr.PostedBy != null);
 
@@ -3060,7 +3063,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
+                        NetOfEwtAmount = (netOfEwtAmount - dr.FreightAmountPaid).ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
             return Json(drList);
