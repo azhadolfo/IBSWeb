@@ -242,6 +242,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate GeneralLedgerBook by Transaction as Excel File
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateGeneralLedgerBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
@@ -637,6 +639,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate General Ledger by Account Number as Excel File
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateGeneralLedgerReportByAccountNumberExcelFile(GeneralLedgerReportViewModel model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
@@ -995,6 +999,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate General Ledger Journal Voucher Report Due To Updating Selling Price as Excel File
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> JournalVoucherSellingPriceReportExcel(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
@@ -1169,6 +1175,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> JournalVoucherUnitCostReportExcel(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
@@ -1356,6 +1364,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateSubsidiaryLedgerExcelFile(GeneralLedgerReportViewModel model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
