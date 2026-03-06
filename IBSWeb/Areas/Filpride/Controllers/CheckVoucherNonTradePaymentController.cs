@@ -21,7 +21,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD, SD.Department_HRAndAdminOrLegal)]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD, SD.Department_HRAndAdminOrLegal, SD.Department_Finance)]
     public class CheckVoucherNonTradePaymentController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -504,6 +504,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
                     TempData["error"] = $"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
+                }
+
+                if (cvHeader.DcrDate != null)
+                {
+                    TempData["error"] = "This record cannot be unposted because it already has a DCR date. Please contact Finance to resolve.";
                     return RedirectToAction(nameof(Print), new { id });
                 }
 

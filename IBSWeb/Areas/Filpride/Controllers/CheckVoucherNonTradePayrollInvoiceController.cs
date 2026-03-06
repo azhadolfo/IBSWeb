@@ -986,6 +986,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
+
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(viewModel);
         }

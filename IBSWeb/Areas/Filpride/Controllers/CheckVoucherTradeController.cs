@@ -22,7 +22,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD, SD.Department_Finance)]
     public class CheckVoucherTradeController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
@@ -1259,7 +1259,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, modelHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 modelHeader.PostedBy = GetUserFullName();
@@ -1589,15 +1590,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
         {
             var cvHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
             if (cvHeader == null)
             {
-                throw new NullReferenceException("CV Header not found.");
-            }
-
-            var userName = GetUserFullName();
-            if (userName == null)
-            {
-                throw new NullReferenceException("User not found.");
+                return NotFound();
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1606,7 +1602,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cvHeader.Date, cancellationToken))
                 {
-                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
+                    TempData["error"] = $"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.";
+                    return RedirectToAction(nameof(Print), new { id });
+                }
+
+                if (cvHeader.DcrDate != null)
+                {
+                    TempData["error"] = "This record cannot be unposted because it already has a DCR date. Please contact Finance to resolve.";
+                    return RedirectToAction(nameof(Print), new { id });
                 }
 
                 cvHeader.PostedBy = null;
@@ -1670,7 +1673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

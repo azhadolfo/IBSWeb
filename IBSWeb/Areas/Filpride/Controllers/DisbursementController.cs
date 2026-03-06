@@ -163,17 +163,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            if (cv.DcrDate is not null)
+            if (cv.DcrDate != null)
             {
-                TempData["error"] = "Cannot update DCP date when DCR date is already set.";
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "Cannot update DCP date because DCR date is already set." });
             }
 
-            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
+            ///TODO: Uncomment this code later when we need to validate the DCP date based on the posted periods. For now, we will allow any DCP date since the period validation is not yet implemented for DCP date.
+            //var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
 
-            //if (isPeriodClosed)
+            //if (dcpDate < DateOnly.FromDateTime(minDate))
             //{
-            //    return Json(new { success = false, message = "Book already closed." });
+            //    return Json(new { success = false, message = $"DCP date cannot be earlier than {minDate:MMM dd, yyyy} based on the posted periods." });
+            //}
+
+            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cv.Date, cancellationToken);
+
+            //if (isPeriodClosed && cv.DcpDate != null)
+            //{
+            //    return Json(new { success = false, message = $"Cannot update DCP date this record because the period {cv.Date:MMM yyyy} is already closed." });
             //}
 
             cv.DcpDate = dcpDate;
@@ -197,11 +204,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
+            if (cv.DcpDate == null)
+            {
+                return Json(new { success = false, message = "Cannot update DCR date because DCP date is not set." });
+            }
 
-            //if (isPeriodClosed)
+            if (dcrDate < cv.DcpDate)
+            {
+                return Json(new { success = false, message = "DCR date cannot be earlier than DCP date." });
+            }
+
+            ///TODO: Uncomment the code below if we want to validate the DCR date based on the posted periods. But for now, we will just validate the DCR date based on the DCP date.
+            //var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+
+            //if (dcrDate < DateOnly.FromDateTime(minDate))
             //{
-            //    return Json(new { success = false, message = "Book already closed." });
+            //    return Json(new { success = false, message = $"DCR date cannot be earlier than {minDate:MMM dd, yyyy} based on the posted periods." });
+            //}
+
+            //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cv.Date, cancellationToken);
+
+            //if (isPeriodClosed && cv.DcrDate != null)
+            //{
+            //    return Json(new { success = false, message = $"Cannot update DCR date this record because the period {cv.Date:MMM yyyy} is already closed." });
             //}
 
             cv.DcrDate = dcrDate;

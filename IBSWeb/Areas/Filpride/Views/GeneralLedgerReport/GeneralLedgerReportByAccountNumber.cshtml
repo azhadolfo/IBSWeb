@@ -16,6 +16,7 @@
     </div>
     <div class="card-body p-4">
         <form id="dynamicForm" method="post" target="_blank">
+            @Html.AntiForgeryToken()
             <div class="row">
                 <div class="mb-3">
                     <label asp-for="DateFrom" class="control-label"></label>
@@ -35,9 +36,6 @@
                     <span asp-validation-for="AccountNo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
-                    <div class="col-6 col-md-3"> 
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateGeneralLedgerReportByAccountNumber')"><i class="bi bi-printer"></i> Generate</button>
-                    </div> 
                     <div class="col-6 col-md-3">
                         <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateGeneralLedgerReportByAccountNumberExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>
