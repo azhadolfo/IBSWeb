@@ -464,9 +464,16 @@
         $(document).on('input', '.inputAmount', function () {
             const inputField = $(this);
             const row = inputField.closest('tr');
-            const grossAmount = parseNumber(row.find('.grossAmount').text());
             const remainingBalance = parseNumber(inputField.attr('data-max'));
-            let paymentAmount = parseNumber($(this).val());
+            let inputValue = $(this).val();
+            let paymentAmount = parseNumber(inputValue);
+
+            // Skip validation when input is empty (user is still typing)
+            if (inputValue === '') {
+                row.find('.balance').text(formatNumberToFour(remainingBalance));
+                updateAmounts();
+                return;
+            }
 
             // Prevent exceeding the remaining balance
             if (paymentAmount > remainingBalance) {
