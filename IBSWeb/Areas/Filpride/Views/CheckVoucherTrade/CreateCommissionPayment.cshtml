@@ -261,7 +261,7 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            const remainingBalance = parseNumber(dr.netOfEwtAmount);
+                            const remainingBalance = parseNumber(dr.remainingBalance);
 
                             // Skip DRs that are already fully paid (no remaining balance)
                             if (remainingBalance <= 0) {

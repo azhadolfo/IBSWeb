@@ -312,7 +312,7 @@
                         );
 
                         data.forEach((rr, index) => {
-                            const remainingBalance = parseNumber(rr.netOfEwtAmount);
+                            const remainingBalance = parseNumber(rr.remainingBalance);
                             const isPartOfCurrentVoucher = modelRRs.has(rr.id);
 
                             // Skip RRs that are already fully paid AND not part of current voucher
@@ -324,7 +324,8 @@
                             const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
                             let display = modelRRs.has(rr.id) ? '' : 'display: none';
                             let inputamountClass = modelRRs.has(rr.id) ? 'inputAmount' : '';
-                            const amountPaid = modelRRs.get(rr.id);
+                            const amountPaid = modelRRs.get(rr.id) || 0;
+                            const initialBalance = remainingBalance - amountPaid;
 
                             // Add to selectedRecords if already checked
                             if (modelRRs.has(rr.id)) {
@@ -339,7 +340,7 @@
                                     <td>${rr.oldRRNo}</td>
                                     <td class="text-end grossAmount">${formatNumberToFour(remainingBalance)}</td>
                                     <td class="text-end"><input type="text" class="paymentAmount text-end ${inputamountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
-                                    <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
+                                    <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
                                 </tr>
                             `);
 

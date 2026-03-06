@@ -9,6 +9,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
+using IBSWeb.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -629,17 +630,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var rrList = receivingReports
                 .Select(rr =>
                 {
-                    var netOfVatAmount = rr.PurchaseOrder?.VatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount)
-                        : rr.Amount;
-
-                    var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
-                        : 0.0000m;
-
-                    var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
-                        : rr.Amount;
+                    var remainingBalance = FilpridePaymentHelper.GetRRRemainingBalance(rr, _unitOfWork.FilprideReceivingReport);
 
                     return new
                     {
@@ -648,7 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = (netOfEwtAmount - rr.AmountPaid).ToString(SD.Four_Decimal_Format)
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
 
@@ -3007,17 +2998,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .OrderBy(x => x.DeliveryReceiptNo)
                     .Select(dr =>
                     {
-                        var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
-                            : dr.CommissionAmount;
-
-                        var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
-                            : 0m;
-
-                        var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
-                            : dr.CommissionAmount;
+                        var remainingBalance = FilpridePaymentHelper.GetCommissionRemaining(dr, _unitOfWork.FilprideReceivingReport);
 
                         return new
                         {
@@ -3025,7 +3006,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             dr.DeliveryReceiptNo,
                             dr.ManualDrNo,
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
-                            NetOfEwtAmount = (netOfEwtAmount - dr.CommissionAmountPaid).ToString(SD.Four_Decimal_Format)
+                            RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);
@@ -3070,17 +3051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(x => x.DeliveryReceiptNo)
                 .Select(dr =>
                 {
-                    var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount)
-                        : dr.FreightAmount;
-
-                    var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
-                        : 0.0000m;
-
-                    var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
-                        : dr.FreightAmount;
+                    var remainingBalance = FilpridePaymentHelper.GetFreightRemaining(dr, _unitOfWork.FilprideReceivingReport);
 
                     return new
                     {
@@ -3088,7 +3059,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = (netOfEwtAmount - dr.FreightAmountPaid).ToString(SD.Four_Decimal_Format)
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
             return Json(drList);

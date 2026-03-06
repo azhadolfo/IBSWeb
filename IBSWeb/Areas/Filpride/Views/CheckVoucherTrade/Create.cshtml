@@ -313,8 +313,8 @@
                         let currentPO = null;
 
                         data.forEach((rr, index) => {
-                            const remainingBalance = parseNumber(rr.netOfEwtAmount);
-                            
+                            const remainingBalance = parseNumber(rr.remainingBalance);
+
                             @* // Skip RRs that are already fully paid (no remaining balance)
                             if (remainingBalance <= 0) {
                                 return;
@@ -328,14 +328,14 @@
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
-                                    <td class="text-end grossAmount">${formatNumberToFour(rr.netOfEwtAmount)}</td>
+                                    <td class="text-end grossAmount">${formatNumberToFour(remainingBalance)}</td>
                                     <td class="text-end"><input type="text" class="paymentAmount text-end" style="display: none" data-max="${remainingBalance}"></td>
                                     <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
                                 </tr>
                             `);
 
-                            subTotalGross += parseNumber(rr.netOfEwtAmount);
-                            totalGross += parseNumber(rr.netOfEwtAmount);
+                            subTotalGross += remainingBalance;
+                            totalGross += remainingBalance;
 
                             tbody.append(tr);
 
@@ -468,8 +468,8 @@
             let inputValue = $(this).val();
             let paymentAmount = parseNumber(inputValue);
 
-            // Skip validation when input is empty (user is still typing)
-            if (inputValue === '') {
+            // Skip validation when input is empty or invalid (user is still typing)
+            if (inputValue === '' || isNaN(paymentAmount)) {
                 row.find('.balance').text(formatNumberToFour(remainingBalance));
                 updateAmounts();
                 return;
@@ -479,7 +479,7 @@
             if (paymentAmount > remainingBalance) {
                 paymentAmount = remainingBalance;
                 $(this).val(formatNumberToFour(paymentAmount));
-                alert('Payment amount cannot exceed the remaining balance!');
+                @* alert('Payment amount cannot exceed the remaining balance!'); *@
             }
 
             // Prevent negative values
