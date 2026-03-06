@@ -599,8 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                                                         && rr.AmountPaid < rr.Amount
+                .Where(rr => rr.Company == companyClaims && rr.AmountPaid < rr.Amount
                                                          && poNumber.Contains(rr.PONo)
                                                          && rr.PostedBy != null);
 
@@ -2938,8 +2937,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(dr => companyClaims != null
                              && dr.Company == companyClaims
                              && commissioneeId == dr.CommissioneeId
-                             && dr.CommissionAmountPaid == 0
-                             && !dr.IsCommissionPaid
+                             && dr.CommissionAmountPaid < dr.CommissionAmount
                              && dr.PostedBy != null);
 
             if (cvId != null)
@@ -2999,8 +2997,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
                              && dr.HaulerId == haulerId
-                             && dr.FreightAmountPaid == 0
-                             && !dr.IsFreightPaid
+                             && dr.FreightAmountPaid < dr.FreightAmount
                              && dr.PostedBy != null);
 
             if (cvId != null)
