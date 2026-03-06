@@ -313,9 +313,10 @@
 
                         data.forEach((rr, index) => {
                             const remainingBalance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
-                            
-                            // Skip RRs that are already fully paid (no remaining balance)
-                            if (remainingBalance <= 0) {
+                            const isPartOfCurrentVoucher = modelRRs.has(rr.id);
+
+                            // Skip RRs that are already fully paid AND not part of current voucher
+                            if (remainingBalance <= 0 && !isPartOfCurrentVoucher) {
                                 return;
                             }
 

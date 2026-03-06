@@ -579,7 +579,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              && po.QuantityReceived > 0
                              && po.Company == companyClaims
                              && po.ReceivingReports != null
-                             && po.ReceivingReports.Any(x => !x.IsPaid))
+                             && po.ReceivingReports.Any(rr => rr.AmountPaid < rr.Amount))
                 .ToListAsync();
 
             if (!purchaseOrders.Any())
@@ -1302,11 +1302,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (item.CV.CvType == "Commission")
                         {
-                            deliveryReceipt!.IsCommissionPaid = true;
+                            deliveryReceipt!.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
                         }
                         if (item.CV.CvType == "Hauler")
                         {
-                            deliveryReceipt!.IsFreightPaid = true;
+                            deliveryReceipt!.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
                         }
                     }
                 }
@@ -2511,6 +2511,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingCommission = getDeliveryReceipts.CommissionAmount - getDeliveryReceipts.CommissionAmountPaid;
+                    if (item.Amount > remainingCommission || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipts.DeliveryReceiptNo}. Remaining balance: {remainingCommission}");
+                    }
+
                     getDeliveryReceipts.CommissionAmountPaid += item.Amount;
 
                     cVTradePaymentModel.Add(
@@ -2880,6 +2887,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (getDeliveryReceipts == null)
                     {
                         return NotFound();
+                    }
+
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingFreight = getDeliveryReceipts.FreightAmount - getDeliveryReceipts.FreightAmountPaid;
+                    if (item.Amount > remainingFreight || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipts.DeliveryReceiptNo}. Remaining balance: {remainingFreight}");
                     }
 
                     getDeliveryReceipts.FreightAmountPaid += item.Amount;
@@ -3408,6 +3422,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingCommission = getDeliveryReceipt.CommissionAmount - getDeliveryReceipt.CommissionAmountPaid;
+                    if (item.Amount > remainingCommission || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipt.DeliveryReceiptNo}. Remaining balance: {remainingCommission}");
+                    }
+
                     getDeliveryReceipt.CommissionAmountPaid += item.Amount;
 
                     cvTradePaymentModel.Add(
@@ -3813,6 +3834,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (getDeliveryReceipt == null)
                     {
                         return NotFound();
+                    }
+
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingFreight = getDeliveryReceipt.FreightAmount - getDeliveryReceipt.FreightAmountPaid;
+                    if (item.Amount > remainingFreight || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipt.DeliveryReceiptNo}. Remaining balance: {remainingFreight}");
                     }
 
                     getDeliveryReceipt.FreightAmountPaid += item.Amount;

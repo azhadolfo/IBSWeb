@@ -257,9 +257,10 @@
                     if (data){
                         data.forEach((dr) => {
                             const remainingBalance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
-                            
-                            // Skip DRs that are already fully paid (no remaining balance)
-                            if (remainingBalance <= 0) {
+                            const isPartOfCurrentVoucher = modelDRs.has(dr.id);
+
+                            // Skip DRs that are already fully paid AND not part of current voucher
+                            if (remainingBalance <= 0 && !isPartOfCurrentVoucher) {
                                 return;
                             }
 
