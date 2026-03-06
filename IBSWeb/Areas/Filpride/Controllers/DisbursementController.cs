@@ -224,7 +224,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             //var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(Module.CheckVoucher, cv.Date, cancellationToken);
 
-            //if (isPeriodClosed)
+            //if (isPeriodClosed && cv.DcrDate != null)
             //{
             //    return Json(new { success = false, message = $"Cannot update DCR date this record because the period {cv.Date:MMM yyyy} is already closed." });
             //}
