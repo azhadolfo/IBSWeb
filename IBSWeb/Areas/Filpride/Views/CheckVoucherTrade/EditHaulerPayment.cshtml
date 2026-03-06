@@ -255,33 +255,38 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            let balance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
+                            const remainingBalance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
+                            
+                            // Skip DRs that are already fully paid (no remaining balance)
+                            if (remainingBalance <= 0) {
+                                return;
+                            }
 
                             const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
                             let display = modelDRs.has(dr.id) ? '' : 'display: none';
                             let inputAmountClass = modelDRs.has(dr.id) ? 'inputAmount' : '';
                             const amountPaid = modelDRs.get(dr.id);
-                            
+
                             // Add to selectedRecords if already checked
                             if (modelDRs.has(dr.id)) {
                                 selectedRecords.push(dr.id.toString());
                             }
-                            
+
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
-                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid)}"></td>
-                                            <td class="text-end balance">${formatNumberToFour(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
+                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
+                                            <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
                             totalGross += parseNumber(dr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(dr.amountPaid);
-                            totalBalance += balance;
+                            totalBalance += remainingBalance;
                         });
                         reindexSelected();
                         updateSelectedCount(); // Update count after loading
@@ -335,18 +340,18 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const balance = parseNumber(row.find('.balance').text().trim());
             const grossAmount = parseNumber(row.find('.grossAmount').text());
+            const maxAmount = parseNumber(inputField.attr('data-max'));
 
             if (this.checked) {
                 if (!selectedRecords.includes(this.value)) {
                     selectedRecords.push(this.value);
                 }
-                inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
+                inputField.val(formatNumberToFour(maxAmount)).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumberToFour(grossAmount - maxAmount));
             } else {
                 selectedRecords = selectedRecords.filter(v => v !== this.value);
-                inputField.removeAttr("name").hide().val('');
+                inputField.removeAttr("name").val('').hide();
                 row.find('.selectCheckbox').removeAttr("name");
                 row.find('.balance').text(formatNumberToFour(grossAmount));
             }
@@ -354,7 +359,7 @@
             reindexSelected();
             updateAmounts();
             updateSelectedCount();
-            
+
             const totalCheckboxes = $('.selectCheckbox').length;
             const checkedCheckboxes = $('.selectCheckbox:checked').length;
             $('#selectAll').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
@@ -371,8 +376,10 @@
         }
 
         $(document).on('input', '.inputAmount', function () {
-            const row = $(this).closest('tr');
-            const remainingBalance = parseNumber(row.attr('data-max'));
+            const inputField = $(this);
+            const row = inputField.closest('tr');
+            const grossAmount = parseNumber(row.find('.grossAmount').text());
+            const remainingBalance = parseNumber(inputField.attr('data-max'));
             let paymentAmount = parseNumber($(this).val());
 
             // Prevent exceeding the remaining balance
@@ -387,7 +394,10 @@
                 paymentAmount = 0;
                 $(this).val(formatNumberToFour(paymentAmount));
             }
-            
+
+            // Update the balance column for this row
+            row.find('.balance').text(formatNumberToFour(grossAmount - paymentAmount));
+
             updateAmounts();
         });
 
