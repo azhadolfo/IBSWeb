@@ -312,6 +312,7 @@
                         );
 
                         data.forEach((rr, index) => {
+                            const grossAmount = parseNumber(rr.grossAmount);
                             const remainingBalance = parseNumber(rr.remainingBalance);
                             const isPartOfCurrentVoucher = modelRRs.has(rr.id);
 
@@ -338,14 +339,14 @@
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
-                                    <td class="text-end grossAmount">${formatNumberToFour(remainingBalance)}</td>
+                                    <td class="text-end grossAmount">${formatNumberToFour(grossAmount)}</td>
                                     <td class="text-end"><input type="text" class="paymentAmount text-end ${inputamountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
                                     <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
                                 </tr>
                             `);
 
-                            subTotalGross += remainingBalance;
-                            totalGross += remainingBalance;
+                            subTotalGross += grossAmount;
+                            totalGross += grossAmount;
 
                             tbody.append(tr);
 

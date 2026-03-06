@@ -255,6 +255,7 @@
 
                     if (data){
                         data.forEach((dr) => {
+                            const grossAmount = parseNumber(dr.grossAmount);
                             const remainingBalance = parseNumber(dr.remainingBalance);
                             const isPartOfCurrentVoucher = modelDRs.has(dr.id);
 
@@ -279,14 +280,14 @@
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
-                                            <td class="text-end grossAmount">${formatNumberToFour(remainingBalance)}</td>
+                                            <td class="text-end grossAmount">${formatNumberToFour(grossAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
                                             <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += remainingBalance;
+                            totalGross += grossAmount;
                             totalBalance += remainingBalance;
                         });
                         reindexSelected();

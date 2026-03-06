@@ -630,6 +630,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var rrList = receivingReports
                 .Select(rr =>
                 {
+                    var grossAmount = FilpridePaymentHelper.GetRRGrossAmount(rr, _unitOfWork.FilprideReceivingReport);
                     var remainingBalance = FilpridePaymentHelper.GetRRRemainingBalance(rr, _unitOfWork.FilprideReceivingReport);
 
                     return new
@@ -638,6 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.ReceivingReportNo,
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
+                        GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
                         RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                     };
@@ -2998,6 +3000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .OrderBy(x => x.DeliveryReceiptNo)
                     .Select(dr =>
                     {
+                        var grossAmount = FilpridePaymentHelper.GetCommissionGrossAmount(dr, _unitOfWork.FilprideReceivingReport);
                         var remainingBalance = FilpridePaymentHelper.GetCommissionRemaining(dr, _unitOfWork.FilprideReceivingReport);
 
                         return new
@@ -3005,6 +3008,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Id = dr.DeliveryReceiptId,
                             dr.DeliveryReceiptNo,
                             dr.ManualDrNo,
+                            GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
                             RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                         };
@@ -3051,6 +3055,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(x => x.DeliveryReceiptNo)
                 .Select(dr =>
                 {
+                    var grossAmount = FilpridePaymentHelper.GetFreightGrossAmount(dr, _unitOfWork.FilprideReceivingReport);
                     var remainingBalance = FilpridePaymentHelper.GetFreightRemaining(dr, _unitOfWork.FilprideReceivingReport);
 
                     return new
@@ -3058,6 +3063,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Id = dr.DeliveryReceiptId,
                         dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
+                        GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
                         RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
                     };

@@ -15,10 +15,10 @@ namespace IBSWeb.Helpers
         #region RR Payment Calculations
 
         /// <summary>
-        /// Calculates the remaining balance for a Receiving Report.
-        /// Uses tax-adjusted calculation as per business requirements.
+        /// Calculates the gross amount (net of EWT) for a Receiving Report.
+        /// This is the static original amount, unchanged by payments.
         /// </summary>
-        public static decimal GetRRRemainingBalance(FilprideReceivingReport rr, IReceivingReportRepository receivingReportRepo)
+        public static decimal GetRRGrossAmount(FilprideReceivingReport rr, IReceivingReportRepository receivingReportRepo)
         {
             var netOfVatAmount = rr.PurchaseOrder?.VatType == SD.VatType_Vatable
                 ? receivingReportRepo.ComputeNetOfVat(rr.Amount)
@@ -28,11 +28,19 @@ namespace IBSWeb.Helpers
                 ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
                 : 0.0000m;
 
-            var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
+            return rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
                 ? receivingReportRepo.ComputeNetOfEwt(rr.Amount, ewtAmount)
                 : rr.Amount;
+        }
 
-            return netOfEwtAmount - rr.AmountPaid;
+        /// <summary>
+        /// Calculates the remaining balance for a Receiving Report.
+        /// Uses tax-adjusted calculation as per business requirements.
+        /// </summary>
+        public static decimal GetRRRemainingBalance(FilprideReceivingReport rr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetRRGrossAmount(rr, receivingReportRepo);
+            return grossAmount - rr.AmountPaid;
         }
 
         /// <summary>
@@ -67,9 +75,10 @@ namespace IBSWeb.Helpers
         #region DR Commission Payment Calculations
 
         /// <summary>
-        /// Calculates the remaining commission for a Delivery Receipt.
+        /// Calculates the gross commission amount (net of EWT) for a Delivery Receipt.
+        /// This is the static original amount, unchanged by payments.
         /// </summary>
-        public static decimal GetCommissionRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        public static decimal GetCommissionGrossAmount(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
         {
             var netOfVatAmount = dr.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable
                 ? receivingReportRepo.ComputeNetOfVat(dr.CommissionAmount)
@@ -79,11 +88,18 @@ namespace IBSWeb.Helpers
                 ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
                 : 0m;
 
-            var netOfEwtAmount = dr.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax
+            return dr.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax
                 ? receivingReportRepo.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
                 : dr.CommissionAmount;
+        }
 
-            return netOfEwtAmount - dr.CommissionAmountPaid;
+        /// <summary>
+        /// Calculates the remaining commission for a Delivery Receipt.
+        /// </summary>
+        public static decimal GetCommissionRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetCommissionGrossAmount(dr, receivingReportRepo);
+            return grossAmount - dr.CommissionAmountPaid;
         }
 
         /// <summary>
@@ -100,9 +116,10 @@ namespace IBSWeb.Helpers
         #region DR Freight Payment Calculations
 
         /// <summary>
-        /// Calculates the remaining freight for a Delivery Receipt.
+        /// Calculates the gross freight amount (net of EWT) for a Delivery Receipt.
+        /// This is the static original amount, unchanged by payments.
         /// </summary>
-        public static decimal GetFreightRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        public static decimal GetFreightGrossAmount(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
         {
             var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
                 ? receivingReportRepo.ComputeNetOfVat(dr.FreightAmount)
@@ -112,11 +129,18 @@ namespace IBSWeb.Helpers
                 ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
                 : 0m;
 
-            var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
+            return dr.HaulerTaxType == SD.TaxType_WithTax
                 ? receivingReportRepo.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
                 : dr.FreightAmount;
+        }
 
-            return netOfEwtAmount - dr.FreightAmountPaid;
+        /// <summary>
+        /// Calculates the remaining freight for a Delivery Receipt.
+        /// </summary>
+        public static decimal GetFreightRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetFreightGrossAmount(dr, receivingReportRepo);
+            return grossAmount - dr.FreightAmountPaid;
         }
 
         /// <summary>
