@@ -600,7 +600,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                                                         && rr.AmountPaid < ((rr.Amount / 1.12m) * rr.TaxPercentage) 
+                                                         && rr.AmountPaid < rr.Amount
                                                          && poNumber.Contains(rr.PONo)
                                                          && rr.PostedBy != null);
 
@@ -1284,7 +1284,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (receivingReport != null)
                         {
-                            if (receivingReport.AmountPaid >= receivingReport.Amount)
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            if (receivingReport.AmountPaid >= taxAdjustedAmount)
                             {
                                 receivingReport.IsPaid = true;
                                 receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -1423,8 +1424,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
                         receivingReport.AmountPaid -= item.AmountPaid;
+                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
                     }
                     if (item.DocumentType == "DR")
                     {
@@ -1524,8 +1526,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
                         receivingReport.AmountPaid -= item.AmountPaid;
+                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
                     }
                     if (item.DocumentType == "DR")
                     {
@@ -1633,7 +1636,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
+                        receivingReport.AmountPaid -= item.AmountPaid;
+                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
                     }
                     if (item.DocumentType == "DR")
                     {
@@ -1641,11 +1646,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
                         if (item.CV.CvType == "Commission")
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
+                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            deliveryReceipt.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
                         }
                         if (item.CV.CvType == "Hauler")
                         {
-                            deliveryReceipt!.IsFreightPaid = false;
+                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            deliveryReceipt.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
                         }
                     }
                 }
