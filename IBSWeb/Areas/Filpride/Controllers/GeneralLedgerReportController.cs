@@ -1397,7 +1397,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Subsidiary Ledger");
 
-                // ── Title Block ──────────────────────────────────────────────────
+                // Title
                 var mergedCells = worksheet.Cells["A1:C1"];
                 mergedCells.Merge = true;
                 mergedCells.Value = "SUBSIDIARY LEDGER";
@@ -1421,14 +1421,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B5"].Value = extractedBy;
                 worksheet.Cells["B6"].Value = companyClaims;
 
-                // ── Column Headers ───────────────────────────────────────────────
+                // Column Headers
                 string[] headers =
                 {
-            "Account No", "Account Name", "Sub-Account Type",
-            "Sub-Account Name", "Period Start", "Period End",
-            "Fiscal Year", "Fiscal Period",
-            "Beginning Balance", "Debit Total", "Credit Total", "Ending Balance"
-        };
+                    "Account No", "Account Name", "Sub-Account Type",
+                    "Sub-Account Name", "Period Start", "Period End",
+                    "Fiscal Year", "Fiscal Period",
+                    "Beginning Balance", "Debit Total", "Credit Total", "Ending Balance"
+                };
 
                 int headerRow = 9;
                 for (int col = 1; col <= headers.Length; col++)
@@ -1447,13 +1447,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                // ── Data Rows ────────────────────────────────────────────────────
+                // Data Rows
                 int row = headerRow + 1;
                 string currencyFormat = "#,##0.00";
 
                 decimal grandBeginning = 0, grandDebit = 0, grandCredit = 0, grandEnding = 0;
 
-                // Group by Account → Sub-Account for subtotals
+                // Group by Account => Sub-Account for subtotals
                 var groupedByAccount = subsidiaryLedgers
                     .GroupBy(s => new { s.Account.AccountNumber, s.Account.AccountName });
 
@@ -1540,7 +1540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                // ── Grand Total Row ──────────────────────────────────────────────
+                // Grand Total row
                 worksheet.Cells[row, 3].Value = "GRAND TOTAL";
                 worksheet.Cells[row, 9].Value = grandBeginning;
                 worksheet.Cells[row, 10].Value = grandDebit;
@@ -1561,7 +1561,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(headerRow + 1, 1);
 
-                // ── Audit Trail ──────────────────────────────────────────────────
+                // Audit Trail
                 FilprideAuditTrail auditTrail = new(
                     GetUserFullName(),
                     "Generate subsidiary ledger report excel file",
@@ -1586,8 +1586,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate Subsidiary Ledger as Excel File
-
-        // ── Private Helpers ──────────────────────────────────────────────────────────
 
         private static void ApplyCurrencyFormat(ExcelWorksheet ws, int row, string format)
         {
