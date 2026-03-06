@@ -1424,24 +1424,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport.AmountPaid -= item.AmountPaid;
-                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
-                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
-                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt!.IsFreightPaid = false;
-                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
                         }
                     }
                 }
@@ -1526,24 +1532,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport.AmountPaid -= item.AmountPaid;
-                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
-                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
-                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt!.IsFreightPaid = false;
-                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
                         }
                     }
                 }
@@ -1636,23 +1648,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport.AmountPaid -= item.AmountPaid;
-                        var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
-                        receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                            deliveryReceipt.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
-                            deliveryReceipt.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                                deliveryReceipt.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                                deliveryReceipt.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
+                            }
                         }
                     }
                 }
