@@ -1400,8 +1400,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var subsidiaryLedgers = await _dbContext.FilprideGlSubAccountBalances
                     .Include(s => s.Account)
                     .Where(s =>
-                        s.PeriodStartDate >= dateFrom &&
-                        s.PeriodEndDate <= dateTo &&
+                        s.PeriodEndDate >= dateFrom &&
+                        s.PeriodStartDate <= dateTo &&
                         (selectedAccountNo == null || s.Account.AccountNumber == selectedAccountNo) &&
                         s.Company == companyClaims)
                     .OrderBy(s => s.Account.AccountNumber)
