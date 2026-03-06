@@ -268,7 +268,6 @@
                             let display = modelDRs.has(dr.id) ? '' : 'display: none';
                             let inputAmountClass = modelDRs.has(dr.id) ? 'inputAmount' : '';
                             const amountPaid = modelDRs.get(dr.id) || 0;
-                            const initialBalance = remainingBalance - amountPaid;
 
                             // Add to selectedRecords if already checked
                             if (modelDRs.has(dr.id)) {
@@ -282,7 +281,7 @@
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(grossAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}" data-max="${remainingBalance}"></td>
-                                            <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
+                                            <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);

@@ -632,6 +632,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var grossAmount = FilpridePaymentHelper.GetRRGrossAmount(rr, _unitOfWork.FilprideReceivingReport);
                     var remainingBalance = FilpridePaymentHelper.GetRRRemainingBalance(rr, _unitOfWork.FilprideReceivingReport);
+                    
+                    // Calculate total amount tagged in UNPOSTED CVs only (excluding current cvId)
+                    // Posted payments are already in rr.AmountPaid, so we only add unposted ones
+                    var unpostedCVPayments = _dbContext.FilprideCVTradePayments
+                        .Where(cvp => cvp.DocumentId == rr.ReceivingReportId 
+                                   && cvp.DocumentType == "RR" 
+                                   && (cvId == null || cvp.CheckVoucherId != cvId))
+                        .Where(cvp => cvp.CV.PostedBy == null)  // Only unposted CVs
+                        .Sum(cvp => (decimal?)cvp.AmountPaid) ?? 0m;
+                    
+                    // Available balance = remaining balance - unposted CV payments
+                    var availableBalance = remainingBalance - unpostedCVPayments;
 
                     return new
                     {
@@ -641,11 +653,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.OldRRNo,
                         GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
-                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format)
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format),
+                        AvailableBalance = availableBalance.ToString(SD.Four_Decimal_Format),
+                        _AvailableBalanceNumeric = availableBalance  // For filtering
                     };
-                }).ToList();
+                })
+                .Where(rr => rr._AvailableBalanceNumeric > 0)  // Filter out fully-covered RRs
+                .Select(rr => new  // Remove internal field before returning
+                {
+                    rr.Id,
+                    rr.ReceivingReportNo,
+                    rr.PurchaseOrderNo,
+                    rr.OldRRNo,
+                    rr.GrossAmount,
+                    rr.AmountPaid,
+                    rr.RemainingBalance,
+                    rr.AvailableBalance
+                })
+                .ToList();
 
-            return Json(rrList);
+            return Json(rrList.Any() ? rrList : null);
         }
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
