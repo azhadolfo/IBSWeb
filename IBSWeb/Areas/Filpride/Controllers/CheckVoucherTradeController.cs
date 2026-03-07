@@ -1,9 +1,12 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -398,6 +401,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
                     if (getReceivingReport != null)
                     {
+                        // Validate payment amount
+                        var remainingBalance = getReceivingReport.Amount - getReceivingReport.AmountPaid;
+                        if (item.Amount < 0)
+                        {
+                            TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot be negative.";
+                            return View(viewModel);
+                        }
+                        if (item.Amount > remainingBalance)
+                        {
+                            TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot exceed remaining balance of {remainingBalance:N4}.";
+                            return View(viewModel);
+                        }
+
                         getReceivingReport.AmountPaid += item.Amount;
                         cvh.TaxPercent = getReceivingReport.TaxPercentage;
 
@@ -566,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                              && po.QuantityReceived > 0
                              && po.Company == companyClaims
                              && po.ReceivingReports != null
-                             && po.ReceivingReports.Any(x => !x.IsPaid))
+                             && po.ReceivingReports.Any(rr => rr.AmountPaid < rr.Amount))
                 .ToListAsync();
 
             if (!purchaseOrders.Any())
@@ -585,11 +601,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            // Get all RRs that have been posted and have some amount remaining
+            // Don't filter by IsPaid - we'll filter by availableBalance later
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                                                         && rr.AmountPaid == 0
-                                                         && poNumber.Contains(rr.PONo)
-                                                         && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims
+                             && rr.AmountPaid < rr.Amount  // Has remaining amount
+                             && poNumber.Contains(rr.PONo)
+                             && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -598,6 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
+                // Include RRs that are already in the current CV (even if fully paid)
                 query = query.Union(_dbContext.FilprideReceivingReports
                     .Where(rr => poNumber.Contains(rr.PONo) && rrIds.Contains(rr.ReceivingReportId)));
             }
@@ -613,20 +632,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
+            // Get RR IDs that are already in the current CV (for editing)
+            var currentCVRRIds = cvId != null
+                ? _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "RR")
+                    .Select(cvp => cvp.DocumentId)
+                    .ToList()
+                : new List<int>();
+
             var rrList = receivingReports
                 .Select(rr =>
                 {
-                    var netOfVatAmount = rr.PurchaseOrder?.VatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount)
-                        : rr.Amount;
-
-                    var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
-                        : 0.0000m;
-
-                    var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
-                        : rr.Amount;
+                    var grossAmount = GetRRGrossAmount(rr, _unitOfWork.FilprideReceivingReport);
+                    var remainingBalance = GetRRRemainingBalance(rr, _unitOfWork.FilprideReceivingReport);
+                    
+                    // Calculate available balance: gross - ALL payments from OTHER CVs (posted + unposted)
+                    // Exclude cancelled and voided CVs
+                    var otherCVPayments = _dbContext.FilprideCVTradePayments
+                        .Where(cvp => cvp.DocumentId == rr.ReceivingReportId 
+                                   && cvp.DocumentType == "RR" 
+                                   && (cvId == null || cvp.CheckVoucherId != cvId)
+                                   && cvp.CV.Status != "Canceled"  // Exclude cancelled CVs
+                                   && cvp.CV.Status != "Voided")   // Exclude voided CVs
+                        .Sum(cvp => (decimal?)cvp.AmountPaid) ?? 0m;
+                    
+                    // Available = gross - payments from OTHER CVs
+                    var availableBalance = grossAmount - otherCVPayments;
 
                     return new
                     {
@@ -634,12 +665,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.ReceivingReportNo,
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
+                        GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format),
+                        AvailableBalance = availableBalance.ToString(SD.Four_Decimal_Format),
+                        _AvailableBalanceNumeric = availableBalance,  // For filtering
+                        _IsInCurrentCV = currentCVRRIds.Contains(rr.ReceivingReportId)  // For filtering
                     };
-                }).ToList();
+                })
+                .Where(rr => rr._IsInCurrentCV || rr._AvailableBalanceNumeric > 0)  // Keep RRs in current CV or with available balance
+                .Select(rr => new  // Remove internal fields before returning
+                {
+                    rr.Id,
+                    rr.ReceivingReportNo,
+                    rr.PurchaseOrderNo,
+                    rr.OldRRNo,
+                    rr.GrossAmount,
+                    rr.AmountPaid,
+                    rr.RemainingBalance,
+                    rr.AvailableBalance
+                })
+                .ToList();
 
-            return Json(rrList);
+            return Json(rrList.Any() ? rrList : null);
         }
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
@@ -941,6 +989,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (getReceivingReport == null)
                     {
                         return NotFound();
+                    }
+
+                    // Validate payment amount
+                    var remainingBalance = getReceivingReport.Amount - getReceivingReport.AmountPaid;
+                    if (item.Amount < 0)
+                    {
+                        TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot be negative.";
+                        return View(viewModel);
+                    }
+                    if (item.Amount > remainingBalance)
+                    {
+                        TempData["error"] = $"Invalid payment amount for RR {getReceivingReport.ReceivingReportNo}. Amount cannot exceed remaining balance of {remainingBalance:N4}.";
+                        return View(viewModel);
                     }
 
                     getReceivingReport.AmountPaid += item.Amount;
@@ -1256,8 +1317,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = true;
-                        receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        if (receivingReport != null)
+                        {
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            if (receivingReport.AmountPaid >= taxAdjustedAmount)
+                            {
+                                receivingReport.IsPaid = true;
+                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                            }
+                            else
+                            {
+                                receivingReport.IsPaid = false;
+                                // PaidDate is non-nullable, leave it as-is or set to DateTime.MinValue if needed
+                                // For now, we'll leave it since the IsPaid flag indicates the true status
+                            }
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
@@ -1266,11 +1340,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (item.CV.CvType == "Commission")
                         {
-                            deliveryReceipt!.IsCommissionPaid = true;
+                            deliveryReceipt!.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
                         }
                         if (item.CV.CvType == "Hauler")
                         {
-                            deliveryReceipt!.IsFreightPaid = true;
+                            deliveryReceipt!.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
                         }
                     }
                 }
@@ -1385,23 +1459,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
-                        receivingReport.AmountPaid -= item.AmountPaid;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
-                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt!.IsFreightPaid = false;
-                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
                         }
                     }
                 }
@@ -1486,23 +1567,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
-                        receivingReport.AmountPaid -= item.AmountPaid;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
-                            deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt!.IsFreightPaid = false;
-                            deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
                         }
                     }
                 }
@@ -1595,19 +1683,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = false;
+                        if (receivingReport != null)
+                        {
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                            var taxAdjustedAmount = (receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage;
+                            receivingReport.IsPaid = receivingReport.AmountPaid >= taxAdjustedAmount;
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
-                        if (item.CV.CvType == "Commission")
+                        if (deliveryReceipt != null)
                         {
-                            deliveryReceipt!.IsCommissionPaid = false;
-                        }
-                        if (item.CV.CvType == "Hauler")
-                        {
-                            deliveryReceipt!.IsFreightPaid = false;
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                                deliveryReceipt.IsCommissionPaid = deliveryReceipt.CommissionAmountPaid >= deliveryReceipt.CommissionAmount;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                                deliveryReceipt.IsFreightPaid = deliveryReceipt.FreightAmountPaid >= deliveryReceipt.FreightAmount;
+                            }
                         }
                     }
                 }
@@ -2477,6 +2575,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingCommission = getDeliveryReceipts.CommissionAmount - getDeliveryReceipts.CommissionAmountPaid;
+                    if (item.Amount > remainingCommission || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipts.DeliveryReceiptNo}. Remaining balance: {remainingCommission}");
+                    }
+
                     getDeliveryReceipts.CommissionAmountPaid += item.Amount;
 
                     cVTradePaymentModel.Add(
@@ -2848,6 +2953,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingFreight = getDeliveryReceipts.FreightAmount - getDeliveryReceipts.FreightAmountPaid;
+                    if (item.Amount > remainingFreight || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipts.DeliveryReceiptNo}. Remaining balance: {remainingFreight}");
+                    }
+
                     getDeliveryReceipts.FreightAmountPaid += item.Amount;
 
                     cVTradePaymentModel.Add(
@@ -2899,12 +3011,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            // Get all DRs that have been posted and have some commission remaining
+            // Don't filter by IsCommissionPaid - we'll filter by availableBalance later
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => companyClaims != null
                              && dr.Company == companyClaims
                              && commissioneeId == dr.CommissioneeId
-                             && dr.CommissionAmountPaid == 0
-                             && !dr.IsCommissionPaid
+                             && dr.CommissionAmountPaid < dr.CommissionAmount  // Has remaining amount
                              && dr.PostedBy != null);
 
             if (cvId != null)
@@ -2914,6 +3027,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
+                // Include DRs that are already in the current CV (even if fully paid)
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
                     .Where(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
             }
@@ -2924,48 +3038,78 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
-            if (query.Any())
+            if (!query.Any())
             {
-                var drList = deliverReceipt
-                    .OrderBy(x => x.DeliveryReceiptNo)
-                    .Select(dr =>
-                    {
-                        var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
-                            : dr.CommissionAmount;
-
-                        var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
-                            : 0m;
-
-                        var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
-                            : dr.CommissionAmount;
-
-                        return new
-                        {
-                            Id = dr.DeliveryReceiptId,
-                            dr.DeliveryReceiptNo,
-                            dr.ManualDrNo,
-                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
-                        };
-                    }).ToList();
-                return Json(drList);
+                return Json(null);
             }
 
-            return Json(null);
+            // Get DR IDs that are already in the current CV (for editing)
+            var currentCVDRIds = cvId != null
+                ? _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .Select(cvp => cvp.DocumentId)
+                    .ToList()
+                : new List<int>();
+
+            var drList = deliverReceipt
+                .OrderBy(x => x.DeliveryReceiptNo)
+                .Select(dr =>
+                {
+                    var grossAmount = GetCommissionGrossAmount(dr, _unitOfWork.FilprideReceivingReport);
+                    var remainingBalance = GetCommissionRemaining(dr, _unitOfWork.FilprideReceivingReport);
+
+                    // Calculate available balance: gross - ALL payments from OTHER CVs (posted + unposted)
+                    // Exclude cancelled and voided CVs
+                    var otherCVPayments = _dbContext.FilprideCVTradePayments
+                        .Where(cvp => cvp.DocumentId == dr.DeliveryReceiptId
+                                   && cvp.DocumentType == "DR"
+                                   && (cvId == null || cvp.CheckVoucherId != cvId)
+                                   && cvp.CV.Status != "Canceled"  // Exclude cancelled CVs
+                                   && cvp.CV.Status != "Voided")   // Exclude voided CVs
+                        .Sum(cvp => (decimal?)cvp.AmountPaid) ?? 0m;
+
+                    // Available = gross - payments from OTHER CVs
+                    var availableBalance = grossAmount - otherCVPayments;
+
+                    return new
+                    {
+                        Id = dr.DeliveryReceiptId,
+                        dr.DeliveryReceiptNo,
+                        dr.ManualDrNo,
+                        GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
+                        AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format),
+                        AvailableBalance = availableBalance.ToString(SD.Four_Decimal_Format),
+                        _AvailableBalanceNumeric = availableBalance,  // For filtering
+                        _IsInCurrentCV = currentCVDRIds.Contains(dr.DeliveryReceiptId)  // For filtering
+                    };
+                })
+                .Where(dr => dr._IsInCurrentCV || dr._AvailableBalanceNumeric > 0)  // Keep DRs in current CV or with available balance
+                .Select(dr => new  // Remove internal fields before returning
+                {
+                    dr.Id,
+                    dr.DeliveryReceiptNo,
+                    dr.ManualDrNo,
+                    dr.GrossAmount,
+                    dr.AmountPaid,
+                    dr.RemainingBalance,
+                    dr.AvailableBalance
+                })
+                .ToList();
+
+            return Json(drList.Any() ? drList : null);
         }
 
         public async Task<IActionResult> GetHaulerDRs(int? haulerId, int? cvId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            // Get all DRs that have been posted and have some freight remaining
+            // Don't filter by IsFreightPaid - we'll filter by availableBalance later
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
                              && dr.HaulerId == haulerId
-                             && dr.FreightAmountPaid == 0
-                             && !dr.IsFreightPaid
+                             && dr.FreightAmountPaid < dr.FreightAmount  // Has remaining amount
                              && dr.PostedBy != null);
 
             if (cvId != null)
@@ -2975,6 +3119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
+                // Include DRs that are already in the current CV (even if fully paid)
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
                     .Where(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId)));
             }
@@ -2989,32 +3134,61 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
+            // Get DR IDs that are already in the current CV (for editing)
+            var currentCVDRIds = cvId != null
+                ? _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .Select(cvp => cvp.DocumentId)
+                    .ToList()
+                : new List<int>();
+
             var drList = deliverReceipt
                 .OrderBy(x => x.DeliveryReceiptNo)
                 .Select(dr =>
                 {
-                    var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount)
-                        : dr.FreightAmount;
+                    var grossAmount = GetFreightGrossAmount(dr, _unitOfWork.FilprideReceivingReport);
+                    var remainingBalance = GetFreightRemaining(dr, _unitOfWork.FilprideReceivingReport);
 
-                    var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
-                        : 0.0000m;
+                    // Calculate available balance: gross - ALL payments from OTHER CVs (posted + unposted)
+                    // Exclude cancelled and voided CVs
+                    var otherCVPayments = _dbContext.FilprideCVTradePayments
+                        .Where(cvp => cvp.DocumentId == dr.DeliveryReceiptId
+                                   && cvp.DocumentType == "DR"
+                                   && (cvId == null || cvp.CheckVoucherId != cvId)
+                                   && cvp.CV.Status != "Canceled"  // Exclude cancelled CVs
+                                   && cvp.CV.Status != "Voided")   // Exclude voided CVs
+                        .Sum(cvp => (decimal?)cvp.AmountPaid) ?? 0m;
 
-                    var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
-                        : dr.FreightAmount;
+                    // Available = gross - payments from OTHER CVs
+                    var availableBalance = grossAmount - otherCVPayments;
 
                     return new
                     {
                         Id = dr.DeliveryReceiptId,
                         dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
+                        GrossAmount = grossAmount.ToString(SD.Four_Decimal_Format),
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
+                        RemainingBalance = remainingBalance.ToString(SD.Four_Decimal_Format),
+                        AvailableBalance = availableBalance.ToString(SD.Four_Decimal_Format),
+                        _AvailableBalanceNumeric = availableBalance,  // For filtering
+                        _IsInCurrentCV = currentCVDRIds.Contains(dr.DeliveryReceiptId)  // For filtering
                     };
-                }).ToList();
-            return Json(drList);
+                })
+                .Where(dr => dr._IsInCurrentCV || dr._AvailableBalanceNumeric > 0)  // Keep DRs in current CV or with available balance
+                .Select(dr => new  // Remove internal fields before returning
+                {
+                    dr.Id,
+                    dr.DeliveryReceiptNo,
+                    dr.ManualDrNo,
+                    dr.GrossAmount,
+                    dr.AmountPaid,
+                    dr.RemainingBalance,
+                    dr.AvailableBalance
+                })
+                .ToList();
+
+            return Json(drList.Any() ? drList : null);
         }
 
         [HttpGet]
@@ -3374,6 +3548,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (getDeliveryReceipt == null)
                     {
                         return NotFound();
+                    }
+
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingCommission = getDeliveryReceipt.CommissionAmount - getDeliveryReceipt.CommissionAmountPaid;
+                    if (item.Amount > remainingCommission || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipt.DeliveryReceiptNo}. Remaining balance: {remainingCommission}");
                     }
 
                     getDeliveryReceipt.CommissionAmountPaid += item.Amount;
@@ -3783,6 +3964,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    // Validate payment amount does not exceed remaining balance
+                    var remainingFreight = getDeliveryReceipt.FreightAmount - getDeliveryReceipt.FreightAmountPaid;
+                    if (item.Amount > remainingFreight || item.Amount < 0)
+                    {
+                        return BadRequest($"Invalid payment amount for DR {getDeliveryReceipt.DeliveryReceiptNo}. Remaining balance: {remainingFreight}");
+                    }
+
                     getDeliveryReceipt.FreightAmountPaid += item.Amount;
 
                     cvTradePaymentModel.Add(
@@ -4058,5 +4246,91 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, error = ex.Message });
             }
         }
+
+        #region Payment Calculation Helpers
+
+        /// <summary>
+        /// Calculates the gross amount (net of EWT) for a Receiving Report.
+        /// This is the static original amount, unchanged by payments.
+        /// </summary>
+        private static decimal GetRRGrossAmount(FilprideReceivingReport rr, IReceivingReportRepository receivingReportRepo)
+        {
+            var netOfVatAmount = rr.PurchaseOrder?.VatType == SD.VatType_Vatable
+                ? receivingReportRepo.ComputeNetOfVat(rr.Amount)
+                : rr.Amount;
+
+            var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, rr.TaxPercentage)
+                : 0.0000m;
+
+            return rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeNetOfEwt(rr.Amount, ewtAmount)
+                : rr.Amount;
+        }
+
+        /// <summary>
+        /// Calculates the remaining balance for a Receiving Report.
+        /// </summary>
+        private static decimal GetRRRemainingBalance(FilprideReceivingReport rr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetRRGrossAmount(rr, receivingReportRepo);
+            return grossAmount - rr.AmountPaid;
+        }
+
+        /// <summary>
+        /// Calculates the gross commission amount (net of EWT) for a Delivery Receipt.
+        /// </summary>
+        private static decimal GetCommissionGrossAmount(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var netOfVatAmount = dr.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable
+                ? receivingReportRepo.ComputeNetOfVat(dr.CommissionAmount)
+                : dr.CommissionAmount;
+
+            var ewtAmount = dr.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, dr.Commissionee?.WithholdingTaxPercent ?? 0m)
+                : 0m;
+
+            return dr.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
+                : dr.CommissionAmount;
+        }
+
+        /// <summary>
+        /// Calculates the remaining commission for a Delivery Receipt.
+        /// </summary>
+        private static decimal GetCommissionRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetCommissionGrossAmount(dr, receivingReportRepo);
+            return grossAmount - dr.CommissionAmountPaid;
+        }
+
+        /// <summary>
+        /// Calculates the gross freight amount (net of EWT) for a Delivery Receipt.
+        /// </summary>
+        private static decimal GetFreightGrossAmount(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
+                ? receivingReportRepo.ComputeNetOfVat(dr.FreightAmount)
+                : dr.FreightAmount;
+
+            var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeEwtAmount(netOfVatAmount, dr.Hauler?.WithholdingTaxPercent ?? 0m)
+                : 0m;
+
+            return dr.HaulerTaxType == SD.TaxType_WithTax
+                ? receivingReportRepo.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
+                : dr.FreightAmount;
+        }
+
+        /// <summary>
+        /// Calculates the remaining freight for a Delivery Receipt.
+        /// </summary>
+        private static decimal GetFreightRemaining(FilprideDeliveryReceipt dr, IReceivingReportRepository receivingReportRepo)
+        {
+            var grossAmount = GetFreightGrossAmount(dr, receivingReportRepo);
+            return grossAmount - dr.FreightAmountPaid;
+        }
+
+        #endregion
     }
 }
