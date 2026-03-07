@@ -587,9 +587,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                                                         && rr.AmountPaid == 0
+                                                         && rr.AmountPaid < (rr.Amount - ((rr.Amount / 1.12m) * rr.TaxPercentage))
                                                          && poNumber.Contains(rr.PONo)
                                                          && rr.PostedBy != null);
+            var rrAmountPaid = 0m;
 
             if (cvId != null)
             {
@@ -597,6 +598,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "RR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
+                
+                rrAmountPaid = await _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "RR")
+                    .SumAsync(cvp => cvp.AmountPaid, cancellationToken);
 
                 query = query.Union(_dbContext.FilprideReceivingReports
                     .Where(rr => poNumber.Contains(rr.PONo) && rrIds.Contains(rr.ReceivingReportId)));
@@ -635,6 +640,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
+                        Balance = ((netOfEwtAmount - rr.AmountPaid) + rrAmountPaid).ToString(SD.Four_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
@@ -1256,8 +1262,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        receivingReport!.IsPaid = true;
-                        receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        // Calculate net amount (excluding tax portion)
+                        var netAmount = Math.Round(receivingReport!.Amount - ((receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage), 4);
+                        
+                        // Mark as paid only if fully settled
+                        if (receivingReport.AmountPaid >= netAmount)
+                        {
+                            receivingReport.IsPaid = true;
+                            receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        }
                     }
                     if (item.DocumentType == "DR")
                     {
@@ -1266,11 +1279,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (item.CV.CvType == "Commission")
                         {
-                            deliveryReceipt!.IsCommissionPaid = true;
+                            // Mark as paid only if fully settled
+                            if (deliveryReceipt!.CommissionAmountPaid >= deliveryReceipt.CommissionAmount)
+                            {
+                                deliveryReceipt.IsCommissionPaid = true;
+                            }
                         }
                         if (item.CV.CvType == "Hauler")
                         {
-                            deliveryReceipt!.IsFreightPaid = true;
+                            // Mark as paid only if fully settled
+                            if (deliveryReceipt!.FreightAmountPaid >= deliveryReceipt.FreightAmount)
+                            {
+                                deliveryReceipt.IsFreightPaid = true;
+                            }
                         }
                     }
                 }
@@ -2903,9 +2924,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(dr => companyClaims != null
                              && dr.Company == companyClaims
                              && commissioneeId == dr.CommissioneeId
-                             && dr.CommissionAmountPaid == 0
+                             && dr.CommissionAmountPaid < dr.CommissionAmount
                              && !dr.IsCommissionPaid
                              && dr.PostedBy != null);
+
+            var drAmountPaid = 0m;
 
             if (cvId != null)
             {
@@ -2913,6 +2936,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
+
+                drAmountPaid = await _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .SumAsync(cvp => cvp.AmountPaid, cancellationToken);
 
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
                     .Where(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
@@ -2948,6 +2975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             dr.DeliveryReceiptNo,
                             dr.ManualDrNo,
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
+                            Balance = ((netOfEwtAmount - dr.CommissionAmountPaid) + drAmountPaid).ToString(SD.Four_Decimal_Format),
                             NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                         };
                     }).ToList();
@@ -2964,9 +2992,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
                              && dr.HaulerId == haulerId
-                             && dr.FreightAmountPaid == 0
+                             && dr.FreightAmountPaid < dr.FreightAmount
                              && !dr.IsFreightPaid
                              && dr.PostedBy != null);
+
+            var drAmountPaid = 0m;
 
             if (cvId != null)
             {
@@ -2974,6 +3004,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
+
+                drAmountPaid = await _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .SumAsync(cvp => cvp.AmountPaid, cancellationToken);
 
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
                     .Where(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId)));
@@ -3011,6 +3045,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.DeliveryReceiptNo,
                         dr.ManualDrNo,
                         AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
+                        Balance = ((netOfEwtAmount - dr.FreightAmountPaid) + drAmountPaid).ToString(SD.Four_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();

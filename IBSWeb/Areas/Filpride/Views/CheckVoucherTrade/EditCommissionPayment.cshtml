@@ -256,33 +256,33 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            let balance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
-                            
+                            const initialBalance = parseNumber(dr.balance);
+
                             const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
                             let display = modelDRs.has(dr.id) ? '' : 'display: none';
                             let inputAmountClass = modelDRs.has(dr.id) ? 'inputAmount' : '';
                             const amountPaid = modelDRs.get(dr.id);
-                            
+
                             // Add to selectedRecords if already checked
                             if (modelDRs.has(dr.id)) {
                                 selectedRecords.push(dr.id.toString());
                             }
-                            
+
                             const tr = $(`
-                                        <tr>
+                                        <tr data-balance="${initialBalance}">
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
                                             <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" readonly style="${display}" value="${amountPaid}"></td>
-                                            <td class="text-end balance">${formatNumberToFour(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
+                                            <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
                             totalGross += parseNumber(dr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(dr.amountPaid);
-                            totalBalance += balance;
+                            totalBalance += initialBalance;
                         });
                         reindexSelected();
                         updateSelectedCount(); // Update count after loading
@@ -336,26 +336,25 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const balance = parseNumber(row.find('.balance').text().trim());
-            const grossAmount = parseNumber(row.find('.grossAmount').text());
+            const initialBalance = parseNumber(row.attr('data-balance'));
 
             if (this.checked) {
                 if (!selectedRecords.includes(this.value)) {
                     selectedRecords.push(this.value);
                 }
-                inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
+                inputField.val(formatNumberToFour(initialBalance)).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumberToFour(initialBalance - initialBalance));
             } else {
                 selectedRecords = selectedRecords.filter(v => v !== this.value);
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumberToFour(grossAmount));
+                row.find('.balance').text(formatNumberToFour(initialBalance));
             }
 
             reindexSelected();
             updateAmounts();
             updateSelectedCount(); // Update count on checkbox change
-            
+
             // Update "Select All" checkbox state
             const totalCheckboxes = $('.selectCheckbox').length;
             const checkedCheckboxes = $('.selectCheckbox:checked').length;
@@ -373,6 +372,10 @@
         }
 
         $(document).on('input', '.inputAmount', function () {
+            const row = $(this).closest('tr');
+            const initialBalance = parseNumber(row.attr('data-balance'));
+            const paymentAmount = parseNumber($(this).val());
+            row.find('.balance').text(formatNumberToFour(initialBalance - paymentAmount));
             updateAmounts();
         });
 

@@ -314,16 +314,17 @@
 
                         data.forEach((rr, index) => {
                             currentPO = rr.purchaseOrderNo;
+                            const initialBalance = parseNumber(rr.balance);
 
                             const tr = $(`
-                                <tr data-po="${rr.purchaseOrderNo}">
+                                <tr data-po="${rr.purchaseOrderNo}" data-balance="${initialBalance}">
                                     <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
                                     <td class="text-end grossAmount">${formatNumberToFour(rr.netOfEwtAmount)}</td>
-                                    <td class="text-end"><input type="text" class="paymentAmount text-end" readonly style="display: none"></td>
-                                    <td class="text-end balance">${formatNumberToFour(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
+                                    <td class="text-end"><input type="text" class="paymentAmount text-end" style="display: none"></td>
+                                    <td class="text-end balance">${formatNumberToFour(initialBalance)}</td>
                                 </tr>
                             `);
 
@@ -420,24 +421,23 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const balance = parseNumber(row.find('.balance').text().trim());
-            const grossAmount = parseNumber(row.find('.grossAmount').text());
+            const initialBalance = parseNumber(row.attr('data-balance'));
 
             if (this.checked) {
                 selectedRecords.add(this.value);
-                inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
+                inputField.val(formatNumberToFour(initialBalance)).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumberToFour(initialBalance - initialBalance));
             } else {
                 selectedRecords.delete(this.value);
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumberToFour(grossAmount));
+                row.find('.balance').text(formatNumberToFour(initialBalance));
             }
 
             reindexSelected();
             updateAmounts();
             updateSelectedCount();
-            
+
             // Update "Select All" checkbox state
             const totalCheckboxes = $('.selectCheckbox').length;
             const checkedCheckboxes = $('.selectCheckbox:checked').length;
@@ -455,9 +455,13 @@
         }
 
         $(document).on('input', '.inputAmount', function () {
+            const row = $(this).closest('tr');
+            const initialBalance = parseNumber(row.attr('data-balance'));
+            const paymentAmount = parseNumber($(this).val());
+            row.find('.balance').text(formatNumberToFour(initialBalance - paymentAmount));
             updateAmounts();
         });
-        
+
         function updateAmounts() {
             var totalNetOfEWT = 0;
 
