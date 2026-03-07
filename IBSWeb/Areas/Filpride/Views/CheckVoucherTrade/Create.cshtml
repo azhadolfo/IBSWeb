@@ -313,10 +313,12 @@
                         let currentPO = null;
 
                         data.forEach((rr, index) => {
-                            const remainingBalance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
-                            
-                            // Skip RRs that are already fully paid (no remaining balance)
-                            if (remainingBalance <= 0) {
+                            const grossAmount = parseNumber(rr.grossAmount);
+                            const remainingBalance = parseNumber(rr.remainingBalance);
+                            const availableBalance = parseNumber(rr.availableBalance);
+
+                            // Skip RRs that have no available balance (fully covered by other CVs)
+                            if (availableBalance <= 0) {
                                 return;
                             }
 
@@ -328,14 +330,14 @@
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
-                                    <td class="text-end grossAmount">${formatNumberToFour(rr.netOfEwtAmount)}</td>
-                                    <td class="text-end"><input type="text" class="paymentAmount text-end" style="display: none" data-max="${remainingBalance}"></td>
+                                    <td class="text-end grossAmount">${formatNumberToFour(grossAmount)}</td>
+                                    <td class="text-end"><input type="text" class="paymentAmount text-end" style="display: none" data-max="${availableBalance}"></td>
                                     <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
                                 </tr>
                             `);
 
-                            subTotalGross += parseNumber(rr.netOfEwtAmount);
-                            totalGross += parseNumber(rr.netOfEwtAmount);
+                            subTotalGross += grossAmount;
+                            totalGross += grossAmount;
 
                             tbody.append(tr);
 
@@ -427,18 +429,17 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const grossAmount = parseNumber(row.find('.grossAmount').text());
-            const maxAmount = parseNumber(inputField.attr('data-max'));
+            const availableBalance = parseNumber(inputField.attr('data-max'));
 
             if (this.checked) {
                 selectedRecords.add(this.value);
-                inputField.val(formatNumberToFour(maxAmount)).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumberToFour(grossAmount - maxAmount));
+                inputField.val(formatNumberToFour(availableBalance)).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumberToFour(availableBalance - availableBalance));
             } else {
                 selectedRecords.delete(this.value);
                 inputField.removeAttr("name").val('').hide();
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumberToFour(grossAmount));
+                row.find('.balance').text(formatNumberToFour(availableBalance));
             }
 
             reindexSelected();
@@ -464,15 +465,22 @@
         $(document).on('input', '.inputAmount', function () {
             const inputField = $(this);
             const row = inputField.closest('tr');
-            const grossAmount = parseNumber(row.find('.grossAmount').text());
             const remainingBalance = parseNumber(inputField.attr('data-max'));
-            let paymentAmount = parseNumber($(this).val());
+            let inputValue = $(this).val();
+            let paymentAmount = parseNumber(inputValue);
+
+            // Skip validation when input is empty or invalid (user is still typing)
+            if (inputValue === '' || isNaN(paymentAmount)) {
+                row.find('.balance').text(formatNumberToFour(remainingBalance));
+                updateAmounts();
+                return;
+            }
 
             // Prevent exceeding the remaining balance
             if (paymentAmount > remainingBalance) {
                 paymentAmount = remainingBalance;
                 $(this).val(formatNumberToFour(paymentAmount));
-                alert('Payment amount cannot exceed the remaining balance!');
+                @* alert('Payment amount cannot exceed the remaining balance!'); *@
             }
 
             // Prevent negative values
@@ -482,7 +490,7 @@
             }
 
             // Update the balance column for this row
-            row.find('.balance').text(formatNumberToFour(grossAmount - paymentAmount));
+            row.find('.balance').text(formatNumberToFour(remainingBalance - paymentAmount));
 
             updateAmounts();
         });
