@@ -258,10 +258,12 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            const remainingBalance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
-                            
-                            // Skip DRs that are already fully paid (no remaining balance)
-                            if (remainingBalance <= 0) {
+                            const grossAmount = parseNumber(dr.grossAmount);
+                            const remainingBalance = parseNumber(dr.remainingBalance);
+                            const availableBalance = parseNumber(dr.availableBalance);
+
+                            // Skip DRs that have no available balance (fully covered by other CVs)
+                            if (availableBalance <= 0) {
                                 return;
                             }
 
@@ -270,16 +272,15 @@
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td>${dr.manualDrNo}</td>
-                                            <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
-                                            <td class="text-end"><input type="text" class="paymentAmount" style="display: none" data-max="${remainingBalance}"></td>
-                                            <td class="text-end balance">${formatNumberToFour(remainingBalance)}</td>
+                                            <td class="text-end grossAmount">${formatNumberToFour(grossAmount)}</td>
+                                            <td class="text-end"><input type="text" class="paymentAmount" style="display: none" data-max="${availableBalance}"></td>
+                                            <td class="text-end balance">${formatNumberToFour(availableBalance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(dr.netOfEwtAmount);
-                            totalAmountPaid += parseNumber(dr.amountPaid);
-                            totalBalance += remainingBalance;
+                            totalGross += grossAmount;
+                            totalBalance += availableBalance;
                         });
                     }
 
@@ -336,17 +337,17 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const remainingBalance = parseNumber(inputField.attr('data-max'));
+            const availableBalance = parseNumber(inputField.attr('data-max'));
 
             if (this.checked) {
                 selectedRecords.add(this.value);
-                inputField.val(formatNumberToFour(remainingBalance)).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumberToFour(remainingBalance - remainingBalance));
+                inputField.val(formatNumberToFour(availableBalance)).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumberToFour(availableBalance - availableBalance));
             } else {
                 selectedRecords.delete(this.value);
                 inputField.removeAttr("name").val('').hide();
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumberToFour(remainingBalance));
+                row.find('.balance').text(formatNumberToFour(availableBalance));
             }
 
             reindexSelected();
@@ -371,14 +372,22 @@
         $(document).on('input', '.inputAmount', function () {
             const inputField = $(this);
             const row = inputField.closest('tr');
-            const remainingBalance = parseNumber(inputField.attr('data-max'));
-            let paymentAmount = parseNumber($(this).val());
+            const availableBalance = parseNumber(inputField.attr('data-max'));
+            let inputValue = $(this).val();
+            let paymentAmount = parseNumber(inputValue);
 
-            // Prevent exceeding the remaining balance
-            if (paymentAmount > remainingBalance) {
-                paymentAmount = remainingBalance;
+            // Skip validation when input is empty (user is still typing)
+            if (inputValue === '') {
+                row.find('.balance').text(formatNumberToFour(availableBalance));
+                updateAmounts();
+                return;
+            }
+
+            // Prevent exceeding the available balance
+            if (paymentAmount > availableBalance) {
+                paymentAmount = availableBalance;
                 $(this).val(formatNumberToFour(paymentAmount));
-                alert('Payment amount cannot exceed the remaining balance!');
+                alert('Payment amount cannot exceed the available balance!');
             }
 
             // Prevent negative values
@@ -387,8 +396,8 @@
                 $(this).val(formatNumberToFour(paymentAmount));
             }
 
-            // Update the balance column: remaining balance - current payment
-            row.find('.balance').text(formatNumberToFour(remainingBalance - paymentAmount));
+            // Update the balance column: available balance - current payment
+            row.find('.balance').text(formatNumberToFour(availableBalance - paymentAmount));
 
             updateAmounts();
         });
