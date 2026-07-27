@@ -7,7 +7,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5073"
+      "applicationUrl": "http://localhost:5073;http://0.0.0.0:5073"
     },
     "https": {
       "commandName": "Project",
