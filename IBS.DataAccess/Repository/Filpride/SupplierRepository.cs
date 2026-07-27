@@ -99,6 +99,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
             existingSupplier.TradeName = model.TradeName;
             existingSupplier.WithholdingTaxTitle = model.WithholdingTaxTitle;
+            existingSupplier.IsMnvP = model.IsMnvP;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
