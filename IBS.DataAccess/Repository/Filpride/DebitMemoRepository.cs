@@ -363,6 +363,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenInclude(sv => sv!.Service)
                 .Include(si => si.SalesInvoice)
                 .ThenInclude(cos => cos!.CustomerOrderSlip)
+                .Include(c => c.SalesInvoice)
+                .ThenInclude(s => s!.DeliveryReceipt)
+                .ThenInclude(dr => dr!.PurchaseOrder)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -378,7 +381,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(c => c.ServiceInvoice)
                 .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv!.Service);
+                .ThenInclude(sv => sv!.Service)
+                .Include(c => c.SalesInvoice)
+                .ThenInclude(s => s!.DeliveryReceipt)
+                .ThenInclude(dr => dr!.PurchaseOrder);
 
             if (filter != null)
             {

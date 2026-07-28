@@ -6,6 +6,14 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.9] - 2026-07-28
+
+### Changed
+- Updated debit memo and credit memo locked-period adjustment snapshots to also store the related trade supplier from the underlying sales invoice delivery receipt purchase order when available.
+- Updated Filpride sales invoice repository loading to include the related delivery receipt purchase order so supplier snapshot data is available during debit memo and credit memo approval processing.
+
+---
+
 ## [v3.0.8] - 2026-07-28
 
 ### Added

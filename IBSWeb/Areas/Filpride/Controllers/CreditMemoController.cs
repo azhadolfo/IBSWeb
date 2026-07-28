@@ -144,6 +144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                     .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
+                .OrderBy(si => si.SalesInvoiceNo)
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
@@ -153,6 +154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
                     .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
+                .OrderBy(sv => sv.ServiceInvoiceNo)
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
@@ -1176,6 +1178,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         EntityNo = model.CreditMemoNo ?? string.Empty,
                         CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
                         CustomerName = model.SalesInvoice.CustomerOrderSlip?.CustomerName ?? model.SalesInvoice.Customer?.CustomerName,
+                        SupplierId = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierId,
+                        SupplierName = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierName,
                         AdjustmentType = LockedPeriodAdjustmentType.CreditMemo,
                         OldValue = oldBalance,
                         NewValue = model.SalesInvoice.Balance,
