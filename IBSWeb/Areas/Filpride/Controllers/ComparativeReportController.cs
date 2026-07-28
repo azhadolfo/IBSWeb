@@ -89,8 +89,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!isCombinedReport)
                 {
-                    var adjustmentType = GetAdjustmentType(category);
-                    adjustmentsQuery = adjustmentsQuery.Where(a => a.AdjustmentType == adjustmentType);
+                    adjustmentsQuery = category switch
+                    {
+                        "Sales" => adjustmentsQuery.Where(a =>
+                            a.AdjustmentType == LockedPeriodAdjustmentType.SellingPrice ||
+                            a.AdjustmentType == LockedPeriodAdjustmentType.DebitMemo ||
+                            a.AdjustmentType == LockedPeriodAdjustmentType.CreditMemo),
+                        "Purchases" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.UnitCost),
+                        "Commission" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.Commission),
+                        "Freight" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.Freight),
+                        _ => throw new ArgumentException("Invalid comparative report category.")
+                    };
                 }
 
                 var adjustments = await adjustmentsQuery
@@ -124,18 +133,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-        }
-
-        private static LockedPeriodAdjustmentType GetAdjustmentType(string category)
-        {
-            return category switch
-            {
-                "Sales" => LockedPeriodAdjustmentType.SellingPrice,
-                "Purchases" => LockedPeriodAdjustmentType.UnitCost,
-                "Commission" => LockedPeriodAdjustmentType.Commission,
-                "Freight" => LockedPeriodAdjustmentType.Freight,
-                _ => throw new ArgumentException("Invalid comparative report category.")
-            };
         }
 
         private static string GetReportTitle(string category)
@@ -330,6 +327,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return adjustmentType switch
             {
                 LockedPeriodAdjustmentType.SellingPrice => "Sales",
+                LockedPeriodAdjustmentType.DebitMemo => "Sales",
+                LockedPeriodAdjustmentType.CreditMemo => "Sales",
                 LockedPeriodAdjustmentType.UnitCost => "Purchases",
                 LockedPeriodAdjustmentType.Commission => "Commission",
                 LockedPeriodAdjustmentType.Freight => "Freight",

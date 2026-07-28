@@ -6,6 +6,18 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.8] - 2026-07-28
+
+### Added
+- Added locked-period comparative adjustment support for approved debit memos and credit memos that affect prior sales invoice balances, including customer snapshot details and signed adjustment amounts in the sales comparative report dataset.
+
+### Changed
+- Updated Filpride debit memo and credit memo approval flows to automatically complete posting in the same transaction after approval, including creation of the related general ledger entries.
+- Updated the Filpride debit memo and credit memo print actions to reflect the combined `Approve & Post` workflow for records pending finance approval.
+- Updated the comparative sales adjustment filter to include debit memo and credit memo prior-sales effects alongside selling price adjustments.
+
+---
+
 ## [v3.0.7] - 2026-07-28
 
 ### Added
