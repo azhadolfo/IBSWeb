@@ -200,6 +200,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                             if (isCombinedReport)
                             {
                                 columns.RelativeColumn();
@@ -216,6 +218,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                             AddHeaderCell(header, "Module");
                             AddHeaderCell(header, "Reference");
+                            AddHeaderCell(header, "Customer");
+                            AddHeaderCell(header, "Supplier");
                             AddHeaderCell(header, "Affected Qty");
                             AddHeaderCell(header, "Old Value");
                             AddHeaderCell(header, "New Value");
@@ -235,6 +239,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                             AddTextCell(table, adjustment.EntityType.ToString());
                             AddTextCell(table, adjustment.EntityTypeNo);
+                            AddTextCell(table, adjustment.CustomerName);
+                            AddTextCell(table, adjustment.SupplierName);
                             AddNumberCell(table, adjustment.AffectedQuantity, SD.Two_Decimal_Format);
                             AddNumberCell(table, adjustment.OldValue, SD.Four_Decimal_Format);
                             AddNumberCell(table, adjustment.NewValue, SD.Four_Decimal_Format);
@@ -289,7 +295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             decimal totalAdjustment,
             bool isCombinedReport)
         {
-            table.Cell().ColumnSpan((uint)(isCombinedReport ? 5 : 4))
+            table.Cell().ColumnSpan((uint)(isCombinedReport ? 7 : 6))
                 .Background(Colors.Grey.Lighten1)
                 .Border(0.5f)
                 .Padding(3)

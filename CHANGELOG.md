@@ -6,6 +6,17 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.7] - 2026-07-28
+
+### Added
+- Added customer and supplier snapshot fields to locked-period adjustments so comparative adjustment records can retain the related party details used at the time the adjustment was recorded.
+
+### Changed
+- Updated locked-period adjustment creation flows for delivery receipt selling price, commission, freight, and receiving report unit cost updates to persist related customer and supplier snapshots when available.
+- Updated the Filpride comparative adjustment PDF output to populate the existing `Customer` and `Supplier` columns from the stored locked-period adjustment snapshot fields.
+
+---
+
 ## [v3.0.6] - 2026-06-10
 
 ### Added
