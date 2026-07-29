@@ -571,9 +571,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var dateToday = DateTimeHelper.GetCurrentPhilippineTime();
                 model.PostedBy = null;
                 model.VoidedBy = GetUserFullName();
-                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.VoidedDate = dateToday;
                 model.Status = nameof(DmCmStatus.Voided);
                 if (model.SalesInvoice != null)
                 {
@@ -585,7 +586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.LockedPeriodAdjustment.AddIfPeriodPostedAsync(new()
                     {
                         Module = Module.SalesInvoice,
-                        TransactionDate = model.SalesInvoice.TransactionDate,
+                        TransactionDate = DateOnly.FromDateTime(dateToday),
                         EntityType = Module.CreditMemo,
                         EntityNo = model.CreditMemoNo ?? string.Empty,
                         CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
