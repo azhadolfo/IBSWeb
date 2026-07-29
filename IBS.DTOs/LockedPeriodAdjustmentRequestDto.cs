@@ -12,6 +12,14 @@ namespace IBS.DTOs
 
         public string EntityNo { get; set; } = string.Empty;
 
+        public int? CustomerId { get; set; }
+
+        public string? CustomerName { get; set; }
+
+        public int? SupplierId { get; set; }
+
+        public string? SupplierName { get; set; }
+
         public LockedPeriodAdjustmentType AdjustmentType { get; set; }
 
         public decimal OldValue { get; set; }

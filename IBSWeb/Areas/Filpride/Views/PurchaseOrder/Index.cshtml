@@ -400,10 +400,9 @@
                                 <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Preview</a></li>
                                  `;
 
-                                // Validate unTriggeredQuantity before showing Update Price
                                 if (row.unTriggeredQuantity > 0 || isAdmin) {
                                     dropdownContent += `
-                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="showUpdatePriceModal(${data}, ${row.unTriggeredQuantity})">Update Price</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="showUpdatePriceModal(${data}, ${row.quantity})">Update Price</a></li>
                                     `;
                                 }
 

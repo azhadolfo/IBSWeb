@@ -258,7 +258,7 @@
             if (isApprover)
             {
                 <div class="col-6 col-md-3">
-                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.DebitMemoId)">Approve</a>
+                    <a class="btn btn-success form-control buttons" onclick="confirmApprove(@Model.DebitMemoId)">Approve & Post</a>
                 </div>
             }
         }
@@ -385,7 +385,7 @@
         function confirmApprove(id) {
             Swal.fire({
                 title: 'Approve this record?',
-                text: "This will mark the debit memo as ForPosting.",
+                text: "This will approve and post the debit memo.",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',

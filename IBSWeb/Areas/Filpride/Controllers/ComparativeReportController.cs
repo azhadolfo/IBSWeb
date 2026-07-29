@@ -89,8 +89,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!isCombinedReport)
                 {
-                    var adjustmentType = GetAdjustmentType(category);
-                    adjustmentsQuery = adjustmentsQuery.Where(a => a.AdjustmentType == adjustmentType);
+                    adjustmentsQuery = category switch
+                    {
+                        "Sales" => adjustmentsQuery.Where(a =>
+                            a.AdjustmentType == LockedPeriodAdjustmentType.SellingPrice ||
+                            a.AdjustmentType == LockedPeriodAdjustmentType.DebitMemo ||
+                            a.AdjustmentType == LockedPeriodAdjustmentType.CreditMemo),
+                        "Purchases" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.UnitCost),
+                        "Commission" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.Commission),
+                        "Freight" => adjustmentsQuery.Where(a => a.AdjustmentType == LockedPeriodAdjustmentType.Freight),
+                        _ => throw new ArgumentException("Invalid comparative report category.")
+                    };
                 }
 
                 var adjustments = await adjustmentsQuery
@@ -124,18 +133,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-        }
-
-        private static LockedPeriodAdjustmentType GetAdjustmentType(string category)
-        {
-            return category switch
-            {
-                "Sales" => LockedPeriodAdjustmentType.SellingPrice,
-                "Purchases" => LockedPeriodAdjustmentType.UnitCost,
-                "Commission" => LockedPeriodAdjustmentType.Commission,
-                "Freight" => LockedPeriodAdjustmentType.Freight,
-                _ => throw new ArgumentException("Invalid comparative report category.")
-            };
         }
 
         private static string GetReportTitle(string category)
@@ -200,6 +197,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                             if (isCombinedReport)
                             {
                                 columns.RelativeColumn();
@@ -216,6 +215,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                             AddHeaderCell(header, "Module");
                             AddHeaderCell(header, "Reference");
+                            AddHeaderCell(header, "Customer");
+                            AddHeaderCell(header, "Supplier");
                             AddHeaderCell(header, "Affected Qty");
                             AddHeaderCell(header, "Old Value");
                             AddHeaderCell(header, "New Value");
@@ -235,6 +236,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                             AddTextCell(table, adjustment.EntityType.ToString());
                             AddTextCell(table, adjustment.EntityTypeNo);
+                            AddTextCell(table, adjustment.CustomerName);
+                            AddTextCell(table, adjustment.SupplierName);
                             AddNumberCell(table, adjustment.AffectedQuantity, SD.Two_Decimal_Format);
                             AddNumberCell(table, adjustment.OldValue, SD.Four_Decimal_Format);
                             AddNumberCell(table, adjustment.NewValue, SD.Four_Decimal_Format);
@@ -289,7 +292,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             decimal totalAdjustment,
             bool isCombinedReport)
         {
-            table.Cell().ColumnSpan((uint)(isCombinedReport ? 5 : 4))
+            table.Cell().ColumnSpan((uint)(isCombinedReport ? 7 : 6))
                 .Background(Colors.Grey.Lighten1)
                 .Border(0.5f)
                 .Padding(3)
@@ -324,6 +327,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return adjustmentType switch
             {
                 LockedPeriodAdjustmentType.SellingPrice => "Sales",
+                LockedPeriodAdjustmentType.DebitMemo => "Sales",
+                LockedPeriodAdjustmentType.CreditMemo => "Sales",
                 LockedPeriodAdjustmentType.UnitCost => "Purchases",
                 LockedPeriodAdjustmentType.Commission => "Commission",
                 LockedPeriodAdjustmentType.Freight => "Freight",

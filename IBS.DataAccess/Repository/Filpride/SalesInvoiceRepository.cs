@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Utility.Constants;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -81,6 +80,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
                 .Include(si => si.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.PurchaseOrder)
+                .Include(si => si.DeliveryReceipt)
                     .ThenInclude(dr => dr!.Hauler)
                 .Include(si => si.DeliveryReceipt)
                     .ThenInclude(dr => dr!.Commissionee)
@@ -93,6 +94,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideSalesInvoice> query = dbSet
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.PurchaseOrder)
                 .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
                 .Include(si => si.CustomerOrderSlip);
 
@@ -109,6 +111,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideSalesInvoice> query = dbSet
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.PurchaseOrder)
                 .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
                 .Include(si => si.CustomerOrderSlip)
                 .AsSplitQuery()
