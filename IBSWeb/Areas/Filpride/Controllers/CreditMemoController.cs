@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Filpride;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -576,8 +577,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(DmCmStatus.Voided);
                 if (model.SalesInvoice != null)
                 {
-                    model.SalesInvoice!.Balance += Math.Abs(model.CreditAmount);
-                    model.SalesInvoice!.CreditAmount -= Math.Abs(model.CreditAmount);
+                    var creditAmount = Math.Abs(model.CreditAmount);
+                    var oldBalance = model.SalesInvoice.Balance;
+                    model.SalesInvoice.Balance += creditAmount;
+                    model.SalesInvoice.CreditAmount -= creditAmount;
+
+                    await _unitOfWork.LockedPeriodAdjustment.AddIfPeriodPostedAsync(new()
+                    {
+                        Module = Module.SalesInvoice,
+                        TransactionDate = model.SalesInvoice.TransactionDate,
+                        EntityType = Module.CreditMemo,
+                        EntityNo = model.CreditMemoNo ?? string.Empty,
+                        CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
+                        CustomerName = model.SalesInvoice.CustomerOrderSlip?.CustomerName ?? model.SalesInvoice.Customer?.CustomerName,
+                        SupplierId = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierId,
+                        SupplierName = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierName,
+                        AdjustmentType = LockedPeriodAdjustmentType.CreditMemo,
+                        OldValue = oldBalance,
+                        NewValue = model.SalesInvoice.Balance,
+                        AdjustmentValue = creditAmount,
+                        AffectedQuantity = model.Quantity ?? 0m,
+                        Reason = "Voided credit memo reversal",
+                        CreatedBy = model.VoidedBy
+                    }, cancellationToken);
                 }
 
                 await _unitOfWork.GeneralLedger.ReverseEntries(model.CreditMemoNo, cancellationToken);
@@ -743,8 +765,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.CreditMemoNo!.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.SalesInvoice?.SalesInvoiceNo?.ToLower().Contains(searchValue) == true ||
-                            s.ServiceInvoice?.ServiceInvoiceNo?.ToLower().Contains(searchValue) == true ||
-                            s.Source!.ToLower().Contains(searchValue) ||
+                            s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true ||
+                            s.Source.ToLower().Contains(searchValue) ||
                             s.CreditAmount.ToString().Contains(searchValue) ||
                             s.CreatedBy!.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue)
@@ -1103,11 +1125,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(Print), new { id });
                 }
 
+                if (creditMemo.SalesInvoice != null)
+                {
+                    var creditAmount = Math.Abs(creditMemo.CreditAmount);
+                    creditMemo.SalesInvoice.Balance += creditAmount;
+                    creditMemo.SalesInvoice.CreditAmount -= creditAmount;
+                }
+
                 creditMemo.PostedBy = null;
                 creditMemo.PostedDate = null;
-                creditMemo.Status = nameof(DmCmStatus.ForPosting);
+                creditMemo.Status = nameof(DmCmStatus.ForApprovalOfFM);
 
                 await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(x => x.Reference == creditMemo.CreditMemoNo, cancellationToken);
+                await _unitOfWork.FilprideCreditMemo.RemoveRecords<LockedPeriodAdjustment>(
+                    x => x.EntityType == Module.CreditMemo && x.EntityTypeNo == creditMemo.CreditMemoNo,
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 

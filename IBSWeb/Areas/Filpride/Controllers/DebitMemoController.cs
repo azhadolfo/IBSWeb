@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Models.Filpride;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -393,14 +394,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var dateToday = DateTimeHelper.GetCurrentPhilippineTime();
                 model.PostedBy = null;
                 model.VoidedBy = GetUserFullName();
-                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.VoidedDate = dateToday;
                 model.Status = nameof(DmCmStatus.Voided);
                 if (model.SalesInvoice != null)
                 {
+                    var oldBalance = model.SalesInvoice.Balance;
                     model.SalesInvoice.Balance -= model.DebitAmount;
                     model.SalesInvoice.DebitAmount -= model.DebitAmount;
+
+                    await _unitOfWork.LockedPeriodAdjustment.AddIfPeriodPostedAsync(new()
+                    {
+                        Module = Module.SalesInvoice,
+                        TransactionDate = DateOnly.FromDateTime(dateToday),
+                        EntityType = Module.DebitMemo,
+                        EntityNo = model.DebitMemoNo ?? string.Empty,
+                        CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
+                        CustomerName = model.SalesInvoice.CustomerOrderSlip?.CustomerName ?? model.SalesInvoice.Customer?.CustomerName,
+                        SupplierId = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierId,
+                        SupplierName = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierName,
+                        AdjustmentType = LockedPeriodAdjustmentType.DebitMemo,
+                        OldValue = oldBalance,
+                        NewValue = model.SalesInvoice.Balance,
+                        AdjustmentValue = -model.DebitAmount,
+                        AffectedQuantity = model.Quantity ?? 0m,
+                        Reason = "Voided debit memo reversal",
+                        CreatedBy = model.VoidedBy
+                    }, cancellationToken);
                 }
 
                 await _unitOfWork.GeneralLedger.ReverseEntries(model.DebitMemoNo, cancellationToken);
@@ -1092,11 +1114,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(Print), new { id });
                 }
 
+                if (debitMemo.SalesInvoice != null)
+                {
+                    debitMemo.SalesInvoice.Balance -= debitMemo.DebitAmount;
+                    debitMemo.SalesInvoice.DebitAmount -= debitMemo.DebitAmount;
+                }
+
                 debitMemo.PostedBy = null;
                 debitMemo.PostedDate = null;
-                debitMemo.Status = nameof(DmCmStatus.ForPosting);
+                debitMemo.Status = nameof(DmCmStatus.ForApprovalOfFM);
 
                 await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(x => x.Reference == debitMemo.DebitMemoNo, cancellationToken);
+                await _unitOfWork.FilprideDebitMemo.RemoveRecords<LockedPeriodAdjustment>(
+                    x => x.EntityType == Module.DebitMemo && x.EntityTypeNo == debitMemo.DebitMemoNo,
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
