@@ -50,6 +50,11 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 #region -- Filpride
 
+                MarketingApprovalCount = await _dbContext.FilprideCustomerOrderSlips
+                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfMarketing)
+                                      && cos.Company == companyClaims)
+                        .CountAsync(),
+
                 SupplierAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
                             (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created))
@@ -94,6 +99,16 @@ namespace IBSWeb.Areas.User.Controllers
                 FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM)
                                       && cos.Company == companyClaims)
+                        .CountAsync(),
+
+                FMApprovalDMCount = await _dbContext.FilprideDebitMemos
+                        .Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM)
+                                     && dm.Company == companyClaims)
+                        .CountAsync(),
+
+                FMApprovalCMCount = await _dbContext.FilprideCreditMemos
+                        .Where(cm => cm.Status == nameof(DmCmStatus.ForApprovalOfFM)
+                                     && cm.Company == companyClaims)
                         .CountAsync(),
 
                 DRCount = await _dbContext.FilprideCustomerOrderSlips

@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @model IBS.Models.Filpride.ViewModels.DashboardCountViewModel
 @inject SignInManager<ApplicationUser> SignInManager
 
@@ -33,6 +33,19 @@
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
                         <div class="row g-4">
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-check-circle me-2 text-primary"></i>Marketing Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MarketingApprovalCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
 
                             <div class="col-md-4">
                                 <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="text-decoration-none">
@@ -106,6 +119,32 @@
                                                 <i class="bi bi-check-circle me-2 text-primary"></i>OM Approval (Purchase Order)
                                             </h5>
                                             <p class="card-text display-6 text-primary fw-bold">@Model.OMApprovalPOCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-check-circle me-2 text-primary"></i>FM Approval (Debit Memo)
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.FMApprovalDMCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-check-circle me-2 text-primary"></i>FM Approval (Credit Memo)
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.FMApprovalCMCount.ToString("N0")</p>
                                         </div>
                                     </div>
                                 </a>
