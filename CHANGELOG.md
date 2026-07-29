@@ -6,6 +6,37 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.9] - 2026-07-28
+
+### Changed
+- Updated debit memo and credit memo locked-period adjustment snapshots to also store the related trade supplier from the underlying sales invoice delivery receipt purchase order when available.
+- Updated Filpride sales invoice repository loading to include the related delivery receipt purchase order so supplier snapshot data is available during debit memo and credit memo approval processing.
+
+---
+
+## [v3.0.8] - 2026-07-28
+
+### Added
+- Added locked-period comparative adjustment support for approved debit memos and credit memos that affect prior sales invoice balances, including customer snapshot details and signed adjustment amounts in the sales comparative report dataset.
+
+### Changed
+- Updated Filpride debit memo and credit memo approval flows to automatically complete posting in the same transaction after approval, including creation of the related general ledger entries.
+- Updated the Filpride debit memo and credit memo print actions to reflect the combined `Approve & Post` workflow for records pending finance approval.
+- Updated the comparative sales adjustment filter to include debit memo and credit memo prior-sales effects alongside selling price adjustments.
+
+---
+
+## [v3.0.7] - 2026-07-28
+
+### Added
+- Added customer and supplier snapshot fields to locked-period adjustments so comparative adjustment records can retain the related party details used at the time the adjustment was recorded.
+
+### Changed
+- Updated locked-period adjustment creation flows for delivery receipt selling price, commission, freight, and receiving report unit cost updates to persist related customer and supplier snapshots when available.
+- Updated the Filpride comparative adjustment PDF output to populate the existing `Customer` and `Supplier` columns from the stored locked-period adjustment snapshot fields.
+
+---
+
 ## [v3.0.6] - 2026-06-10
 
 ### Added

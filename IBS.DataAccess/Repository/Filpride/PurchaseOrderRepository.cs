@@ -202,7 +202,10 @@ namespace IBS.DataAccess.Repository.Filpride
             var receivingReports = await _db.FilprideReceivingReports
                 .Include(rr => rr.PurchaseOrder)
                     .ThenInclude(po => po!.Supplier)
-                .Include(r => r.DeliveryReceipt)
+                .Include(rr => rr.PurchaseOrder)
+                    .ThenInclude(po => po!.Customer)
+                .Include(rr => rr.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.CustomerOrderSlip)
                 .Where(r => r.POId == model.PurchaseOrderId
                             && r.Status == nameof(Status.Posted)
                             && !r.IsCostUpdated)
@@ -276,6 +279,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     TransactionDate = receivingReport.Date,
                     EntityType = Module.ReceivingReport,
                     EntityNo = receivingReport.ReceivingReportNo!,
+                    CustomerId = receivingReport.DeliveryReceipt?.CustomerId ?? receivingReport.PurchaseOrder?.CustomerId,
+                    CustomerName = receivingReport.DeliveryReceipt?.CustomerOrderSlip?.CustomerName
+                                   ?? receivingReport.PurchaseOrder?.Customer?.CustomerName,
+                    SupplierId = receivingReport.PurchaseOrder?.SupplierId,
+                    SupplierName = receivingReport.PurchaseOrder?.SupplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.UnitCost,
                     OldValue = oldUnitCost,
                     NewValue = model.TriggeredPrice,
