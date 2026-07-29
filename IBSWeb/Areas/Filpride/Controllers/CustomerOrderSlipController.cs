@@ -1259,6 +1259,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                existingRecord.MarketingApprovedBy = GetUserFullName();
+                existingRecord.MarketingApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
                 existingRecord.Terms = terms ?? existingRecord.Terms;
                 existingRecord.FinanceInstruction = instructions;
