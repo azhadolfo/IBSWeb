@@ -1410,9 +1410,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var serviceAccountNo = existingSv!.Service!.CurrentAndPreviousNo;
                 var serviceTitle = accountTitlesDto.Find(c => c.AccountNumber == serviceAccountNo) ?? throw new ArgumentException($"Account title '{serviceAccountNo}' not found.");
 
-                var netAmount = model.ServiceInvoice!.VatType == "Vatable"
-                    ? (model.Amount ?? 0 - existingSv.Discount) / 1.12m
-                    : model.Amount ?? 0 - existingSv.Discount;
+                decimal netAmount;
+                if (model.ServiceInvoice!.VatType == SD.VatType_Vatable)
+                {
+                    netAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
+                    var total = Math.Round((model.Amount ?? 0) / 1.12m, 4);
+                    var roundedNetAmount = Math.Round(netAmount, 4);
+
+                    if (roundedNetAmount > total)
+                    {
+                        var shortAmount = netAmount - total;
+                        netAmount += shortAmount;
+                    }
+                }
+                else
+                {
+                    netAmount = model.Amount ?? 0 - existingSv.Discount;
+                }
 
                 decimal withHoldingTaxAmount = 0;
                 decimal withHoldingVatAmount = 0;
@@ -1431,7 +1445,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.ServiceInvoice.HasEwt)
                 {
-                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m) * -1;
+                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), existingSv.ServicePercent / 100m) * -1;
                 }
 
                 if (model.ServiceInvoice.HasWvat)
