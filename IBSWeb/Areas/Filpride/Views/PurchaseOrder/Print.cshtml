@@ -7,13 +7,28 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    ViewData["Title"] = "Purchase Order - Preview";    
-    
+    ViewData["Title"] = "Purchase Order - Preview";
+
     var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+
+    var productName = Model.ProductName;
+
+    var isFilOil = Model.SupplierName.StartsWith("FILOIL");
+
+    if (isFilOil)
+    {
+        productName = productName switch
+        {
+            "BIODIESEL" => "BIODIESEL / DIESEL",
+            "ECONOGAS" => "ECONOGAS / UNLEADED",
+            "ENVIROGAS" => "ENVIROGAS / PREMIUM",
+            _ => productName
+        };
     }
 
 }
@@ -61,12 +76,12 @@
     }
 
     @@media (max-width: 768px) {
-        
+
         .table th, .table td {
             font-size: 0.9rem;
             padding: 8px 10px;
         }
-    
+
         h3 {
             font-size: 1.5rem;
         }
@@ -75,7 +90,7 @@
             page-break-before: always;
         }
     }
-    
+
     @@media print {
         /* Reduce spacing for compact layout */
         .compact-section {
@@ -142,7 +157,7 @@
         </thead>
         <tbody>
             <tr>
-                <td class="w-25">@Html.DisplayFor(model => model.ProductName)</td>
+                <td class="w-25">@productName</td>
                 <td class="w-25">@Model.Quantity.ToString(SD.Two_Decimal_Format)</td>
                 <td class="w-25">@Model.Price.ToString(SD.Four_Decimal_Format)</td>
                 <td class="w-25">@Model.Amount.ToString(SD.Two_Decimal_Format)</td>
@@ -361,7 +376,7 @@
                             window.removeEventListener('afterprint', afterPrintHandler);
                             controllerThenPrint(id);
                         };
-                        
+
                         window.addEventListener('afterprint', afterPrintHandler);
                         Swal.close();
                         setTimeout(() => { window.print(); }, 200);
@@ -379,7 +394,7 @@
                     window.removeEventListener('afterprint', afterPrintHandler);
                     controllerThenPrint(id);
                 };
-                
+
                 window.addEventListener('afterprint', afterPrintHandler);
                 window.print();
             }
@@ -391,6 +406,6 @@
             window.location.href = url;
         }
     </script>
-    
+
     <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }
