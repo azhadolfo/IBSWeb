@@ -283,8 +283,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeVatAmount(netOfVatAmount)
                     : 0m;
-                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.01m) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.05m) : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
                 var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                     ? ComputeNetOfEwt(deliveryReceipt.TotalAmount, (arTradeCwtAmount + arTradeCwvAmount))
                     : deliveryReceipt.TotalAmount;
@@ -966,8 +966,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeVatAmount(netOfVatAmount)
                     : 0m;
-                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(difference, 0.01m) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(difference, 0.05m) : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
                 var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                     ? ComputeNetOfEwt(difference, (arTradeCwtAmount + arTradeCwvAmount))
                     : difference;
@@ -1078,8 +1078,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     EntityType = Module.DeliveryReceipt,
                     EntityNo = deliveryReceipt.DeliveryReceiptNo,
                     AdjustmentType = LockedPeriodAdjustmentType.SellingPrice,
-                    OldValue = GetUnitValue(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
-                    NewValue = GetUnitValue(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
+                    OldValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
+                    NewValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,
                     Reason = "Update selling price in COS",
@@ -1205,7 +1205,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     EntityType = Module.DeliveryReceipt,
                     EntityNo = deliveryReceipt.DeliveryReceiptNo,
                     AdjustmentType = LockedPeriodAdjustmentType.Commission,
-                    OldValue = GetUnitValue(deliveryReceipt.CommissionAmount - signedDifference, deliveryReceipt.Quantity),
+                    OldValue = GetRoundedUnitValue(deliveryReceipt.CommissionAmount - signedDifference, deliveryReceipt.Quantity),
                     NewValue = deliveryReceipt.CommissionRate,
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,
@@ -1355,7 +1355,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     EntityType = Module.DeliveryReceipt,
                     EntityNo = deliveryReceipt.DeliveryReceiptNo,
                     AdjustmentType = LockedPeriodAdjustmentType.Freight,
-                    OldValue = GetUnitValue(deliveryReceipt.FreightAmount - (deliveryReceipt.ECC * deliveryReceipt.Quantity) - signedDifference, deliveryReceipt.Quantity),
+                    OldValue = GetRoundedUnitValue(deliveryReceipt.FreightAmount - (deliveryReceipt.ECC * deliveryReceipt.Quantity) - signedDifference, deliveryReceipt.Quantity),
                     NewValue = deliveryReceipt.Freight,
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,
@@ -1368,11 +1368,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException(ex.Message);
             }
-        }
-
-        private static decimal GetUnitValue(decimal amount, decimal quantity)
-        {
-            return quantity == 0m ? 0m : amount / quantity;
         }
 
     }

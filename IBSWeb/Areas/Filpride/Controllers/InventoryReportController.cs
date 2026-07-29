@@ -61,6 +61,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    ?? User.Identity?.Name!;
         }
 
+        private static decimal DivideOrZero(decimal dividend, decimal divisor) => DecimalRoundingHelper.DivideOrZero(dividend, divisor);
+
         [HttpGet]
         public async Task<IActionResult> InventoryReport(CancellationToken cancellationToken)
         {
@@ -299,9 +301,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     if (showProductSections && isLastGroupForProduct)
                                     {
-                                        var productAverageCost = productTotalInventoryBalance != 0
-                                            ? productTotalTotalBalance / productTotalInventoryBalance
-                                            : 0m;
+                                        var productAverageCost = DivideOrZero(productTotalTotalBalance, productTotalInventoryBalance);
 
                                         table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten2).Border(0.5f);
                                         table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).Text($"Product Total - {currentProductName}").SemiBold();
@@ -314,9 +314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 }
 
-                            var grandTotalAverageCost = grandTotalTotalBalance != 0
-                                ? grandTotalTotalBalance / grandTotalInventoryBalance
-                                : 0m;
+                            var grandTotalAverageCost = DivideOrZero(grandTotalTotalBalance, grandTotalInventoryBalance);
                             table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Grand Total").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalInventoryBalance != 0 ? grandTotalInventoryBalance < 0 ? $"({Math.Abs(grandTotalInventoryBalance).ToString(SD.Two_Decimal_Format)})" : grandTotalInventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalInventoryBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
@@ -670,19 +668,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Subtotal Columns
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 5], subTotalBegBalQty, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 6], subTotalBegBalQty != 0
-                        ? subTotalBegBalAmt / subTotalBegBalQty
-                        : 0, currencyFourDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 6], DivideOrZero(subTotalBegBalAmt, subTotalBegBalQty), currencyFourDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 7], subTotalBegBalAmt, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 8], subTotalPurchasesQty, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 9], subTotalPurchasesQty != 0
-                        ? subTotalPurchasesAmt / subTotalPurchasesQty
-                        : 0, currencyFourDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 9], DivideOrZero(subTotalPurchasesAmt, subTotalPurchasesQty), currencyFourDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 10], subTotalPurchasesAmt, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 11], subTotalSalesQty, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 12], subTotalSalesQty != 0
-                        ? subTotalSalesAmt / subTotalSalesQty
-                        : 0, currencyFourDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 12], DivideOrZero(subTotalSalesAmt, subTotalSalesQty), currencyFourDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 13], subTotalSalesAmt, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 14], subTotalInventoryBalance, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(
@@ -725,18 +717,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (showProductSections && isLastGroupForProduct)
                     {
-                        var productTotalAverageCost = productTotalInventoryBalance != 0
-                            ? productTotalTotalBalance / productTotalInventoryBalance
-                            : 0m;
-                        var productTotalPurchasesAverageCost = productTotalPurchasesQty != 0
-                            ? productTotalPurchasesAmt / productTotalPurchasesQty
-                            : 0m;
-                        var productTotalSalesAverageCost = productTotalSalesQty != 0
-                            ? productTotalSalesAmt / productTotalSalesQty
-                            : 0m;
-                        var productTotalBegBalAverageCost = productTotalBegBalQty != 0
-                            ? productTotalBegBalAmt / productTotalBegBalQty
-                            : 0m;
+                        var productTotalAverageCost = DivideOrZero(productTotalTotalBalance, productTotalInventoryBalance);
+                        var productTotalPurchasesAverageCost = DivideOrZero(productTotalPurchasesAmt, productTotalPurchasesQty);
+                        var productTotalSalesAverageCost = DivideOrZero(productTotalSalesAmt, productTotalSalesQty);
+                        var productTotalBegBalAverageCost = DivideOrZero(productTotalBegBalAmt, productTotalBegBalQty);
 
                         worksheet.Cells[currentRow, 1, currentRow, 3].Merge = true;
                         worksheet.Cells[currentRow, 4].Value = $"Product Total - {currentProductName}";
@@ -777,18 +761,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Calculate averages
-                var grandTotalAverageCost = grandTotalTotalBalance != 0
-                    ? grandTotalTotalBalance / grandTotalInventoryBalance
-                    : 0m;
-                var grandTotalPurchasesAverageCost = grandTotalPurchasesQty != 0
-                    ? grandTotalPurchasesAmt / grandTotalPurchasesQty
-                    : 0m;
-                var grandTotalSalesAverageCost = grandTotalSalesQty != 0
-                    ? grandTotalSalesAmt / grandTotalSalesQty
-                    : 0m;
-                var grandTotalBegbalAverageCost = grandTotalBegbalQty != 0
-                    ? grandTotalBegbalAmt / grandTotalBegbalQty
-                    : 0m;
+                var grandTotalAverageCost = DivideOrZero(grandTotalTotalBalance, grandTotalInventoryBalance);
+                var grandTotalPurchasesAverageCost = DivideOrZero(grandTotalPurchasesAmt, grandTotalPurchasesQty);
+                var grandTotalSalesAverageCost = DivideOrZero(grandTotalSalesAmt, grandTotalSalesQty);
+                var grandTotalBegbalAverageCost = DivideOrZero(grandTotalBegbalAmt, grandTotalBegbalQty);
 
                 // Title cell
                 worksheet.Cells[currentRow, 1, currentRow, 3].Merge = true;

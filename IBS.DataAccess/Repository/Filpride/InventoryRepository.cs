@@ -48,7 +48,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Calculate initial values
 
-            var cost = Math.Round(receivingReport.Amount / receivingReport.QuantityReceived, 4);
+            var cost = GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived);
 
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) + receivingReport.QuantityReceived;
             var averageCost = cost;
@@ -156,7 +156,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var poPrice = await unitOfWork.FilpridePurchaseOrder
                     .GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken) + freight;
 
-                cost = Math.Round(poPrice, 4);
+                cost = RoundToFourDecimalPlaces(poPrice);
             }
             else
             {
@@ -257,17 +257,20 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 if (IsSales(transaction))
                 {
-                    transaction.Cost = runningAverageCost != 0 ? runningAverageCost : transaction.Cost;
+                    transaction.Cost = runningAverageCost != 0
+                        ? RoundToFourDecimalPlaces(runningAverageCost)
+                        : RoundToFourDecimalPlaces(transaction.Cost);
                     transaction.Total = transaction.Quantity * transaction.Cost;
                     transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
-                    transaction.AverageCost = transaction.Cost;
+                    transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
                     transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
                 }
                 else if (IsPurchase(transaction))
                 {
+                    transaction.Cost = RoundToFourDecimalPlaces(transaction.Cost);
                     transaction.Total = transaction.Quantity * transaction.Cost;
                     transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.Cost;
+                    transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
                     transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
                 }
 

@@ -508,7 +508,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerPoNo = existingRecord.CustomerPoNo,
                     Quantity = existingRecord.Quantity,
                     DeliveredPrice = existingRecord.DeliveredPrice,
-                    Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m)),
+                    Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(
+                        _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount)),
                     TotalAmount = existingRecord.TotalAmount,
                     ProductId = existingRecord.ProductId,
                     Products = product,
@@ -587,7 +588,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            viewModel.Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m));
+            viewModel.Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(
+                _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount));
             viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(existingRecord.CustomerId, cancellationToken);
             viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
             viewModel.PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken);

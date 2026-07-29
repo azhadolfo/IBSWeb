@@ -190,12 +190,22 @@ namespace IBS.DataAccess.Repository
                 return grossAmount;
             }
 
-            return grossAmount / (1 + VatRate);
+            return RoundToFourDecimalPlaces(grossAmount / (1 + VatRate));
         }
 
         public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
-            return netOfVatAmount * VatRate;
+            return netOfVatAmount == 0m ? 0m : RoundToFourDecimalPlaces(netOfVatAmount * VatRate);
+        }
+
+        protected static decimal RoundToFourDecimalPlaces(decimal value)
+        {
+            return Math.Round(value, 4, MidpointRounding.AwayFromZero);
+        }
+
+        protected static decimal GetRoundedUnitValue(decimal amount, decimal quantity)
+        {
+            return quantity == 0m ? 0m : RoundToFourDecimalPlaces(amount / quantity);
         }
 
         public async Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
@@ -233,7 +243,9 @@ namespace IBS.DataAccess.Repository
 
         public decimal ComputeEwtAmount(decimal netOfVatAmount, decimal percent)
         {
-            return netOfVatAmount * percent;
+            return netOfVatAmount == 0m || percent == 0m
+                ? 0m
+                : RoundToFourDecimalPlaces(netOfVatAmount * percent);
         }
 
         public decimal ComputeNetOfEwt(decimal grossAmount, decimal ewtAmount)
