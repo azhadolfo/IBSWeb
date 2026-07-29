@@ -1323,7 +1323,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, MarketingSupervisor, Admin")]
+        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, MarketingSupervisor, Admin, HeadApprover")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

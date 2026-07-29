@@ -218,7 +218,7 @@
         </table>
     </div>
     
-    @if (Model.UploadedFiles?.Count != 0 && Model.UploadedFiles != null)
+    @if (Model.UploadedFiles != null && Model.UploadedFiles.Count != 0)
     {
         <div class="hide-in-print px-1 row d-flex justify-content-start">
             <label class="mt-3">Attachments: </label>
@@ -334,66 +334,69 @@
             init();
         });
         
-        document.getElementById('approveButton').addEventListener('click', function () {
-            Swal.fire({
-                title: 'Choose an action',
-                text: "Approve or Disapprove the action.",
-                icon: 'question',
-                showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: 'Approve',
-                denyButtonText: 'Disapprove',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Do you want to change the terms?',
-                        text: "If yes, please select new terms. If not, submit to approve without changes.",
-                        icon: 'question',
-                        input: 'select',
-                        inputOptions: {
-                            '@SD.Terms_Cod': '@SD.Terms_Cod',
-                            '@SD.Terms_Prepaid': '@SD.Terms_Prepaid',
-                            '@SD.Terms_7d': '@SD.Terms_7d',
-                            '@SD.Terms_10d': '@SD.Terms_10d',
-                            '@SD.Terms_15d': '@SD.Terms_15d',
-                            '@SD.Terms_30d': '@SD.Terms_30d',
-                            '@SD.Terms_45d': '@SD.Terms_45d',
-                            '@SD.Terms_60d': '@SD.Terms_60d',
-                            '@SD.Terms_90d': '@SD.Terms_90d',
-                            '@SD.Terms_15pdc': '@SD.Terms_15pdc',
-                            '@SD.Terms_30pdc': '@SD.Terms_30pdc',
-                            '@SD.Terms_45pdc': '@SD.Terms_45pdc',
-                            '@SD.Terms_60pdc': '@SD.Terms_60pdc',
-                            '@SD.Terms_M15': '@SD.Terms_M15',
-                            '@SD.Terms_M29': '@SD.Terms_M29',
-                            '@SD.Terms_M30': '@SD.Terms_M30'
-                        },
-                        inputPlaceholder: 'Select terms (optional)',
-                        showCancelButton: false,
-                        confirmButtonText: 'Next'
-                    }).then((termResult) => {
-                        const selectedTerm = termResult.value || null;
-
+        const approveBtn = document.getElementById('approveButton');
+        if (approveBtn) {
+            approveBtn.addEventListener('click', function () {
+                Swal.fire({
+                    title: 'Choose an action',
+                    text: "Approve or Disapprove the action.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: 'Approve',
+                    denyButtonText: 'Disapprove',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Add any instructions (optional)',
-                            input: 'textarea',
-                            inputPlaceholder: 'Enter instructions here...',
+                            title: 'Do you want to change the terms?',
+                            text: "If yes, please select new terms. If not, submit to approve without changes.",
+                            icon: 'question',
+                            input: 'select',
+                            inputOptions: {
+                                '@SD.Terms_Cod': '@SD.Terms_Cod',
+                                '@SD.Terms_Prepaid': '@SD.Terms_Prepaid',
+                                '@SD.Terms_7d': '@SD.Terms_7d',
+                                '@SD.Terms_10d': '@SD.Terms_10d',
+                                '@SD.Terms_15d': '@SD.Terms_15d',
+                                '@SD.Terms_30d': '@SD.Terms_30d',
+                                '@SD.Terms_45d': '@SD.Terms_45d',
+                                '@SD.Terms_60d': '@SD.Terms_60d',
+                                '@SD.Terms_90d': '@SD.Terms_90d',
+                                '@SD.Terms_15pdc': '@SD.Terms_15pdc',
+                                '@SD.Terms_30pdc': '@SD.Terms_30pdc',
+                                '@SD.Terms_45pdc': '@SD.Terms_45pdc',
+                                '@SD.Terms_60pdc': '@SD.Terms_60pdc',
+                                '@SD.Terms_M15': '@SD.Terms_M15',
+                                '@SD.Terms_M29': '@SD.Terms_M29',
+                                '@SD.Terms_M30': '@SD.Terms_M30'
+                            },
+                            inputPlaceholder: 'Select terms (optional)',
                             showCancelButton: false,
-                            confirmButtonText: 'Submit'
-                        }).then((instructionResult) => {
-                            const instruction = instructionResult.value || null;
-                            var url = '@Html.Raw(Url.Action("ApproveByMarketing", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
-                            url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
-                            url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
-                            window.location.href = url;
+                            confirmButtonText: 'Next'
+                        }).then((termResult) => {
+                            const selectedTerm = termResult.value || null;
+
+                            Swal.fire({
+                                title: 'Add any instructions (optional)',
+                                input: 'textarea',
+                                inputPlaceholder: 'Enter instructions here...',
+                                showCancelButton: false,
+                                confirmButtonText: 'Submit'
+                            }).then((instructionResult) => {
+                                const instruction = instructionResult.value || null;
+                                var url = '@Html.Raw(Url.Action("ApproveByMarketing", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
+                                url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
+                                url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
+                                window.location.href = url;
+                            });
                         });
-                    });
-                } else if (result.isDenied) {
-                    window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
-                }
+                    } else if (result.isDenied) {
+                        window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
+                    }
+                });
             });
-        });
+        }
     </script>
     
     <script>
