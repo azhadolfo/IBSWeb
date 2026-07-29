@@ -59,12 +59,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index(string? view)
+        private const string FilterTypeClaimType = "DebitMemo_FilterType";
+
+        private async Task UpdateFilterTypeClaim(string filterType)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                var existingClaim = claims.FirstOrDefault(c => c.Type == FilterTypeClaimType);
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string?> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+        }
+
+        public async Task<IActionResult> Index(string? filterType, string? view)
         {
             if (view == nameof(DynamicView.DebitMemo))
             {
                 return View("ExportIndex");
             }
+
+            await UpdateFilterTypeClaim(filterType!);
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View();
         }
@@ -75,9 +111,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
                 var debitMemos = _unitOfWork.FilprideDebitMemo
                     .GetAllQuery(x => x.Company == companyClaims);
+
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "ForFMApproval":
+                            debitMemos = debitMemos.Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM));
+                            break;
+                    }
+                }
 
                 var totalRecords = await debitMemos.CountAsync(cancellationToken);
 
