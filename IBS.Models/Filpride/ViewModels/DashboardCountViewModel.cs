@@ -11,6 +11,8 @@ namespace IBS.Models.Filpride.ViewModels
         public int OMApprovalPOCount { get; set; }
         public int CNCApprovalCount { get; set; }
         public int FMApprovalCount { get; set; }
+        public int FMApprovalDMCount { get; set; }
+        public int FMApprovalCMCount { get; set; }
         public int DRCount { get; set; }
         public int InTransitCount { get; set; }
         public int ForInvoiceCount { get; set; }

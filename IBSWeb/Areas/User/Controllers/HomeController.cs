@@ -101,6 +101,16 @@ namespace IBSWeb.Areas.User.Controllers
                                       && cos.Company == companyClaims)
                         .CountAsync(),
 
+                FMApprovalDMCount = await _dbContext.FilprideDebitMemos
+                        .Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM)
+                                     && dm.Company == companyClaims)
+                        .CountAsync(),
+
+                FMApprovalCMCount = await _dbContext.FilprideCreditMemos
+                        .Where(cm => cm.Status == nameof(DmCmStatus.ForApprovalOfFM)
+                                     && cm.Company == companyClaims)
+                        .CountAsync(),
+
                 DRCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForDR)
                                       && cos.Company == companyClaims)
