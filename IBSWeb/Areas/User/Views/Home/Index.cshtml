@@ -1000,7 +1000,7 @@ else
             t.classList.toggle('active', t.dataset.tab === tab);
         });
         document.querySelectorAll('#sidebar .sidebar-tab-content, #mobile-sidebar .sidebar-tab-content').forEach(function(c) {
-            c.style.display = c.id.endsWith('-tab-' + tab) ? 'block' : 'none';
+            c.style.display = c.id === 'tab-' + tab || c.id === 'mob-tab-' + tab ? 'block' : 'none';
         });
     }
 </script>

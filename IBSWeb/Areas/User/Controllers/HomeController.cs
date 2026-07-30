@@ -20,14 +20,14 @@ namespace IBSWeb.Areas.User.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, IDbContextFactory<ApplicationDbContext> dbContextFactory)
+        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
             _userManager = userManager;
             _dbContext = dbContext;
-            _dbContextFactory = dbContextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -318,7 +318,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<DashboardCountViewModel> RunCountQueriesAsync(string companyClaims)
         {
-            await using var ctx = await _dbContextFactory.CreateDbContextAsync();
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var counts = new DashboardCountViewModel();
 
             counts.MarketingApprovalCount = await ctx.FilprideCustomerOrderSlips
@@ -390,7 +391,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<List<PendingApprovalItem>> RunSubmissionQueriesAsync(string userFullName, string companyClaims, DateTime twoMonthsAgo, HashSet<string> terminalStatuses)
         {
-            await using var ctx = await _dbContextFactory.CreateDbContextAsync();
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             var cosTask = ctx.FilprideCustomerOrderSlips
                 .Where(cos => cos.CreatedBy == userFullName && cos.Company == companyClaims
