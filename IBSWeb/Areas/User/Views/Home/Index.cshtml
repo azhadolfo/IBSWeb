@@ -14,7 +14,6 @@
         selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 
-    // ── Role checks ──────────────────────────────────────────
     bool isAdmin = User.IsInRole("Admin");
     bool isHead = User.IsInRole("HeadApprover");
     bool isAccounting = User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager");
@@ -26,13 +25,12 @@
 
     bool showPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isCashier;
 
-    // ── Aggregated counts ────────────────────────────────────
     int fmTotal = Model.FMApprovalCount + Model.FMApprovalDMCount + Model.FMApprovalCMCount;
     int omTotal = Model.OMApprovalCOSCount + Model.OMApprovalDRCount + Model.OMApprovalPOCount;
-
 }
 
-
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 
 @if (!User.Identity!.IsAuthenticated)
 {
@@ -49,203 +47,315 @@ else
         <div class="dash">
 
             <header class="dash-header">
-                <div>
-                    <h1 class="dash-title">Welcome to Our Integrated Business System</h1>
-                    <p class="dash-subtitle">Effortlessly manage and optimize your business tasks.</p>
-                </div>
+                <h1 class="dash-title">Welcome to Our Integrated Business System</h1>
+                <p class="dash-subtitle">Effortlessly manage and optimize your business tasks.</p>
             </header>
 
-            @* ── Priority Approvals (role-filtered) ────────────── *@
             @if (showPriority)
             {
-            <section class="pri-section">
-                <div class="section-header">
-                    <span class="sec-bar sec-bar--primary"></span>
-                    <h2 class="sec-title">Priority Approvals</h2>
-                    <span class="sec-tag">Urgent Actions Required</span>
-                </div>
-                <div class="pri-grid">
+                <section class="pri-section">
+                    <div class="section-header">
+                        <span class="bar-primary"></span>
+                        <h2 class="sec-title">Priority Approvals</h2>
+                        <span class="sec-tag">Urgent Actions Required</span>
+                    </div>
+                    <div class="pri-grid">
 
-                    @* FM Approvals — finance / admin only *@
-                    @if (isAdmin || isHead || isFinance)
-                    {
-                        <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pri-card">
-                            <span class="pri-icon" style="background:#d0e9d4; color:#061b0e;"><i class="bi bi-check-circle"></i></span>
-                            <span class="pri-count">@fmTotal.ToString("N0")</span>
-                            <span class="pri-label">FM Approval</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isFinance)
+                        {
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-green">
+                                        <span class="material-symbols-outlined pri-icon">check_circle</span>
+                                    </div>
+                                    <span class="pri-label">FM Approval</span>
+                                </div>
+                                <span class="pri-count">@fmTotal.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* OM Approvals — operations *@
-                    @if (isAdmin || isHead || isOps)
-                    {
-                        <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="pri-card">
-                            <span class="pri-icon" style="background:#d8e3fa; color:#545f72;"><i class="bi bi-check-circle"></i></span>
-                            <span class="pri-count">@omTotal.ToString("N0")</span>
-                            <span class="pri-label">OM Approval</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isOps)
+                        {
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-blue">
+                                        <span class="material-symbols-outlined pri-icon">verified</span>
+                                    </div>
+                                    <span class="pri-label">OM Approval</span>
+                                </div>
+                                <span class="pri-count">@omTotal.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* CV Approval — accounting only *@
-                    @if (isAdmin || isHead || isAccounting)
-                    {
-                        <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pri-card">
-                            <span class="pri-icon" style="background:#ffdad6; color:#ba1a1a;"><i class="bi bi-receipt"></i></span>
-                            <span class="pri-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
-                            <span class="pri-label">CV Approval</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isAccounting)
+                        {
+                            <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-red">
+                                        <span class="material-symbols-outlined pri-icon">assignment_late</span>
+                                    </div>
+                                    <span class="pri-label">CV Approval</span>
+                                </div>
+                                <span class="pri-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* JV Approval — accounting only *@
-                    @if (isAdmin || isHead || isAccounting)
-                    {
-                        <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pri-card">
-                            <span class="pri-icon" style="background:#ffd9dc; color:#271013;"><i class="bi bi-file-earmark-text"></i></span>
-                            <span class="pri-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
-                            <span class="pri-label">JV Approval</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isAccounting)
+                        {
+                            <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-red">
+                                        <span class="material-symbols-outlined pri-icon">assignment</span>
+                                    </div>
+                                    <span class="pri-label">JV Approval</span>
+                                </div>
+                                <span class="pri-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* CNC Queue — CNC manager *@
-                    @if (isAdmin || isHead || isCnc)
-                    {
-                        <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pri-card">
-                            <span class="pri-icon" style="background:#e8edee; color:#192E2F;"><i class="bi bi-check-circle"></i></span>
-                            <span class="pri-count">@Model.CNCApprovalCount.ToString("N0")</span>
-                            <span class="pri-label">CNC Approval</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isCnc)
+                        {
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-gray">
+                                        <span class="material-symbols-outlined pri-icon">fact_check</span>
+                                    </div>
+                                    <span class="pri-label">CNC Approval</span>
+                                </div>
+                                <span class="pri-count">@Model.CNCApprovalCount.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* Logistics Queue — operations / port *@
-                    @if (isAdmin || isHead || isOps || isPort)
-                    {
-                        <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pri-card">
-                            <span class="pri-icon" style="background:#e0e9ea; color:#3A595C;"><i class="bi bi-arrow-right-circle"></i></span>
-                            <span class="pri-count">@Model.InTransitCount.ToString("N0")</span>
-                            <span class="pri-label">Pending Delivery</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isOps || isPort)
+                        {
+                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-teal">
+                                        <span class="material-symbols-outlined pri-icon">local_shipping</span>
+                                    </div>
+                                    <span class="pri-label">Pending Delivery</span>
+                                </div>
+                                <span class="pri-count">@Model.InTransitCount.ToString("N0")</span>
+                            </a>
+                        }
 
-                    @* For Invoicing — cashier / finance *@
-                    @if (isAdmin || isHead || isFinance || isCashier)
-                    {
-                        <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pri-card">
-                            <span class="pri-icon" style="background:#e6ede4; color:#4b7147;"><i class="bi bi-file-earmark-text"></i></span>
-                            <span class="pri-count">@Model.ForInvoiceCount.ToString("N0")</span>
-                            <span class="pri-label">For Invoicing</span>
-                        </a>
-                    }
+                        @if (isAdmin || isHead || isFinance || isCashier)
+                        {
+                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-green">
+                                        <span class="material-symbols-outlined pri-icon">receipt_long</span>
+                                    </div>
+                                    <span class="pri-label">For Invoicing</span>
+                                </div>
+                                <span class="pri-count">@Model.ForInvoiceCount.ToString("N0")</span>
+                            </a>
+                        }
 
-                </div>
-            </section>
+                    </div>
+                </section>
             }
 
-            @* ── Order Pipeline ──────────────────── *@
-            <section class="flow-group">
-                <h2 class="group-title" style="color:#192E2F;">Order Processing Pipeline</h2>
+            <section class="flow-section">
+                <h2 class="flow-heading">
+                    <span class="bar-secondary"></span>
+                    Order Processing Pipeline
+                </h2>
                 <div class="pipe-grid">
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">campaign</span>
+                            </div>
+                            <span class="pipe-count">@Model.MarketingApprovalCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">Marketing Approval</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.MarketingApprovalCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">fact_check</span>
+                            </div>
+                            <span class="pipe-count">@Model.CNCApprovalCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">CNC Approval</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.CNCApprovalCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForAppointSupplier" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-person-check"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForAppointSupplier" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-gray">
+                                <span class="material-symbols-outlined pipe-icon">person_add</span>
+                            </div>
+                            <span class="pipe-count">@Model.SupplierAppointmentCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">Supplier Appointment</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.SupplierAppointmentCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForATLBooking" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-calendar-check"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForATLBooking" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">event_available</span>
+                            </div>
+                            <span class="pipe-count">@Model.ATLBookingCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">ATL Booking</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.ATLBookingCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">verified</span>
+                            </div>
+                            <span class="pipe-count">@Model.OMApprovalCOSCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">OM Approval (COS)</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.OMApprovalCOSCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">check_circle</span>
+                            </div>
+                            <span class="pipe-count">@Model.FMApprovalCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">FM Approval (COS)</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.FMApprovalCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForDR" })" class="pipe-card" style="border-top-color:#192E2F;">
-                        <span class="pipe-icon" style="background:#e8edee;"><i class="bi bi-receipt"></i></span>
+
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForDR" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">description</span>
+                            </div>
+                            <span class="pipe-count">@Model.DRCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">For DR</span>
-                        <span class="pipe-count" style="color:#192E2F;">@Model.DRCount.ToString("N0")</span>
                     </a>
+
                 </div>
             </section>
 
-            @* ── Delivery & Procurement ───────────────────────── *@
-            <section class="flow-group">
-                <h2 class="group-title" style="color:#3A595C;">Delivery &amp; Procurement</h2>
+            <section class="flow-section">
+                <h2 class="flow-heading flow-heading-bordered">
+                    <span class="bar-primary"></span>
+                    Delivery &amp; Procurement
+                </h2>
                 <div class="pipe-grid">
-                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">verified</span>
+                            </div>
+                            <span class="pipe-count">@Model.OMApprovalDRCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">OM Approval (DR)</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.OMApprovalDRCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">verified</span>
+                            </div>
+                            <span class="pipe-count">@Model.OMApprovalPOCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">OM Approval (PO)</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.OMApprovalPOCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-arrow-right-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-gray">
+                                <span class="material-symbols-outlined pipe-icon">local_shipping</span>
+                            </div>
+                            <span class="pipe-count">@Model.InTransitCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">Pending Delivery</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.InTransitCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-calendar-plus"></i></span>
+
+                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">calendar_add_on</span>
+                            </div>
+                            <span class="pipe-count">@Model.RecordLiftingDateCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">Record Lifting Date</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.RecordLiftingDateCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-file-earmark-text"></i></span>
+
+                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">receipt_long</span>
+                            </div>
+                            <span class="pipe-count">@Model.ForInvoiceCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">For Invoicing</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.ForInvoiceCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "ReceivingReport", new { area = "Filpride", filterType = "RecordSupplierDetails" })" class="pipe-card" style="border-top-color:#3A595C;">
-                        <span class="pipe-icon" style="background:#e0e9ea;"><i class="bi bi-file-earmark-text"></i></span>
+
+                    <a href="@Url.Action("Index", "ReceivingReport", new { area = "Filpride", filterType = "RecordSupplierDetails" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">assignment_ind</span>
+                            </div>
+                            <span class="pipe-count">@Model.RecordSupplierDetails.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">Record Supplier Details</span>
-                        <span class="pipe-count" style="color:#3A595C;">@Model.RecordSupplierDetails.ToString("N0")</span>
                     </a>
+
                 </div>
             </section>
 
-            @* ── Finance & Accounting ─────────────────────────── *@
-            <section class="flow-group">
-                <h2 class="group-title" style="color:#4b7147;">Finance &amp; Accounting</h2>
-                <div class="pipe-grid">
-                    <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card" style="border-top-color:#4b7147;">
-                        <span class="pipe-icon" style="background:#e6ede4;"><i class="bi bi-check-circle"></i></span>
+            <section class="flow-section">
+                <h2 class="flow-heading flow-heading-bordered">
+                    <span class="bar-secondary"></span>
+                    Finance &amp; Accounting
+                </h2>
+                <div class="pipe-grid pipe-grid-4">
+
+                    <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">check_circle</span>
+                            </div>
+                            <span class="pipe-count">@Model.FMApprovalDMCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">FM Approval (Debit Memo)</span>
-                        <span class="pipe-count" style="color:#4b7147;">@Model.FMApprovalDMCount.ToString("N0")</span>
                     </a>
-                    <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card" style="border-top-color:#4b7147;">
-                        <span class="pipe-icon" style="background:#e6ede4;"><i class="bi bi-check-circle"></i></span>
+
+                    <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">check_circle</span>
+                            </div>
+                            <span class="pipe-count">@Model.FMApprovalCMCount.ToString("N0")</span>
+                        </div>
                         <span class="pipe-label">FM Approval (Credit Memo)</span>
-                        <span class="pipe-count" style="color:#4b7147;">@Model.FMApprovalCMCount.ToString("N0")</span>
                     </a>
+
                     @if (isAdmin || isHead || isAccounting)
                     {
-                        <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card" style="border-top-color:#4b7147;">
-                            <span class="pipe-icon" style="background:#e6ede4;"><i class="bi bi-receipt"></i></span>
+                        <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
+                            <div class="pipe-card-top">
+                                <div class="pipe-icon-wrap pipe-icon-green">
+                                    <span class="material-symbols-outlined pipe-icon">assignment_late</span>
+                                </div>
+                                <span class="pipe-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
+                            </div>
                             <span class="pipe-label">CV Approval</span>
-                            <span class="pipe-count" style="color:#4b7147;">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
                         </a>
-                        <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card" style="border-top-color:#4b7147;">
-                            <span class="pipe-icon" style="background:#e6ede4;"><i class="bi bi-file-earmark-text"></i></span>
+
+                        <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
+                            <div class="pipe-card-top">
+                                <div class="pipe-icon-wrap pipe-icon-green">
+                                    <span class="material-symbols-outlined pipe-icon">assignment</span>
+                                </div>
+                                <span class="pipe-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
+                            </div>
                             <span class="pipe-label">JV Approval</span>
-                            <span class="pipe-count" style="color:#4b7147;">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
                         </a>
                     }
+
                 </div>
             </section>
 
@@ -254,245 +364,264 @@ else
 }
 
 <style>
-    .dash {
-        padding: 1.25rem 2rem;
-        max-width: 1280px;
-        margin: 0 auto;
-        min-height: calc(100vh - var(--navbar-height, 56px));
-        background-image: radial-gradient(circle, rgba(195,200,193,0.25) 0.5px, transparent 0.5px);
-        background-size: 16px 16px;
+    :root {
+        --primary: #001919;
+        --on-surface: #0b1c30;
+        --on-surface-variant: #414848;
+        --secondary: #006c47;
+        --outline-variant: #c1c8c7;
+        --surface-container-lowest: #ffffff;
+        --secondary-container: #8bf8bf;
+        --error: #ba1a1a;
+        --error-container: #ffdad6;
+        --surface-variant: #d3e4fe;
+        --surface: #f8f9ff;
     }
 
-    .dash-header { margin-bottom: 1.5rem; }
+    .dash {
+        color: var(--on-surface);
+        font-family: 'Inter', sans-serif;
+        padding: 1.25rem 2rem;
+        min-height: calc(100vh - var(--navbar-height, 56px));
+    }
+
+    .dash-header { margin-bottom: 3rem; }
 
     .dash-title {
-        font-family: inherit;
-        font-size: 2.5rem;
-        font-weight: 800;
+        font-family: 'Hanken Grotesk', sans-serif;
+        font-size: 48px;
+        line-height: 56px;
+        font-weight: 700;
         letter-spacing: -0.02em;
-        color: #061b0e;
-        margin: 0;
-        line-height: 1.2;
+        color: var(--primary);
+        margin: 0 0 0.25rem 0;
     }
 
     .dash-subtitle {
-        font-family: inherit;
-        font-size: 1.5rem;
-        color: #737973;
-        margin: 0.1rem 0 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 18px;
+        line-height: 28px;
+        font-weight: 400;
+        color: var(--on-surface-variant);
+        margin: 0;
     }
 
-    /* ── Section header ──────────────────── */
-
-    .pri-section { margin-bottom: 1.5rem; }
+    .pri-section { margin-bottom: 3rem; }
 
     .section-header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
     }
 
-    .sec-bar {
-        width: 3px;
-        height: 1.2rem;
+    .bar-primary, .bar-secondary {
+        display: inline-block;
+        width: 4px;
+        height: 1rem;
         border-radius: 2px;
         flex-shrink: 0;
     }
+    .bar-primary { background: var(--primary); }
+    .bar-secondary { background: var(--secondary); }
 
     .sec-title {
-        font-family: inherit;
-        font-size: 0.9rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        line-height: 16px;
         font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #061b0e;
+        color: var(--primary);
         margin: 0;
     }
 
     .sec-tag {
-        font-family: inherit;
-        font-size: 0.65rem;
-        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #737973;
+        color: var(--on-surface-variant);
         margin-left: auto;
     }
 
-    /* ── Priority grid ───────────────────── */
-
     .pri-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 0.75rem;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.25rem;
     }
+    @@media (min-width: 768px) { .pri-grid { grid-template-columns: repeat(2, 1fr); } }
+    @@media (min-width: 1024px) { .pri-grid { grid-template-columns: repeat(3, 1fr); } }
+    @@media (min-width: 1280px) { .pri-grid { grid-template-columns: repeat(4, 1fr); } }
 
     .pri-card {
-        background: rgba(255,255,255,0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid #e0e3e5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
         border-radius: 0.75rem;
-        padding: 0.7rem 1rem;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0.1rem 0.75rem;
+        padding: 1.5rem;
         text-decoration: none;
         transition: all 0.2s ease;
+        box-shadow: 0px 4px 20px rgba(15, 46, 46, 0.04);
+        cursor: pointer;
     }
-
     .pri-card:hover {
-        border-color: #c3c8c1;
-        box-shadow: 0 4px 16px rgba(6,27,14,0.08);
-        transform: translateY(-2px);
+        box-shadow: 0px 8px 24px rgba(15, 46, 46, 0.08);
+        border-color: var(--secondary);
         text-decoration: none;
     }
 
-    .pri-icon {
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 0.4rem;
+    .pri-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pri-icon-wrap {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        grid-row: 1 / 2;
-        grid-column: 1 / 2;
-        flex-shrink: 0;
     }
+    .pri-icon-wrap.pri-icon-green { background: var(--secondary-container); color: var(--secondary); }
+    .pri-icon-wrap.pri-icon-blue { background: var(--surface-variant); color: var(--primary); }
+    .pri-icon-wrap.pri-icon-red { background: var(--error-container); color: var(--error); }
+    .pri-icon-wrap.pri-icon-gray { background: #e8edee; color: #192E2F; }
+    .pri-icon-wrap.pri-icon-teal { background: #e0e9ea; color: #3A595C; }
 
-    .pri-icon i {
-        font-size: 0.85rem;
-        line-height: 1;
+    .pri-icon {
+        font-size: 1.25rem;
+        font-variation-settings: 'FILL' 1;
     }
 
     .pri-label {
-        font-family: inherit;
-        font-size: 1rem;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        color: #737973;
-        grid-row: 2 / 3;
-        grid-column: 1 / 2;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--on-surface-variant);
     }
 
     .pri-count {
-        font-family: inherit;
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #061b0e;
-        line-height: 1;
-        grid-row: 1 / 3;
-        grid-column: 2 / 3;
-        justify-self: end;
-        align-self: center;
+        font-family: 'Hanken Grotesk', sans-serif;
+        font-size: 28px;
+        line-height: 32px;
+        font-weight: 500;
+        color: var(--primary);
     }
 
-    /* ── Flow sections ───────────────────── */
+    .flow-section { margin-bottom: 3rem; }
 
-    .flow-group { margin-bottom: 1.25rem; }
-
-    .group-title {
-        font-family: inherit;
+    .flow-heading {
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--primary);
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin: 0 0 0.6rem 0;
-        padding-bottom: 0.35rem;
-        border-bottom: 1px solid #e0e3e5;
+        margin: 0 0 1.5rem 0;
     }
-
-    .group-title::before {
-        content: '';
-        width: 3px;
-        height: 0.8rem;
-        border-radius: 2px;
-        background: currentColor;
-        flex-shrink: 0;
+    .flow-heading-bordered {
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--outline-variant);
     }
 
     .pipe-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 0.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
+    @@media (min-width: 768px) { .pipe-grid { grid-template-columns: repeat(4, 1fr); } }
+    @@media (min-width: 1024px) { .pipe-grid { grid-template-columns: repeat(6, 1fr); } }
+
+    .pipe-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    @@media (min-width: 768px) { .pipe-grid-4 { grid-template-columns: repeat(4, 1fr); } }
 
     .pipe-card {
-        background: rgba(255,255,255,0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid #e0e3e5;
-        border-top: 2px solid;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
         border-radius: 0.5rem;
-        padding: 0.6rem 0.75rem;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0.1rem 0.6rem;
+        padding: 1rem;
         text-decoration: none;
         transition: all 0.2s ease;
+        box-shadow: 0px 4px 20px rgba(15, 46, 46, 0.04);
+        cursor: pointer;
+        height: 100%;
+        min-height: 100px;
     }
-
     .pipe-card:hover {
-        border-color: #c3c8c1;
-        box-shadow: 0 4px 16px rgba(6,27,14,0.08);
-        transform: translateY(-2px);
+        box-shadow: 0px 8px 24px rgba(15, 46, 46, 0.08);
+        border-color: var(--secondary);
         text-decoration: none;
     }
 
-    .pipe-icon {
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 0.4rem;
+    .pipe-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .pipe-icon-wrap {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.35rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        grid-row: 1 / 2;
-        grid-column: 1 / 2;
-        flex-shrink: 0;
     }
+    .pipe-icon-wrap.pipe-icon-green { background: var(--secondary-container); color: var(--secondary); }
+    .pipe-icon-wrap.pipe-icon-gray { background: var(--surface-variant); color: var(--primary); }
 
-    .pipe-icon i {
-        font-size: 0.85rem;
-        line-height: 1;
-    }
-
-    .pipe-label {
-        font-family: inherit;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        color: #737973;
-        line-height: 1.2;
-        grid-row: 2 / 3;
-        grid-column: 1 / 2;
+    .pipe-icon {
+        font-size: 0.875rem;
+        font-variation-settings: 'FILL' 1;
     }
 
     .pipe-count {
-        font-family: inherit;
-        font-size: 1.1rem;
-        font-weight: 800;
-        line-height: 1;
-        grid-row: 1 / 3;
-        grid-column: 2 / 3;
-        justify-self: end;
-        align-self: center;
+        font-family: 'Hanken Grotesk', sans-serif;
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 600;
+        color: var(--primary);
     }
 
-    @@media (max-width: 768px) {
+    .pipe-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--on-surface-variant);
+    }
+
+    @@media (max-width: 767px) {
         .dash { padding: 0.75rem 1rem; }
-        .dash-title { font-size: 1.2rem; }
-        .pri-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-        .pri-card { padding: 0.6rem 0.75rem; }
-        .pri-icon { width: 1.5rem; height: 1.5rem; }
-        .pri-icon i { font-size: 0.7rem; }
-        .pri-label { font-size: 0.8rem; }
-        .pri-count { font-size: 1.4rem; }
-        .pipe-card { padding: 0.45rem 0.4rem; }
-        .pipe-icon { width: 1.5rem; height: 1.5rem; }
-        .pipe-icon i { font-size: 0.65rem; }
-        .pipe-label { font-size: 0.6rem; }
-        .pipe-count { font-size: 0.9rem; }
+        .dash-title { font-size: 32px; line-height: 40px; }
+        .dash-subtitle { font-size: 16px; line-height: 24px; }
+        .pri-card { padding: 1rem; }
+        .pri-icon-wrap { width: 2rem; height: 2rem; }
+        .pri-icon { font-size: 1rem; }
+        .pri-count { font-size: 22px; line-height: 28px; }
+        .pipe-card { padding: 0.75rem; min-height: 85px; }
+        .pipe-icon-wrap { width: 1.5rem; height: 1.5rem; }
+        .pipe-icon { font-size: 0.75rem; }
+        .pipe-count { font-size: 16px; line-height: 24px; }
     }
 </style>
