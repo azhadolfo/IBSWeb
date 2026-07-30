@@ -1,5 +1,6 @@
+@using IBS.Models.Filpride.ViewModels
 @using Microsoft.AspNetCore.Identity
-@model IBS.Models.Filpride.ViewModels.DashboardCountViewModel
+@model DashboardCountViewModel
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
@@ -44,7 +45,9 @@ else
 {
     if (selectedCompany == "Filpride")
     {
-        <div class="dash">
+        <div class="dash-layout">
+
+            <div class="dash-main">
 
             <header class="dash-header">
                 <h1 class="dash-title">Welcome to Our Integrated Business System</h1>
@@ -245,7 +248,7 @@ else
 
                     <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
                                 <span class="material-symbols-outlined pipe-icon">verified</span>
                             </div>
                             <span class="pipe-count">@Model.OMApprovalDRCount.ToString("N0")</span>
@@ -255,7 +258,7 @@ else
 
                     <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
                                 <span class="material-symbols-outlined pipe-icon">verified</span>
                             </div>
                             <span class="pipe-count">@Model.OMApprovalPOCount.ToString("N0")</span>
@@ -275,7 +278,7 @@ else
 
                     <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
                                 <span class="material-symbols-outlined pipe-icon">calendar_add_on</span>
                             </div>
                             <span class="pipe-count">@Model.RecordLiftingDateCount.ToString("N0")</span>
@@ -285,7 +288,7 @@ else
 
                     <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
                                 <span class="material-symbols-outlined pipe-icon">receipt_long</span>
                             </div>
                             <span class="pipe-count">@Model.ForInvoiceCount.ToString("N0")</span>
@@ -295,7 +298,7 @@ else
 
                     <a href="@Url.Action("Index", "ReceivingReport", new { area = "Filpride", filterType = "RecordSupplierDetails" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
                                 <span class="material-symbols-outlined pipe-icon">assignment_ind</span>
                             </div>
                             <span class="pipe-count">@Model.RecordSupplierDetails.ToString("N0")</span>
@@ -315,7 +318,7 @@ else
 
                     <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-red">
                                 <span class="material-symbols-outlined pipe-icon">check_circle</span>
                             </div>
                             <span class="pipe-count">@Model.FMApprovalDMCount.ToString("N0")</span>
@@ -325,7 +328,7 @@ else
 
                     <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-green">
+                            <div class="pipe-icon-wrap pipe-icon-red">
                                 <span class="material-symbols-outlined pipe-icon">check_circle</span>
                             </div>
                             <span class="pipe-count">@Model.FMApprovalCMCount.ToString("N0")</span>
@@ -337,7 +340,7 @@ else
                     {
                         <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
                             <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-green">
+                                <div class="pipe-icon-wrap pipe-icon-red">
                                     <span class="material-symbols-outlined pipe-icon">assignment_late</span>
                                 </div>
                                 <span class="pipe-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
@@ -347,7 +350,7 @@ else
 
                         <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
                             <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-green">
+                                <div class="pipe-icon-wrap pipe-icon-red">
                                     <span class="material-symbols-outlined pipe-icon">assignment</span>
                                 </div>
                                 <span class="pipe-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
@@ -360,10 +363,133 @@ else
             </section>
 
         </div>
+
+            <aside class="dash-sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span class="material-symbols-outlined sidebar-header-icon">pending_actions</span>
+                    <h3 class="sidebar-title">Approvals</h3>
+                </div>
+
+                <div class="sidebar-tabs">
+                    @if (showPriority)
+                    {
+                        <button class="sidebar-tab @(showPriority ? "active" : "")" data-tab="for-approval" onclick="switchSidebarTab('for-approval')">For Approval</button>
+                    }
+                    <button class="sidebar-tab @(!showPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')">My Submissions</button>
+                </div>
+
+                @{
+                    bool hasApproval = Model.PendingMyApproval.Count > 0;
+                    bool hasSubmissions = Model.MySubmissions.Count > 0;
+                }
+
+                @if (showPriority)
+                {
+                    <div id="tab-for-approval" class="sidebar-tab-content" style="display: block">
+                        @if (hasApproval)
+                        {
+                            <div class="sidebar-list">
+                                @foreach (var item in Model.PendingMyApproval)
+                                {
+                                    <a href="@SidebarHref(item)" class="sidebar-item">
+                                        <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
+                                        <div class="sidebar-item-body">
+                                            <span class="sidebar-item-ref">@item.ReferenceNo</span>
+                                            <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sidebar-empty">
+                                <p class="sidebar-empty-text">No items pending your approval.</p>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div id="tab-my-submissions" class="sidebar-tab-content" style="display: @(!showPriority ? "block" : "none")">
+                    @if (hasSubmissions)
+                    {
+                        <div class="sidebar-list">
+                            @foreach (var item in Model.MySubmissions)
+                            {
+                                <a href="@SidebarHref(item)" class="sidebar-item">
+                                    <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
+                                    <div class="sidebar-item-body">
+                                        <span class="sidebar-item-ref">@item.ReferenceNo</span>
+                                        <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sidebar-empty">
+                            <p class="sidebar-empty-text">No pending submissions.</p>
+                        </div>
+                    }
+                </div>
+            </aside>
+
+        </div>
+    }
+}
+
+@functions {
+    string MapStatus(string status) => status switch
+    {
+        "ForApprovalOfMarketing" => "Marketing Approval",
+        "Created" => "Created",
+        "SupplierAppointed" => "Supplier Appointed",
+        "HaulerAppointed" => "Hauler Appointed",
+        "ForAtlBooking" => "ATL Booking",
+        "ForApprovalOfOM" => "OM Approval",
+        "ForApprovalOfCNC" => "CNC Approval",
+        "ForApprovalOfFM" => "FM Approval",
+        "ForDR" => "For DR",
+        "Completed" => "Completed",
+        "Disapproved" => "Disapproved",
+        "Expired" => "Expired",
+        "Closed" => "Closed",
+        "ForApproval" => "For Approval",
+        "ForPosting" => "For Posting",
+        "ForPayment" => "For Payment",
+        "Paid" => "Paid",
+        "Voided" => "Voided",
+        "Canceled" => "Canceled",
+        "Pending" => "Pending",
+        "Posted" => "Posted",
+        "PendingDelivery" => "Pending Delivery",
+        "ForInvoicing" => "For Invoicing",
+        _ => status
+    };
+
+    string SidebarAction(string type) => type switch
+    {
+        "COS" => "Preview",
+        "CV" or "JV" or "DM" or "CM" => "Print",
+        _ => "Index"
+    };
+
+    string SidebarHref(PendingApprovalItem item)
+    {
+        var action = SidebarAction(item.Type);
+        if (action == "Index")
+        {
+            return Url.Action(action, item.Controller, new { area = item.Area, filterType = string.IsNullOrEmpty(item.FilterType) ? null : item.FilterType }) ?? "#";
+        }
+        return Url.Action(action, item.Controller, new { area = item.Area, id = item.Id }) ?? "#";
     }
 }
 
 <style>
+    .container {
+        max-width: 100% !important;
+    }
     :root {
         --primary: #001919;
         --on-surface: #0b1c30;
@@ -378,14 +504,21 @@ else
         --surface: #f8f9ff;
     }
 
-    .dash {
-        color: var(--on-surface);
-        font-family: 'Inter', sans-serif;
-        padding: 1.25rem 2rem;
+    .dash-layout {
+        display: flex;
+        gap: 0;
         min-height: calc(100vh - var(--navbar-height, 56px));
     }
 
-    .dash-header { margin-bottom: 3rem; }
+    .dash-main {
+        flex: 1;
+        min-width: 0;
+        color: var(--on-surface);
+        font-family: 'Inter', sans-serif;
+        padding: 1.25rem 2rem;
+    }
+
+    .dash-header { margin-bottom: 2rem; }
 
     .dash-title {
         font-family: 'Hanken Grotesk', sans-serif;
@@ -587,6 +720,8 @@ else
     }
     .pipe-icon-wrap.pipe-icon-green { background: var(--secondary-container); color: var(--secondary); }
     .pipe-icon-wrap.pipe-icon-gray { background: var(--surface-variant); color: var(--primary); }
+    .pipe-icon-wrap.pipe-icon-blue { background: #d3e4fe; color: #001f5c; }
+    .pipe-icon-wrap.pipe-icon-red { background: var(--error-container); color: var(--error); }
 
     .pipe-icon {
         font-size: 0.875rem;
@@ -611,8 +746,189 @@ else
         color: var(--on-surface-variant);
     }
 
+    /* Sidebar */
+    .dash-sidebar {
+        width: 300px;
+        flex-shrink: 0;
+        border-left: 1px solid var(--outline-variant);
+        background: var(--surface);
+        padding: 1.25rem 1rem;
+        overflow-y: auto;
+        max-height: calc(100vh - var(--navbar-height, 56px));
+        position: sticky;
+        top: 0;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--outline-variant);
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-header-icon {
+        font-size: 1.25rem;
+        color: var(--secondary);
+        font-variation-settings: 'FILL' 1;
+    }
+
+    .sidebar-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin: 0;
+    }
+
+    .sidebar-section {
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-section-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--on-surface-variant);
+        margin: 0 0 0.5rem 0;
+    }
+
+    .sidebar-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        transition: background 0.15s ease;
+    }
+    .sidebar-item:hover {
+        background: var(--surface-container-lowest);
+        text-decoration: none;
+    }
+
+    .sidebar-item-type {
+        font-family: 'Inter', sans-serif;
+        font-size: 10px;
+        line-height: 14px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        flex-shrink: 0;
+        min-width: 2rem;
+        text-align: center;
+    }
+
+    .sidebar-type-cos { background: var(--secondary-container); color: var(--secondary); }
+    .sidebar-type-cv { background: var(--error-container); color: var(--error); }
+    .sidebar-type-jv { background: #fff3e0; color: #e65100; }
+    .sidebar-type-dm { background: #e8eaf6; color: #283593; }
+    .sidebar-type-cm { background: #f3e5f5; color: #7b1fa2; }
+    .sidebar-type-dr { background: var(--surface-variant); color: var(--primary); }
+    .sidebar-type-po { background: #e0f2f1; color: #004d40; }
+
+    .sidebar-item-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .sidebar-item-ref {
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 600;
+        color: var(--primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sidebar-item-status {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 400;
+        color: var(--on-surface-variant);
+    }
+
+    .sidebar-empty {
+        text-align: center;
+        padding: 2rem 0.5rem;
+    }
+
+    .sidebar-empty-icon {
+        font-size: 2rem;
+        color: var(--outline-variant);
+        font-variation-settings: 'FILL' 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .sidebar-empty-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 400;
+        color: var(--on-surface-variant);
+        margin: 0;
+    }
+
+    /* Sidebar tabs */
+    .sidebar-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .sidebar-tab {
+        flex: 1;
+        padding: 0.5rem 0.5rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--on-surface-variant);
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+    }
+    .sidebar-tab:hover { color: var(--primary); }
+    .sidebar-tab.active {
+        color: var(--secondary);
+        border-bottom-color: var(--secondary);
+    }
+
+    .sidebar-tab-content {
+        overflow-y: auto;
+        max-height: calc(100vh - var(--navbar-height, 56px) - 140px);
+    }
+
+    @@media (max-width: 1023px) {
+        .dash-sidebar { display: none; }
+    }
+
     @@media (max-width: 767px) {
-        .dash { padding: 0.75rem 1rem; }
+        .dash-main { padding: 0.75rem 1rem; }
         .dash-title { font-size: 32px; line-height: 40px; }
         .dash-subtitle { font-size: 16px; line-height: 24px; }
         .pri-card { padding: 1rem; }
@@ -625,3 +941,14 @@ else
         .pipe-count { font-size: 16px; line-height: 24px; }
     }
 </style>
+
+<script>
+    function switchSidebarTab(tab) {
+        document.querySelectorAll('#sidebar .sidebar-tab').forEach(function(t) {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        document.querySelectorAll('#sidebar .sidebar-tab-content').forEach(function(c) {
+            c.style.display = c.id === 'tab-' + tab ? 'block' : 'none';
+        });
+    }
+</script>

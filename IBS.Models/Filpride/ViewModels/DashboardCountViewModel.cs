@@ -23,5 +23,21 @@ namespace IBS.Models.Filpride.ViewModels
         public int CheckVoucherNonTradeInvoiceForApprovalCount { get; set; }
         public int CheckVoucherNonTradePayrollInvoiceForApprovalCount { get; set; }
 
+        // Sidebar data
+        public List<PendingApprovalItem> MySubmissions { get; set; } = new();
+        public List<PendingApprovalItem> PendingMyApproval { get; set; } = new();
+        public string UserFullName { get; set; } = string.Empty;
+    }
+
+    public class PendingApprovalItem
+    {
+        public int Id { get; set; }
+        public string ReferenceNo { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Area { get; set; } = "Filpride";
+        public string Controller { get; set; } = string.Empty;
+        public string FilterType { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; }
     }
 }
