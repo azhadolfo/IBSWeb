@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.User.Controllers
             var companyClaims = findUser != null ? await GetCompanyClaimAsync() : string.Empty;
 
             var userFullName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
-                               ?? User.Identity?.Name ?? string.Empty;
+                               ?? findUser?.Name ?? string.Empty;
 
             bool isAdmin = User.IsInRole("Admin");
             bool isHead = User.IsInRole("HeadApprover");
@@ -84,6 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dashboardCounts = await countTask;
             dashboardCounts.UserFullName = userFullName;
+            dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isCashier;
             dashboardCounts.MySubmissions = await submissionTask;
 
             var pendingApproval = new List<PendingApprovalItem>();
@@ -503,7 +504,7 @@ namespace IBSWeb.Areas.User.Controllers
             ("COS", nameof(CosStatus.Created)) => "",
             ("COS", nameof(CosStatus.SupplierAppointed)) => "ForAppointSupplier",
             ("COS", nameof(CosStatus.HaulerAppointed)) => "ForAppointHauler",
-            ("COS", nameof(CosStatus.ForAtlBooking)) => "",
+            ("COS", nameof(CosStatus.ForAtlBooking)) => "", // ponytail: ATL queue driven by IsCosAtlFinalized, not filterType
             ("COS", nameof(CosStatus.ForApprovalOfOM)) => "ForOMApproval",
             ("COS", nameof(CosStatus.ForApprovalOfCNC)) => "ForCNCApproval",
             ("COS", nameof(CosStatus.ForApprovalOfFM)) => "ForFMApproval",
@@ -521,29 +522,31 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string MapStatus(string status) => status switch
         {
-            "ForApprovalOfMarketing" => "Marketing Approval",
-            "Created" => "Created",
-            "SupplierAppointed" => "Supplier Appointed",
-            "HaulerAppointed" => "Hauler Appointed",
-            "ForAtlBooking" => "ATL Booking",
-            "ForApprovalOfOM" => "OM Approval",
-            "ForApprovalOfCNC" => "CNC Approval",
-            "ForApprovalOfFM" => "FM Approval",
-            "ForDR" => "For DR",
-            "Completed" => "Completed",
-            "Disapproved" => "Disapproved",
-            "Expired" => "Expired",
-            "Closed" => "Closed",
-            "ForApproval" => "For Approval",
-            "ForPosting" => "For Posting",
-            "ForPayment" => "For Payment",
-            "Paid" => "Paid",
-            "Voided" => "Voided",
+            nameof(CosStatus.ForApprovalOfMarketing) => "Marketing Approval",
+            nameof(CosStatus.Created) => "Created",
+            nameof(CosStatus.SupplierAppointed) => "Supplier Appointed",
+            nameof(CosStatus.HaulerAppointed) => "Hauler Appointed",
+            nameof(CosStatus.ForAtlBooking) => "ATL Booking",
+            nameof(CosStatus.ForApprovalOfOM) => "OM Approval",
+            nameof(CosStatus.ForApprovalOfCNC) => "CNC Approval",
+            nameof(CosStatus.ForApprovalOfFM) => "FM Approval",
+            nameof(CosStatus.ForDR) => "For DR",
+            nameof(CosStatus.Completed) => "Completed",
+            nameof(CosStatus.Disapproved) => "Disapproved",
+            nameof(CosStatus.Expired) => "Expired",
+            nameof(CosStatus.Closed) => "Closed",
+            nameof(DRStatus.PendingDelivery) => "Pending Delivery",
+            nameof(DRStatus.ForInvoicing) => "For Invoicing",
+            nameof(JvStatus.Pending) => "Pending",
+            nameof(JvStatus.ForApproval) => "For Approval",
+            nameof(JvStatus.Posted) => "Posted",
+            nameof(DmCmStatus.ForPosting) => "For Posting",
+            nameof(CheckVoucherInvoiceStatus.ForPayment) => "For Payment",
+            nameof(CheckVoucherInvoiceStatus.Paid) => "Paid",
+            nameof(CheckVoucherPaymentStatus.Liquidated) => "Liquidated",
+            nameof(CheckVoucherPaymentStatus.Unliquidated) => "Unliquidated",
             "Canceled" => "Canceled",
-            "Pending" => "Pending",
-            "Posted" => "Posted",
-            "PendingDelivery" => "Pending Delivery",
-            "ForInvoicing" => "For Invoicing",
+            "Voided" => "Voided",
             _ => status
         };
 

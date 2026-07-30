@@ -24,8 +24,6 @@
     bool isPort = User.IsInRole("PortCoordinator");
     bool isCashier = User.IsInRole("Cashier");
 
-    bool showPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isCashier;
-
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -52,7 +50,7 @@ else
                 <p class="dash-subtitle">Effortlessly manage and optimize your business tasks.</p>
             </header>
 
-            @if (showPriority)
+            @if (Model.ShowPriority)
             {
                 <section class="pri-section">
                     <div class="section-header">
@@ -164,14 +162,14 @@ else
 
             <div class="mobile-sidebar" id="mobile-sidebar">
                 <div class="sidebar-tabs" role="tablist">
-                    @if (showPriority)
+                    @if (Model.ShowPriority)
                     {
                         <button class="sidebar-tab active" data-tab="for-approval" onclick="switchSidebarTab('for-approval')" role="tab" aria-selected="true" aria-controls="mob-tab-for-approval">For Approval</button>
                     }
-                    <button class="sidebar-tab @(!showPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!showPriority ? "true" : "false")" aria-controls="mob-tab-my-submissions">My Submissions</button>
+                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="mob-tab-my-submissions">My Submissions</button>
                 </div>
 
-                @if (showPriority)
+                @if (Model.ShowPriority)
                 {
                     <div id="mob-tab-for-approval" class="sidebar-tab-content" style="display: block" role="tabpanel">
                         @if (hasApproval)
@@ -198,7 +196,7 @@ else
                     </div>
                 }
 
-                <div id="mob-tab-my-submissions" class="sidebar-tab-content" style="display: @(!showPriority ? "block" : "none")" role="tabpanel">
+                <div id="mob-tab-my-submissions" class="sidebar-tab-content" style="display: @(!Model.ShowPriority ? "block" : "none")" role="tabpanel">
                     @if (hasSubmissions)
                     {
                         <div class="sidebar-list">
@@ -434,14 +432,14 @@ else
                 </div>
 
                 <div class="sidebar-tabs" role="tablist">
-                    @if (showPriority)
+                    @if (Model.ShowPriority)
                     {
                         <button class="sidebar-tab active" data-tab="for-approval" onclick="switchSidebarTab('for-approval')" role="tab" aria-selected="true" aria-controls="tab-for-approval">For Approval</button>
                     }
-                    <button class="sidebar-tab @(!showPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!showPriority ? "true" : "false")" aria-controls="tab-my-submissions">My Submissions</button>
+                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="tab-my-submissions">My Submissions</button>
                 </div>
 
-                @if (showPriority)
+                @if (Model.ShowPriority)
                 {
                     <div id="tab-for-approval" class="sidebar-tab-content" style="display: block" role="tabpanel">
                         @if (hasApproval)
@@ -468,7 +466,7 @@ else
                     </div>
                 }
 
-                <div id="tab-my-submissions" class="sidebar-tab-content" style="display: @(!showPriority ? "block" : "none")" role="tabpanel">
+                <div id="tab-my-submissions" class="sidebar-tab-content" style="display: @(!Model.ShowPriority ? "block" : "none")" role="tabpanel">
                     @if (hasSubmissions)
                     {
                         <div class="sidebar-list">
@@ -511,7 +509,7 @@ else
 
 
 <style>
-    .dash-layout .container {
+    .container {
         max-width: 100% !important;
     }
     :root {

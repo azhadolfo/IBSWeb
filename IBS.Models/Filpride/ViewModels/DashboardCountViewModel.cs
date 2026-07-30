@@ -27,6 +27,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<PendingApprovalItem> MySubmissions { get; set; } = new();
         public List<PendingApprovalItem> PendingMyApproval { get; set; } = new();
         public string UserFullName { get; set; } = string.Empty;
+        public bool ShowPriority { get; set; }
     }
 
     public class PendingApprovalItem
