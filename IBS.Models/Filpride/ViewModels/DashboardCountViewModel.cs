@@ -38,6 +38,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string Area { get; set; } = "Filpride";
         public string Controller { get; set; } = string.Empty;
         public string FilterType { get; set; } = string.Empty;
+        public string DisplayStatus { get; set; } = string.Empty;
+        public string SidebarUrl { get; set; } = "#";
         public DateTime CreatedDate { get; set; }
     }
 }

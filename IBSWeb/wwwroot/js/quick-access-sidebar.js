@@ -156,7 +156,8 @@
     }
 
     function isHomeUrl(url) {
-        return url === '/' || url.toLowerCase().includes('/home/');
+        if (url === '/') return true;
+        return /^\/(user\/)?home(\/|$)/i.test(url);
     }
 
     /* ─── Breadcrumb resolver ─── */

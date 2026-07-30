@@ -181,11 +181,11 @@ else
                             <div class="sidebar-list">
                                 @foreach (var item in Model.PendingMyApproval)
                                 {
-                                    <a href="@SidebarHref(item)" class="sidebar-item">
+                                    <a href="@item.SidebarUrl" class="sidebar-item">
                                         <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
                                         <div class="sidebar-item-body">
                                             <span class="sidebar-item-ref">@item.ReferenceNo</span>
-                                            <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                            <span class="sidebar-item-status">@item.DisplayStatus</span>
                                         </div>
                                     </a>
                                 }
@@ -206,11 +206,11 @@ else
                         <div class="sidebar-list">
                             @foreach (var item in Model.MySubmissions)
                             {
-                                <a href="@SidebarHref(item)" class="sidebar-item">
+                                <a href="@item.SidebarUrl" class="sidebar-item">
                                     <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
                                     <div class="sidebar-item-body">
                                         <span class="sidebar-item-ref">@item.ReferenceNo</span>
-                                        <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                        <span class="sidebar-item-status">@item.DisplayStatus</span>
                                     </div>
                                 </a>
                             }
@@ -452,11 +452,11 @@ else
                             <div class="sidebar-list">
                                 @foreach (var item in Model.PendingMyApproval)
                                 {
-                                    <a href="@SidebarHref(item)" class="sidebar-item">
+                                    <a href="@item.SidebarUrl" class="sidebar-item">
                                         <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
                                         <div class="sidebar-item-body">
                                             <span class="sidebar-item-ref">@item.ReferenceNo</span>
-                                            <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                            <span class="sidebar-item-status">@item.DisplayStatus</span>
                                         </div>
                                     </a>
                                 }
@@ -477,11 +477,11 @@ else
                         <div class="sidebar-list">
                             @foreach (var item in Model.MySubmissions)
                             {
-                                <a href="@SidebarHref(item)" class="sidebar-item">
+                                <a href="@item.SidebarUrl" class="sidebar-item">
                                     <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
                                     <div class="sidebar-item-body">
                                         <span class="sidebar-item-ref">@item.ReferenceNo</span>
-                                        <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                        <span class="sidebar-item-status">@item.DisplayStatus</span>
                                     </div>
                                 </a>
                             }
@@ -498,54 +498,20 @@ else
 
         </div>
     }
-}
-
-@functions {
-    string MapStatus(string status) => status switch
+    else
     {
-        "ForApprovalOfMarketing" => "Marketing Approval",
-        "Created" => "Created",
-        "SupplierAppointed" => "Supplier Appointed",
-        "HaulerAppointed" => "Hauler Appointed",
-        "ForAtlBooking" => "ATL Booking",
-        "ForApprovalOfOM" => "OM Approval",
-        "ForApprovalOfCNC" => "CNC Approval",
-        "ForApprovalOfFM" => "FM Approval",
-        "ForDR" => "For DR",
-        "Completed" => "Completed",
-        "Disapproved" => "Disapproved",
-        "Expired" => "Expired",
-        "Closed" => "Closed",
-        "ForApproval" => "For Approval",
-        "ForPosting" => "For Posting",
-        "ForPayment" => "For Payment",
-        "Paid" => "Paid",
-        "Voided" => "Voided",
-        "Canceled" => "Canceled",
-        "Pending" => "Pending",
-        "Posted" => "Posted",
-        "PendingDelivery" => "Pending Delivery",
-        "ForInvoicing" => "For Invoicing",
-        _ => status
-    };
-
-    string SidebarAction(string type) => type switch
-    {
-        "COS" => "Preview",
-        "CV" or "JV" or "DM" or "CM" => "Print",
-        _ => "Index"
-    };
-
-    string SidebarHref(PendingApprovalItem item)
-    {
-        var action = SidebarAction(item.Type);
-        if (action == "Index")
-        {
-            return Url.Action(action, item.Controller, new { area = item.Area, filterType = string.IsNullOrEmpty(item.FilterType) ? null : item.FilterType }) ?? "#";
-        }
-        return Url.Action(action, item.Controller, new { area = item.Area, id = item.Id }) ?? "#";
+        <div class="dash-layout">
+            <div class="dash-main">
+                <header class="dash-header">
+                    <h1 class="dash-title">Welcome to Our Integrated Business System</h1>
+                    <p class="dash-subtitle">Please select a company to access the dashboard.</p>
+                </header>
+            </div>
+        </div>
     }
 }
+
+
 
 <style>
     .container {
