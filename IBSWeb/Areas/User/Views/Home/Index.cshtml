@@ -159,6 +159,72 @@ else
                 </section>
             }
 
+                @{
+                    bool hasApproval = Model.PendingMyApproval.Count > 0;
+                    bool hasSubmissions = Model.MySubmissions.Count > 0;
+                }
+
+            <div class="mobile-sidebar" id="mobile-sidebar">
+                <div class="sidebar-tabs">
+                    @if (showPriority)
+                    {
+                        <button class="sidebar-tab @(showPriority ? "active" : "")" data-tab="for-approval" onclick="switchSidebarTab('for-approval')">For Approval</button>
+                    }
+                    <button class="sidebar-tab @(!showPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')">My Submissions</button>
+                </div>
+
+                @if (showPriority)
+                {
+                    <div id="mob-tab-for-approval" class="sidebar-tab-content" style="display: block">
+                        @if (hasApproval)
+                        {
+                            <div class="sidebar-list">
+                                @foreach (var item in Model.PendingMyApproval)
+                                {
+                                    <a href="@SidebarHref(item)" class="sidebar-item">
+                                        <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
+                                        <div class="sidebar-item-body">
+                                            <span class="sidebar-item-ref">@item.ReferenceNo</span>
+                                            <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sidebar-empty">
+                                <p class="sidebar-empty-text">No items pending your approval.</p>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div id="mob-tab-my-submissions" class="sidebar-tab-content" style="display: @(!showPriority ? "block" : "none")">
+                    @if (hasSubmissions)
+                    {
+                        <div class="sidebar-list">
+                            @foreach (var item in Model.MySubmissions)
+                            {
+                                <a href="@SidebarHref(item)" class="sidebar-item">
+                                    <span class="sidebar-item-type sidebar-type-@item.Type.ToLowerInvariant()">@item.Type</span>
+                                    <div class="sidebar-item-body">
+                                        <span class="sidebar-item-ref">@item.ReferenceNo</span>
+                                        <span class="sidebar-item-status">@MapStatus(item.Status)</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sidebar-empty">
+                            <p class="sidebar-empty-text">No pending submissions.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
             <section class="flow-section">
                 <h2 class="flow-heading">
                     <span class="bar-secondary"></span>
@@ -377,11 +443,6 @@ else
                     }
                     <button class="sidebar-tab @(!showPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')">My Submissions</button>
                 </div>
-
-                @{
-                    bool hasApproval = Model.PendingMyApproval.Count > 0;
-                    bool hasSubmissions = Model.MySubmissions.Count > 0;
-                }
 
                 @if (showPriority)
                 {
@@ -923,8 +984,23 @@ else
         max-height: calc(100vh - var(--navbar-height, 56px) - 140px);
     }
 
+    @@media (min-width: 1024px) {
+        .mobile-sidebar { display: none; }
+    }
+
     @@media (max-width: 1023px) {
         .dash-sidebar { display: none; }
+        .mobile-sidebar {
+            display: block;
+            margin-bottom: 2rem;
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .mobile-sidebar .sidebar-tab-content {
+            max-height: none;
+        }
     }
 
     @@media (max-width: 767px) {
@@ -939,16 +1015,26 @@ else
         .pipe-icon-wrap { width: 1.5rem; height: 1.5rem; }
         .pipe-icon { font-size: 0.75rem; }
         .pipe-count { font-size: 16px; line-height: 24px; }
+        .flow-section { margin-bottom: 2rem; }
+        .flow-heading { margin-bottom: 1rem; }
+    }
+
+    @@media (max-width: 480px) {
+        .pipe-grid { grid-template-columns: 1fr; }
+        .pipe-grid-4 { grid-template-columns: 1fr; }
+        .pipe-card { min-height: 75px; }
+        .dash-main { padding: 0.5rem 0.75rem; }
+        .dash-title { font-size: 26px; line-height: 32px; }
     }
 </style>
 
 <script>
     function switchSidebarTab(tab) {
-        document.querySelectorAll('#sidebar .sidebar-tab').forEach(function(t) {
+        document.querySelectorAll('#sidebar .sidebar-tab, #mobile-sidebar .sidebar-tab').forEach(function(t) {
             t.classList.toggle('active', t.dataset.tab === tab);
         });
-        document.querySelectorAll('#sidebar .sidebar-tab-content').forEach(function(c) {
-            c.style.display = c.id === 'tab-' + tab ? 'block' : 'none';
+        document.querySelectorAll('#sidebar .sidebar-tab-content, #mobile-sidebar .sidebar-tab-content').forEach(function(c) {
+            c.style.display = c.id.endsWith('-tab-' + tab) ? 'block' : 'none';
         });
     }
 </script>
