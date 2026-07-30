@@ -82,9 +82,9 @@ namespace IBSWeb.Areas.User.Controllers
 
             await Task.WhenAll(countTask, submissionTask);
 
-            var dashboardCounts = countTask.Result;
+            var dashboardCounts = await countTask;
             dashboardCounts.UserFullName = userFullName;
-            dashboardCounts.MySubmissions = submissionTask.Result;
+            dashboardCounts.MySubmissions = await submissionTask;
 
             var pendingApproval = new List<PendingApprovalItem>();
 
@@ -371,7 +371,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .CountAsync();
             counts.RecordSupplierDetails = await ctx.FilprideReceivingReports
                 .Where(rr => (rr.SupplierDrNo == null || rr.SupplierInvoiceDate == null || rr.SupplierInvoiceNumber == null
-                    || rr.WithdrawalCertificate == null || rr.SupplierDrNo == null || rr.CostBasedOnSoa == 0)
+                    || rr.WithdrawalCertificate == null || rr.CostBasedOnSoa == 0)
                     && rr.CanceledBy == null && rr.VoidedBy == null && rr.Company == companyClaims)
                 .CountAsync();
             counts.JournalVoucherForApprovalCount = await ctx.FilprideJournalVoucherHeaders
@@ -394,7 +394,7 @@ namespace IBSWeb.Areas.User.Controllers
             await using var scope = _scopeFactory.CreateAsyncScope();
             var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var cosTask = ctx.FilprideCustomerOrderSlips
+            var cosList = await ctx.FilprideCustomerOrderSlips
                 .Where(cos => cos.CreatedBy == userFullName && cos.Company == companyClaims
                     && cos.CreatedDate >= twoMonthsAgo && !terminalStatuses.Contains(cos.Status))
                 .OrderByDescending(cos => cos.CreatedDate)
@@ -410,8 +410,6 @@ namespace IBSWeb.Areas.User.Controllers
                     CreatedDate = cos.CreatedDate
                 })
                 .ToListAsync();
-
-            var cosList = await cosTask;
             var cvList = await ctx.FilprideCheckVoucherHeaders
                 .Where(cv => cv.CreatedBy == userFullName && cv.Company == companyClaims
                     && cv.CreatedDate >= twoMonthsAgo
@@ -495,29 +493,29 @@ namespace IBSWeb.Areas.User.Controllers
             all.AddRange(jvList);
             all.AddRange(dmList);
             all.AddRange(cmList);
-            foreach (var item in all) item.FilterType = GetFilterType(item.Type, item.Status);
 
             return all.OrderByDescending(s => s.CreatedDate).Take(20).ToList();
         }
 
         private static string GetFilterType(string type, string status) => (type, status) switch
         {
-            ("COS", "ForApprovalOfMarketing") => "ForMarketingApproval",
-            ("COS", "Created") => "",
-            ("COS", "SupplierAppointed") => "ForAppointSupplier",
-            ("COS", "HaulerAppointed") => "ForAppointHauler",
-            ("COS", "ForAtlBooking") => "",
-            ("COS", "ForApprovalOfOM") => "ForOMApproval",
-            ("COS", "ForApprovalOfCNC") => "ForCNCApproval",
-            ("COS", "ForApprovalOfFM") => "ForFMApproval",
-            ("COS", "ForDR") => "ForDR",
-            ("CV", "ForApproval") => "ForApproval",
-            ("JV", "ForApproval") => "ForApproval",
-            ("DR", "ForApprovalOfOM") => "ForOMApproval",
-            ("DR", "PendingDelivery") => "InTransit",
-            ("DR", "ForInvoicing") => "ForInvoice",
-            ("DM", "ForApprovalOfFM") => "ForFMApproval",
-            ("CM", "ForApprovalOfFM") => "ForFMApproval",
+            ("COS", nameof(CosStatus.ForApprovalOfMarketing)) => "ForMarketingApproval",
+            ("COS", nameof(CosStatus.Created)) => "",
+            ("COS", nameof(CosStatus.SupplierAppointed)) => "ForAppointSupplier",
+            ("COS", nameof(CosStatus.HaulerAppointed)) => "ForAppointHauler",
+            ("COS", nameof(CosStatus.ForAtlBooking)) => "",
+            ("COS", nameof(CosStatus.ForApprovalOfOM)) => "ForOMApproval",
+            ("COS", nameof(CosStatus.ForApprovalOfCNC)) => "ForCNCApproval",
+            ("COS", nameof(CosStatus.ForApprovalOfFM)) => "ForFMApproval",
+            ("COS", nameof(CosStatus.ForDR)) => "ForDR",
+            ("CV", nameof(CheckVoucherInvoiceStatus.ForApproval)) => "ForApproval",
+            ("JV", nameof(JvStatus.ForApproval)) => "ForApproval",
+            ("DR", nameof(CosStatus.ForApprovalOfOM)) => "ForOMApproval",
+            ("DR", nameof(DRStatus.PendingDelivery)) => "InTransit",
+            ("DR", nameof(DRStatus.ForInvoicing)) => "ForInvoice",
+            ("DM", nameof(DmCmStatus.ForApprovalOfFM)) => "ForFMApproval",
+            ("CM", nameof(DmCmStatus.ForApprovalOfFM)) => "ForFMApproval",
+            ("PO", nameof(CosStatus.ForApprovalOfOM)) => "ForOMApproval",
             _ => ""
         };
 

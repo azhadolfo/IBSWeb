@@ -156,8 +156,9 @@
     }
 
     function isHomeUrl(url) {
-        if (url === '/') return true;
-        return /^\/(user\/)?home(\/|$)/i.test(url);
+        var path = url.split('?')[0].split('#')[0];
+        if (path === '/') return true;
+        return /^\/(user\/)?home(\/|$)/i.test(path);
     }
 
     /* ─── Breadcrumb resolver ─── */
