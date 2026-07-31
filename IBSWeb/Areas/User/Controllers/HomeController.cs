@@ -308,6 +308,10 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 pendingApproval.AddRange(await TakeLatestAsync(ProjectCos(ctx.FilprideCustomerOrderSlips
                     .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo))));
+            }
+
+            if (isAdmin || isHead || isFinance || isAccounting)
+            {
                 pendingApproval.AddRange(await TakeLatestAsync(ProjectDm(ctx.FilprideDebitMemos
                     .Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM) && dm.Company == companyClaims && dm.CreatedDate >= twoMonthsAgo))));
                 pendingApproval.AddRange(await TakeLatestAsync(ProjectCm(ctx.FilprideCreditMemos
