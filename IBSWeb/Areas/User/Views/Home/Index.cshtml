@@ -26,8 +26,8 @@
 
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@@400;500;600;700&family=Inter:wght@@400;500;600;700&display=swap" rel="stylesheet">
 
 @if (!User.Identity!.IsAuthenticated)
 {
@@ -371,15 +371,14 @@ else
                 </div>
             </section>
 
-            <section class="flow-section">
-                <h2 class="flow-heading flow-heading-bordered">
-                    <span class="bar-secondary"></span>
-                    Finance &amp; Accounting
-                </h2>
-                <div class="pipe-grid pipe-grid-4">
-
-                    @if (isAdmin || isHead || isAccounting)
-                    {
+            @if (isAdmin || isHead || isAccounting)
+            {
+                <section class="flow-section">
+                    <h2 class="flow-heading flow-heading-bordered">
+                        <span class="bar-secondary"></span>
+                        Finance &amp; Accounting
+                    </h2>
+                    <div class="pipe-grid pipe-grid-4">
                         <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
                             <div class="pipe-card-top">
                                 <div class="pipe-icon-wrap pipe-icon-red">
@@ -389,7 +388,6 @@ else
                             </div>
                             <span class="pipe-label">FM Approval (Debit Memo)</span>
                         </a>
-
                         <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
                             <div class="pipe-card-top">
                                 <div class="pipe-icon-wrap pipe-icon-red">
@@ -408,7 +406,6 @@ else
                             </div>
                             <span class="pipe-label">CV Approval</span>
                         </a>
-
                         <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
                             <div class="pipe-card-top">
                                 <div class="pipe-icon-wrap pipe-icon-red">
@@ -418,12 +415,11 @@ else
                             </div>
                             <span class="pipe-label">JV Approval</span>
                         </a>
-                    }
+                    </div>
+                </section>
+            }
 
-                </div>
-            </section>
-
-        </div>
+            </div>
 
             <aside class="dash-sidebar" id="sidebar">
                 <div class="sidebar-header">

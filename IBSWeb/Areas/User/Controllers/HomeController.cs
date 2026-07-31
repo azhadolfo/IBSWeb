@@ -79,217 +79,15 @@ namespace IBSWeb.Areas.User.Controllers
 
             var countTask = RunCountQueriesAsync(companyClaims ?? string.Empty);
             var submissionTask = RunSubmissionQueriesAsync(userFullName, companyClaims ?? string.Empty, twoMonthsAgo, terminalStatuses);
+            var approvalTask = RunApprovalQueriesAsync(isAdmin, isHead, isFinance, isAccounting, isOps, isCnc, isPort, companyClaims ?? string.Empty, twoMonthsAgo);
 
-            await Task.WhenAll(countTask, submissionTask);
+            await Task.WhenAll(countTask, submissionTask, approvalTask);
 
             var dashboardCounts = await countTask;
             dashboardCounts.UserFullName = userFullName;
             dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isCashier;
             dashboardCounts.MySubmissions = await submissionTask;
-
-            var pendingApproval = new List<PendingApprovalItem>();
-
-            if (isAdmin || isHead || isFinance)
-            {
-                var fmCos = await _dbContext.FilprideCustomerOrderSlips
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(cos => cos.CreatedDate)
-                    .Take(10)
-                    .Select(cos => new PendingApprovalItem
-                    {
-                        Id = cos.CustomerOrderSlipId,
-                        ReferenceNo = cos.CustomerOrderSlipNo,
-                        Type = "COS",
-                        Status = cos.Status,
-                        Area = "Filpride",
-                        Controller = "CustomerOrderSlip",
-                        CreatedDate = cos.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(fmCos);
-
-                var fmDm = await _dbContext.FilprideDebitMemos
-                    .Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM) && dm.Company == companyClaims && dm.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(dm => dm.CreatedDate)
-                    .Take(10)
-                    .Select(dm => new PendingApprovalItem
-                    {
-                        Id = dm.DebitMemoId,
-                        ReferenceNo = dm.DebitMemoNo ?? "",
-                        Type = "DM",
-                        Status = dm.Status,
-                        Area = "Filpride",
-                        Controller = "DebitMemo",
-                        CreatedDate = dm.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(fmDm);
-
-                var fmCm = await _dbContext.FilprideCreditMemos
-                    .Where(cm => cm.Status == nameof(DmCmStatus.ForApprovalOfFM) && cm.Company == companyClaims && cm.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(cm => cm.CreatedDate)
-                    .Take(10)
-                    .Select(cm => new PendingApprovalItem
-                    {
-                        Id = cm.CreditMemoId,
-                        ReferenceNo = cm.CreditMemoNo ?? "",
-                        Type = "CM",
-                        Status = cm.Status,
-                        Area = "Filpride",
-                        Controller = "CreditMemo",
-
-                        CreatedDate = cm.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(fmCm);
-            }
-
-            if (isAdmin || isHead || isOps)
-            {
-                var omCos = await _dbContext.FilprideCustomerOrderSlips
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(cos => cos.CreatedDate)
-                    .Take(10)
-                    .Select(cos => new PendingApprovalItem
-                    {
-                        Id = cos.CustomerOrderSlipId,
-                        ReferenceNo = cos.CustomerOrderSlipNo,
-                        Type = "COS",
-                        Status = cos.Status,
-                        Area = "Filpride",
-                        Controller = "CustomerOrderSlip",
-
-                        CreatedDate = cos.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(omCos);
-
-                var omDr = await _dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM) && dr.Company == companyClaims && dr.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(dr => dr.CreatedDate)
-                    .Take(10)
-                    .Select(dr => new PendingApprovalItem
-                    {
-                        Id = dr.DeliveryReceiptId,
-                        ReferenceNo = dr.DeliveryReceiptNo,
-                        Type = "DR",
-                        Status = dr.Status,
-                        Area = "Filpride",
-                        Controller = "DeliveryReceipt",
-
-                        CreatedDate = dr.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(omDr);
-
-                var omPo = await _dbContext.FilpridePurchaseOrders
-                    .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM) && po.Company == companyClaims && po.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(po => po.CreatedDate)
-                    .Take(10)
-                    .Select(po => new PendingApprovalItem
-                    {
-                        Id = po.PurchaseOrderId,
-                        ReferenceNo = po.PurchaseOrderNo ?? "",
-                        Type = "PO",
-                        Status = po.Status,
-                        Area = "Filpride",
-                        Controller = "PurchaseOrder",
-
-                        CreatedDate = po.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(omPo);
-            }
-
-            if (isAdmin || isHead || isAccounting)
-            {
-                var cvApproval = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cv => cv.Status == nameof(CheckVoucherInvoiceStatus.ForApproval)
-                                 && cv.Company == companyClaims
-                                 && cv.CreatedDate >= twoMonthsAgo
-                                 && cv.CvType == nameof(CVType.Invoicing)
-                                 && !cv.IsPayroll)
-                    .OrderByDescending(cv => cv.CreatedDate)
-                    .Take(10)
-                    .Select(cv => new PendingApprovalItem
-                    {
-                        Id = cv.CheckVoucherHeaderId,
-                        ReferenceNo = cv.CheckVoucherHeaderNo ?? "",
-                        Type = "CV",
-                        Status = cv.Status,
-                        Area = "Filpride",
-                        Controller = "CheckVoucherNonTradeInvoice",
-
-                        CreatedDate = cv.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(cvApproval);
-
-                var jvApproval = await _dbContext.FilprideJournalVoucherHeaders
-                    .Where(jv => jv.Status == nameof(JvStatus.ForApproval) && jv.Company == companyClaims && jv.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(jv => jv.CreatedDate)
-                    .Take(10)
-                    .Select(jv => new PendingApprovalItem
-                    {
-                        Id = jv.JournalVoucherHeaderId,
-                        ReferenceNo = jv.JournalVoucherHeaderNo ?? "",
-                        Type = "JV",
-                        Status = jv.Status,
-                        Area = "Filpride",
-                        Controller = "JournalVoucher",
-
-                        CreatedDate = jv.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(jvApproval);
-            }
-
-            if (isAdmin || isHead || isCnc)
-            {
-                var cncCos = await _dbContext.FilprideCustomerOrderSlips
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(cos => cos.CreatedDate)
-                    .Take(10)
-                    .Select(cos => new PendingApprovalItem
-                    {
-                        Id = cos.CustomerOrderSlipId,
-                        ReferenceNo = cos.CustomerOrderSlipNo,
-                        Type = "COS",
-                        Status = cos.Status,
-                        Area = "Filpride",
-                        Controller = "CustomerOrderSlip",
-
-                        CreatedDate = cos.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(cncCos);
-            }
-
-            if (isAdmin || isHead || isOps || isPort)
-            {
-                var inTransitDr = await _dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery) && dr.Company == companyClaims && dr.CreatedDate >= twoMonthsAgo)
-                    .OrderByDescending(dr => dr.CreatedDate)
-                    .Take(10)
-                    .Select(dr => new PendingApprovalItem
-                    {
-                        Id = dr.DeliveryReceiptId,
-                        ReferenceNo = dr.DeliveryReceiptNo,
-                        Type = "DR",
-                        Status = dr.Status,
-                        Area = "Filpride",
-                        Controller = "DeliveryReceipt",
-
-                        CreatedDate = dr.CreatedDate
-                    })
-                    .ToListAsync();
-                pendingApproval.AddRange(inTransitDr);
-            }
-
-            dashboardCounts.PendingMyApproval = pendingApproval
-                .OrderByDescending(s => s.CreatedDate)
-                .Take(30)
-                .ToList();
+            dashboardCounts.PendingMyApproval = await approvalTask;
 
             EnrichSidebarItems(dashboardCounts.MySubmissions);
             EnrichSidebarItems(dashboardCounts.PendingMyApproval);
@@ -498,13 +296,153 @@ namespace IBSWeb.Areas.User.Controllers
             return all.OrderByDescending(s => s.CreatedDate).Take(20).ToList();
         }
 
+        private async Task<List<PendingApprovalItem>> RunApprovalQueriesAsync(
+            bool isAdmin, bool isHead, bool isFinance, bool isAccounting, bool isOps, bool isCnc, bool isPort,
+            string companyClaims, DateTime twoMonthsAgo)
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var pendingApproval = new List<PendingApprovalItem>();
+
+            if (isAdmin || isHead || isFinance)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCos(ctx.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo))));
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectDm(ctx.FilprideDebitMemos
+                    .Where(dm => dm.Status == nameof(DmCmStatus.ForApprovalOfFM) && dm.Company == companyClaims && dm.CreatedDate >= twoMonthsAgo))));
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCm(ctx.FilprideCreditMemos
+                    .Where(cm => cm.Status == nameof(DmCmStatus.ForApprovalOfFM) && cm.Company == companyClaims && cm.CreatedDate >= twoMonthsAgo))));
+            }
+
+            if (isAdmin || isHead || isOps)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCos(ctx.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo))));
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectDr(ctx.FilprideDeliveryReceipts
+                    .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM) && dr.Company == companyClaims && dr.CreatedDate >= twoMonthsAgo))));
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectPo(ctx.FilpridePurchaseOrders
+                    .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM) && po.Company == companyClaims && po.CreatedDate >= twoMonthsAgo))));
+            }
+
+            if (isAdmin || isHead || isAccounting)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCv(ctx.FilprideCheckVoucherHeaders
+                    .Where(cv => cv.Status == nameof(CheckVoucherInvoiceStatus.ForApproval)
+                        && cv.Company == companyClaims && cv.CreatedDate >= twoMonthsAgo
+                        && cv.CvType == nameof(CVType.Invoicing) && !cv.IsPayroll))));
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectJv(ctx.FilprideJournalVoucherHeaders
+                    .Where(jv => jv.Status == nameof(JvStatus.ForApproval) && jv.Company == companyClaims && jv.CreatedDate >= twoMonthsAgo))));
+            }
+
+            if (isAdmin || isHead || isCnc)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCos(ctx.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo))));
+            }
+
+            if (isAdmin || isHead || isOps || isPort)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectDr(ctx.FilprideDeliveryReceipts
+                    .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery) && dr.Company == companyClaims && dr.CreatedDate >= twoMonthsAgo))));
+            }
+
+            return pendingApproval.OrderByDescending(s => s.CreatedDate).Take(30).ToList();
+        }
+
+        private static async Task<List<PendingApprovalItem>> TakeLatestAsync(IQueryable<PendingApprovalItem> query) =>
+            await query.OrderByDescending(x => x.CreatedDate).Take(10).ToListAsync();
+
+        private static IQueryable<PendingApprovalItem> ProjectCos(IQueryable<FilprideCustomerOrderSlip> query) =>
+            query.Select(cos => new PendingApprovalItem
+            {
+                Id = cos.CustomerOrderSlipId,
+                ReferenceNo = cos.CustomerOrderSlipNo,
+                Type = "COS",
+                Status = cos.Status,
+                Area = "Filpride",
+                Controller = "CustomerOrderSlip",
+                CreatedDate = cos.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectDr(IQueryable<FilprideDeliveryReceipt> query) =>
+            query.Select(dr => new PendingApprovalItem
+            {
+                Id = dr.DeliveryReceiptId,
+                ReferenceNo = dr.DeliveryReceiptNo,
+                Type = "DR",
+                Status = dr.Status,
+                Area = "Filpride",
+                Controller = "DeliveryReceipt",
+                CreatedDate = dr.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectPo(IQueryable<FilpridePurchaseOrder> query) =>
+            query.Select(po => new PendingApprovalItem
+            {
+                Id = po.PurchaseOrderId,
+                ReferenceNo = po.PurchaseOrderNo ?? "",
+                Type = "PO",
+                Status = po.Status,
+                Area = "Filpride",
+                Controller = "PurchaseOrder",
+                CreatedDate = po.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectDm(IQueryable<FilprideDebitMemo> query) =>
+            query.Select(dm => new PendingApprovalItem
+            {
+                Id = dm.DebitMemoId,
+                ReferenceNo = dm.DebitMemoNo ?? "",
+                Type = "DM",
+                Status = dm.Status,
+                Area = "Filpride",
+                Controller = "DebitMemo",
+                CreatedDate = dm.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectCm(IQueryable<FilprideCreditMemo> query) =>
+            query.Select(cm => new PendingApprovalItem
+            {
+                Id = cm.CreditMemoId,
+                ReferenceNo = cm.CreditMemoNo ?? "",
+                Type = "CM",
+                Status = cm.Status,
+                Area = "Filpride",
+                Controller = "CreditMemo",
+                CreatedDate = cm.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectCv(IQueryable<FilprideCheckVoucherHeader> query) =>
+            query.Select(cv => new PendingApprovalItem
+            {
+                Id = cv.CheckVoucherHeaderId,
+                ReferenceNo = cv.CheckVoucherHeaderNo ?? "",
+                Type = "CV",
+                Status = cv.Status,
+                Area = "Filpride",
+                Controller = "CheckVoucherNonTradeInvoice",
+                CreatedDate = cv.CreatedDate
+            });
+
+        private static IQueryable<PendingApprovalItem> ProjectJv(IQueryable<FilprideJournalVoucherHeader> query) =>
+            query.Select(jv => new PendingApprovalItem
+            {
+                Id = jv.JournalVoucherHeaderId,
+                ReferenceNo = jv.JournalVoucherHeaderNo ?? "",
+                Type = "JV",
+                Status = jv.Status,
+                Area = "Filpride",
+                Controller = "JournalVoucher",
+                CreatedDate = jv.CreatedDate
+            });
+
         private static string GetFilterType(string type, string status) => (type, status) switch
         {
             ("COS", nameof(CosStatus.ForApprovalOfMarketing)) => "ForMarketingApproval",
             ("COS", nameof(CosStatus.Created)) => "",
             ("COS", nameof(CosStatus.SupplierAppointed)) => "ForAppointSupplier",
             ("COS", nameof(CosStatus.HaulerAppointed)) => "ForAppointHauler",
-            ("COS", nameof(CosStatus.ForAtlBooking)) => "", // ponytail: ATL queue driven by IsCosAtlFinalized, not filterType
+            ("COS", nameof(CosStatus.ForAtlBooking)) => "",
             ("COS", nameof(CosStatus.ForApprovalOfOM)) => "ForOMApproval",
             ("COS", nameof(CosStatus.ForApprovalOfCNC)) => "ForCNCApproval",
             ("COS", nameof(CosStatus.ForApprovalOfFM)) => "ForFMApproval",
