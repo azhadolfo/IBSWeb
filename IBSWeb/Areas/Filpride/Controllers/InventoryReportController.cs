@@ -68,19 +68,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Products = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Where(p => p.IsActive &&
-                            p.ProductCode != "PET004" &&
-                            p.ProductCode != "PET005" &&
-                            p.ProductCode != "PET006" &&
-                            p.ProductCode != "PET007" )
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = p.ProductCode + " " + p.ProductName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
