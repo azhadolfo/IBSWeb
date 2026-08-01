@@ -631,5 +631,33 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return journalVoucherDetails;
         }
+
+        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must not be greater than Date To!");
+            }
+
+            var query = _db.FilprideCustomerOrderSlips
+                .Where(dr => dr.Company == company &&
+                             dr.Date >= dateFrom &&
+                             dr.Date <= dateTo);
+            // "All" returns Posted, Voided, and Canceled records
+
+            var customerOrderSlip = await query
+                .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
+                .Include(cos => cos.Product)
+                .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(cos => cos.AppointedSuppliers)
+                .OrderBy(p => p.CustomerOrderSlipNo)
+                .ToListAsync(cancellationToken);
+
+            return customerOrderSlip;
+        }
     }
 }

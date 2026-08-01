@@ -43,5 +43,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         public Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default);
 
         public Task<List<FilprideJournalVoucherDetail>> GetJournalVoucherReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default);
+
+        public Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
     }
 }
