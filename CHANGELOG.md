@@ -58,9 +58,6 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ### Changed
 - Updated Filpride customer order slip creation to leave `ExpirationDate` blank for NPC customers as a temporary exception, while continuing to assign the standard 7-day expiration to other customers.
-- Renamed the Filpride `OTC Fuel Sales` report flow to `COS Summary Report`, including the controller actions, navigation entry, Razor view title, and Excel export action target.
-- Reworked the Filpride `COS Summary Report` export to use customer order slip records directly instead of the sales report dataset, so the generated workbook now reflects the COS list by selected COS date range.
-- Revised the `COS Summary Report` Excel worksheets to show COS-centric columns and totals, including delivered volume, balance volume, price, and COS status, and renamed the month-to-date sheet/output filename to match the COS summary report.
 
 ### Fixed
 - Fixed the Filpride AP Monitoring Report export to include open purchase orders with outstanding balances from prior months, align topsheet grouping with the per-supplier worksheets, and compute unlifted quantities based on posted receiving reports through the selected month-end.
