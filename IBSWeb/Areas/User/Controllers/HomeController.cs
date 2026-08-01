@@ -62,7 +62,6 @@ namespace IBSWeb.Areas.User.Controllers
             bool isOps = User.IsInRole("OperationManager");
             bool isCnc = User.IsInRole("CncManager");
             bool isPort = User.IsInRole("PortCoordinator");
-            bool isCashier = User.IsInRole("Cashier");
 
             var twoMonthsAgo = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila")).AddMonths(-2);
 
@@ -85,7 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dashboardCounts = await countTask;
             dashboardCounts.UserFullName = userFullName;
-            dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isCashier;
+            dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort;
             dashboardCounts.MySubmissions = await submissionTask;
             dashboardCounts.PendingMyApproval = await approvalTask;
 
