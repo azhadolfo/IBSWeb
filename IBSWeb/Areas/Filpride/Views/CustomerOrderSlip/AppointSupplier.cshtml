@@ -256,7 +256,6 @@
                 const depot = $('#PickUpPointId option:selected').text();
                 const productId = $('#ProductId').val();
                 const $poSelect = $('#PurchaseOrderIds');
-                const cosId = @Model.CustomerOrderSlipId;
 
                 // Show loading indicator
                 $('.loader-container').show();
@@ -272,7 +271,6 @@
                             supplierIds: supplierIds.join(','),
                             depot: depot,
                             productId: productId,
-                            cosId: cosId,
                         },
                         success: function (data) {
                             if (data.length === 0) {

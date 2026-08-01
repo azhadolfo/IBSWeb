@@ -115,10 +115,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("401010100", "Sales - Biodiesel"),
                 "PET002" => ("401010200", "Sales - Econogas"),
                 "PET003" => ("401010300", "Sales - Envirogas"),
-                "PET004" => ("401010200", "Sales - Econogas"),
-                "PET005" => ("401010300", "Sales - Envirogas"),
-                "PET006" => ("401010400", "Sales - NEAT - Diesel"),
-                "PET007" => ("401010500", "Sales - CME"),
+                "PET006" => ("401010400", "Sales - Diesel"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
@@ -130,10 +127,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("501010100", "COGS - Biodiesel"),
                 "PET002" => ("501010200", "COGS - Econogas"),
                 "PET003" => ("501010300", "COGS - Envirogas"),
-                "PET004" => ("501010200", "COGS - Econogas"),
-                "PET005" => ("501010300", "COGS - Envirogas"),
-                "PET006" => ("501010400", "COGS - NEAT - Diesel"),
-                "PET007" => ("501010500", "COGS - CME"),
+                "PET006" => ("501010400", "COGS - Diesel"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
@@ -145,10 +139,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("101040100", "Inventory - Biodiesel"),
                 "PET002" => ("101040200", "Inventory - Econogas"),
                 "PET003" => ("101040300", "Inventory - Envirogas"),
-                "PET004" => ("101040200", "Inventory - Econogas"),
-                "PET005" => ("101040300", "Inventory - Envirogas"),
-                "PET006" => ("101040400", "Inventory - NEAT - Diesel"),
-                "PET007" => ("101040500", "Inventory - CME"),
+                "PET006" => ("101040400", "Inventory - Diesel"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
@@ -160,10 +151,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("502010100", "COGS - Freight - Biodiesel"),
                 "PET002" => ("502010200", "COGS - Freight - Econogas"),
                 "PET003" => ("502010300", "COGS - Freight - Envirogas"),
-                "PET004" => ("502010200", "COGS - Freight - Econogas"),
-                "PET005" => ("502010300", "COGS - Freight - Envirogas"),
-                "PET006" => ("502010400", "COGS - Freight - NEAT - Diesel"),
-                "PET007" => ("502010500", "COGS - Freight - CME"),
+                "PET006" => ("502010400", "COGS - Freight - Diesel"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
@@ -175,10 +163,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("503010100", "COGS - Commission - Biodiesel"),
                 "PET002" => ("503010200", "COGS - Commission - Econogas"),
                 "PET003" => ("503010300", "COGS - Commission - Envirogas"),
-                "PET004" => ("503010200", "COGS - Commission - Econogas"),
-                "PET005" => ("503010300", "COGS - Commission - Envirogas"),
-                "PET006" => ("503010400", "COGS - Commission - NEAT - Diesel"),
-                "PET007" => ("503010500", "COGS - Commission - CME"),
+                "PET006" => ("503010400", "COGS - Commission - Diesel"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
