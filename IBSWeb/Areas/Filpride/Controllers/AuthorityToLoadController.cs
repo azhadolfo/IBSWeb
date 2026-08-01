@@ -340,12 +340,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSupplierCOS(int[] supplierId, int loadPortId)
+        public async Task<IActionResult> GetSupplierCOS(int supplierId, int loadPortId)
         {
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
                 .Include(a => a.PurchaseOrder)
-                .Where(a => ((IEnumerable<int>)supplierId).Contains(a.SupplierId)
+                .Where(a => a.SupplierId == supplierId
                             && !a.CustomerOrderSlip!.IsCosAtlFinalized
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Closed)
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Expired)

@@ -270,25 +270,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var product = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Where(p => p.IsActive &&
-                            p.ProductCode != "PET004" &&
-                            p.ProductCode != "PET005" &&
-                            p.ProductCode != "PET006" &&
-                            p.ProductCode != "PET007" )
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = p.ProductCode + " " + p.ProductName
-                })
-                .ToListAsync(cancellationToken);
-
             CustomerOrderSlipViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                Products = product,
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                 MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken),
                 PaymentTerms = await _unitOfWork.FilprideTerms.GetFilprideTermsListAsyncByCode(cancellationToken)
             };
@@ -483,20 +469,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
 
-                var product = await _dbContext.Products
-                    .OrderBy(p => p.ProductCode)
-                    .Where(p => p.IsActive &&
-                                p.ProductCode != "PET004" &&
-                                p.ProductCode != "PET005" &&
-                                p.ProductCode != "PET006" &&
-                                p.ProductCode != "PET007" )
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.ProductId.ToString(),
-                        Text = p.ProductCode + " " + p.ProductName
-                    })
-                    .ToListAsync(cancellationToken);
-
                 CustomerOrderSlipViewModel viewModel = new()
                 {
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -515,7 +487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m)),
                     TotalAmount = existingRecord.TotalAmount,
                     ProductId = existingRecord.ProductId,
-                    Products = product,
+                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                     AccountSpecialist = existingRecord.AccountSpecialist,
                     Remarks = existingRecord.Remarks,
                     OtcCosNo = existingRecord.OldCosNo,
@@ -1738,9 +1710,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(x => x.CustomerOrderSlipId == cosId, cancellationToken);
-
             var supplierIdList = supplierIds.Split(',')
                 .Select(id => int.Parse(id.Trim()))
                 .ToList();
@@ -1762,19 +1731,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(p => p.Supplier)
                 .Where(p => supplierIdList.Contains(p.SupplierId) &&
                             p.PickUpPoint!.Depot == depot &&
-                            (p.ProductId == productId ||
-                             customerOrderSlip != null &&
-                             customerOrderSlip.ProductName == "BIODIESEL" &&
-                             p.ProductName == "DIESEL" ||
-                             customerOrderSlip != null &&
-                             customerOrderSlip.ProductName == "BIODIESEL" &&
-                             p.ProductName == "CME" ||
-                             customerOrderSlip != null &&
-                             customerOrderSlip.ProductName == "ECONOGAS" &&
-                             p.ProductName == "UNLEADED" ||
-                             customerOrderSlip != null &&
-                             customerOrderSlip.ProductName == "ENVIROGAS" &&
-                             p.ProductName == "PREMIUM") &&
+                            p.ProductId == productId &&
                             !p.IsReceived && !p.IsSubPo &&
                             p.Status == nameof(Status.Posted) &&
                             p.Company == companyClaims)

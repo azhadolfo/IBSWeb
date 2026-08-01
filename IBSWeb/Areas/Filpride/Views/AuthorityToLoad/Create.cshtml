@@ -35,7 +35,8 @@
 
             <div class="form-group py-2 col-12">
                 <label class="control-label">Supplier List<span class="required">*</span></label>
-                <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-multiple border-0 shadow" id="SupplierId" style="width:100%" multiple="multiple">
+                <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" id="SupplierId" style="width:100%">
+                    <option value="" selected>Select supplier</option>
                 </select>
                 <span asp-validation-for="SupplierId" class="text-danger"></span>
             </div>
@@ -75,9 +76,7 @@
             const loadPortInput = $('#LoadPortSelect');
 
             supplierIdInput.on('change', function () {
-                const selected = $(this).val();
-                const values = Array.isArray(selected) ? selected : [selected];
-                $('#uppiAtlWrapper').toggle(values.includes('19'));
+                $('#uppiAtlWrapper').toggle($(this).val() === '19');
                 loadCosList();
             });
 
@@ -96,7 +95,6 @@
                 $.ajax({
                     url: '@Url.Action("GetSupplierCOS", "AuthorityToLoad", new { area = "Filpride" })',
                     type: 'GET',
-                    traditional: true,
                     data: { supplierId, loadPortId },
                     success: function (data) {
                         if (data?.length > 0) {
