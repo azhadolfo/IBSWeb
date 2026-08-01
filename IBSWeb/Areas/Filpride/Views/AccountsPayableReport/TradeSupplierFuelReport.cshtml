@@ -15,30 +15,46 @@
     <div class="card-body p-4">
         <form id="dynamicForm" method="post" target="_blank">
             <div class="row">
-                <div class="mb-3">
-                    <label asp-for="DateFrom" class="control-label"></label>
-                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
-                    <span asp-validation-for="DateFrom" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="DateTo" class="control-label"></label>
-                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
-                    <span asp-validation-for="DateTo" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="StatusFilter" class="control-label"></label>
-                    <select asp-for="StatusFilter" class="form-select">
-                        <option value="ValidOnly">Valid Only</option>
-                        <option value="All">All (Include Voided)</option>
-                        <option value="InvalidOnly">Voided Only</option>
-                    </select>
-                    <span asp-validation-for="StatusFilter" class="text-danger"></span>
-                </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateTradeSupplierFuelReportExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
+
+                <div class="mb-4 row align-items-center">
+                    <label for="monthDate" class="col-sm-4 col-form-label text-end fw-semibold">
+                        As Of (Month and Year)
+                    </label>
+                    <div class="col-sm-6">
+                        <input type="month"
+                               id="monthDate"
+                               name="monthDate"
+                               class="form-control"
+                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
+                               required />
                     </div>
                 </div>
+
+                <div class="mb-4 row align-items-center">
+                    <label asp-for="StatusFilter"
+                           class="col-sm-4 col-form-label text-end fw-semibold">
+                    </label>
+                    <div class="col-sm-6">
+                        <select asp-for="StatusFilter" class="form-select">
+                            <option value="ValidOnly">Valid Only</option>
+                            <option value="All">All (Include Voided)</option>
+                            <option value="InvalidOnly">Voided Only</option>
+                        </select>
+                        <span asp-validation-for="StatusFilter" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row pt-2">
+                    <div class="offset-sm-4 col-sm-6">
+                        <button type="button"
+                                class="btn btn-primary w-100"
+                                onclick="submitForm('GenerateTradeSupplierFuelReportExcelFile')">
+                            <i class="bi bi-file-text"></i>
+                            Generate as Excel file
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </form>
     </div>

@@ -6098,7 +6098,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generate Service Invoice Report Excel File --
+        #region -- Generate Cos Summary Report Excel File --
 
         public async Task<IActionResult> GenerateCosSummaryReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {

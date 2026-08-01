@@ -9294,7 +9294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Trade Supplier Fuel Report as Excel File --
 
-        public async Task<IActionResult> GenerateTradeSupplierFuelReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateTradeSupplierFuelReportExcelFile(ViewModelBook model, DateOnly monthDate, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -9304,8 +9304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var dateFrom = model.DateFrom;
-                var dateTo = model.DateTo;
+                monthDate = monthDate.AddMonths(1).AddDays(-1);
                 var extractedBy = GetUserFullName();
                 var companyClaims = await GetCompanyClaimAsync();
 
@@ -9316,28 +9315,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var cvTradePayments = await _dbContext.FilprideCVTradePayments
-                    .Where(x => x.DocumentType == "RR" &&
-                                x.CV.Company == companyClaims &&
-                                x.CV.Date >= dateFrom &&
-                                x.CV.Date <= dateTo &&
-                                (statusFilter == "ValidOnly"
-                                    ? x.CV.PostedBy != null
-                                    : statusFilter != "InvalidOnly" || x.CV.VoidedBy != null))
-                    .Include(x => x.CV)
-                    .ToListAsync(cancellationToken);
+                var receivingReportsGroupBySupplier = await (
+                    from rr in _dbContext.FilprideReceivingReports
+                        .Include(x => x.DeliveryReceipt)
+                        .Include(x => x.PurchaseOrder)
+                        .ThenInclude(x => x!.Supplier)
+                        .Where(rr =>
+                            (statusFilter == "ValidOnly"
+                                ? rr.PostedBy != null
+                                : statusFilter != "InvalidOnly" || rr.VoidedBy != null) &&
+                            rr.DeliveryReceipt!.CommissioneeId == null &&
+                            rr.DeliveryReceipt!.HaulerId == null &&
+                            rr.Date <= monthDate)
 
-                var receivingReportId = cvTradePayments.Select(x => x.DocumentId).Distinct().ToList();
-                var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(x => receivingReportId.Contains(x.ReceivingReportId) &&
-                                (statusFilter == "ValidOnly"
-                                    ? x.PostedBy != null
-                                    : statusFilter != "InvalidOnly" || x.VoidedBy != null))
-                    .Include(x => x.PurchaseOrder)
-                    .ThenInclude(x => x!.Supplier)
-                    .ToDictionaryAsync(x => x.ReceivingReportId, cancellationToken);
+                    join cvTradePayment in _dbContext.FilprideCVTradePayments
+                            .Where(x => x.DocumentType == "RR")
+                        on rr.ReceivingReportId equals cvTradePayment.DocumentId into cvPayments
+                    from cvTradePayment in cvPayments.DefaultIfEmpty()
 
-                if (cvTradePayments.Count == 0)
+                    join cvTrade in _dbContext.FilprideCheckVoucherHeaders
+                            .Where(cv =>
+                                (statusFilter == "ValidOnly"
+                                    ? cv.PostedBy != null
+                                    : statusFilter != "InvalidOnly" || cv.VoidedBy != null) &&
+                                cv.Date <= monthDate)
+                        on cvTradePayment.CheckVoucherId equals cvTrade.CheckVoucherHeaderId into cvs
+                    from cvTrade in cvs.DefaultIfEmpty()
+
+                    group new
+                        {
+                            ReceivingReport = rr,
+                            CVTradePayment = cvTradePayment,
+                            CheckVoucher = cvTrade
+                        }
+                        by rr.PurchaseOrder!.Supplier!.SupplierName into g
+
+                    select new
+                    {
+                        SupplierName = g.Key,
+                        Items = g.ToList()
+                    }
+                ).ToListAsync(cancellationToken);
+
+                if (receivingReportsGroupBySupplier.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(TradeSupplierFuelReport));
@@ -9359,7 +9379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A5"].Value = "Status Filter:";
                 worksheet.Cells["A6"].Value = "Date and Time Generated:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom.ToString("MMM dd, yyyy")} - {dateTo.ToString("MMM dd, yyyy")}";
+                worksheet.Cells["B2"].Value = $"As of " + monthDate.ToString("MMM yyyy");
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
                 worksheet.Cells["B5"].Value = GetStatusFilterLabel(statusFilter);
@@ -9368,31 +9388,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Determine if we need to show void/cancel columns
                 bool showVoidCancelColumns = statusFilter != "ValidOnly";
 
-                int row = 7;
+                int row = 8;
                 int col = 1;
 
-                worksheet.Cells[row, col].Value = "SI No."; col++;
-                worksheet.Cells[row, col].Value = "Suppliers PO No."; col++;
-                worksheet.Cells[row, col].Value = "RR No."; col++;
-                worksheet.Cells[row, col].Value = "RR Date"; col++;
-                worksheet.Cells[row, col].Value = "Gross of Vat"; col++;
-                worksheet.Cells[row, col].Value = "Net of Vat"; col++;
-                worksheet.Cells[row, col].Value = "EWT"; col++;
-                worksheet.Cells[row, col].Value = "Amount Paid"; col++;
-                worksheet.Cells[row, col].Value = "CV No."; col++;
+                worksheet.Cells[row, col].Value = "SUPPLIER NAME"; col++;
+                worksheet.Cells[row, col].Value = "SI NO."; col++;
+                worksheet.Cells[row, col].Value = "SUPPLIERS PO NO."; col++;
+                worksheet.Cells[row, col].Value = "RR NO."; col++;
+                worksheet.Cells[row, col].Value = "RR DATE"; col++;
+                worksheet.Cells[row, col].Value = "GROSS OF VAT"; col++;
+                worksheet.Cells[row, col].Value = ""; col++;
+                worksheet.Cells[row, col].Value = "CV NO."; col++;
                 worksheet.Cells[row, col].Value = "CV DATE"; col++;
                 worksheet.Cells[row, col].Value = "CHECK #"; col++;
+                worksheet.Cells[row, col].Value = "CLEARED DATE"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
+                worksheet.Cells[row, col].Value = "NET OF VAT"; col++;
+                worksheet.Cells[row, col].Value = "EWT"; col++;
+                worksheet.Cells[row, col].Value = "AMOUNT PAID";col++;
+                worksheet.Cells[row, col].Value = "BALANCE";
 
                 if (showVoidCancelColumns)
                 {
+                    col++;
                     worksheet.Cells[row, col].Value = "VOIDED BY"; col++;
                     worksheet.Cells[row, col].Value = "VOIDED DATE";
                 }
 
-                using (var range = worksheet.Cells[row, 1, row, col])
+                foreach (var range in new[]
+                         {
+                             worksheet.Cells[row, 1, row, 6],
+                             worksheet.Cells[row, 8, row, col]
+                         })
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -9406,88 +9435,156 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
                 var currencyFormat = "#,##0.00";
 
-                foreach (var record in cvTradePayments)
+                var lastDataCol = showVoidCancelColumns ? 20 : 18;
+                var grandTotalGrossOfVat = 0m;
+                var grandTotalNetOfVat = 0m;
+                var grandTotalEwt = 0m;
+                var grandTotalAmountPaid = 0m;
+                var grandTotalBalance = 0m;
+
+                foreach (var receivingReports in receivingReportsGroupBySupplier)
                 {
-                    receivingReports.TryGetValue(record.DocumentId, out var rr);
-                    if (rr == null)
+                    var subtotalGrossOfVat = 0m;
+                    var subtotalNetOfVat = 0m;
+                    var subtotalEwt = 0m;
+                    var subtotalAmountPaid = 0m;
+                    var subtotalBalance = 0m;
+
+                    foreach (var item in receivingReports.Items)
                     {
-                        continue;
-                    }
-                    col = 1;
+                        col = 1;
 
-                    var netOfVatAmount = rr.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount)
-                        : rr.Amount;
+                        var netOfVatAmount = item.ReceivingReport.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(item.ReceivingReport.Amount)
+                            : item.ReceivingReport.Amount;
 
-                    var vatAmount = rr.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideReceivingReport.ComputeVatAmount(netOfVatAmount)
-                        : 0m;
+                        var vatAmount = item.ReceivingReport.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideReceivingReport.ComputeVatAmount(netOfVatAmount)
+                            : 0m;
 
-                    var taxPercent = rr.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? rr.TaxPercentage;
+                        var taxPercent = item.ReceivingReport.TaxPercentage;
 
-                    var withHoldingTaxAmount = rr.PurchaseOrder!.Supplier!.TaxType == SD.TaxType_WithTax
-                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, taxPercent)
-                        : 0m;
+                        var withHoldingTaxAmount = item.ReceivingReport.PurchaseOrder!.Supplier!.TaxType == SD.TaxType_WithTax
+                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, taxPercent)
+                            : 0m;
 
-                    worksheet.Cells[row, col].Value = rr.SupplierInvoiceNumber; col++;
-                    worksheet.Cells[row, col].Value = rr.PONo; col++;
-                    worksheet.Cells[row, col].Value = rr.ReceivingReportNo; col++;
-                    worksheet.Cells[row, col].Value = rr.Date;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    col++;
-                    worksheet.Cells[row, col].Value = rr.Amount;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                    col++;
-                    worksheet.Cells[row, col].Value = netOfVatAmount;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                    col++;
-                    worksheet.Cells[row, col].Value = withHoldingTaxAmount;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                    col++;
-                    worksheet.Cells[row, col].Value = rr.AmountPaid;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                    col++;
-                    worksheet.Cells[row, col].Value = record.CV.CheckVoucherHeaderNo; col++;
-                    worksheet.Cells[row, col].Value = record.CV.Date;
-                    worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    col++;
-                    worksheet.Cells[row, col].Value = record.CV.CheckNo; col++;
-                    worksheet.Cells[row, col].Value = record.CV.Payee; col++;
-                    worksheet.Cells[row, col].Value = record.CV.Particulars; col++;
-                    worksheet.Cells[row, col].Value = record.CV.Type; col++;
+                        var balance = item.ReceivingReport.Amount - (item.ReceivingReport.AmountPaid + withHoldingTaxAmount);
 
-                    if (showVoidCancelColumns)
-                    {
-                        worksheet.Cells[row, col].Value = rr.VoidedBy; col++;
-                        worksheet.Cells[row, col].Value = rr.VoidedDate;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.PurchaseOrder.SupplierName; col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.SupplierInvoiceNumber; col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.PONo; col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.ReceivingReportNo; col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.Date;
                         worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.Amount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = "";col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.CheckVoucherHeaderNo; col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.Date;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.DcrDate;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.Payee; col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.Particulars; col++;
+                        worksheet.Cells[row, col].Value = item.CheckVoucher?.Type; col++;
+                        worksheet.Cells[row, col].Value = netOfVatAmount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = withHoldingTaxAmount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReport.AmountPaid;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = balance;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+
+                        if (showVoidCancelColumns)
+                        {
+                            col++;
+                            worksheet.Cells[row, col].Value = item.ReceivingReport.VoidedBy; col++;
+                            worksheet.Cells[row, col].Value = item.ReceivingReport.VoidedDate;
+                            worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        }
+
+                        subtotalGrossOfVat += item.ReceivingReport.Amount;
+                        subtotalNetOfVat += netOfVatAmount;
+                        subtotalEwt += withHoldingTaxAmount;
+                        subtotalAmountPaid += item.ReceivingReport.AmountPaid;
+                        subtotalBalance += balance;
+
+                        row++;
                     }
+
+                    worksheet.Cells[row, 1].Value = $"SUBTOTAL: {receivingReports.SupplierName}";
+                    worksheet.Cells[row, 1].Style.Font.Bold = true;
+                    worksheet.Cells[row, 6].Value = subtotalGrossOfVat;
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 15].Value = subtotalNetOfVat;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 16].Value = subtotalEwt;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 17].Value = subtotalAmountPaid;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 18].Value = subtotalBalance;
+                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
+
+                    foreach (var range in new[]
+                             {
+                                 worksheet.Cells[row, 1, row, 6],
+                                 worksheet.Cells[row, 8, row, lastDataCol]
+                             })
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(252, 228, 214));
+                    }
+
+                    grandTotalGrossOfVat += subtotalGrossOfVat;
+                    grandTotalNetOfVat += subtotalNetOfVat;
+                    grandTotalEwt += subtotalEwt;
+                    grandTotalAmountPaid += subtotalAmountPaid;
+                    grandTotalBalance += subtotalBalance;
 
                     row++;
                 }
 
-                // int totalRow = row;
-                // int lastDataCol = showVoidCancelColumns ? 16 : 14;
-                // worksheet.Cells[totalRow, 5].Value = "TOTAL: ";
-                // worksheet.Cells[totalRow, 6].Value = 1;
-                // worksheet.Cells[totalRow, 7].Value = 2;
-                // worksheet.Cells[totalRow, 8].Value = 3;
-                // worksheet.Cells[totalRow, 9].Value = 4;
-                //
-                // using (var range = worksheet.Cells[totalRow, 1, totalRow, lastDataCol])
-                // {
-                //     range.Style.Font.Bold = true;
-                //     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
-                //     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                // }
-                // using (var range = worksheet.Cells[totalRow, 11, totalRow, lastDataCol])
-                // {
-                //     range.Style.Numberformat.Format = currencyFormat;
-                // }
+                worksheet.Cells[row, 1].Value = "GRAND TOTAL:";
+                worksheet.Cells[row, 1].Style.Font.Bold = true;
+                worksheet.Cells[row, 6].Value = grandTotalGrossOfVat;
+                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 15].Value = grandTotalNetOfVat;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Value = grandTotalEwt;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 17].Value = grandTotalAmountPaid;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 18].Value = grandTotalBalance;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
+
+                foreach (var range in new[]
+                         {
+                             worksheet.Cells[row, 1, row, 6],
+                             worksheet.Cells[row, 8, row, lastDataCol]
+                         })
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(252, 228, 214));
+                }
 
                 worksheet.Cells.AutoFitColumns();
 
-                worksheet.View.FreezePanes(8, 1);
+                worksheet.View.FreezePanes(9, 1);
 
                 #region -- Audit Trail --
 
