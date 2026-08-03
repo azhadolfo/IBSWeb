@@ -227,14 +227,16 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (availableQuantity > 0)
                 {
                     var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
-                    totalAmount += applicableQuantity * (poActualPrice.TriggeredPrice + freight);
+                    var applicableUnitCost = RoundToFourDecimalPlaces(poActualPrice.TriggeredPrice + freight);
+                    totalAmount += applicableQuantity * applicableUnitCost;
                     poActualPrice.AppliedVolume += applicableQuantity;
                     remainingQuantity -= applicableQuantity;
                 }
             }
 
             // Compute the remaining using the default price
-            totalAmount += remainingQuantity * ((poActualPrice?.TriggeredPrice ?? deliveryReceipt.PurchaseOrder.Price) + freight);
+            var remainingUnitCost = RoundToFourDecimalPlaces((poActualPrice?.TriggeredPrice ?? deliveryReceipt.PurchaseOrder.Price) + freight);
+            totalAmount += remainingQuantity * remainingUnitCost;
             model.Amount = totalAmount;
 
             #region --Audit Trail Recording
