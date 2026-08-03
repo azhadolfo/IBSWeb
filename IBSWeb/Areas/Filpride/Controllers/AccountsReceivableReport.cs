@@ -79,11 +79,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _ => "Valid Only (Exclude Voided)"
         };
 
-        private static decimal RoundToFour(decimal value) => Math.Round(value, 4, MidpointRounding.AwayFromZero);
+        private static decimal RoundToFour(decimal value) => DecimalRoundingHelper.RoundToFour(value);
 
-        private static decimal DivideOrZero(decimal dividend, decimal divisor) => divisor != 0m
-            ? RoundToFour(dividend / divisor)
-            : 0m;
+        private static decimal DivideOrZero(decimal dividend, decimal divisor) => DecimalRoundingHelper.DivideOrZero(dividend, divisor);
+
+        private static decimal NetOfVatOrZero(decimal grossAmount) => DecimalRoundingHelper.ComputeNetOfVat(grossAmount);
+
+        private static decimal VatAmountOrZero(decimal netOfVatAmount) => DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount);
+
+        private static decimal EwtAmountOrZero(decimal netOfVatAmount, decimal percent) => DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, percent);
 
         [HttpGet]
         public IActionResult COSUnservedVolume()
@@ -1766,13 +1770,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var quantity = record.DeliveryReceipt.Quantity;
                                         var freight = record.DeliveryReceipt.FreightAmount;
                                         var freightNetOfVat = isHaulerVatable
-                                            ? RoundToFour(repoCalculator.ComputeNetOfVat(freight))
+                                            ? NetOfVatOrZero(freight)
                                             : freight;
                                         var salesNetOfVat = isCustomerVatable
-                                            ? RoundToFour(repoCalculator.ComputeNetOfVat(record.DeliveryReceipt.TotalAmount))
+                                            ? NetOfVatOrZero(record.DeliveryReceipt.TotalAmount)
                                             : record.DeliveryReceipt.TotalAmount;
                                         var vat = isCustomerVatable
-                                            ? RoundToFour(repoCalculator.ComputeVatAmount(salesNetOfVat))
+                                            ? VatAmountOrZero(salesNetOfVat)
                                             : 0m;
 
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.DeliveredDate?.ToString(SD.Date_Format));
@@ -1907,7 +1911,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
                                                 var overallAmountSum = list.Sum(s => s.DeliveryReceipt.TotalAmount);
-                                                var overallNetOfAmountSum = overallAmountSum != 0m ? RoundToFour(overallAmountSum / 1.12m) : 0m;
+                                                var overallNetOfAmountSum = NetOfVatOrZero(overallAmountSum);
                                                 var overallAverageSellingPrice = overallNetOfAmountSum != 0m || overAllQuantitySum != 0m ? DivideOrZero(overallNetOfAmountSum, overAllQuantitySum) : 0m;
 
                                                 #endregion
@@ -1918,7 +1922,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
                                                 var biodieselAmountSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.TotalAmount);
-                                                var biodieselNetOfAmountSum = biodieselAmountSum != 0m ? RoundToFour(biodieselAmountSum / 1.12m) : 0m;
+                                                var biodieselNetOfAmountSum = NetOfVatOrZero(biodieselAmountSum);
                                                 var biodieselAverageSellingPrice = biodieselNetOfAmountSum != 0m || biodieselQuantitySum != 0m ? DivideOrZero(biodieselNetOfAmountSum, biodieselQuantitySum) : 0m;
 
                                                 #endregion
@@ -1929,7 +1933,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
                                                 var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
-                                                var econogasNetOfAmountSum = econogasAmountSum != 0m ? RoundToFour(econogasAmountSum / 1.12m) : 0m;
+                                                var econogasNetOfAmountSum = NetOfVatOrZero(econogasAmountSum);
                                                 var econogasAverageSellingPrice = econogasNetOfAmountSum != 0m && econogasQuantitySum != 0m ? DivideOrZero(econogasNetOfAmountSum, econogasQuantitySum) : 0m;
 
                                                 #endregion
@@ -1940,7 +1944,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
                                                 var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
-                                                var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? RoundToFour(envirogasAmountSum / 1.12m) : 0m;
+                                                var envirogasNetOfAmountSum = NetOfVatOrZero(envirogasAmountSum);
                                                 var envirogasAverageSellingPrice = envirogasNetOfAmountSum != 0m && envirogasQuantitySum != 0m ? DivideOrZero(envirogasNetOfAmountSum, envirogasQuantitySum) : 0m;
 
                                                 #endregion
@@ -2259,9 +2263,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var isHaulerVatable = dr.DeliveryReceipt.HaulerVatType == SD.VatType_Vatable;
                     var freightAmount = dr.DeliveryReceipt.FreightAmount;
                     var segment = dr.DeliveryReceipt.TotalAmount;
-                    var salesNetOfVat = isCustomerVatable ? RoundToFour(repoCalculator.ComputeNetOfVat(segment)) : segment;
-                    var vat = isCustomerVatable ? RoundToFour(repoCalculator.ComputeVatAmount(salesNetOfVat)) : 0m;
-                    var freightNetOfVat = isHaulerVatable ? RoundToFour(repoCalculator.ComputeNetOfVat(freightAmount)) : freightAmount;
+                    var salesNetOfVat = isCustomerVatable ? NetOfVatOrZero(segment) : segment;
+                    var vat = isCustomerVatable ? VatAmountOrZero(salesNetOfVat) : 0m;
+                    var freightNetOfVat = isHaulerVatable ? NetOfVatOrZero(freightAmount) : freightAmount;
                     var quantity = dr.DeliveryReceipt.Quantity;
 
                     var customerType = dr.DeliveryReceipt.CustomerOrderSlip!.CustomerType;
@@ -3686,10 +3690,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var gross = record.Amount;
                                     var netDiscount = record.Amount - record.Discount;
                                     var netOfVatAmount = record.CustomerOrderSlip?.VatType == SD.VatType_Vatable
-                                        ? RoundToFour(repoCalculator.ComputeNetOfVat(netDiscount))
+                                        ? NetOfVatOrZero(netDiscount)
                                         : netDiscount;
                                     var withHoldingTaxAmount = record.CustomerOrderSlip?.HasEWT ?? true
-                                        ? RoundToFour(repoCalculator.ComputeEwtAmount(netDiscount, 0.01m))
+                                        ? EwtAmountOrZero(netOfVatAmount, 0.01m)
                                         : 0;
                                     var retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                                     var vcfAmount = 0.0000m;
@@ -3919,10 +3923,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var gross = si.Amount;
                     var netDiscount = si.Amount - si.Discount;
                     var netOfVatAmount = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable
-                        ? RoundToFour(repoCalculator.ComputeNetOfVat(netDiscount))
+                        ? NetOfVatOrZero(netDiscount)
                         : netDiscount;
                     var withHoldingTaxAmount = si.CustomerOrderSlip?.HasEWT ?? true
-                        ? RoundToFour(repoCalculator.ComputeEwtAmount(netDiscount, 0.01m))
+                        ? EwtAmountOrZero(netOfVatAmount, 0.01m)
                         : 0;
                     var retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                     var vcfAmount = 0.0000m;
@@ -4252,14 +4256,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var freight = record.DeliveryReceipt?.FreightAmount;
                                         var grossAmount = record.Amount;
                                         var netOfVat = isVatable
-                                            ? RoundToFour(repoCalculator.ComputeNetOfVat(grossAmount))
+                                            ? NetOfVatOrZero(grossAmount)
                                             : grossAmount;
                                         var vatAmount = isVatable
-                                            ? RoundToFour(repoCalculator.ComputeVatAmount(netOfVat))
+                                            ? VatAmountOrZero(netOfVat)
                                             : 0m;
                                         var vatPerLiter = DivideOrZero(vatAmount, record.Quantity);
                                         var ewtAmount = isTaxable
-                                            ? RoundToFour(repoCalculator.ComputeEwtAmount(netOfVat, 0.01m))
+                                            ? EwtAmountOrZero(netOfVat, 0.01m)
                                             : 0m;
                                         var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
                                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
@@ -4310,15 +4314,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var subTotalFreightPerLiter = subTotalFreight != 0m && subTotalQuantity != 0m ? DivideOrZero(subTotalFreight, subTotalQuantity) : 0m;
                                     var subTotalGrossAmount = groupByCustomer.Sum(x => x.Amount);
                                     var subTotalNetOfVat = isVatableSub == SD.VatType_Vatable
-                                        ? repoCalculator.ComputeNetOfVat(subTotalGrossAmount)
+                                        ? NetOfVatOrZero(subTotalGrossAmount)
                                         : subTotalGrossAmount;
                                     var subTotalVatAmount = isVatableSub == SD.VatType_Vatable
-                                        ? repoCalculator.ComputeVatAmount(subTotalNetOfVat)
+                                        ? VatAmountOrZero(subTotalNetOfVat)
                                         : 0m;
                                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                                     var subTotalEwtAmount = isTaxableSub == true
-                                        ? repoCalculator.ComputeEwtAmount(subTotalNetOfVat, 0.01m)
+                                        ? EwtAmountOrZero(subTotalNetOfVat, 0.01m)
                                         : 0m;
                                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4551,14 +4555,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var grossAmount = si.Amount;
                         var siAmountIncludingDmCmAmount = si.Amount + si.DebitAmount - si.CreditAmount;
                         var netOfVat = isVatable
-                            ? RoundToFour(repoCalculator.ComputeNetOfVat(siAmountIncludingDmCmAmount))
+                            ? NetOfVatOrZero(siAmountIncludingDmCmAmount)
                             : siAmountIncludingDmCmAmount;
-                        var vatAmount = isVatable ? RoundToFour(repoCalculator.ComputeVatAmount(netOfVat)) : 0m;
+                        var vatAmount = isVatable ? VatAmountOrZero(netOfVat) : 0m;
                         var vatPerLiter = DivideOrZero(vatAmount, si.Quantity);
-                        var ewtAmount = isTaxable ? RoundToFour(repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)) : 0m;
+                        var ewtAmount = isTaxable ? EwtAmountOrZero(netOfVat, 0.01m) : 0m;
                         var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
-                        var cwvatAmount = hasCwVat ? RoundToFour(repoCalculator.ComputeEwtAmount(netOfVat, 0.05m)) : 0m;
+                        var cwvatAmount = hasCwVat ? EwtAmountOrZero(netOfVat, 0.05m) : 0m;
                         var isCwvatAmountPaid = si.IsTaxAndVatPaid ? cwvatAmount : 0m;
                         var cwvatBalance = RoundToFour(cwvatAmount - isCwvatAmountPaid);
 
@@ -4652,15 +4656,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalGrossAmount = groupByCustomer.Sum(x => x.Amount);
                     var subTotalBalanceIncludingDmCmAmount = groupByCustomer.Sum(x => x.Balance);
                     var subTotalNetOfVat = isVatableSub == SD.VatType_Vatable
-                        ? repoCalculator.ComputeNetOfVat(subTotalBalanceIncludingDmCmAmount)
+                        ? NetOfVatOrZero(subTotalBalanceIncludingDmCmAmount)
                         : subTotalBalanceIncludingDmCmAmount;
                     var subTotalVatAmount = isVatableSub == SD.VatType_Vatable
-                        ? RoundToFour(repoCalculator.ComputeVatAmount(subTotalNetOfVat))
+                        ? VatAmountOrZero(subTotalNetOfVat)
                         : 0m;
                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                     var subTotalEwtAmount = isTaxableSub == true
-                        ? RoundToFour(repoCalculator.ComputeEwtAmount(subTotalNetOfVat, 0.01m))
+                        ? EwtAmountOrZero(subTotalNetOfVat, 0.01m)
                         : 0m;
                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4668,7 +4672,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalBalance = groupByCustomer.Sum(x => x.Balance);
                     var subTotalEwtAmountPaid = isEwtAmountPaidSub;
                     var subTotalCwVatAmount = hasCwVatSub == true
-                        ? RoundToFour(repoCalculator.ComputeEwtAmount(subTotalNetOfVat, 0.05m))
+                        ? EwtAmountOrZero(subTotalNetOfVat, 0.05m)
                         : 0m;
                     var isCwVatAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalCwVatAmount : 0m;
                     var subTotalCwVatBalance = RoundToFour(subTotalCwVatAmount - isCwVatAmountPaidSub);
@@ -5316,9 +5320,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var quantity = dr.Quantity;
                     var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.Amount;
-                    var salesNetOfVat = segment != 0 ? RoundToFour(segment / 1.12m) : 0m;
-                    var vat = RoundToFour(salesNetOfVat * .12m);
-                    var freightNetOfVat = RoundToFour(freightAmount / 1.12m);
+                    var salesNetOfVat = NetOfVatOrZero(segment);
+                    var vat = VatAmountOrZero(salesNetOfVat);
+                    var freightNetOfVat = NetOfVatOrZero(freightAmount);
 
                     worksheet.Cells[row, 1].Value = dr.TransactionDate;
                     worksheet.Cells[row, 2].Value = dr.Customer?.CustomerName;
@@ -6120,7 +6124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
 
                 if (cosSummaryReport.Count == 0)
                 {
@@ -6245,6 +6249,4 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
     }
 }
-
-
 

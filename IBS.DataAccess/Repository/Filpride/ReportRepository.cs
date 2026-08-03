@@ -1,10 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -632,7 +632,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return journalVoucherDetails;
         }
 
-        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -643,7 +643,21 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(dr => dr.Company == company &&
                              dr.Date >= dateFrom &&
                              dr.Date <= dateTo);
-            // "All" returns Posted, Voided, and Canceled records
+
+            if (statusFilter == "ValidOnly")
+            {
+                query = query.Where(cos =>
+                    cos.Status != nameof(CosStatus.Closed) &&
+                    cos.Status != nameof(CosStatus.Disapproved) &&
+                    cos.Status != nameof(CosStatus.Expired));
+            }
+            else if (statusFilter == "InvalidOnly")
+            {
+                query = query.Where(cos =>
+                    cos.Status == nameof(CosStatus.Closed) ||
+                    cos.Status == nameof(CosStatus.Disapproved) ||
+                    cos.Status == nameof(CosStatus.Expired));
+            }
 
             var customerOrderSlip = await query
                 .Include(cos => cos.Customer)
