@@ -144,10 +144,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                        && cos.Status != nameof(CosStatus.Disapproved)
                                                        && cos.Status != nameof(CosStatus.Expired));
                             break;
-                        case "ForMarketingApproval":
-                            query = query.Where(cos =>
-                                cos.Status == nameof(CosStatus.ForApprovalOfMarketing));
-                            break;
                         case "ForCNCApproval":
                             query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForApprovalOfCNC));
@@ -349,7 +345,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Company = companyClaims,
                     CreatedBy = GetUserFullName(),
                     ProductId = viewModel.ProductId,
-                    Status = nameof(CosStatus.ForApprovalOfMarketing),
+                    Status = nameof(CosStatus.ForApprovalOfCNC),
                     OldCosNo = viewModel.OtcCosNo,
                     Terms = viewModel.Terms,
                     Branch = viewModel.SelectedBranch,
@@ -744,11 +740,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
                     {
-                        existingRecord.Status = nameof(CosStatus.ForApprovalOfMarketing);
+                        existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
                         existingRecord.PickUpPointId = null;
                         existingRecord.Depot = string.Empty;
-                        existingRecord.MarketingApprovedBy = null;
-                        existingRecord.MarketingApprovedDate = null;
                         existingRecord.CncApprovedBy = null;
                         existingRecord.CncApprovedDate = null;
                         existingRecord.OmApprovedBy = null;
@@ -911,11 +905,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
-
-                if (customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfMarketing))
-                {
-                    return View("PreviewByMarketing", model);
-                }
 
                 return View(customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) ? "PreviewByCnc" : "PreviewByFinance", model);
             }
@@ -1217,49 +1206,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "MarketingSupervisor, Admin, HeadApprover")]
-        public async Task<IActionResult> ApproveByMarketing(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                existingRecord.MarketingApprovedBy = GetUserFullName();
-                existingRecord.MarketingApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
-                existingRecord.Terms = terms ?? existingRecord.Terms;
-                existingRecord.FinanceInstruction = instructions;
-
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                TempData["success"] = "Customer order slip approved by marketing successfully.";
-                await transaction.CommitAsync(cancellationToken);
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to approve customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
-                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-        }
-
         [Authorize(Roles = "CncManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByCnc(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
@@ -1303,7 +1249,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, MarketingSupervisor, Admin, HeadApprover")]
+        [Authorize(Roles = "OperationManager, FinanceManager, CncManager, Admin")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
