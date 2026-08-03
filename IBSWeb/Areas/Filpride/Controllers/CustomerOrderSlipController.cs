@@ -744,9 +744,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
                     {
-                        existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
+                        existingRecord.Status = nameof(CosStatus.ForApprovalOfMarketing);
                         existingRecord.PickUpPointId = null;
                         existingRecord.Depot = string.Empty;
+                        existingRecord.MarketingApprovedBy = null;
+                        existingRecord.MarketingApprovedDate = null;
+                        existingRecord.CncApprovedBy = null;
+                        existingRecord.CncApprovedDate = null;
                         existingRecord.OmApprovedBy = null;
                         existingRecord.OmApprovedDate = null;
                         existingRecord.FmApprovedBy = null;

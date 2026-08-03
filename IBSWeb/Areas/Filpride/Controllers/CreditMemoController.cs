@@ -1460,19 +1460,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal netAmount;
                 if (model.ServiceInvoice!.VatType == SD.VatType_Vatable)
                 {
-                    netAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
+                    netAmount = ((model.Amount ?? 0) - existingSv.Discount) / 1.12m;
                     var total = Math.Round((model.Amount ?? 0) / 1.12m, 4);
                     var roundedNetAmount = Math.Round(netAmount, 4);
 
                     if (roundedNetAmount > total)
                     {
                         var shortAmount = netAmount - total;
-                        netAmount += shortAmount;
+                        netAmount -= shortAmount;
                     }
                 }
                 else
                 {
-                    netAmount = model.Amount ?? 0 - existingSv.Discount;
+                    netAmount = (model.Amount ?? 0) - existingSv.Discount;
                 }
 
                 decimal withHoldingTaxAmount = 0;
