@@ -130,7 +130,5 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? PaymentTerms { get; set; }
-
-        public bool IsMnvP { get; set; }
     }
 }
