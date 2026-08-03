@@ -9444,11 +9444,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         col = 1;
 
-                        var netOfVatAmount = rr.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
-                            ? NetOfVatOrZero(rr.Amount)
-                            : rr.Amount;
+                        var netOfVatAmount = item.ReceivingReport.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
+                            ? NetOfVatOrZero(item.ReceivingReport.Amount)
+                            : item.ReceivingReport.Amount;
 
-                        var vatAmount = rr.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
+                        var vatAmount = item.ReceivingReport.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable
                             ? VatAmountOrZero(netOfVatAmount)
                             : 0m;
 
