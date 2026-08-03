@@ -6,6 +6,17 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.10] - 2026-08-03
+
+### Changed
+- Updated Filpride accounts receivable report product-based summaries to build dynamic report columns from the persisted historical product names on customer order slips and purchase orders instead of relying on the related product master navigation.
+
+### Fixed
+- Fixed the Filpride sales report Excel summary to keep dynamic product columns and per-row summary accumulation keyed to `CustomerOrderSlip.ProductName`, preventing undercounted or omitted product totals when the related product navigation is missing or no longer matches the stored historical name.
+- Fixed the Filpride COS unserved-volume PDF and Excel summaries to derive product buckets from `PurchaseOrder.ProductName`, preserving historical product columns even when the related product navigation is null.
+
+---
+
 ## [v3.0.9] - 2026-07-28
 
 ### Changed
