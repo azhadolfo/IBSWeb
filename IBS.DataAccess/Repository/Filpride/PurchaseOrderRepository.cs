@@ -259,10 +259,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (inventory != null)
                 {
-                    inventory.Cost = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
-                        ? RoundToFourDecimalPlaces(ComputeNetOfVat(normalizedTriggeredPrice))
-                        : normalizedTriggeredPrice;
-                    inventory.Total = inventory.Quantity * inventory.Cost;
+                    var inventoryAmount = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                        ? ComputeNetOfVat(updatedAmount)
+                        : updatedAmount;
+
+                    inventory.Cost = GetRoundedUnitValue(inventoryAmount, receivingReport.QuantityReceived);
+                    inventory.Total = inventoryAmount;
 
                     // Update first inventory's average cost and total balance
                     if (inventories.FirstOrDefault()?.InventoryId == inventory.InventoryId)

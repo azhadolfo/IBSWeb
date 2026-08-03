@@ -48,13 +48,11 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Calculate initial values
 
-            var cost = ComputeVatAwareCost(
-                GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived),
-                receivingReport.PurchaseOrder!.VatType);
+            var total = ComputeVatAwareAmount(receivingReport.Amount, receivingReport.PurchaseOrder!.VatType);
+            var cost = GetRoundedUnitValue(total, receivingReport.QuantityReceived);
 
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) + receivingReport.QuantityReceived;
             var averageCost = cost;
-            var total = receivingReport.QuantityReceived * cost;
             var totalBalance = inventoryBalance * averageCost;
 
             // Create new inventory entry
@@ -235,7 +233,11 @@ namespace IBS.DataAccess.Repository.Filpride
             var orderedInventories = OrderInventoryTransactions(inventories).ToList();
             var previousInventory = orderedInventories.First();
 
-            previousInventory.Total = previousInventory.Quantity * previousInventory.Cost;
+            if (!IsPurchase(previousInventory))
+            {
+                previousInventory.Total = previousInventory.Quantity * previousInventory.Cost;
+            }
+
             previousInventory.AverageCost = previousInventory.Cost;
             previousInventory.TotalBalance = previousInventory.InventoryBalance * previousInventory.AverageCost;
 
@@ -268,7 +270,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 else if (IsPurchase(transaction))
                 {
                     transaction.Cost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = transaction.Quantity * transaction.Cost;
                     transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
                     transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
                     transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
@@ -286,6 +287,13 @@ namespace IBS.DataAccess.Repository.Filpride
             return vatType == SD.VatType_Vatable
                 ? ComputeNetOfVat(grossCost)
                 : grossCost;
+        }
+
+        private decimal ComputeVatAwareAmount(decimal grossAmount, string vatType)
+        {
+            return vatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(grossAmount)
+                : grossAmount;
         }
 
         private static IOrderedEnumerable<FilprideInventory> OrderInventoryTransactions(IEnumerable<FilprideInventory> inventories)
