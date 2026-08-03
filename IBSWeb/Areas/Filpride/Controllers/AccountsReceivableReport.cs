@@ -795,7 +795,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     var productList = GetOrderedProductNames(
                                         deliveryReceipts,
-                                        dr => dr.PurchaseOrder?.Product?.ProductName);
+                                        dr => dr.PurchaseOrder?.ProductName);
 
                                     col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
 
@@ -854,7 +854,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var totalProductToday = customerType.Where(x =>
                                                         x.Date == viewModel.DateFrom &&
-                                                        x.PurchaseOrder?.Product?.ProductName == productName)
+                                                        x.PurchaseOrder?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductToday != 0
@@ -889,7 +889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var totalProductYesterday = customerType.Where(x =>
                                                         x.Date < viewModel.DateFrom &&
-                                                        x.PurchaseOrder?.Product?.ProductName == productName)
+                                                        x.PurchaseOrder?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductYesterday != 0
@@ -921,7 +921,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             foreach (var productName in productList)
                                             {
                                                 var totalProductMonthToDate = customerType
-                                                    .Where(x => x.PurchaseOrder?.Product?.ProductName == productName)
+                                                    .Where(x => x.PurchaseOrder?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductMonthToDate != 0
@@ -969,7 +969,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         {
                                             var totalProductTodayOverAll = deliveryReceipts.Where(x =>
                                                     x.Date == viewModel.DateFrom &&
-                                                    x.PurchaseOrder?.Product?.ProductName == productName)
+                                                    x.PurchaseOrder?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight().Text(
                                                 totalProductTodayOverAll != 0
@@ -1003,7 +1003,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         {
                                             var totalProductYesterdayOverAll = deliveryReceipts.Where(x =>
                                                     x.Date < viewModel.DateFrom &&
-                                                    x.PurchaseOrder?.Product?.ProductName == productName)
+                                                    x.PurchaseOrder?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                 .Text(totalProductYesterdayOverAll != 0
@@ -1035,7 +1035,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         foreach (var productName in productList)
                                         {
                                             var totalProductMonthToDateOverAll = deliveryReceipts
-                                                .Where(x => x.PurchaseOrder?.Product?.ProductName == productName)
+                                                .Where(x => x.PurchaseOrder?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                 .Text(totalProductMonthToDateOverAll != 0
@@ -1446,7 +1446,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var productList = GetOrderedProductNames(
                         deliveryReceipts,
-                        dr => dr.PurchaseOrder?.Product?.ProductName);
+                        dr => dr.PurchaseOrder?.ProductName);
                     var summaryHeaderStartColumn = 11;
                     var summaryOverallColumn = summaryHeaderStartColumn + 1;
                     var summaryProductStartColumn = summaryHeaderStartColumn + 2;
@@ -1485,7 +1485,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnOne = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductToday = customerType.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                            var totalProductToday = customerType.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName)
                                 .Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnOne].Value = totalProductToday != 0 ? totalProductToday : 0m;
                             worksheet.Cells[startOfSummary, columnOne].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -1507,7 +1507,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnTwo = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductYesterday = customerType.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                            var totalProductYesterday = customerType.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnTwo].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
                             worksheet.Cells[startOfSummary, columnTwo].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             columnTwo++;
@@ -1528,7 +1528,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnThree = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                            var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnThree].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
                             worksheet.Cells[startOfSummary, columnThree].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             columnThree++;
@@ -1572,7 +1572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnOneOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductToday = deliveryReceipts.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                        var totalProductToday = deliveryReceipts.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName)
                             .Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnOneOverAll].Value = totalProductToday != 0 ? totalProductToday : 0m;
                         worksheet.Cells[startOfSummary, columnOneOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -1594,7 +1594,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnTwoOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductYesterday = deliveryReceipts.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                        var totalProductYesterday = deliveryReceipts.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnTwoOverAll].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
                         worksheet.Cells[startOfSummary, columnTwoOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         columnTwoOverAll++;
@@ -1615,7 +1615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnThreeOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                        var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnThreeOverAll].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
                         worksheet.Cells[startOfSummary, columnThreeOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         columnThreeOverAll++;
@@ -1887,7 +1887,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
                                 var productList = GetOrderedProductNames(
                                     sales,
-                                    s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName);
+                                    s => s.DeliveryReceipt.CustomerOrderSlip!.ProductName);
 
                                 #region -- Overall Summary
 
@@ -1967,12 +1967,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 foreach (var productName in productList)
                                                 {
                                                     var productAmountSum = list
-                                                        .Where(s => string.Equals(s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName, productName, StringComparison.OrdinalIgnoreCase))
+                                                        .Where(s => string.Equals(s.DeliveryReceipt.CustomerOrderSlip!.ProductName, productName, StringComparison.OrdinalIgnoreCase))
                                                         .Sum(s => s.DeliveryReceipt.TotalAmount);
                                                     productMetrics[productName].Quantity = SumQuantityByProduct(
                                                         list,
                                                         productName,
-                                                        s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                                        s => s.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                                         s => s.DeliveryReceipt.Quantity);
                                                     productMetrics[productName].NetOfSales = NetOfVatOrZero(productAmountSum);
                                                 }
@@ -2186,7 +2186,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
                 var productList = GetOrderedProductNames(
                     salesReport,
-                    sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName);
+                    sr => sr.DeliveryReceipt.CustomerOrderSlip!.ProductName);
                 var customerTypeNames = Enum.GetValues<CustomerType>()
                     .Select(customerType => customerType.ToString())
                     .ToList();
