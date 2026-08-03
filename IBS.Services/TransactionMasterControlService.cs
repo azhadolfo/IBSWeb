@@ -463,8 +463,8 @@ namespace IBS.Services
 
             foreach (var dr in records)
             {
-                await unitOfWork.FilprideDeliveryReceipt.PostAsync(dr, cancellationToken);
                 await unitOfWork.FilprideInventory.AddSalesToInventoryAsync(dr, cancellationToken);
+                await unitOfWork.FilprideDeliveryReceipt.PostAsync(dr, cancellationToken);
             }
 
             return records.Count;
