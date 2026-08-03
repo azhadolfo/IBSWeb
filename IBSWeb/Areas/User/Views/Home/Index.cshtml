@@ -23,6 +23,7 @@
     bool isCnc = User.IsInRole("CncManager");
     bool isPort = User.IsInRole("PortCoordinator");
     bool isCashier = User.IsInRole("Cashier");
+    bool isMarketing = User.IsInRole("MarketingSupervisor");
 
 }
 
@@ -227,6 +228,19 @@ else
                     Customer Order Process &amp; Booking
                 </h2>
                 <div class="pipe-grid">
+
+                    @if (isAdmin || isHead || isMarketing)
+                    {
+                        <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card">
+                            <div class="pipe-card-top">
+                                <div class="pipe-icon-wrap pipe-icon-green">
+                                    <span class="material-symbols-outlined pipe-icon">campaign</span>
+                                </div>
+                                <span class="pipe-count">@Model.MarketingApprovalCount.ToString("N0")</span>
+                            </div>
+                            <span class="pipe-label">Marketing Approval</span>
+                        </a>
+                    }
 
                     <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pipe-card">
                         <div class="pipe-card-top">

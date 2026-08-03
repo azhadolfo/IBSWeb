@@ -62,6 +62,7 @@ namespace IBSWeb.Areas.User.Controllers
             bool isOps = User.IsInRole("OperationManager");
             bool isCnc = User.IsInRole("CncManager");
             bool isPort = User.IsInRole("PortCoordinator");
+            bool isMarketing = User.IsInRole("MarketingSupervisor");
 
             var twoMonthsAgo = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila")).AddMonths(-2);
 
@@ -78,13 +79,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             var countTask = RunCountQueriesAsync(companyClaims ?? string.Empty);
             var submissionTask = RunSubmissionQueriesAsync(userFullName, companyClaims ?? string.Empty, twoMonthsAgo, terminalStatuses);
-            var approvalTask = RunApprovalQueriesAsync(isAdmin, isHead, isFinance, isAccounting, isOps, isCnc, isPort, companyClaims ?? string.Empty, twoMonthsAgo);
+            var approvalTask = RunApprovalQueriesAsync(isAdmin, isHead, isFinance, isAccounting, isOps, isCnc, isPort, isMarketing, companyClaims ?? string.Empty, twoMonthsAgo);
 
             await Task.WhenAll(countTask, submissionTask, approvalTask);
 
             var dashboardCounts = await countTask;
             dashboardCounts.UserFullName = userFullName;
-            dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort;
+            dashboardCounts.ShowPriority = isAdmin || isHead || isAccounting || isFinance || isOps || isCnc || isPort || isMarketing;
             dashboardCounts.MySubmissions = await submissionTask;
             dashboardCounts.PendingMyApproval = await approvalTask;
 
@@ -120,6 +121,9 @@ namespace IBSWeb.Areas.User.Controllers
             var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var counts = new DashboardCountViewModel();
 
+            counts.MarketingApprovalCount = await ctx.FilprideCustomerOrderSlips
+                .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfMarketing) && cos.Company == companyClaims)
+                .CountAsync();
             counts.SupplierAppointmentCount = await ctx.FilprideCustomerOrderSlips
                 .Where(cos => (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
                 .CountAsync();
@@ -293,12 +297,18 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         private async Task<List<PendingApprovalItem>> RunApprovalQueriesAsync(
-            bool isAdmin, bool isHead, bool isFinance, bool isAccounting, bool isOps, bool isCnc, bool isPort,
+            bool isAdmin, bool isHead, bool isFinance, bool isAccounting, bool isOps, bool isCnc, bool isPort, bool isMarketing,
             string companyClaims, DateTime twoMonthsAgo)
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var pendingApproval = new List<PendingApprovalItem>();
+
+            if (isAdmin || isHead || isMarketing)
+            {
+                pendingApproval.AddRange(await TakeLatestAsync(ProjectCos(ctx.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfMarketing) && cos.Company == companyClaims && cos.CreatedDate >= twoMonthsAgo))));
+            }
 
             if (isAdmin || isHead || isFinance)
             {
@@ -438,6 +448,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string GetFilterType(string type, string status) => (type, status) switch
         {
+            ("COS", nameof(CosStatus.ForApprovalOfMarketing)) => "ForMarketingApproval",
             ("COS", nameof(CosStatus.Created)) => "",
             ("COS", nameof(CosStatus.SupplierAppointed)) => "ForAppointSupplier",
             ("COS", nameof(CosStatus.HaulerAppointed)) => "ForAppointHauler",
@@ -459,6 +470,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string MapStatus(string status) => status switch
         {
+            nameof(CosStatus.ForApprovalOfMarketing) => "Marketing Approval",
             nameof(CosStatus.Created) => "Created",
             nameof(CosStatus.SupplierAppointed) => "Supplier Appointed",
             nameof(CosStatus.HaulerAppointed) => "Hauler Appointed",
