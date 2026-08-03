@@ -48,13 +48,13 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Calculate initial values
 
-            var cost = GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived);
+            var cost = ComputeVatAwareCost(
+                GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived),
+                receivingReport.PurchaseOrder!.VatType);
 
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) + receivingReport.QuantityReceived;
             var averageCost = cost;
-            var total = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
-                ? ComputeNetOfVat(receivingReport.QuantityReceived * cost)
-                : receivingReport.QuantityReceived * cost;
+            var total = receivingReport.QuantityReceived * cost;
             var totalBalance = inventoryBalance * averageCost;
 
             // Create new inventory entry
@@ -153,10 +153,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     ? (decimal)deliveryReceipt.CustomerOrderSlip?.Freight!
                     : 0;
 
-                var poPrice = await unitOfWork.FilpridePurchaseOrder
+                var grossPoPrice = await unitOfWork.FilpridePurchaseOrder
                     .GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken) + freight;
 
-                cost = RoundToFourDecimalPlaces(poPrice);
+                cost = ComputeVatAwareCost(RoundToFourDecimalPlaces(grossPoPrice), purchaseOrder.VatType);
             }
             else
             {
@@ -166,9 +166,7 @@ namespace IBS.DataAccess.Repository.Filpride
             // Calculate initial values for new inventory entry
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) - deliveryReceipt.Quantity;
             var averageCost = cost;
-            var total = purchaseOrder.VatType == SD.VatType_Vatable
-                ? ComputeNetOfVat(deliveryReceipt.Quantity * cost)
-                : deliveryReceipt.Quantity * cost;
+            var total = deliveryReceipt.Quantity * cost;
             var totalBalance = inventoryBalance * averageCost;
 
             // Create new inventory entry
@@ -236,13 +234,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var orderedInventories = OrderInventoryTransactions(inventories).ToList();
             var previousInventory = orderedInventories.First();
-            var purchaseOrderVatTypes = await GetPurchaseOrderVatTypesAsync(orderedInventories, cancellationToken);
 
-            previousInventory.Total = ComputeVatAwareAmount(previousInventory.Quantity, previousInventory.Cost, previousInventory, purchaseOrderVatTypes);
+            previousInventory.Total = previousInventory.Quantity * previousInventory.Cost;
             previousInventory.AverageCost = previousInventory.Cost;
-            previousInventory.TotalBalance = ComputeVatAwareAmount(previousInventory.InventoryBalance, previousInventory.AverageCost, previousInventory, purchaseOrderVatTypes);
+            previousInventory.TotalBalance = previousInventory.InventoryBalance * previousInventory.AverageCost;
 
-            await RecalculateTransactionsAsync(previousInventory, orderedInventories.Skip(1), cancellationToken, purchaseOrderVatTypes);
+            await RecalculateTransactionsAsync(previousInventory, orderedInventories.Skip(1), cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -250,15 +247,11 @@ namespace IBS.DataAccess.Repository.Filpride
         private async Task RecalculateTransactionsAsync(
             FilprideInventory? previousInventory,
             IEnumerable<FilprideInventory> transactions,
-            CancellationToken cancellationToken,
-            IReadOnlyDictionary<int, string>? purchaseOrderVatTypes = null)
+            CancellationToken cancellationToken)
         {
             var runningInventoryBalance = previousInventory?.InventoryBalance ?? 0m;
             var runningAverageCost = previousInventory?.AverageCost ?? 0m;
             var orderedTransactions = OrderInventoryTransactions(transactions).ToList();
-            purchaseOrderVatTypes ??= await GetPurchaseOrderVatTypesAsync(
-                previousInventory is null ? orderedTransactions : orderedTransactions.Prepend(previousInventory),
-                cancellationToken);
 
             foreach (var transaction in orderedTransactions)
             {
@@ -267,69 +260,32 @@ namespace IBS.DataAccess.Repository.Filpride
                     transaction.Cost = runningAverageCost != 0
                         ? RoundToFourDecimalPlaces(runningAverageCost)
                         : RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = ComputeVatAwareAmount(transaction.Quantity, transaction.Cost, transaction, purchaseOrderVatTypes);
+                    transaction.Total = transaction.Quantity * transaction.Cost;
                     transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
                     transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = ComputeVatAwareAmount(transaction.InventoryBalance, transaction.AverageCost, transaction, purchaseOrderVatTypes);
+                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
                 }
                 else if (IsPurchase(transaction))
                 {
                     transaction.Cost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = ComputeVatAwareAmount(transaction.Quantity, transaction.Cost, transaction, purchaseOrderVatTypes);
+                    transaction.Total = transaction.Quantity * transaction.Cost;
                     transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
                     transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = ComputeVatAwareAmount(transaction.InventoryBalance, transaction.AverageCost, transaction, purchaseOrderVatTypes);
+                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
                 }
 
                 runningAverageCost = transaction.AverageCost;
                 runningInventoryBalance = transaction.InventoryBalance;
             }
+
+            await Task.CompletedTask;
         }
 
-        private async Task<Dictionary<int, string>> GetPurchaseOrderVatTypesAsync(
-            IEnumerable<FilprideInventory> inventories,
-            CancellationToken cancellationToken)
+        private decimal ComputeVatAwareCost(decimal grossCost, string vatType)
         {
-            var purchaseOrderIds = inventories
-                .Select(i => i.POId)
-                .OfType<int>()
-                .Distinct()
-                .ToList();
-
-            if (purchaseOrderIds.Count == 0)
-            {
-                return [];
-            }
-
-            return await _db.FilpridePurchaseOrders
-                .Where(po => purchaseOrderIds.Contains(po.PurchaseOrderId))
-                .Select(po => new { po.PurchaseOrderId, po.VatType })
-                .ToDictionaryAsync(po => po.PurchaseOrderId, po => po.VatType, cancellationToken);
-        }
-
-        private decimal ComputeVatAwareAmount(
-            decimal quantity,
-            decimal cost,
-            FilprideInventory transaction,
-            IReadOnlyDictionary<int, string> purchaseOrderVatTypes)
-        {
-            var grossAmount = quantity * cost;
-            return IsVatable(transaction, purchaseOrderVatTypes)
-                ? ComputeNetOfVat(grossAmount)
-                : grossAmount;
-        }
-
-        private static bool IsVatable(
-            FilprideInventory transaction,
-            IReadOnlyDictionary<int, string> purchaseOrderVatTypes)
-        {
-            var vatType = transaction.PurchaseOrder?.VatType;
-            if (vatType is null && transaction.POId is int purchaseOrderId)
-            {
-                purchaseOrderVatTypes.TryGetValue(purchaseOrderId, out vatType);
-            }
-
-            return vatType == SD.VatType_Vatable;
+            return vatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(grossCost)
+                : grossCost;
         }
 
         private static IOrderedEnumerable<FilprideInventory> OrderInventoryTransactions(IEnumerable<FilprideInventory> inventories)

@@ -4,6 +4,7 @@ using IBS.DTOs;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -230,7 +231,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var unitOfWork = new UnitOfWork(_db);
             var normalizedTriggeredPrice = RoundToFourDecimalPlaces(model.TriggeredPrice);
-            var netOfVatPrice = RoundToFourDecimalPlaces(ComputeNetOfVat(normalizedTriggeredPrice));
             var remainingVolume = model.TriggeredVolume - model.AppliedVolume;
 
             // Process receiving reports
@@ -259,7 +259,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (inventory != null)
                 {
-                    inventory.Cost = netOfVatPrice;
+                    inventory.Cost = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                        ? RoundToFourDecimalPlaces(ComputeNetOfVat(normalizedTriggeredPrice))
+                        : normalizedTriggeredPrice;
                     inventory.Total = inventory.Quantity * inventory.Cost;
 
                     // Update first inventory's average cost and total balance
