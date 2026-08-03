@@ -6124,7 +6124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
 
                 if (cosSummaryReport.Count == 0)
                 {
