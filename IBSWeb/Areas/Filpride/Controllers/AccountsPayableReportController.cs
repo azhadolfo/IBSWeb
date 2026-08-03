@@ -3424,9 +3424,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     retailEnvirogasCommissionSum += commissionAmount;
                                     retailEnvirogasNetMarginSum += netMarginAmount;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -3470,9 +3467,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     industrialEnvirogasCommissionSum += commissionAmount;
                                     industrialEnvirogasNetMarginSum += netMarginAmount;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -3516,9 +3510,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     governmentEnvirogasCommissionSum += commissionAmount;
                                     governmentEnvirogasNetMarginSum += netMarginAmount;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -3562,9 +3553,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     resellerEnvirogasCommissionSum += commissionAmount;
                                     resellerEnvirogasNetMarginSum += netMarginAmount;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
