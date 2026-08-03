@@ -236,49 +236,100 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var orderedInventories = OrderInventoryTransactions(inventories).ToList();
             var previousInventory = orderedInventories.First();
-            previousInventory.Total = previousInventory.Quantity * previousInventory.Cost;
-            previousInventory.AverageCost = previousInventory.Cost;
-            previousInventory.TotalBalance = previousInventory.InventoryBalance * previousInventory.AverageCost;
+            var purchaseOrderVatTypes = await GetPurchaseOrderVatTypesAsync(orderedInventories, cancellationToken);
 
-            await RecalculateTransactionsAsync(previousInventory, orderedInventories.Skip(1), cancellationToken);
+            previousInventory.Total = ComputeVatAwareAmount(previousInventory.Quantity, previousInventory.Cost, previousInventory, purchaseOrderVatTypes);
+            previousInventory.AverageCost = previousInventory.Cost;
+            previousInventory.TotalBalance = ComputeVatAwareAmount(previousInventory.InventoryBalance, previousInventory.AverageCost, previousInventory, purchaseOrderVatTypes);
+
+            await RecalculateTransactionsAsync(previousInventory, orderedInventories.Skip(1), cancellationToken, purchaseOrderVatTypes);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        private Task RecalculateTransactionsAsync(
+        private async Task RecalculateTransactionsAsync(
             FilprideInventory? previousInventory,
             IEnumerable<FilprideInventory> transactions,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            IReadOnlyDictionary<int, string>? purchaseOrderVatTypes = null)
         {
             var runningInventoryBalance = previousInventory?.InventoryBalance ?? 0m;
             var runningAverageCost = previousInventory?.AverageCost ?? 0m;
+            var orderedTransactions = OrderInventoryTransactions(transactions).ToList();
+            purchaseOrderVatTypes ??= await GetPurchaseOrderVatTypesAsync(
+                previousInventory is null ? orderedTransactions : orderedTransactions.Prepend(previousInventory),
+                cancellationToken);
 
-            foreach (var transaction in OrderInventoryTransactions(transactions))
+            foreach (var transaction in orderedTransactions)
             {
                 if (IsSales(transaction))
                 {
                     transaction.Cost = runningAverageCost != 0
                         ? RoundToFourDecimalPlaces(runningAverageCost)
                         : RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = transaction.Quantity * transaction.Cost;
+                    transaction.Total = ComputeVatAwareAmount(transaction.Quantity, transaction.Cost, transaction, purchaseOrderVatTypes);
                     transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
                     transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
+                    transaction.TotalBalance = ComputeVatAwareAmount(transaction.InventoryBalance, transaction.AverageCost, transaction, purchaseOrderVatTypes);
                 }
                 else if (IsPurchase(transaction))
                 {
                     transaction.Cost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = transaction.Quantity * transaction.Cost;
+                    transaction.Total = ComputeVatAwareAmount(transaction.Quantity, transaction.Cost, transaction, purchaseOrderVatTypes);
                     transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
                     transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
+                    transaction.TotalBalance = ComputeVatAwareAmount(transaction.InventoryBalance, transaction.AverageCost, transaction, purchaseOrderVatTypes);
                 }
 
                 runningAverageCost = transaction.AverageCost;
                 runningInventoryBalance = transaction.InventoryBalance;
             }
+        }
 
-            return Task.CompletedTask;
+        private async Task<Dictionary<int, string>> GetPurchaseOrderVatTypesAsync(
+            IEnumerable<FilprideInventory> inventories,
+            CancellationToken cancellationToken)
+        {
+            var purchaseOrderIds = inventories
+                .Select(i => i.POId)
+                .OfType<int>()
+                .Distinct()
+                .ToList();
+
+            if (purchaseOrderIds.Count == 0)
+            {
+                return [];
+            }
+
+            return await _db.FilpridePurchaseOrders
+                .Where(po => purchaseOrderIds.Contains(po.PurchaseOrderId))
+                .Select(po => new { po.PurchaseOrderId, po.VatType })
+                .ToDictionaryAsync(po => po.PurchaseOrderId, po => po.VatType, cancellationToken);
+        }
+
+        private decimal ComputeVatAwareAmount(
+            decimal quantity,
+            decimal cost,
+            FilprideInventory transaction,
+            IReadOnlyDictionary<int, string> purchaseOrderVatTypes)
+        {
+            var grossAmount = quantity * cost;
+            return IsVatable(transaction, purchaseOrderVatTypes)
+                ? ComputeNetOfVat(grossAmount)
+                : grossAmount;
+        }
+
+        private static bool IsVatable(
+            FilprideInventory transaction,
+            IReadOnlyDictionary<int, string> purchaseOrderVatTypes)
+        {
+            var vatType = transaction.PurchaseOrder?.VatType;
+            if (vatType is null && transaction.POId is int purchaseOrderId)
+            {
+                purchaseOrderVatTypes.TryGetValue(purchaseOrderId, out vatType);
+            }
+
+            return vatType == SD.VatType_Vatable;
         }
 
         private static IOrderedEnumerable<FilprideInventory> OrderInventoryTransactions(IEnumerable<FilprideInventory> inventories)
