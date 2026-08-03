@@ -35,6 +35,19 @@
                         <div class="row g-4">
 
                             <div class="col-md-4">
+                                <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-check-circle me-2 text-primary"></i>Marketing Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MarketingApprovalCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="col-md-4">
                                 <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="text-decoration-none">
                                     <div class="card shadow-sm h-100 border-0">
                                         <div class="card-body text-center">

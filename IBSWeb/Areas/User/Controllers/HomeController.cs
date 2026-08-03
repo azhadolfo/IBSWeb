@@ -50,6 +50,11 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 #region -- Filpride
 
+                MarketingApprovalCount = await _dbContext.FilprideCustomerOrderSlips
+                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfMarketing)
+                                      && cos.Company == companyClaims)
+                        .CountAsync(),
+
                 SupplierAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
                             (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created))

@@ -3656,6 +3656,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
+                    b.Property<string>("MarketingApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("marketing_approved_by");
+
+                    b.Property<DateTime?>("MarketingApprovedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("marketing_approved_date");
+
                     b.Property<string>("OMReason")
                         .HasColumnType("text")
                         .HasColumnName("om_reason");
