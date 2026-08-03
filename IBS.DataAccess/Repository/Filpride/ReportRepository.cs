@@ -1,10 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -630,6 +630,48 @@ namespace IBS.DataAccess.Repository.Filpride
 
 
             return journalVoucherDetails;
+        }
+
+        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must not be greater than Date To!");
+            }
+
+            var query = _db.FilprideCustomerOrderSlips
+                .Where(dr => dr.Company == company &&
+                             dr.Date >= dateFrom &&
+                             dr.Date <= dateTo);
+
+            if (statusFilter == "ValidOnly")
+            {
+                query = query.Where(cos =>
+                    cos.Status != nameof(CosStatus.Closed) &&
+                    cos.Status != nameof(CosStatus.Disapproved) &&
+                    cos.Status != nameof(CosStatus.Expired));
+            }
+            else if (statusFilter == "InvalidOnly")
+            {
+                query = query.Where(cos =>
+                    cos.Status == nameof(CosStatus.Closed) ||
+                    cos.Status == nameof(CosStatus.Disapproved) ||
+                    cos.Status == nameof(CosStatus.Expired));
+            }
+
+            var customerOrderSlip = await query
+                .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
+                .Include(cos => cos.Product)
+                .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(cos => cos.AppointedSuppliers)
+                .OrderBy(p => p.CustomerOrderSlipNo)
+                .ToListAsync(cancellationToken);
+
+            return customerOrderSlip;
         }
     }
 }
