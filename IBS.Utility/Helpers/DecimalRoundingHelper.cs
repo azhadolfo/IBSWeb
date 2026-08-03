@@ -31,6 +31,6 @@ public static class DecimalRoundingHelper
 
     public static decimal ComputeNetUnitValue(decimal grossAmount, decimal quantity)
     {
-        return quantity == 0m ? 0m : ComputeNetOfVat(DivideOrZero(grossAmount, quantity));
+        return quantity == 0m ? 0m : RoundToFour(grossAmount / quantity / (1 + VatRate));
     }
 }
