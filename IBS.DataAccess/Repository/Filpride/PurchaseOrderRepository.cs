@@ -4,6 +4,7 @@ using IBS.DTOs;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -229,7 +230,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToLookup(inv => new { inv.Reference, inv.Company });
 
             var unitOfWork = new UnitOfWork(_db);
-            var netOfVatPrice = ComputeNetOfVat(model.TriggeredPrice);
+            var normalizedTriggeredPrice = RoundToFourDecimalPlaces(model.TriggeredPrice);
             var remainingVolume = model.TriggeredVolume - model.AppliedVolume;
 
             // Process receiving reports
@@ -242,9 +243,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 // Calculate effective volume
                 var effectiveVolume = Math.Min(receivingReport.QuantityReceived, remainingVolume);
-                var updatedAmount = effectiveVolume * model.TriggeredPrice;
+                var updatedAmount = effectiveVolume * normalizedTriggeredPrice;
                 var difference = updatedAmount - receivingReport.Amount;
-                var oldUnitCost = GetUnitValue(receivingReport.Amount, receivingReport.QuantityReceived);
+                var oldUnitCost = GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived);
 
                 // Update receiving report
                 receivingReport.Amount = updatedAmount;
@@ -258,8 +259,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (inventory != null)
                 {
-                    inventory.Cost = netOfVatPrice;
-                    inventory.Total = inventory.Quantity * inventory.Cost;
+                    var inventoryAmount = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                        ? ComputeNetOfVat(updatedAmount)
+                        : updatedAmount;
+
+                    inventory.Cost = GetRoundedUnitValue(inventoryAmount, receivingReport.QuantityReceived);
+                    inventory.Total = inventoryAmount;
 
                     // Update first inventory's average cost and total balance
                     if (inventories.FirstOrDefault()?.InventoryId == inventory.InventoryId)
@@ -286,7 +291,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     SupplierName = receivingReport.PurchaseOrder?.SupplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.UnitCost,
                     OldValue = oldUnitCost,
-                    NewValue = model.TriggeredPrice,
+                    NewValue = normalizedTriggeredPrice,
                     AdjustmentValue = difference,
                     AffectedQuantity = effectiveVolume,
                     Reason = "Update approved unit cost in PO",
@@ -310,17 +315,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var hasTriggeredPrice = purchaseOrder.ActualPrices?.Count > 0 && purchaseOrder.ActualPrices.Any(x => x.IsApproved);
 
-            return hasTriggeredPrice
+            return RoundToFourDecimalPlaces(hasTriggeredPrice
                 ? purchaseOrder.ActualPrices!
                     .OrderByDescending(x => x.ApprovedDate)
                     .First(x => x.IsApproved)
                     .TriggeredPrice
-                : purchaseOrder.Price;
-        }
-
-        private static decimal GetUnitValue(decimal amount, decimal quantity)
-        {
-            return quantity == 0m ? 0m : amount / quantity;
+                : purchaseOrder.Price);
         }
     }
 }

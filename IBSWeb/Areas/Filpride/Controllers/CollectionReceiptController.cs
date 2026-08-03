@@ -1265,7 +1265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var netOfVatAmount = sv.VatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Total) - sv.Discount
+                    ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Total - sv.Discount)
                     : sv.Total - sv.Discount;
                 var withHoldingTaxAmount = sv.HasEwt
                     ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
