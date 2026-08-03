@@ -2293,9 +2293,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     retailEnvirogasQuantitySum += quantity;
                                     retailEnvirogasNetOfSalesSum += salesNetOfVat;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -2319,9 +2316,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     industrialEnvirogasQuantitySum += quantity;
                                     industrialEnvirogasNetOfSalesSum += salesNetOfVat;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -2345,9 +2339,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     governmentEnvirogasQuantitySum += quantity;
                                     governmentEnvirogasNetOfSalesSum += salesNetOfVat;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 
@@ -2371,9 +2362,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     resellerEnvirogasQuantitySum += quantity;
                                     resellerEnvirogasNetOfSalesSum += salesNetOfVat;
                                     break;
-
-                                default:
-                                    throw new ArgumentException("No product name");
                             }
                             break;
 

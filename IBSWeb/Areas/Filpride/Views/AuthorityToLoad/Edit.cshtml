@@ -80,9 +80,7 @@
         loadCosList();
 
         supplierIdInput.on('change', function () {
-            const selected = $(this).val();
-            const values = Array.isArray(selected) ? selected : [selected];
-            $('#uppiAtlWrapper').toggle(values.includes('19'));
+            $('#uppiAtlWrapper').toggle($(this).val() === '19');
             loadCosList();
         });
 
