@@ -6,6 +6,18 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.0.10] - 2026-08-03
+
+### Changed
+- Updated Filpride accounts payable purchase report, gross margin report, and AP report summaries and Excel exports to build product sections dynamically from the persisted transaction product names instead of fixed product buckets.
+- Updated Filpride accounts receivable dispatch, sales, and COS summary report outputs to derive product columns from the persisted purchase order or customer order slip product names so historical product labels remain available even when the related product master navigation is missing or has changed.
+
+### Fixed
+- Fixed the Filpride sales report PDF and Excel summaries to keep per-customer-type and grand-total product totals keyed to `CustomerOrderSlip.ProductName`, preventing omitted or undercounted historical product amounts.
+- Fixed the Filpride delivered dispatch and COS unserved-volume PDF and Excel summaries to use `PurchaseOrder.ProductName`, preserving product totals when the related product navigation is null.
+
+---
+
 ## [v3.0.9] - 2026-07-28
 
 ### Changed

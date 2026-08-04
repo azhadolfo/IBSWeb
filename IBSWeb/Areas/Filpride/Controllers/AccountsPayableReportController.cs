@@ -30,6 +30,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
     [CompanyAuthorize(nameof(Filpride))]
     public class AccountsPayableReportController : Controller
     {
+        private sealed class PurchaseSummaryMetric
+        {
+            public decimal Quantity { get; set; }
+            public decimal NetOfAmount { get; set; }
+        }
+
+        private sealed class PurchaseOrderSummaryMetric
+        {
+            public decimal OriginalPo { get; set; }
+            public decimal UnliftedLastMonth { get; set; }
+            public decimal LiftedThisMonth { get; set; }
+            public decimal UnliftedThisMonth { get; set; }
+            public decimal GrossAmount { get; set; }
+            public decimal EwtAmount { get; set; }
+        }
+
+        private sealed class GrossMarginSummaryMetric
+        {
+            public decimal Quantity { get; set; }
+            public decimal NetOfSales { get; set; }
+            public decimal NetOfPurchases { get; set; }
+            public decimal GrossMargin { get; set; }
+            public decimal NetOfFreight { get; set; }
+            public decimal Commission { get; set; }
+            public decimal NetMargin { get; set; }
+        }
+
         private readonly ApplicationDbContext _dbContext;
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -92,6 +119,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private static decimal EwtAmountOrZero(decimal netOfVatAmount, decimal percent) => DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, percent);
 
         private static decimal NetUnitValueOrZero(decimal grossAmount, decimal quantity) => DecimalRoundingHelper.ComputeNetUnitValue(grossAmount, quantity);
+
+        private static List<string> GetOrderedProductNames<T>(IEnumerable<T> records, Func<T, string?> selector)
+        {
+            return records
+                .Select(selector)
+                .Where(productName => !string.IsNullOrWhiteSpace(productName))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(productName => productName, StringComparer.OrdinalIgnoreCase)
+                .Cast<string>()
+                .ToList();
+        }
+
+        private static decimal ComputeAverage(decimal amount, decimal quantity)
+        {
+            return amount != 0m && quantity != 0m
+                ? DivideOrZero(amount, quantity)
+                : 0m;
+        }
+
+        private static Dictionary<string, PurchaseSummaryMetric> CreatePurchaseSummaryMetricMap(IEnumerable<string> productNames)
+        {
+            return productNames.ToDictionary(
+                productName => productName,
+                _ => new PurchaseSummaryMetric(),
+                StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Dictionary<string, PurchaseOrderSummaryMetric> CreatePurchaseOrderSummaryMetricMap(IEnumerable<string> productNames)
+        {
+            return productNames.ToDictionary(
+                productName => productName,
+                _ => new PurchaseOrderSummaryMetric(),
+                StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Dictionary<string, GrossMarginSummaryMetric> CreateGrossMarginSummaryMetricMap(IEnumerable<string> productNames)
+        {
+            return productNames.ToDictionary(
+                productName => productName,
+                _ => new GrossMarginSummaryMetric(),
+                StringComparer.OrdinalIgnoreCase);
+        }
 
         [HttpGet]
         public IActionResult ClearedDisbursementReport()
@@ -1465,6 +1534,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 //Summary Table
                                 col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
+                                var summaryProductList = GetOrderedProductNames(
+                                    purchaseReport,
+                                    pr => pr.PurchaseOrder!.ProductName);
 
                                 #region -- Overall Summary
 
@@ -1475,17 +1547,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     content.ColumnsDefinition(columns =>
                                         {
                                             columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.ConstantColumn(5);
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.ConstantColumn(5);
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
+
+                                            foreach (var _ in summaryProductList)
+                                            {
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+
+                                                if (_ != summaryProductList.Last())
+                                                {
+                                                    columns.ConstantColumn(5);
+                                                }
+                                            }
                                         });
 
                                     #endregion -- Columns Definition
@@ -1494,36 +1567,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     content.Header(header =>
                                         {
-                                            header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Biodiesel").AlignCenter().SemiBold();
-                                            header.Cell();
-                                            header.Cell().ColumnSpan(3).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Econogas").AlignCenter().SemiBold();
-                                            header.Cell();
-                                            header.Cell().ColumnSpan(3).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Envirogas").AlignCenter().SemiBold();
+                                            for (var index = 0; index < summaryProductList.Count; index++)
+                                            {
+                                                var productName = summaryProductList[index];
+                                                header.Cell().ColumnSpan((uint)(index == 0 ? 4 : 3)).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text(productName).AlignCenter().SemiBold();
 
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Suppliers").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
-                                            header.Cell();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
-                                            header.Cell();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
+                                                if (index < summaryProductList.Count - 1)
+                                                {
+                                                    header.Cell();
+                                                }
+                                            }
+
+                                            for (var index = 0; index < summaryProductList.Count; index++)
+                                            {
+                                                if (index == 0)
+                                                {
+                                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Suppliers").SemiBold();
+                                                }
+
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
+
+                                                if (index < summaryProductList.Count - 1)
+                                                {
+                                                    header.Cell();
+                                                }
+                                            }
                                         });
 
                                     #endregion -- Table Header
 
                                     #region -- Initialize Variable for Computation
 
-                                    var totalQuantityForBiodiesel = 0m;
-                                    var totalPurchaseNetOfVatForBiodiesel = 0m;
-                                    var totalQuantityForEconogas = 0m;
-                                    var totalPurchaseNetOfVatForEconogas = 0m;
-                                    var totalQuantityForEnvirogas = 0m;
-                                    var totalPurchaseNetOfVatForEnvirogas = 0m;
+                                    var totalMetricsByProduct = CreatePurchaseSummaryMetricMap(summaryProductList);
 
                                     #endregion -- Initialize Variable for Computation
 
@@ -1539,88 +1616,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var list = purchaseReport.Where(s => s.PurchaseOrder!.SupplierName == record.Key).ToList();
 
                                         var isVatable = list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
-
-                                        #region Computation for Biodiesel
-
-                                        var listForBiodiesel = list.Where(s => s.PurchaseOrder!.ProductName == "BIODIESEL").ToList();
-
-                                        var biodieselQuantitySum = listForBiodiesel.Sum(s => s.QuantityReceived);
-                                        var biodieselPurchaseNetOfVatSum = isVatable
-                                                ? NetOfVatOrZero(listForBiodiesel.Sum(pr => pr.Amount))
-                                                : listForBiodiesel.Sum(pr => pr.Amount);
-                                        var biodieselAverageSellingPrice = biodieselPurchaseNetOfVatSum != 0m || biodieselQuantitySum != 0m
-                                                ? DivideOrZero(biodieselPurchaseNetOfVatSum, biodieselQuantitySum)
-                                                : 0m;
-
-                                        #endregion Computation for Biodiesel
-
-                                        #region Computation for Econogas
-
-                                        var listForEconogas = list.Where(s => s.PurchaseOrder!.ProductName == "ECONOGAS").ToList();
-
-                                        var econogasQuantitySum = listForEconogas.Sum(s => s.QuantityReceived);
-                                        var econogasPurchaseNetOfVatSum = isVatable
-                                                ? NetOfVatOrZero(listForEconogas.Sum(pr => pr.Amount))
-                                                : listForEconogas.Sum(pr => pr.Amount);
-                                        var econogasAverageSellingPrice = econogasPurchaseNetOfVatSum != 0m && econogasQuantitySum != 0m
-                                                ? DivideOrZero(econogasPurchaseNetOfVatSum, econogasQuantitySum)
-                                                : 0m;
-
-                                        #endregion Computation for Econogas
-
-                                        #region Computation for Envirogas
-
-                                        var listForEnvirogas = list.Where(s => s.PurchaseOrder!.ProductName == "ENVIROGAS").ToList();
-
-                                        var envirogasQuantitySum = listForEnvirogas.Sum(s => s.QuantityReceived);
-                                        var envirogasPurchaseNetOfVatSum = isVatable
-                                                ? NetOfVatOrZero(listForEnvirogas.Sum(pr => pr.Amount))
-                                                : listForEnvirogas.Sum(pr => pr.Amount);
-                                        var envirogasAverageSellingPrice = envirogasPurchaseNetOfVatSum != 0m && envirogasQuantitySum != 0m ? DivideOrZero(envirogasPurchaseNetOfVatSum, envirogasQuantitySum) : 0m;
-
-                                        #endregion Computation for Envirogas
+                                        var supplierMetricsByProduct = CreatePurchaseSummaryMetricMap(summaryProductList);
+                                        foreach (var productName in summaryProductList)
+                                        {
+                                            var productPurchases = list.Where(s => string.Equals(s.PurchaseOrder!.ProductName, productName, StringComparison.OrdinalIgnoreCase)).ToList();
+                                            supplierMetricsByProduct[productName].Quantity = productPurchases.Sum(s => s.QuantityReceived);
+                                            supplierMetricsByProduct[productName].NetOfAmount = isVatable
+                                                ? NetOfVatOrZero(productPurchases.Sum(pr => pr.Amount))
+                                                : productPurchases.Sum(pr => pr.Amount);
+                                        }
 
                                         content.Cell().Border(0.5f).Padding(3).Text(record.Key);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselPurchaseNetOfVatSum != 0 ? biodieselPurchaseNetOfVatSum < 0 ? $"({Math.Abs(biodieselPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : biodieselPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselAverageSellingPrice != 0 ? biodieselAverageSellingPrice < 0 ? $"({Math.Abs(biodieselAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : biodieselAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell();
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasPurchaseNetOfVatSum != 0 ? econogasPurchaseNetOfVatSum < 0 ? $"({Math.Abs(econogasPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : econogasPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasAverageSellingPrice != 0 ? econogasAverageSellingPrice < 0 ? $"({Math.Abs(econogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell();
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasPurchaseNetOfVatSum != 0 ? envirogasPurchaseNetOfVatSum < 0 ? $"({Math.Abs(envirogasPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : envirogasPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasAverageSellingPrice != 0 ? envirogasAverageSellingPrice < 0 ? $"({Math.Abs(envirogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                        for (var index = 0; index < summaryProductList.Count; index++)
+                                        {
+                                            var productName = summaryProductList[index];
+                                            var productMetric = supplierMetricsByProduct[productName];
+                                            var averagePurchase = ComputeAverage(productMetric.NetOfAmount, productMetric.Quantity);
 
-                                        totalQuantityForBiodiesel += biodieselQuantitySum;
-                                        totalPurchaseNetOfVatForBiodiesel += biodieselPurchaseNetOfVatSum;
-                                        totalQuantityForEconogas += econogasQuantitySum;
-                                        totalPurchaseNetOfVatForEconogas += econogasPurchaseNetOfVatSum;
-                                        totalQuantityForEnvirogas += envirogasQuantitySum;
-                                        totalPurchaseNetOfVatForEnvirogas += envirogasPurchaseNetOfVatSum;
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(productMetric.Quantity != 0 ? productMetric.Quantity < 0 ? $"({Math.Abs(productMetric.Quantity).ToString(SD.Two_Decimal_Format)})" : productMetric.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(productMetric.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(productMetric.NetOfAmount != 0 ? productMetric.NetOfAmount < 0 ? $"({Math.Abs(productMetric.NetOfAmount).ToString(SD.Two_Decimal_Format)})" : productMetric.NetOfAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(productMetric.NetOfAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(averagePurchase != 0 ? averagePurchase < 0 ? $"({Math.Abs(averagePurchase).ToString(SD.Four_Decimal_Format)})" : averagePurchase.ToString(SD.Four_Decimal_Format) : null).FontColor(averagePurchase < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            if (index < summaryProductList.Count - 1)
+                                            {
+                                                content.Cell();
+                                            }
+
+                                            totalMetricsByProduct[productName].Quantity += productMetric.Quantity;
+                                            totalMetricsByProduct[productName].NetOfAmount += productMetric.NetOfAmount;
+                                        }
                                     }
 
                                     #endregion -- Loop to Show Records
 
                                     #region -- Create Table Cell for Totals
 
-                                    var averageSellingPriceForBiodiesel = totalPurchaseNetOfVatForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? DivideOrZero(totalPurchaseNetOfVatForBiodiesel, totalQuantityForBiodiesel) : 0m;
-                                    var averageSellingPriceForEconogas = totalPurchaseNetOfVatForEconogas != 0 && totalQuantityForEconogas != 0 ? DivideOrZero(totalPurchaseNetOfVatForEconogas, totalQuantityForEconogas) : 0m;
-                                    var averageSellingPriceForEnvirogas = totalPurchaseNetOfVatForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? DivideOrZero(totalPurchaseNetOfVatForEnvirogas, totalQuantityForEnvirogas) : 0m;
-
                                     content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForBiodiesel != 0 ? totalQuantityForBiodiesel < 0 ? $"({Math.Abs(totalQuantityForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForBiodiesel != 0 ? totalPurchaseNetOfVatForBiodiesel < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForBiodiesel != 0 ? averageSellingPriceForBiodiesel < 0 ? $"({Math.Abs(averageSellingPriceForBiodiesel).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForBiodiesel.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEconogas != 0 ? totalQuantityForEconogas < 0 ? $"({Math.Abs(totalQuantityForEconogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForEconogas != 0 ? totalPurchaseNetOfVatForEconogas < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForEconogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEconogas != 0 ? averageSellingPriceForEconogas < 0 ? $"({Math.Abs(averageSellingPriceForEconogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEconogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEnvirogas != 0 ? totalQuantityForEnvirogas < 0 ? $"({Math.Abs(totalQuantityForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForEnvirogas != 0 ? totalPurchaseNetOfVatForEnvirogas < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEnvirogas != 0 ? averageSellingPriceForEnvirogas < 0 ? $"({Math.Abs(averageSellingPriceForEnvirogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEnvirogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    for (var index = 0; index < summaryProductList.Count; index++)
+                                    {
+                                        var productName = summaryProductList[index];
+                                        var totalMetric = totalMetricsByProduct[productName];
+                                        var averagePurchase = ComputeAverage(totalMetric.NetOfAmount, totalMetric.Quantity);
+
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.Quantity != 0 ? totalMetric.Quantity < 0 ? $"({Math.Abs(totalMetric.Quantity).ToString(SD.Two_Decimal_Format)})" : totalMetric.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.Quantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.NetOfAmount != 0 ? totalMetric.NetOfAmount < 0 ? $"({Math.Abs(totalMetric.NetOfAmount).ToString(SD.Two_Decimal_Format)})" : totalMetric.NetOfAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.NetOfAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averagePurchase != 0 ? averagePurchase < 0 ? $"({Math.Abs(averagePurchase).ToString(SD.Four_Decimal_Format)})" : averagePurchase.ToString(SD.Four_Decimal_Format) : null).FontColor(averagePurchase < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+
+                                        if (index < summaryProductList.Count - 1)
+                                        {
+                                            content.Cell();
+                                        }
+                                    }
 
                                     #endregion -- Create Table Cell for Totals
                                 });
@@ -2041,11 +2087,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var startingSummaryTableRow = row;
 
-                string[] productList = ["DIESEL", "ECONO", "ENVIRO"];
+                var productList = GetOrderedProductNames(
+                    purchaseReport,
+                    pr => pr.PurchaseOrder!.ProductName);
+                var summaryFirstMetricColumn = 3;
 
-                for (int i = 3, index = 0; i != 12; i += 3, index++)
+                for (int index = 0; index < productList.Count; index++)
                 {
-                    mergedCells = purchaseReportWorksheet.Cells[row, i, row, i + 2];
+                    var summaryStartColumn = summaryFirstMetricColumn + (index * 3);
+                    mergedCells = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     mergedCells.Style.Font.Bold = true;
                     mergedCells.Style.Font.Size = 16;
                     mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -2065,16 +2115,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
                 purchaseReportWorksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                for (int i = 2; i != 11; i += 3)
+                for (int index = 0; index < productList.Count; index++)
                 {
-                    purchaseReportWorksheet.Cells[row, i + 1].Value = "VOLUME";
-                    purchaseReportWorksheet.Cells[row, i + 2].Value = "PURCHASES N.VAT";
-                    purchaseReportWorksheet.Cells[row, i + 3].Value = "AVE. CPL";
-                    purchaseReportWorksheet.Cells[row, i + 1, row, i + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    purchaseReportWorksheet.Cells[row, i + 1, row, i + 3].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    purchaseReportWorksheet.Cells[row, i + 1, row, i + 3].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    var summaryStartColumn = summaryFirstMetricColumn + (index * 3);
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn].Value = "VOLUME";
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 1].Value = "PURCHASES N.VAT";
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 2].Value = "AVE. CPL";
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2].Style.Border.Top.Style = ExcelBorderStyle.Thin;
 
-                    using var range = purchaseReportWorksheet.Cells[row, i + 1, row, i + 3];
+                    using var range = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     range.Style.Font.Bold = true;
                     range.Style.Font.Italic = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -2095,7 +2146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // for each supplier
                 foreach (var rrSupplier in supplierByRr)
                 {
-                    var startingColumn = 2;
+                    var startingColumn = summaryFirstMetricColumn;
                     var isVatable = rrSupplier.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
 
                     // get name of group supplier
@@ -2109,9 +2160,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GroupBy(rr => rr.PurchaseOrder!.ProductName);
 
                     // get volume, net purchases, and average cost per liter
-                    foreach (var product in productBySupplier)
+                    foreach (var productName in productList)
                     {
-                        if (product.Any())
+                        var product = productBySupplier.FirstOrDefault(p => string.Equals(p.Key, productName, StringComparison.OrdinalIgnoreCase));
+                        if (product != null && product.Any())
                         {
                             var grandTotalVolume = product
                                 .Sum(pr => pr.QuantityReceived); // volume
@@ -2138,17 +2190,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 row++;
 
-                for (var i = 2; i != 11; i += 3)
+                for (var index = 0; index < productList.Count; index++)
                 {
-                    purchaseReportWorksheet.Cells[row, i + 1].Formula = $"=SUM({purchaseReportWorksheet.Cells[startingSummaryTableRow, i + 1].Address}:{purchaseReportWorksheet.Cells[endingSummaryTableRow, i + 1].Address})";
-                    purchaseReportWorksheet.Cells[row, i + 2].Formula = $"=SUM({purchaseReportWorksheet.Cells[startingSummaryTableRow, i + 2].Address}:{purchaseReportWorksheet.Cells[endingSummaryTableRow, i + 2].Address})";
-                    purchaseReportWorksheet.Cells[row, i + 3].Formula = $"={purchaseReportWorksheet.Cells[row, i + 2].Address}/{purchaseReportWorksheet.Cells[row, i + 1].Address}";
+                    var summaryStartColumn = summaryFirstMetricColumn + (index * 3);
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn].Formula = $"=SUM({purchaseReportWorksheet.Cells[startingSummaryTableRow, summaryStartColumn].Address}:{purchaseReportWorksheet.Cells[endingSummaryTableRow, summaryStartColumn].Address})";
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 1].Formula = $"=SUM({purchaseReportWorksheet.Cells[startingSummaryTableRow, summaryStartColumn + 1].Address}:{purchaseReportWorksheet.Cells[endingSummaryTableRow, summaryStartColumn + 1].Address})";
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 2].Formula = $"={purchaseReportWorksheet.Cells[row, summaryStartColumn + 1].Address}/{purchaseReportWorksheet.Cells[row, summaryStartColumn].Address}";
 
-                    purchaseReportWorksheet.Cells[row, i + 1].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, i + 2].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, i + 3].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 1].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, summaryStartColumn + 2].Style.Numberformat.Format = currencyFormat;
 
-                    mergedCells = purchaseReportWorksheet.Cells[row, i + 1, row, i + 3];
+                    mergedCells = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     mergedCells.Style.Font.Bold = true;
                     mergedCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     mergedCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
@@ -2166,11 +2219,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 enclosure = purchaseReportWorksheet.Cells[firstColumnForThickBorder, 3, lastColumnForThickBorder, 5];
                 enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
-                enclosure = purchaseReportWorksheet.Cells[firstColumnForThickBorder, 6, lastColumnForThickBorder, 8];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
-
-                enclosure = purchaseReportWorksheet.Cells[firstColumnForThickBorder, 9, lastColumnForThickBorder, 11];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                for (var index = 1; index < productList.Count; index++)
+                {
+                    var summaryStartColumn = summaryFirstMetricColumn + (index * 3);
+                    enclosure = purchaseReportWorksheet.Cells[firstColumnForThickBorder, summaryStartColumn, lastColumnForThickBorder, summaryStartColumn + 2];
+                    enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                }
 
                 #endregion == Summary Contents ==
 
@@ -2604,32 +2658,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 #endregion -- Overall Summary
 
-                                #region -- Biodiesel Summary
+                                var grossMarginProductList = GetOrderedProductNames(
+                                    grossMarginReport,
+                                    report => report.DeliveryReceipt!.CustomerOrderSlip!.ProductName);
 
-                                col.Item().PaddingTop(10).Table(content =>
+                                foreach (var productName in grossMarginProductList)
                                 {
-                                    #region -- Columns Definition
-
-                                    content.ColumnsDefinition(columns =>
+                                    col.Item().PaddingTop(10).Table(content =>
+                                    {
+                                        content.ColumnsDefinition(columns =>
                                         {
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
+                                            for (var index = 0; index < 9; index++)
+                                            {
+                                                columns.RelativeColumn();
+                                            }
                                         });
 
-                                    #endregion -- Columns Definition
-
-                                    #region -- Table Header
-
-                                    content.Header(header =>
+                                        content.Header(header =>
                                         {
-                                            header.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Biodiesel").AlignCenter().SemiBold();
+                                            header.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text(productName).AlignCenter().SemiBold();
 
                                             header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Segment").SemiBold();
                                             header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
@@ -2642,333 +2689,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Net GM/LIT").SemiBold();
                                         });
 
-                                    #endregion -- Table Header
+                                        var totalMetric = new GrossMarginSummaryMetric();
 
-                                    #region -- Initialize Variable for Computation
-
-                                    var biodieselTotalQuantity = 0m;
-                                    var biodieselTotalSales = 0m;
-                                    var biodieselTotalPurchases = 0m;
-                                    var biodieselTotalGrossMargin = 0m;
-                                    var biodieselTotalFreight = 0m;
-                                    var biodieselTotalCommission = 0m;
-                                    var biodieselTotalNetMargin = 0m;
-                                    var biodieselTotalNetMarginPerLiter = 0m;
-
-                                    #endregion -- Initialize Variable for Computation
-
-                                    #region -- Loop to Show Records
-
-                                    foreach (var customerType in Enum.GetValues<CustomerType>())
-                                    {
-                                        var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
-                                        var listForBiodiesel = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
-                                        var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
-                                        var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
-                                        var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                                        var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
-
-                                        // Computation for Biodiesel
-                                        var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var biodieselSalesSum = RoundToFour(listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
-                                        var biodieselNetOfSalesSum = isCustomerVatable && biodieselSalesSum != 0m
-                                                ? NetOfVatOrZero(biodieselSalesSum)
-                                                : biodieselSalesSum;
-                                        var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
-                                        var biodieselNetOfPurchasesSum = isSupplierVatable && biodieselPurchasesSum != 0m
-                                                ? NetOfVatOrZero(biodieselPurchasesSum)
-                                                : biodieselPurchasesSum;
-                                        var biodieselGrossMarginSum = RoundToFour(biodieselNetOfSalesSum - biodieselNetOfPurchasesSum);
-                                        var biodieselFreightSum = RoundToFour(listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
-                                        var biodieselNetOfFreightSum = isHaulerVatable && biodieselFreightSum != 0m
-                                                ? NetOfVatOrZero(biodieselFreightSum)
-                                                : biodieselFreightSum;
-                                        var biodieselCommissionSum = RoundToFour(listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
-                                        var biodieselNetMarginSum = RoundToFour(biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum));
-                                        var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? DivideOrZero(biodieselNetMarginSum, biodieselQuantitySum) : 0m;
-
-                                        content.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetOfSalesSum != 0 ? biodieselNetOfSalesSum < 0 ? $"({Math.Abs(biodieselNetOfSalesSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetOfSalesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetOfSalesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetOfPurchasesSum != 0 ? biodieselNetOfPurchasesSum < 0 ? $"({Math.Abs(biodieselNetOfPurchasesSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetOfPurchasesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetOfPurchasesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselGrossMarginSum != 0 ? biodieselGrossMarginSum < 0 ? $"({Math.Abs(biodieselGrossMarginSum).ToString(SD.Two_Decimal_Format)})" : biodieselGrossMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselGrossMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetOfFreightSum != 0 ? biodieselNetOfFreightSum < 0 ? $"({Math.Abs(biodieselNetOfFreightSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetOfFreightSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetOfFreightSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselCommissionSum != 0 ? biodieselCommissionSum < 0 ? $"({Math.Abs(biodieselCommissionSum).ToString(SD.Two_Decimal_Format)})" : biodieselCommissionSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselCommissionSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetMarginSum != 0 ? biodieselNetMarginSum < 0 ? $"({Math.Abs(biodieselNetMarginSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetMarginPerLiterSum != 0 ? biodieselNetMarginPerLiterSum < 0 ? $"({Math.Abs(biodieselNetMarginPerLiterSum).ToString(SD.Four_Decimal_Format)})" : biodieselNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselNetMarginPerLiterSum < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                        biodieselTotalQuantity += biodieselQuantitySum;
-                                        biodieselTotalSales += biodieselNetOfSalesSum;
-                                        biodieselTotalPurchases += biodieselNetOfPurchasesSum;
-                                        biodieselTotalGrossMargin += biodieselGrossMarginSum;
-                                        biodieselTotalFreight += biodieselNetOfFreightSum;
-                                        biodieselTotalCommission += biodieselCommissionSum;
-                                        biodieselTotalNetMargin += biodieselNetMarginSum;
-                                        biodieselTotalNetMarginPerLiter = biodieselTotalNetMargin != 0 && biodieselTotalQuantity != 0 ? biodieselTotalNetMargin / biodieselTotalQuantity : 0;
-                                    }
-
-                                    #endregion -- Loop to Show Records
-
-                                    #region -- Create Table Cell for Totals
-
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:");
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalQuantity != 0 ? biodieselTotalQuantity < 0 ? $"({Math.Abs(biodieselTotalQuantity).ToString(SD.Two_Decimal_Format)})" : biodieselTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalSales != 0 ? biodieselTotalSales < 0 ? $"({Math.Abs(biodieselTotalSales).ToString(SD.Two_Decimal_Format)})" : biodieselTotalSales.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalSales < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalPurchases != 0 ? biodieselTotalPurchases < 0 ? $"({Math.Abs(biodieselTotalPurchases).ToString(SD.Two_Decimal_Format)})" : biodieselTotalPurchases.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalPurchases < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalGrossMargin != 0 ? biodieselTotalGrossMargin < 0 ? $"({Math.Abs(biodieselTotalGrossMargin).ToString(SD.Two_Decimal_Format)})" : biodieselTotalGrossMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalGrossMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalFreight != 0 ? biodieselTotalFreight < 0 ? $"({Math.Abs(biodieselTotalFreight).ToString(SD.Two_Decimal_Format)})" : biodieselTotalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalFreight < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalCommission != 0 ? biodieselTotalCommission < 0 ? $"({Math.Abs(biodieselTotalCommission).ToString(SD.Two_Decimal_Format)})" : biodieselTotalCommission.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalCommission < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalNetMargin != 0 ? biodieselTotalNetMargin < 0 ? $"({Math.Abs(biodieselTotalNetMargin).ToString(SD.Two_Decimal_Format)})" : biodieselTotalNetMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselTotalNetMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(biodieselTotalNetMarginPerLiter != 0 ? biodieselTotalNetMarginPerLiter < 0 ? $"({Math.Abs(biodieselTotalNetMarginPerLiter).ToString(SD.Four_Decimal_Format)})" : biodieselTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselTotalNetMarginPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                    #endregion -- Create Table Cell for Totals
-                                });
-
-                                #endregion -- Biodiesel Summary
-
-                                #region -- Econogas Summary
-
-                                col.Item().PaddingTop(10).Table(content =>
-                                {
-                                    #region -- Columns Definition
-
-                                    content.ColumnsDefinition(columns =>
+                                        foreach (var customerType in Enum.GetValues<CustomerType>())
                                         {
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                        });
+                                            var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                                            var productItems = list.Where(s => string.Equals(s.DeliveryReceipt!.CustomerOrderSlip!.ProductName, productName, StringComparison.OrdinalIgnoreCase)).ToList();
+                                            var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                                            var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                                            var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
-                                    #endregion -- Columns Definition
+                                            var quantitySum = productItems.Sum(s => s.DeliveryReceipt!.Quantity);
+                                            var salesSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                            var netOfSalesSum = isCustomerVatable && salesSum != 0m
+                                                ? NetOfVatOrZero(salesSum)
+                                                : salesSum;
+                                            var purchasesSum = productItems.Sum(s => s.Amount);
+                                            var netOfPurchasesSum = isSupplierVatable && purchasesSum != 0m
+                                                ? NetOfVatOrZero(purchasesSum)
+                                                : purchasesSum;
+                                            var grossMarginSum = RoundToFour(netOfSalesSum - netOfPurchasesSum);
+                                            var freightSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                            var netOfFreightSum = isHaulerVatable && freightSum != 0m
+                                                ? NetOfVatOrZero(freightSum)
+                                                : freightSum;
+                                            var commissionSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                            var netMarginSum = RoundToFour(grossMarginSum - (freightSum + commissionSum));
+                                            var netMarginPerLiterSum = quantitySum != 0m ? DivideOrZero(netMarginSum, quantitySum) : 0m;
 
-                                    #region -- Table Header
+                                            content.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantitySum != 0 ? quantitySum < 0 ? $"({Math.Abs(quantitySum).ToString(SD.Two_Decimal_Format)})" : quantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(quantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(netOfSalesSum != 0 ? netOfSalesSum < 0 ? $"({Math.Abs(netOfSalesSum).ToString(SD.Two_Decimal_Format)})" : netOfSalesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(netOfSalesSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(netOfPurchasesSum != 0 ? netOfPurchasesSum < 0 ? $"({Math.Abs(netOfPurchasesSum).ToString(SD.Two_Decimal_Format)})" : netOfPurchasesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(netOfPurchasesSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(grossMarginSum != 0 ? grossMarginSum < 0 ? $"({Math.Abs(grossMarginSum).ToString(SD.Two_Decimal_Format)})" : grossMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(grossMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(netOfFreightSum != 0 ? netOfFreightSum < 0 ? $"({Math.Abs(netOfFreightSum).ToString(SD.Two_Decimal_Format)})" : netOfFreightSum.ToString(SD.Two_Decimal_Format) : null).FontColor(netOfFreightSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(commissionSum != 0 ? commissionSum < 0 ? $"({Math.Abs(commissionSum).ToString(SD.Two_Decimal_Format)})" : commissionSum.ToString(SD.Two_Decimal_Format) : null).FontColor(commissionSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(netMarginSum != 0 ? netMarginSum < 0 ? $"({Math.Abs(netMarginSum).ToString(SD.Two_Decimal_Format)})" : netMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(netMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(netMarginPerLiterSum != 0 ? netMarginPerLiterSum < 0 ? $"({Math.Abs(netMarginPerLiterSum).ToString(SD.Four_Decimal_Format)})" : netMarginPerLiterSum.ToString(SD.Four_Decimal_Format) : null).FontColor(netMarginPerLiterSum < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    content.Header(header =>
-                                        {
-                                            header.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Econogas").AlignCenter().SemiBold();
+                                            totalMetric.Quantity += quantitySum;
+                                            totalMetric.NetOfSales += netOfSalesSum;
+                                            totalMetric.NetOfPurchases += netOfPurchasesSum;
+                                            totalMetric.GrossMargin += grossMarginSum;
+                                            totalMetric.NetOfFreight += netOfFreightSum;
+                                            totalMetric.Commission += commissionSum;
+                                            totalMetric.NetMargin += netMarginSum;
+                                        }
 
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Segment").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Sales N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Gross Margin").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Freight N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Commission").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Net Margin").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Net GM/LIT").SemiBold();
-                                        });
+                                        var totalNetMarginPerLiter = totalMetric.Quantity != 0m ? DivideOrZero(totalMetric.NetMargin, totalMetric.Quantity) : 0m;
 
-                                    #endregion -- Table Header
-
-                                    #region -- Initialize Variable for Computation
-
-                                    var econogasTotalQuantity = 0m;
-                                    var econogasTotalSales = 0m;
-                                    var econogasTotalPurchases = 0m;
-                                    var econogasTotalGrossMargin = 0m;
-                                    var econogasTotalFreight = 0m;
-                                    var econogasTotalCommission = 0m;
-                                    var econogasTotalNetMargin = 0m;
-                                    var econogasTotalNetMarginPerLiter = 0m;
-
-                                    #endregion -- Initialize Variable for Computation
-
-                                    #region -- Loop to Show Records
-
-                                    foreach (var customerType in Enum.GetValues<CustomerType>())
-                                    {
-                                        var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
-                                        var listForEconogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS").ToList();
-                                        var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
-                                        var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
-                                        var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                                        var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
-
-                                        // Computation for Econogas
-                                        var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var econogasSalesSum = RoundToFour(listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
-                                        var econogasNetOfSalesSum = isCustomerVatable && econogasSalesSum != 0m
-                                                ? NetOfVatOrZero(econogasSalesSum)
-                                                : econogasSalesSum;
-                                        var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
-                                        var econogasNetOfPurchasesSum = isSupplierVatable && econogasPurchasesSum != 0m
-                                                ? NetOfVatOrZero(econogasPurchasesSum)
-                                                : econogasPurchasesSum;
-                                        var econogasGrossMarginSum = RoundToFour(econogasNetOfSalesSum - econogasNetOfPurchasesSum);
-                                        var econogasFreightSum = RoundToFour(listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
-                                        var econogasNetOfFreightSum = isHaulerVatable && econogasFreightSum != 0m
-                                                ? NetOfVatOrZero(econogasFreightSum)
-                                                : econogasFreightSum;
-                                        var econogasCommissionSum = RoundToFour(listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
-                                        var econogasNetMarginSum = RoundToFour(econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum));
-                                        var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? DivideOrZero(econogasNetMarginSum, econogasQuantitySum) : 0m;
-
-                                        content.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetOfSalesSum != 0 ? econogasNetOfSalesSum < 0 ? $"({Math.Abs(econogasNetOfSalesSum).ToString(SD.Two_Decimal_Format)})" : econogasNetOfSalesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetOfSalesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetOfPurchasesSum != 0 ? econogasNetOfPurchasesSum < 0 ? $"({Math.Abs(econogasNetOfPurchasesSum).ToString(SD.Two_Decimal_Format)})" : econogasNetOfPurchasesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetOfPurchasesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasGrossMarginSum != 0 ? econogasGrossMarginSum < 0 ? $"({Math.Abs(econogasGrossMarginSum).ToString(SD.Two_Decimal_Format)})" : econogasGrossMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasGrossMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetOfFreightSum != 0 ? econogasNetOfFreightSum < 0 ? $"({Math.Abs(econogasNetOfFreightSum).ToString(SD.Two_Decimal_Format)})" : econogasNetOfFreightSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetOfFreightSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasCommissionSum != 0 ? econogasCommissionSum < 0 ? $"({Math.Abs(econogasCommissionSum).ToString(SD.Two_Decimal_Format)})" : econogasCommissionSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasCommissionSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetMarginSum != 0 ? econogasNetMarginSum < 0 ? $"({Math.Abs(econogasNetMarginSum).ToString(SD.Two_Decimal_Format)})" : econogasNetMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetMarginPerLiterSum != 0 ? econogasNetMarginPerLiterSum < 0 ? $"({Math.Abs(econogasNetMarginPerLiterSum).ToString(SD.Four_Decimal_Format)})" : econogasNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasNetMarginPerLiterSum < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                        econogasTotalQuantity += econogasQuantitySum;
-                                        econogasTotalSales += econogasNetOfSalesSum;
-                                        econogasTotalPurchases += econogasNetOfPurchasesSum;
-                                        econogasTotalGrossMargin += econogasGrossMarginSum;
-                                        econogasTotalFreight += econogasNetOfFreightSum;
-                                        econogasTotalCommission += econogasCommissionSum;
-                                        econogasTotalNetMargin += econogasNetMarginSum;
-                                        econogasTotalNetMarginPerLiter = econogasTotalNetMargin != 0 && econogasTotalQuantity != 0 ? econogasTotalNetMargin / econogasTotalQuantity : 0;
-                                    }
-
-                                    #endregion -- Loop to Show Records
-
-                                    #region -- Create Table Cell for Totals
-
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:");
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalQuantity != 0 ? econogasTotalQuantity < 0 ? $"({Math.Abs(econogasTotalQuantity).ToString(SD.Two_Decimal_Format)})" : econogasTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalSales != 0 ? econogasTotalSales < 0 ? $"({Math.Abs(econogasTotalSales).ToString(SD.Two_Decimal_Format)})" : econogasTotalSales.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalSales < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalPurchases != 0 ? econogasTotalPurchases < 0 ? $"({Math.Abs(econogasTotalPurchases).ToString(SD.Two_Decimal_Format)})" : econogasTotalPurchases.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalPurchases < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalGrossMargin != 0 ? econogasTotalGrossMargin < 0 ? $"({Math.Abs(econogasTotalGrossMargin).ToString(SD.Two_Decimal_Format)})" : econogasTotalGrossMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalGrossMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalFreight != 0 ? econogasTotalFreight < 0 ? $"({Math.Abs(econogasTotalFreight).ToString(SD.Two_Decimal_Format)})" : econogasTotalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalFreight < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalCommission != 0 ? econogasTotalCommission < 0 ? $"({Math.Abs(econogasTotalCommission).ToString(SD.Two_Decimal_Format)})" : econogasTotalCommission.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalCommission < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalNetMargin != 0 ? econogasTotalNetMargin < 0 ? $"({Math.Abs(econogasTotalNetMargin).ToString(SD.Two_Decimal_Format)})" : econogasTotalNetMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasTotalNetMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(econogasTotalNetMarginPerLiter != 0 ? econogasTotalNetMarginPerLiter < 0 ? $"({Math.Abs(econogasTotalNetMarginPerLiter).ToString(SD.Four_Decimal_Format)})" : econogasTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasTotalNetMarginPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                    #endregion -- Create Table Cell for Totals
-                                });
-
-                                #endregion -- Econogas Summary
-
-                                #region -- Envirogas Summary
-
-                                col.Item().PaddingTop(10).Table(content =>
-                                {
-                                    #region -- Columns Definition
-
-                                    content.ColumnsDefinition(columns =>
-                                        {
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                        });
-
-                                    #endregion -- Columns Definition
-
-                                    #region -- Table Header
-
-                                    content.Header(header =>
-                                        {
-                                            header.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Envirogas").AlignCenter().SemiBold();
-
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Segment").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Sales N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Gross Margin").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Freight N. VAT").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Commission").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Net Margin").SemiBold();
-                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Net GM/LIT").SemiBold();
-                                        });
-
-                                    #endregion -- Table Header
-
-                                    #region -- Initialize Variable for Computation
-
-                                    var envirogasTotalQuantity = 0m;
-                                    var envirogasTotalSales = 0m;
-                                    var envirogasTotalPurchases = 0m;
-                                    var envirogasTotalGrossMargin = 0m;
-                                    var envirogasTotalFreight = 0m;
-                                    var envirogasTotalCommission = 0m;
-                                    var envirogasTotalNetMargin = 0m;
-                                    var envirogasTotalNetMarginPerLiter = 0m;
-
-                                    #endregion -- Initialize Variable for Computation
-
-                                    #region -- Loop to Show Records
-
-                                    foreach (var customerType in Enum.GetValues<CustomerType>())
-                                    {
-                                        var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
-                                        var listForEnvirogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS").ToList();
-                                        var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
-                                        var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
-                                        var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                                        var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
-
-                                        // Computation for Envirogas
-                                        var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var envirogasSalesSum = RoundToFour(listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
-                                        var envirogasNetOfSalesSum = isCustomerVatable && envirogasSalesSum != 0m
-                                                ? NetOfVatOrZero(envirogasSalesSum)
-                                                : envirogasSalesSum;
-                                        var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
-                                        var envirogasNetOfPurchasesSum = isSupplierVatable && envirogasPurchasesSum != 0m
-                                                ? NetOfVatOrZero(envirogasPurchasesSum)
-                                                : envirogasPurchasesSum;
-                                        var envirogasGrossMarginSum = RoundToFour(envirogasNetOfSalesSum - envirogasNetOfPurchasesSum);
-                                        var envirogasFreightSum = RoundToFour(listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
-                                        var envirogasNetOfFreightSum = isHaulerVatable && envirogasFreightSum != 0m
-                                                ? NetOfVatOrZero(envirogasFreightSum)
-                                                : envirogasFreightSum;
-                                        var envirogasCommissionSum = RoundToFour(listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
-                                        var envirogasNetMarginSum = RoundToFour(envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum));
-                                        var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? DivideOrZero(envirogasNetMarginSum, envirogasQuantitySum) : 0m;
-
-                                        content.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetOfSalesSum != 0 ? envirogasNetOfSalesSum < 0 ? $"({Math.Abs(envirogasNetOfSalesSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetOfSalesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetOfSalesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetOfPurchasesSum != 0 ? envirogasNetOfPurchasesSum < 0 ? $"({Math.Abs(envirogasNetOfPurchasesSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetOfPurchasesSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetOfPurchasesSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasGrossMarginSum != 0 ? envirogasGrossMarginSum < 0 ? $"({Math.Abs(envirogasGrossMarginSum).ToString(SD.Two_Decimal_Format)})" : envirogasGrossMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasGrossMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetOfFreightSum != 0 ? envirogasNetOfFreightSum < 0 ? $"({Math.Abs(envirogasNetOfFreightSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetOfFreightSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetOfFreightSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasCommissionSum != 0 ? envirogasCommissionSum < 0 ? $"({Math.Abs(envirogasCommissionSum).ToString(SD.Two_Decimal_Format)})" : envirogasCommissionSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasCommissionSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetMarginSum != 0 ? envirogasNetMarginSum < 0 ? $"({Math.Abs(envirogasNetMarginSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetMarginSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetMarginSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetMarginPerLiterSum != 0 ? envirogasNetMarginPerLiterSum < 0 ? $"({Math.Abs(envirogasNetMarginPerLiterSum).ToString(SD.Four_Decimal_Format)})" : envirogasNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasNetMarginPerLiterSum < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                        envirogasTotalQuantity += envirogasQuantitySum;
-                                        envirogasTotalSales += envirogasNetOfSalesSum;
-                                        envirogasTotalPurchases += envirogasNetOfPurchasesSum;
-                                        envirogasTotalGrossMargin += envirogasGrossMarginSum;
-                                        envirogasTotalFreight += envirogasNetOfFreightSum;
-                                        envirogasTotalCommission += envirogasCommissionSum;
-                                        envirogasTotalNetMargin += envirogasNetMarginSum;
-                                        envirogasTotalNetMarginPerLiter = envirogasTotalNetMargin != 0 && envirogasTotalQuantity != 0 ? envirogasTotalNetMargin / envirogasTotalQuantity : 0;
-                                    }
-
-                                    #endregion -- Loop to Show Records
-
-                                    #region -- Create Table Cell for Totals
-
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:");
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalQuantity != 0 ? envirogasTotalQuantity < 0 ? $"({Math.Abs(envirogasTotalQuantity).ToString(SD.Two_Decimal_Format)})" : envirogasTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalSales != 0 ? envirogasTotalSales < 0 ? $"({Math.Abs(envirogasTotalSales).ToString(SD.Two_Decimal_Format)})" : envirogasTotalSales.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalSales < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalPurchases != 0 ? envirogasTotalPurchases < 0 ? $"({Math.Abs(envirogasTotalPurchases).ToString(SD.Two_Decimal_Format)})" : envirogasTotalPurchases.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalPurchases < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalGrossMargin != 0 ? envirogasTotalGrossMargin < 0 ? $"({Math.Abs(envirogasTotalGrossMargin).ToString(SD.Two_Decimal_Format)})" : envirogasTotalGrossMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalGrossMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalFreight != 0 ? envirogasTotalFreight < 0 ? $"({Math.Abs(envirogasTotalFreight).ToString(SD.Two_Decimal_Format)})" : envirogasTotalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalFreight < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalCommission != 0 ? envirogasTotalCommission < 0 ? $"({Math.Abs(envirogasTotalCommission).ToString(SD.Two_Decimal_Format)})" : envirogasTotalCommission.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalCommission < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalNetMargin != 0 ? envirogasTotalNetMargin < 0 ? $"({Math.Abs(envirogasTotalNetMargin).ToString(SD.Two_Decimal_Format)})" : envirogasTotalNetMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasTotalNetMargin < 0 ? Colors.Red.Medium : Colors.Black);
-                                    content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(envirogasTotalNetMarginPerLiter != 0 ? envirogasTotalNetMarginPerLiter < 0 ? $"({Math.Abs(envirogasTotalNetMarginPerLiter).ToString(SD.Four_Decimal_Format)})" : envirogasTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasTotalNetMarginPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                    #endregion -- Create Table Cell for Totals
-                                });
-
-                                #endregion -- Envirogas Summary
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:");
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.Quantity != 0 ? totalMetric.Quantity < 0 ? $"({Math.Abs(totalMetric.Quantity).ToString(SD.Two_Decimal_Format)})" : totalMetric.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.NetOfSales != 0 ? totalMetric.NetOfSales < 0 ? $"({Math.Abs(totalMetric.NetOfSales).ToString(SD.Two_Decimal_Format)})" : totalMetric.NetOfSales.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.NetOfSales < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.NetOfPurchases != 0 ? totalMetric.NetOfPurchases < 0 ? $"({Math.Abs(totalMetric.NetOfPurchases).ToString(SD.Two_Decimal_Format)})" : totalMetric.NetOfPurchases.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.NetOfPurchases < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.GrossMargin != 0 ? totalMetric.GrossMargin < 0 ? $"({Math.Abs(totalMetric.GrossMargin).ToString(SD.Two_Decimal_Format)})" : totalMetric.GrossMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.GrossMargin < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.NetOfFreight != 0 ? totalMetric.NetOfFreight < 0 ? $"({Math.Abs(totalMetric.NetOfFreight).ToString(SD.Two_Decimal_Format)})" : totalMetric.NetOfFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.NetOfFreight < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.Commission != 0 ? totalMetric.Commission < 0 ? $"({Math.Abs(totalMetric.Commission).ToString(SD.Two_Decimal_Format)})" : totalMetric.Commission.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.Commission < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalMetric.NetMargin != 0 ? totalMetric.NetMargin < 0 ? $"({Math.Abs(totalMetric.NetMargin).ToString(SD.Two_Decimal_Format)})" : totalMetric.NetMargin.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMetric.NetMargin < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalNetMarginPerLiter != 0 ? totalNetMarginPerLiter < 0 ? $"({Math.Abs(totalNetMarginPerLiter).ToString(SD.Four_Decimal_Format)})" : totalNetMarginPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(totalNetMarginPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
+                                    });
+                                }
                             });
                         });
 
@@ -3076,189 +2856,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Initialize "Summary" variables
 
-                    #region -- Overall
-
-                        var retailOverallQuantitySum = 0m;
-                        var retailOverallNetOfSalesSum = 0m;
-                        var retailOverallNetOfPurchasesSum = 0m;
-                        var retailOverallGrossMarginSum = 0m;
-                        var retailOverallNetOfFreightSum = 0m;
-                        var retailOverallCommissionSum = 0m;
-                        var retailOverallNetMarginSum = 0m;
-
-                        var industrialOverallQuantitySum = 0m;
-                        var industrialOverallNetOfSalesSum = 0m;
-                        var industrialOverallNetOfPurchasesSum = 0m;
-                        var industrialOverallGrossMarginSum = 0m;
-                        var industrialOverallNetOfFreightSum = 0m;
-                        var industrialOverallCommissionSum = 0m;
-                        var industrialOverallNetMarginSum = 0m;
-
-                        var governmentOverallQuantitySum = 0m;
-                        var governmentOverallNetOfSalesSum = 0m;
-                        var governmentOverallNetOfPurchasesSum = 0m;
-                        var governmentOverallGrossMarginSum = 0m;
-                        var governmentOverallNetOfFreightSum = 0m;
-                        var governmentOverallCommissionSum = 0m;
-                        var governmentOverallNetMarginSum = 0m;
-
-                        var resellerOverallQuantitySum = 0m;
-                        var resellerOverallNetOfSalesSum = 0m;
-                        var resellerOverallNetOfPurchasesSum = 0m;
-                        var resellerOverallGrossMarginSum = 0m;
-                        var resellerOverallNetOfFreightSum = 0m;
-                        var resellerOverallCommissionSum = 0m;
-                        var resellerOverallNetMarginSum = 0m;
-
-                    #endregion
-
-                    #region -- Biodiesel
-
-                        var retailBiodieselQuantitySum = 0m;
-                        var retailBiodieselNetOfSalesSum = 0m;
-                        var retailBiodieselNetOfPurchasesSum = 0m;
-                        var retailBiodieselGrossMarginSum = 0m;
-                        var retailBiodieselNetOfFreightSum = 0m;
-                        var retailBiodieselCommissionSum = 0m;
-                        var retailBiodieselNetMarginSum = 0m;
-
-                        var industrialBiodieselQuantitySum = 0m;
-                        var industrialBiodieselNetOfSalesSum = 0m;
-                        var industrialBiodieselNetOfPurchasesSum = 0m;
-                        var industrialBiodieselGrossMarginSum = 0m;
-                        var industrialBiodieselNetOfFreightSum = 0m;
-                        var industrialBiodieselCommissionSum = 0m;
-                        var industrialBiodieselNetMarginSum = 0m;
-
-                        var governmentBiodieselQuantitySum = 0m;
-                        var governmentBiodieselNetOfSalesSum = 0m;
-                        var governmentBiodieselNetOfPurchasesSum = 0m;
-                        var governmentBiodieselGrossMarginSum = 0m;
-                        var governmentBiodieselNetOfFreightSum = 0m;
-                        var governmentBiodieselCommissionSum = 0m;
-                        var governmentBiodieselNetMarginSum = 0m;
-
-                        var resellerBiodieselQuantitySum = 0m;
-                        var resellerBiodieselNetOfSalesSum = 0m;
-                        var resellerBiodieselNetOfPurchasesSum = 0m;
-                        var resellerBiodieselGrossMarginSum = 0m;
-                        var resellerBiodieselNetOfFreightSum = 0m;
-                        var resellerBiodieselCommissionSum = 0m;
-                        var resellerBiodieselNetMarginSum = 0m;
-
-                    #endregion
-
-                    #region -- Econogas
-
-                    var retailEconogasQuantitySum = 0m;
-                    var retailEconogasNetOfSalesSum = 0m;
-                    var retailEconogasNetOfPurchasesSum = 0m;
-                    var retailEconogasGrossMarginSum = 0m;
-                    var retailEconogasNetOfFreightSum = 0m;
-                    var retailEconogasCommissionSum = 0m;
-                    var retailEconogasNetMarginSum = 0m;
-
-                    var industrialEconogasQuantitySum = 0m;
-                    var industrialEconogasNetOfSalesSum = 0m;
-                    var industrialEconogasNetOfPurchasesSum = 0m;
-                    var industrialEconogasGrossMarginSum = 0m;
-                    var industrialEconogasNetOfFreightSum = 0m;
-                    var industrialEconogasCommissionSum = 0m;
-                    var industrialEconogasNetMarginSum = 0m;
-
-                    var governmentEconogasQuantitySum = 0m;
-                    var governmentEconogasNetOfSalesSum = 0m;
-                    var governmentEconogasNetOfPurchasesSum = 0m;
-                    var governmentEconogasGrossMarginSum = 0m;
-                    var governmentEconogasNetOfFreightSum = 0m;
-                    var governmentEconogasCommissionSum = 0m;
-                    var governmentEconogasNetMarginSum = 0m;
-
-                    var resellerEconogasQuantitySum = 0m;
-                    var resellerEconogasNetOfSalesSum = 0m;
-                    var resellerEconogasNetOfPurchasesSum = 0m;
-                    var resellerEconogasGrossMarginSum = 0m;
-                    var resellerEconogasNetOfFreightSum = 0m;
-                    var resellerEconogasCommissionSum = 0m;
-                    var resellerEconogasNetMarginSum = 0m;
-
-                    #endregion
-
-                    #region -- Envirogas
-
-                        var retailEnvirogasQuantitySum = 0m;
-                        var retailEnvirogasNetOfSalesSum = 0m;
-                        var retailEnvirogasNetOfPurchasesSum = 0m;
-                        var retailEnvirogasGrossMarginSum = 0m;
-                        var retailEnvirogasNetOfFreightSum = 0m;
-                        var retailEnvirogasCommissionSum = 0m;
-                        var retailEnvirogasNetMarginSum = 0m;
-
-                        var industrialEnvirogasQuantitySum = 0m;
-                        var industrialEnvirogasNetOfSalesSum = 0m;
-                        var industrialEnvirogasNetOfPurchasesSum = 0m;
-                        var industrialEnvirogasGrossMarginSum = 0m;
-                        var industrialEnvirogasNetOfFreightSum = 0m;
-                        var industrialEnvirogasCommissionSum = 0m;
-                        var industrialEnvirogasNetMarginSum = 0m;
-
-                        var governmentEnvirogasQuantitySum = 0m;
-                        var governmentEnvirogasNetOfSalesSum = 0m;
-                        var governmentEnvirogasNetOfPurchasesSum = 0m;
-                        var governmentEnvirogasGrossMarginSum = 0m;
-                        var governmentEnvirogasNetOfFreightSum = 0m;
-                        var governmentEnvirogasCommissionSum = 0m;
-                        var governmentEnvirogasNetMarginSum = 0m;
-
-                        var resellerEnvirogasQuantitySum = 0m;
-                        var resellerEnvirogasNetOfSalesSum = 0m;
-                        var resellerEnvirogasNetOfPurchasesSum = 0m;
-                        var resellerEnvirogasGrossMarginSum = 0m;
-                        var resellerEnvirogasNetOfFreightSum = 0m;
-                        var resellerEnvirogasCommissionSum = 0m;
-                        var resellerEnvirogasNetMarginSum = 0m;
-
-                    #endregion
-
-                    #region -- totals of summary
-
-                        var totalOverallQuantity = 0m;
-                        var totalOverallNetOfSales = 0m;
-                        var totalOverallNetOfPurchases = 0m;
-                        var totalOverallGrossMargin = 0m;
-                        var totalOverallNetOfFreight = 0m;
-                        var totalOverallCommission = 0m;
-                        var totalOverallNetMargin = 0m;
-                        var totalOverallNetMarginPerLiter = 0m;
-
-                        var totalQuantityForBiodiesel = 0m;
-                        var totalNetOfSalesForBiodiesel = 0m;
-                        var totalNetOfPurchasesForBiodiesel = 0m;
-                        var totalGrossMarginForBiodiesel = 0m;
-                        var totalNetOfFreightForBiodiesel = 0m;
-                        var totalCommissionForBiodiesel = 0m;
-                        var totalNetMarginForBiodiesel = 0m;
-                        var totalNetMarginPerLiterForBiodiesel = 0m;
-
-                        var totalQuantityForEconogas = 0m;
-                        var totalNetOfSalesForEconogas = 0m;
-                        var totalNetOfPurchasesForEconogas = 0m;
-                        var totalGrossMarginForEconogas = 0m;
-                        var totalNetOfFreightForEconogas = 0m;
-                        var totalCommissionForEconogas = 0m;
-                        var totalNetMarginForEconogas = 0m;
-                        var totalNetMarginPerLiterForEconogas = 0m;
-
-                        var totalQuantityForEnvirogas = 0m;
-                        var totalNetOfSalesForEnvirogas = 0m;
-                        var totalNetOfPurchasesForEnvirogas = 0m;
-                        var totalGrossMarginForEnvirogas = 0m;
-                        var totalNetOfFreightForEnvirogas = 0m;
-                        var totalCommissionForEnvirogas = 0m;
-                        var totalNetMarginForEnvirogas = 0m;
-                        var totalNetMarginPerLiterForEnvirogas = 0m;
-
-                    #endregion
+                    var grossMarginProductList = GetOrderedProductNames(
+                        grossMarginReport,
+                        report => report.CustomerOrderSlip!.ProductName);
+                    var customerTypeNames = Enum.GetValues<CustomerType>()
+                        .Select(customerType => customerType.ToString())
+                        .ToList();
+                    var overallMetricsByCustomerType = customerTypeNames.ToDictionary(
+                        customerType => customerType,
+                        _ => new GrossMarginSummaryMetric(),
+                        StringComparer.OrdinalIgnoreCase);
+                    var productMetricsByCustomerType = customerTypeNames.ToDictionary(
+                        customerType => customerType,
+                        _ => CreateGrossMarginSummaryMetricMap(grossMarginProductList),
+                        StringComparer.OrdinalIgnoreCase);
+                    var totalOverallMetric = new GrossMarginSummaryMetric();
+                    var totalProductMetrics = CreateGrossMarginSummaryMetricMap(grossMarginProductList);
 
                 #endregion
 
@@ -3384,182 +2997,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var customerType = dr.CustomerOrderSlip!.CustomerType;
                     var productName = dr.CustomerOrderSlip!.ProductName;
 
-                    switch (customerType)
+                    if (!overallMetricsByCustomerType.TryGetValue(customerType, out var overallMetric))
                     {
-                        case nameof(CustomerType.Retail):
-                            retailOverallQuantitySum += volume;
-                            retailOverallNetOfSalesSum += netSales;
-                            retailOverallNetOfPurchasesSum += netPurchases;
-                            retailOverallGrossMarginSum += gmAmount;
-                            retailOverallNetOfFreightSum += freightChargeNet;
-                            retailOverallCommissionSum += commissionAmount;
-                            retailOverallNetMarginSum += netMarginAmount;
+                        throw new ArgumentException("No customer type");
+                    }
 
-                            switch (productName)
-                            {
-                                case "BIODIESEL":
-                                    retailBiodieselQuantitySum  += volume;
-                                    retailBiodieselNetOfSalesSum += netSales;
-                                    retailBiodieselNetOfPurchasesSum += netPurchases;
-                                    retailBiodieselGrossMarginSum += gmAmount;
-                                    retailBiodieselNetOfFreightSum += freightChargeNet;
-                                    retailBiodieselCommissionSum += commissionAmount;
-                                    retailBiodieselNetMarginSum += netMarginAmount;
-                                    break;
+                    overallMetric.Quantity += volume;
+                    overallMetric.NetOfSales += netSales;
+                    overallMetric.NetOfPurchases += netPurchases;
+                    overallMetric.GrossMargin += gmAmount;
+                    overallMetric.NetOfFreight += freightChargeNet;
+                    overallMetric.Commission += commissionAmount;
+                    overallMetric.NetMargin += netMarginAmount;
 
-                                case "ECONOGAS":
-                                    retailEconogasQuantitySum += volume;
-                                    retailEconogasNetOfSalesSum += netSales;
-                                    retailEconogasNetOfPurchasesSum += netPurchases;
-                                    retailEconogasGrossMarginSum += gmAmount;
-                                    retailEconogasNetOfFreightSum += freightChargeNet;
-                                    retailEconogasCommissionSum += commissionAmount;
-                                    retailEconogasNetMarginSum += netMarginAmount;
-                                    break;
+                    totalOverallMetric.Quantity += volume;
+                    totalOverallMetric.NetOfSales += netSales;
+                    totalOverallMetric.NetOfPurchases += netPurchases;
+                    totalOverallMetric.GrossMargin += gmAmount;
+                    totalOverallMetric.NetOfFreight += freightChargeNet;
+                    totalOverallMetric.Commission += commissionAmount;
+                    totalOverallMetric.NetMargin += netMarginAmount;
 
-                                case "ENVIROGAS":
-                                    retailEnvirogasQuantitySum += volume;
-                                    retailEnvirogasNetOfSalesSum += netSales;
-                                    retailEnvirogasNetOfPurchasesSum += netPurchases;
-                                    retailEnvirogasGrossMarginSum += gmAmount;
-                                    retailEnvirogasNetOfFreightSum += freightChargeNet;
-                                    retailEnvirogasCommissionSum += commissionAmount;
-                                    retailEnvirogasNetMarginSum += netMarginAmount;
-                                    break;
-                            }
-                            break;
+                    if (productMetricsByCustomerType.TryGetValue(customerType, out var productMetrics)
+                        && productMetrics.TryGetValue(productName, out var productMetric))
+                    {
+                        productMetric.Quantity += volume;
+                        productMetric.NetOfSales += netSales;
+                        productMetric.NetOfPurchases += netPurchases;
+                        productMetric.GrossMargin += gmAmount;
+                        productMetric.NetOfFreight += freightChargeNet;
+                        productMetric.Commission += commissionAmount;
+                        productMetric.NetMargin += netMarginAmount;
+                    }
 
-                        case nameof(CustomerType.Industrial):
-                            industrialOverallQuantitySum += volume;
-                            industrialOverallNetOfSalesSum += netSales;
-                            industrialOverallNetOfPurchasesSum += netPurchases;
-                            industrialOverallGrossMarginSum += gmAmount;
-                            industrialOverallNetOfFreightSum += freightChargeNet;
-                            industrialOverallCommissionSum += commissionAmount;
-                            industrialOverallNetMarginSum += netMarginAmount;
-
-                            switch (productName)
-                            {
-                                case "BIODIESEL":
-                                    industrialBiodieselQuantitySum  += volume;
-                                    industrialBiodieselNetOfSalesSum += netSales;
-                                    industrialBiodieselNetOfPurchasesSum += netPurchases;
-                                    industrialBiodieselGrossMarginSum += gmAmount;
-                                    industrialBiodieselNetOfFreightSum += freightChargeNet;
-                                    industrialBiodieselCommissionSum += commissionAmount;
-                                    industrialBiodieselNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ECONOGAS":
-                                    industrialEconogasQuantitySum += volume;
-                                    industrialEconogasNetOfSalesSum += netSales;
-                                    industrialEconogasNetOfPurchasesSum += netPurchases;
-                                    industrialEconogasGrossMarginSum += gmAmount;
-                                    industrialEconogasNetOfFreightSum += freightChargeNet;
-                                    industrialEconogasCommissionSum += commissionAmount;
-                                    industrialEconogasNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ENVIROGAS":
-                                    industrialEnvirogasQuantitySum += volume;
-                                    industrialEnvirogasNetOfSalesSum += netSales;
-                                    industrialEnvirogasNetOfPurchasesSum += netPurchases;
-                                    industrialEnvirogasGrossMarginSum += gmAmount;
-                                    industrialEnvirogasNetOfFreightSum += freightChargeNet;
-                                    industrialEnvirogasCommissionSum += commissionAmount;
-                                    industrialEnvirogasNetMarginSum += netMarginAmount;
-                                    break;
-                            }
-                            break;
-
-                        case nameof(CustomerType.Government):
-                            governmentOverallQuantitySum += volume;
-                            governmentOverallNetOfSalesSum += netSales;
-                            governmentOverallNetOfPurchasesSum += netPurchases;
-                            governmentOverallGrossMarginSum += gmAmount;
-                            governmentOverallNetOfFreightSum += freightChargeNet;
-                            governmentOverallCommissionSum += commissionAmount;
-                            governmentOverallNetMarginSum += netMarginAmount;
-
-                            switch (productName)
-                            {
-                                case "BIODIESEL":
-                                    governmentBiodieselQuantitySum  += volume;
-                                    governmentBiodieselNetOfSalesSum += netSales;
-                                    governmentBiodieselNetOfPurchasesSum += netPurchases;
-                                    governmentBiodieselGrossMarginSum += gmAmount;
-                                    governmentBiodieselNetOfFreightSum += freightChargeNet;
-                                    governmentBiodieselCommissionSum += commissionAmount;
-                                    governmentBiodieselNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ECONOGAS":
-                                    governmentEconogasQuantitySum += volume;
-                                    governmentEconogasNetOfSalesSum += netSales;
-                                    governmentEconogasNetOfPurchasesSum += netPurchases;
-                                    governmentEconogasGrossMarginSum += gmAmount;
-                                    governmentEconogasNetOfFreightSum += freightChargeNet;
-                                    governmentEconogasCommissionSum += commissionAmount;
-                                    governmentEconogasNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ENVIROGAS":
-                                    governmentEnvirogasQuantitySum += volume;
-                                    governmentEnvirogasNetOfSalesSum += netSales;
-                                    governmentEnvirogasNetOfPurchasesSum += netPurchases;
-                                    governmentEnvirogasGrossMarginSum += gmAmount;
-                                    governmentEnvirogasNetOfFreightSum += freightChargeNet;
-                                    governmentEnvirogasCommissionSum += commissionAmount;
-                                    governmentEnvirogasNetMarginSum += netMarginAmount;
-                                    break;
-                            }
-                            break;
-
-                        case nameof(CustomerType.Reseller):
-                            resellerOverallQuantitySum += volume;
-                            resellerOverallNetOfSalesSum += netSales;
-                            resellerOverallNetOfPurchasesSum += netPurchases;
-                            resellerOverallGrossMarginSum += gmAmount;
-                            resellerOverallNetOfFreightSum += freightChargeNet;
-                            resellerOverallCommissionSum += commissionAmount;
-                            resellerOverallNetMarginSum += netMarginAmount;
-
-                            switch (productName)
-                            {
-                                case "BIODIESEL":
-                                    resellerBiodieselQuantitySum  += volume;
-                                    resellerBiodieselNetOfSalesSum += netSales;
-                                    resellerBiodieselNetOfPurchasesSum += netPurchases;
-                                    resellerBiodieselGrossMarginSum += gmAmount;
-                                    resellerBiodieselNetOfFreightSum += freightChargeNet;
-                                    resellerBiodieselCommissionSum += commissionAmount;
-                                    resellerBiodieselNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ECONOGAS":
-                                    resellerEconogasQuantitySum += volume;
-                                    resellerEconogasNetOfSalesSum += netSales;
-                                    resellerEconogasNetOfPurchasesSum += netPurchases;
-                                    resellerEconogasGrossMarginSum += gmAmount;
-                                    resellerEconogasNetOfFreightSum += freightChargeNet;
-                                    resellerEconogasCommissionSum += commissionAmount;
-                                    resellerEconogasNetMarginSum += netMarginAmount;
-                                    break;
-
-                                case "ENVIROGAS":
-                                    resellerEnvirogasQuantitySum += volume;
-                                    resellerEnvirogasNetOfSalesSum += netSales;
-                                    resellerEnvirogasNetOfPurchasesSum += netPurchases;
-                                    resellerEnvirogasGrossMarginSum += gmAmount;
-                                    resellerEnvirogasNetOfFreightSum += freightChargeNet;
-                                    resellerEnvirogasCommissionSum += commissionAmount;
-                                    resellerEnvirogasNetMarginSum += netMarginAmount;
-                                    break;
-                            }
-                            break;
-
-                        default:
-                            throw new ArgumentException("No customer type");
+                    if (totalProductMetrics.TryGetValue(productName, out var totalProductMetric))
+                    {
+                        totalProductMetric.Quantity += volume;
+                        totalProductMetric.NetOfSales += netSales;
+                        totalProductMetric.NetOfPurchases += netPurchases;
+                        totalProductMetric.GrossMargin += gmAmount;
+                        totalProductMetric.NetOfFreight += freightChargeNet;
+                        totalProductMetric.Commission += commissionAmount;
+                        totalProductMetric.NetMargin += netMarginAmount;
                     }
 
                     #endregion
@@ -3614,46 +3093,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     row++;
                 }
-
-                #region -- Computation of totals for summary --
-
-                    totalOverallQuantity = retailOverallQuantitySum + industrialOverallQuantitySum + governmentOverallQuantitySum + resellerOverallQuantitySum;
-                    totalOverallNetOfSales = retailOverallNetOfSalesSum + industrialOverallNetOfSalesSum + governmentOverallNetOfSalesSum + resellerOverallNetOfSalesSum;
-                    totalOverallNetOfPurchases  = retailOverallNetOfPurchasesSum + industrialOverallNetOfPurchasesSum + governmentOverallNetOfPurchasesSum + resellerOverallNetOfPurchasesSum;
-                    totalOverallGrossMargin = retailOverallGrossMarginSum + industrialOverallGrossMarginSum + governmentOverallGrossMarginSum + resellerOverallGrossMarginSum;
-                    totalOverallNetOfFreight = retailOverallNetOfFreightSum + industrialOverallNetOfFreightSum + governmentOverallNetOfFreightSum + resellerOverallNetOfFreightSum;
-                    totalOverallCommission = retailOverallCommissionSum + industrialOverallCommissionSum + governmentOverallCommissionSum + resellerOverallCommissionSum;
-                    totalOverallNetMargin = retailOverallNetMarginSum + industrialOverallNetMarginSum + governmentOverallNetMarginSum + resellerOverallNetMarginSum;
-                    totalOverallNetMarginPerLiter = DivideOrZero(totalOverallNetMargin, totalOverallQuantity);
-
-                    totalQuantityForBiodiesel = retailBiodieselQuantitySum + industrialBiodieselQuantitySum + governmentBiodieselQuantitySum + resellerBiodieselQuantitySum;
-                    totalNetOfSalesForBiodiesel = retailBiodieselNetOfSalesSum + industrialBiodieselNetOfSalesSum + governmentBiodieselNetOfSalesSum + resellerBiodieselNetOfSalesSum;
-                    totalNetOfPurchasesForBiodiesel = retailBiodieselNetOfPurchasesSum + industrialBiodieselNetOfPurchasesSum + governmentBiodieselNetOfPurchasesSum + resellerBiodieselNetOfPurchasesSum;
-                    totalGrossMarginForBiodiesel = retailBiodieselGrossMarginSum + industrialBiodieselGrossMarginSum + governmentBiodieselGrossMarginSum + resellerBiodieselGrossMarginSum;
-                    totalNetOfFreightForBiodiesel = retailBiodieselNetOfFreightSum + industrialBiodieselNetOfFreightSum + governmentBiodieselNetOfFreightSum + resellerBiodieselNetOfFreightSum;
-                    totalCommissionForBiodiesel = retailBiodieselCommissionSum + industrialBiodieselCommissionSum + governmentBiodieselCommissionSum + resellerBiodieselCommissionSum;
-                    totalNetMarginForBiodiesel = retailBiodieselNetMarginSum + industrialBiodieselNetMarginSum + governmentBiodieselNetMarginSum + resellerBiodieselNetMarginSum;
-                    totalNetMarginPerLiterForBiodiesel = DivideOrZero(totalNetMarginForBiodiesel, totalQuantityForBiodiesel);
-
-                    totalQuantityForEconogas = retailEconogasQuantitySum + industrialEconogasQuantitySum + governmentEconogasQuantitySum + resellerEconogasQuantitySum;
-                    totalNetOfSalesForEconogas = retailEconogasNetOfSalesSum + industrialEconogasNetOfSalesSum + governmentEconogasNetOfSalesSum + resellerEconogasNetOfSalesSum;
-                    totalNetOfPurchasesForEconogas = retailEconogasNetOfPurchasesSum + industrialEconogasNetOfPurchasesSum + governmentEconogasNetOfPurchasesSum + resellerEconogasNetOfPurchasesSum;
-                    totalGrossMarginForEconogas = retailEconogasGrossMarginSum + industrialEconogasGrossMarginSum + governmentEconogasGrossMarginSum + resellerEconogasGrossMarginSum;
-                    totalNetOfFreightForEconogas = retailEconogasNetOfFreightSum + industrialEconogasNetOfFreightSum + governmentEconogasNetOfFreightSum + resellerEconogasNetOfFreightSum;
-                    totalCommissionForEconogas = retailEconogasCommissionSum + industrialEconogasCommissionSum + governmentEconogasCommissionSum + resellerEconogasCommissionSum;
-                    totalNetMarginForEconogas = retailEconogasNetMarginSum + industrialEconogasNetMarginSum + governmentEconogasNetMarginSum + resellerEconogasNetMarginSum;
-                    totalNetMarginPerLiterForEconogas = DivideOrZero(totalNetMarginForEconogas, totalQuantityForEconogas);
-
-                    totalQuantityForEnvirogas = retailEnvirogasQuantitySum + industrialEnvirogasQuantitySum + governmentEnvirogasQuantitySum + resellerEnvirogasQuantitySum;
-                    totalNetOfSalesForEnvirogas = retailEnvirogasNetOfSalesSum + industrialEnvirogasNetOfSalesSum + governmentEnvirogasNetOfSalesSum + resellerEnvirogasNetOfSalesSum;
-                    totalNetOfPurchasesForEnvirogas = retailEnvirogasNetOfPurchasesSum + industrialEnvirogasNetOfPurchasesSum + governmentEnvirogasNetOfPurchasesSum + resellerEnvirogasNetOfPurchasesSum;
-                    totalGrossMarginForEnvirogas = retailEnvirogasGrossMarginSum + industrialEnvirogasGrossMarginSum + governmentEnvirogasGrossMarginSum + resellerEnvirogasGrossMarginSum;
-                    totalNetOfFreightForEnvirogas = retailEnvirogasNetOfFreightSum + industrialEnvirogasNetOfFreightSum + governmentEnvirogasNetOfFreightSum + resellerEnvirogasNetOfFreightSum;
-                    totalCommissionForEnvirogas = retailEnvirogasCommissionSum + industrialEnvirogasCommissionSum + governmentEnvirogasCommissionSum + resellerEnvirogasCommissionSum;
-                    totalNetMarginForEnvirogas = retailEnvirogasNetMarginSum + industrialEnvirogasNetMarginSum + governmentEnvirogasNetMarginSum + resellerEnvirogasNetMarginSum;
-                    totalNetMarginPerLiterForEnvirogas = DivideOrZero(totalNetMarginForEnvirogas, totalQuantityForEnvirogas);
-
-                #endregion
 
                 #endregion -- Populate data rows --
 
@@ -3722,10 +3161,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Summary Row --
 
                 var rowForSummary = row + 8;
+                var summaryTotalRow = rowForSummary + customerTypeNames.Count;
+                const int productSummaryStartColumn = 12;
+                const int productSummaryWidth = 8;
+                const int productSummarySpacing = 1;
 
                 #region -- Summary header for "Overall"
 
-                // Set the column headers
                 var mergedCellForOverall = gmReportWorksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 10];
                 mergedCellForOverall.Merge = true;
                 mergedCellForOverall.Value = "Overall";
@@ -3750,7 +3192,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 gmReportWorksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                // Apply styling to the header row for Overall
                 using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 10])
                 {
                     range.Style.Font.Bold = true;
@@ -3762,340 +3203,78 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                // Apply style to subtotal row for Overall
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 10])
+                using (var range = gmReportWorksheet.Cells[summaryTotalRow, 2, summaryTotalRow, 10])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-                }
-
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 10])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-                }
-
-                #endregion
-
-                #region -- Summary header for "Biodiesel"
-
-                // Set the column headers
-                var mergedCellForBiodiesel = gmReportWorksheet.Cells[rowForSummary - 2, 12, rowForSummary - 2, 19];
-                mergedCellForBiodiesel.Merge = true;
-                mergedCellForBiodiesel.Value = "Biodiesel";
-                mergedCellForBiodiesel.Style.Font.Size = 13;
-                mergedCellForBiodiesel.Style.Font.Bold = true;
-                gmReportWorksheet.Cells[rowForSummary - 2, 12, rowForSummary - 2, 19].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                gmReportWorksheet.Cells[rowForSummary - 1, 12].Value = "Volume";
-                gmReportWorksheet.Cells[rowForSummary - 1, 13].Value = "Sales N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 14].Value = "Purchases N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 15].Value = "Gross Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 16].Value = "Freight N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 17].Value = "Commission";
-                gmReportWorksheet.Cells[rowForSummary - 1, 18].Value = "Net Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 19].Value = "Net GM/LIT";
-
-                gmReportWorksheet.Cells[rowForSummary - 1, 12, rowForSummary - 1, 19].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                // Apply styling to the header row for Biodiesel
-                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 12, rowForSummary - 1, 19])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                }
-
-                // Apply style to subtotal row for Biodiesel
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 12, rowForSummary + 4, 19])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
-                }
-
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 12, rowForSummary + 4, 19])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
 
                 #endregion
 
-                #region -- Summary header for "Econogas"
-
-                // Set the column headers
-                var mergedCellForEconogas = gmReportWorksheet.Cells[rowForSummary - 2, 21, rowForSummary - 2, 28];
-                mergedCellForEconogas.Merge = true;
-                mergedCellForEconogas.Value = "Econogas";
-                mergedCellForEconogas.Style.Font.Size = 13;
-                mergedCellForEconogas.Style.Font.Bold = true;
-                gmReportWorksheet.Cells[rowForSummary - 2, 21, rowForSummary - 2, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                gmReportWorksheet.Cells[rowForSummary - 1, 21].Value = "Volume";
-                gmReportWorksheet.Cells[rowForSummary - 1, 22].Value = "Sales N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 23].Value = "Purchases N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 24].Value = "Gross Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 25].Value = "Freight N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 26].Value = "Commission";
-                gmReportWorksheet.Cells[rowForSummary - 1, 27].Value = "Net Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 28].Value = "Net GM/LIT";
-
-                gmReportWorksheet.Cells[rowForSummary - 1, 21, rowForSummary - 1, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                // Apply styling to the header row for Econogas
-                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 21, rowForSummary - 1, 28])
+                for (var index = 0; index < grossMarginProductList.Count; index++)
                 {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                }
+                    var productName = grossMarginProductList[index];
+                    var sectionStartColumn = productSummaryStartColumn + index * (productSummaryWidth + productSummarySpacing);
+                    var sectionEndColumn = sectionStartColumn + productSummaryWidth - 1;
+                    var mergedCell = gmReportWorksheet.Cells[rowForSummary - 2, sectionStartColumn, rowForSummary - 2, sectionEndColumn];
+                    mergedCell.Merge = true;
+                    mergedCell.Value = productName;
+                    mergedCell.Style.Font.Size = 13;
+                    mergedCell.Style.Font.Bold = true;
+                    gmReportWorksheet.Cells[rowForSummary - 2, sectionStartColumn, rowForSummary - 2, sectionEndColumn].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                // Apply style to subtotal row for Econogas
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 21, rowForSummary + 4, 28])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-                }
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn].Value = "Volume";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 1].Value = "Sales N. VAT";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 2].Value = "Purchases N. VAT";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 3].Value = "Gross Margin";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 4].Value = "Freight N. VAT";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 5].Value = "Commission";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 6].Value = "Net Margin";
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn + 7].Value = "Net GM/LIT";
 
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 21, rowForSummary + 4, 28])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-                }
+                    gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn, rowForSummary - 1, sectionEndColumn].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                #endregion
-
-                #region -- Summary header for "Envirogas"
-
-                // Set the column headers
-                var mergedCellForEnvirogas = gmReportWorksheet.Cells[rowForSummary - 2, 30, rowForSummary - 2, 37];
-                mergedCellForEnvirogas.Merge = true;
-                mergedCellForEnvirogas.Value = "Envirogas";
-                mergedCellForEnvirogas.Style.Font.Size = 13;
-                mergedCellForEnvirogas.Style.Font.Bold = true;
-                gmReportWorksheet.Cells[rowForSummary - 2, 30, rowForSummary - 2, 37].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                //inset data/value in excel
-                gmReportWorksheet.Cells[rowForSummary - 1, 30].Value = "Volume";
-                gmReportWorksheet.Cells[rowForSummary - 1, 31].Value = "Sales N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 32].Value = "Purchases N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 33].Value = "Gross Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 34].Value = "Freight N. VAT";
-                gmReportWorksheet.Cells[rowForSummary - 1, 35].Value = "Commission";
-                gmReportWorksheet.Cells[rowForSummary - 1, 36].Value = "Net Margin";
-                gmReportWorksheet.Cells[rowForSummary - 1, 37].Value = "Net GM/LIT";
-
-                gmReportWorksheet.Cells[rowForSummary - 1, 30, rowForSummary - 1, 37].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                // Apply styling to the header row for Envirogas
-                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 30, rowForSummary - 1, 37])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                }
-
-                // Apply style to subtotal row for Envirogas
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 30, rowForSummary + 4, 37])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-                }
-
-                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 30, rowForSummary + 4, 37])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-                }
-
-                #endregion
-
-                foreach (var customerType in Enum.GetValues<CustomerType>())
-                {
-                    // Assign Values to Cells
-                    switch (customerType.ToString())
+                    using (var range = gmReportWorksheet.Cells[rowForSummary - 1, sectionStartColumn, rowForSummary - 1, sectionEndColumn])
                     {
-                        case nameof(CustomerType.Retail):
-                            gmReportWorksheet.Cells[rowForSummary, 2].Value = nameof(CustomerType.Retail);
-                            gmReportWorksheet.Cells[rowForSummary, 3].Value = retailOverallQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 4].Value = retailOverallNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 5].Value = retailOverallNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 6].Value = retailOverallGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 7].Value = retailOverallNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 8].Value = retailOverallCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 9].Value = retailOverallNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 10].Value = DivideOrZero(retailOverallNetMarginSum, retailOverallQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 12].Value = retailBiodieselQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 13].Value = retailBiodieselNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 14].Value = retailBiodieselNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 15].Value = retailBiodieselGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 16].Value = retailBiodieselNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 17].Value = retailBiodieselCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 18].Value = retailBiodieselNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 19].Value = DivideOrZero(retailBiodieselNetMarginSum, retailBiodieselQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 21].Value = retailEconogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 22].Value = retailEconogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 23].Value = retailEconogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 24].Value = retailEconogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 25].Value = retailEconogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 26].Value = retailEconogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 27].Value = retailEconogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 28].Value = DivideOrZero(retailEconogasNetMarginSum, retailEconogasQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 30].Value = retailEnvirogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 31].Value = retailEnvirogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 32].Value = retailEnvirogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 33].Value = retailEnvirogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 34].Value = retailEnvirogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 35].Value = retailEnvirogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 36].Value = retailEnvirogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 37].Value = DivideOrZero(retailEnvirogasNetMarginSum, retailEnvirogasQuantitySum);
-                            break;
-
-                        case nameof(CustomerType.Industrial):
-                            gmReportWorksheet.Cells[rowForSummary, 2].Value = nameof(CustomerType.Industrial);
-                            gmReportWorksheet.Cells[rowForSummary, 3].Value = industrialOverallQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 4].Value = industrialOverallNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 5].Value = industrialOverallNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 6].Value = industrialOverallGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 7].Value = industrialOverallNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 8].Value = industrialOverallCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 9].Value = industrialOverallNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 10].Value = DivideOrZero(industrialOverallNetMarginSum, industrialOverallQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 12].Value = industrialBiodieselQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 13].Value = industrialBiodieselNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 14].Value = industrialBiodieselNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 15].Value = industrialBiodieselGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 16].Value = industrialBiodieselNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 17].Value = industrialBiodieselCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 18].Value = industrialBiodieselNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 19].Value = DivideOrZero(industrialBiodieselNetMarginSum, industrialBiodieselQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 21].Value = industrialEconogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 22].Value = industrialEconogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 23].Value = industrialEconogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 24].Value = industrialEconogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 25].Value = industrialEconogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 26].Value = industrialEconogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 27].Value = industrialEconogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 28].Value = DivideOrZero(industrialEconogasNetMarginSum, industrialEconogasQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 30].Value = industrialEnvirogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 31].Value = industrialEnvirogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 32].Value = industrialEnvirogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 33].Value = industrialEnvirogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 34].Value = industrialEnvirogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 35].Value = industrialEnvirogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 36].Value = industrialEnvirogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 37].Value = DivideOrZero(industrialEnvirogasNetMarginSum, industrialEnvirogasQuantitySum);
-                            break;
-
-                        case nameof(CustomerType.Government):
-                            gmReportWorksheet.Cells[rowForSummary, 2].Value = nameof(CustomerType.Government);
-                            gmReportWorksheet.Cells[rowForSummary, 3].Value = governmentOverallQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 4].Value = governmentOverallNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 5].Value = governmentOverallNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 6].Value = governmentOverallGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 7].Value = governmentOverallNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 8].Value = governmentOverallCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 9].Value = governmentOverallNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 10].Value = DivideOrZero(governmentOverallNetMarginSum, governmentOverallQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 12].Value = governmentBiodieselQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 13].Value = governmentBiodieselNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 14].Value = governmentBiodieselNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 15].Value = governmentBiodieselGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 16].Value = governmentBiodieselNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 17].Value = governmentBiodieselCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 18].Value = governmentBiodieselNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 19].Value = DivideOrZero(governmentBiodieselNetMarginSum, governmentBiodieselQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 21].Value = governmentEconogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 22].Value = governmentEconogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 23].Value = governmentEconogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 24].Value = governmentEconogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 25].Value = governmentEconogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 26].Value = governmentEconogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 27].Value = governmentEconogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 28].Value = DivideOrZero(governmentEconogasNetMarginSum, governmentEconogasQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 30].Value = governmentEnvirogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 31].Value = governmentEnvirogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 32].Value = governmentEnvirogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 33].Value = governmentEnvirogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 34].Value = governmentEnvirogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 35].Value = governmentEnvirogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 36].Value = governmentEnvirogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 37].Value = DivideOrZero(governmentEnvirogasNetMarginSum, governmentEnvirogasQuantitySum);
-                            break;
-
-                        case nameof(CustomerType.Reseller):
-                            gmReportWorksheet.Cells[rowForSummary, 2].Value = nameof(CustomerType.Reseller);
-                            gmReportWorksheet.Cells[rowForSummary, 3].Value = resellerOverallQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 4].Value = resellerOverallNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 5].Value = resellerOverallNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 6].Value = resellerOverallGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 7].Value = resellerOverallNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 8].Value = resellerOverallCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 9].Value = resellerOverallNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 10].Value = DivideOrZero(resellerOverallNetMarginSum, resellerOverallQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 12].Value = resellerBiodieselQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 13].Value = resellerBiodieselNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 14].Value = resellerBiodieselNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 15].Value = resellerBiodieselGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 16].Value = resellerBiodieselNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 17].Value = resellerBiodieselCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 18].Value = resellerBiodieselNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 19].Value = DivideOrZero(resellerBiodieselNetMarginSum, resellerBiodieselQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 21].Value = resellerEconogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 22].Value = resellerEconogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 23].Value = resellerEconogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 24].Value = resellerEconogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 25].Value = resellerEconogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 26].Value = resellerEconogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 27].Value = resellerEconogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 28].Value = DivideOrZero(resellerEconogasNetMarginSum, resellerEconogasQuantitySum);
-
-                            gmReportWorksheet.Cells[rowForSummary, 30].Value = resellerEnvirogasQuantitySum;
-                            gmReportWorksheet.Cells[rowForSummary, 31].Value = resellerEnvirogasNetOfSalesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 32].Value = resellerEnvirogasNetOfPurchasesSum;
-                            gmReportWorksheet.Cells[rowForSummary, 33].Value = resellerEnvirogasGrossMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 34].Value = resellerEnvirogasNetOfFreightSum;
-                            gmReportWorksheet.Cells[rowForSummary, 35].Value = resellerEnvirogasCommissionSum;
-                            gmReportWorksheet.Cells[rowForSummary, 36].Value = resellerEnvirogasNetMarginSum;
-                            gmReportWorksheet.Cells[rowForSummary, 37].Value = DivideOrZero(resellerEnvirogasNetMarginSum, resellerEnvirogasQuantitySum);
-                            break;
-
-                        default:
-                            throw new ArgumentException("No customer type");
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
 
-                    //Column style for Overall summary
+                    using (var range = gmReportWorksheet.Cells[summaryTotalRow, sectionStartColumn, summaryTotalRow, sectionEndColumn])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+                }
+
+                foreach (var customerType in customerTypeNames)
+                {
+                    if (!overallMetricsByCustomerType.TryGetValue(customerType, out var overallMetric))
+                    {
+                        throw new ArgumentException("No customer type");
+                    }
+
+                    gmReportWorksheet.Cells[rowForSummary, 2].Value = customerType;
+                    gmReportWorksheet.Cells[rowForSummary, 3].Value = overallMetric.Quantity;
+                    gmReportWorksheet.Cells[rowForSummary, 4].Value = overallMetric.NetOfSales;
+                    gmReportWorksheet.Cells[rowForSummary, 5].Value = overallMetric.NetOfPurchases;
+                    gmReportWorksheet.Cells[rowForSummary, 6].Value = overallMetric.GrossMargin;
+                    gmReportWorksheet.Cells[rowForSummary, 7].Value = overallMetric.NetOfFreight;
+                    gmReportWorksheet.Cells[rowForSummary, 8].Value = overallMetric.Commission;
+                    gmReportWorksheet.Cells[rowForSummary, 9].Value = overallMetric.NetMargin;
+                    gmReportWorksheet.Cells[rowForSummary, 10].Value = ComputeAverage(overallMetric.NetMargin, overallMetric.Quantity);
+
                     gmReportWorksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -4105,52 +3284,50 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     gmReportWorksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[rowForSummary, 10].Style.Numberformat.Format = currencyFormat;
 
-                    //Column style for Biodiesel summary
-                    gmReportWorksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 19].Style.Numberformat.Format = currencyFormat;
+                    if (productMetricsByCustomerType.TryGetValue(customerType, out var productMetrics))
+                    {
+                        for (var index = 0; index < grossMarginProductList.Count; index++)
+                        {
+                            var productName = grossMarginProductList[index];
+                            var sectionStartColumn = productSummaryStartColumn + index * (productSummaryWidth + productSummarySpacing);
 
-                    //Column style for Econogas summary
-                    gmReportWorksheet.Cells[rowForSummary, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 28].Style.Numberformat.Format = currencyFormat;
+                            if (!productMetrics.TryGetValue(productName, out var productMetric))
+                            {
+                                continue;
+                            }
 
-                    //Column style for Envirogas summary
-                    gmReportWorksheet.Cells[rowForSummary, 30].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 31].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 32].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 33].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 34].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 35].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 36].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[rowForSummary, 37].Style.Numberformat.Format = currencyFormat;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn].Value = productMetric.Quantity;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 1].Value = productMetric.NetOfSales;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 2].Value = productMetric.NetOfPurchases;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 3].Value = productMetric.GrossMargin;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 4].Value = productMetric.NetOfFreight;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 5].Value = productMetric.Commission;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 6].Value = productMetric.NetMargin;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 7].Value = ComputeAverage(productMetric.NetMargin, productMetric.Quantity);
+
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 1].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 2].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 7].Style.Numberformat.Format = currencyFormat;
+                        }
+                    }
 
                     rowForSummary++;
                 }
 
-                var styleOfTotal = gmReportWorksheet.Cells[rowForSummary, 2];
-                styleOfTotal.Value = "Total";
-
-                #region -- Calculated total for Overall summary
-
-                gmReportWorksheet.Cells[rowForSummary, 3].Value = totalOverallQuantity;
-                gmReportWorksheet.Cells[rowForSummary, 4].Value = totalOverallNetOfSales;
-                gmReportWorksheet.Cells[rowForSummary, 5].Value = totalOverallNetOfPurchases;
-                gmReportWorksheet.Cells[rowForSummary, 6].Value = totalOverallGrossMargin;
-                gmReportWorksheet.Cells[rowForSummary, 7].Value = totalOverallNetOfFreight;
-                gmReportWorksheet.Cells[rowForSummary, 8].Value = totalOverallCommission;
-                gmReportWorksheet.Cells[rowForSummary, 9].Value = totalOverallNetMargin;
-                gmReportWorksheet.Cells[rowForSummary, 10].Value = totalOverallNetMarginPerLiter;
+                gmReportWorksheet.Cells[rowForSummary, 2].Value = "Total";
+                gmReportWorksheet.Cells[rowForSummary, 3].Value = totalOverallMetric.Quantity;
+                gmReportWorksheet.Cells[rowForSummary, 4].Value = totalOverallMetric.NetOfSales;
+                gmReportWorksheet.Cells[rowForSummary, 5].Value = totalOverallMetric.NetOfPurchases;
+                gmReportWorksheet.Cells[rowForSummary, 6].Value = totalOverallMetric.GrossMargin;
+                gmReportWorksheet.Cells[rowForSummary, 7].Value = totalOverallMetric.NetOfFreight;
+                gmReportWorksheet.Cells[rowForSummary, 8].Value = totalOverallMetric.Commission;
+                gmReportWorksheet.Cells[rowForSummary, 9].Value = totalOverallMetric.NetMargin;
+                gmReportWorksheet.Cells[rowForSummary, 10].Value = ComputeAverage(totalOverallMetric.NetMargin, totalOverallMetric.Quantity);
 
                 gmReportWorksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -4161,73 +3338,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[rowForSummary, 10].Style.Numberformat.Format = currencyFormat;
 
-                #endregion
+                for (var index = 0; index < grossMarginProductList.Count; index++)
+                {
+                    var productName = grossMarginProductList[index];
+                    var sectionStartColumn = productSummaryStartColumn + index * (productSummaryWidth + productSummarySpacing);
 
-                #region -- Calculated total for Biodiesel summary
+                    if (!totalProductMetrics.TryGetValue(productName, out var totalProductMetric))
+                    {
+                        continue;
+                    }
 
-                gmReportWorksheet.Cells[rowForSummary, 12].Value = totalQuantityForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 13].Value = totalNetOfSalesForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 14].Value = totalNetOfPurchasesForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 15].Value = totalGrossMarginForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 16].Value = totalNetOfFreightForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 17].Value = totalCommissionForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 18].Value = totalNetMarginForBiodiesel;
-                gmReportWorksheet.Cells[rowForSummary, 19].Value = totalNetMarginPerLiterForBiodiesel;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn].Value = totalProductMetric.Quantity;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 1].Value = totalProductMetric.NetOfSales;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 2].Value = totalProductMetric.NetOfPurchases;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 3].Value = totalProductMetric.GrossMargin;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 4].Value = totalProductMetric.NetOfFreight;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 5].Value = totalProductMetric.Commission;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 6].Value = totalProductMetric.NetMargin;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 7].Value = ComputeAverage(totalProductMetric.NetMargin, totalProductMetric.Quantity);
 
-                gmReportWorksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 19].Style.Numberformat.Format = currencyFormat;
-
-                #endregion
-
-                #region -- Calculated total for Econogas summary
-
-                gmReportWorksheet.Cells[rowForSummary, 21].Value = totalQuantityForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 22].Value = totalNetOfSalesForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 23].Value = totalNetOfPurchasesForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 24].Value = totalGrossMarginForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 25].Value = totalNetOfFreightForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 26].Value = totalCommissionForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 27].Value = totalNetMarginForEconogas;
-                gmReportWorksheet.Cells[rowForSummary, 28].Value = totalNetMarginPerLiterForEconogas;
-
-                gmReportWorksheet.Cells[rowForSummary, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 28].Style.Numberformat.Format = currencyFormat;
-
-                #endregion
-
-                #region -- Calculated total for Envirogas summary
-
-                gmReportWorksheet.Cells[rowForSummary, 30].Value = totalQuantityForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 31].Value = totalNetOfSalesForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 32].Value = totalNetOfPurchasesForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 33].Value = totalGrossMarginForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 34].Value = totalNetOfFreightForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 35].Value = totalCommissionForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 36].Value = totalNetMarginForEnvirogas;
-                gmReportWorksheet.Cells[rowForSummary, 37].Value = totalNetMarginPerLiterForEnvirogas;
-
-                gmReportWorksheet.Cells[rowForSummary, 30].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 31].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 32].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 33].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 34].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 35].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 36].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[rowForSummary, 37].Style.Numberformat.Format = currencyFormat;
-
-                #endregion
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 1].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 2].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, sectionStartColumn + 7].Style.Numberformat.Format = currencyFormat;
+                }
 
                 #endregion -- Summary Row --
 
@@ -5454,27 +4592,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 int row = 5;
-                decimal originalPoGrandTotalBiodiesel = 0m;
-                decimal originalPoGrandTotalEconogas = 0m;
-                decimal originalPoGrandTotalEnvirogas = 0m;
-                decimal unliftedLastMonthGrandTotalBiodiesel = 0m;
-                decimal unliftedLastMonthGrandTotalEconogas = 0m;
-                decimal unliftedLastMonthGrandTotalEnvirogas = 0m;
-                decimal liftedThisMonthGrandTotalBiodiesel = 0m;
-                decimal liftedThisMonthGrandTotalEconogas = 0m;
-                decimal liftedThisMonthGrandTotalEnvirogas = 0m;
-                decimal unliftedThisMonthGrandTotalBiodiesel = 0m;
-                decimal unliftedThisMonthGrandTotalEconogas = 0m;
-                decimal unliftedThisMonthGrandTotalEnvirogas = 0m;
-                decimal grossAmountGrandTotalBiodiesel = 0m;
-                decimal grossAmountGrandTotalEconogas = 0m;
-                decimal grossAmountGrandTotalEnvirogas = 0m;
-                decimal ewtGrandTotalBiodiesel = 0m;
-                decimal ewtGrandTotalEconogas = 0m;
-                decimal ewtGrandTotalEnvirogas = 0m;
                 var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
-
-                string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
+                var productList = GetOrderedProductNames(
+                    groupBySupplierTermsAndType.SelectMany(group => group),
+                    po => po.ProductName);
+                var grandTotalsByProduct = CreatePurchaseOrderSummaryMetricMap(productList);
 
                 foreach (var sameSupplierGroup in groupBySupplierTermsAndType)
                 {
@@ -5507,8 +4629,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     decimal unliftedThisMonthSubtotal = 0m;
                     decimal grossAmountSubtotal = 0m;
                     decimal ewtAmountSubtotal = 0m;
-                    decimal tempForGrandTotal = 0m;
-
                     foreach (var product in productList)
                     {
                         // declare per product
@@ -5575,7 +4695,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (allPoTotal != 0m)
                                 {
                                     poSubtotal += allPoTotal;
-                                    tempForGrandTotal += allPoTotal;
                                 }
 
                                 // WRITE ORIGINAL PO VOLUME
@@ -5618,33 +4737,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
 
-                                // operations for grandtotals
-                                switch (product)
-                                {
-                                    case "BIODIESEL":
-                                        unliftedLastMonthGrandTotalBiodiesel += unliftedLastMonth;
-                                        liftedThisMonthGrandTotalBiodiesel += liftedThisMonth;
-                                        unliftedThisMonthGrandTotalBiodiesel += unliftedThisMonth;
-                                        grossAmountGrandTotalBiodiesel += grossOfLiftedThisMonth;
-                                        ewtGrandTotalBiodiesel += totalEwt;
-                                        break;
-
-                                    case "ECONOGAS":
-                                        unliftedLastMonthGrandTotalEconogas += unliftedLastMonth;
-                                        liftedThisMonthGrandTotalEconogas += liftedThisMonth;
-                                        unliftedThisMonthGrandTotalEconogas += unliftedThisMonth;
-                                        grossAmountGrandTotalEconogas += grossOfLiftedThisMonth;
-                                        ewtGrandTotalEconogas += totalEwt;
-                                        break;
-
-                                    case "ENVIROGAS":
-                                        unliftedLastMonthGrandTotalEnvirogas += unliftedLastMonth;
-                                        liftedThisMonthGrandTotalEnvirogas += liftedThisMonth;
-                                        unliftedThisMonthGrandTotalEnvirogas += unliftedThisMonth;
-                                        grossAmountGrandTotalEnvirogas += grossOfLiftedThisMonth;
-                                        ewtGrandTotalEnvirogas += totalEwt;
-                                        break;
-                                }
+                                grandTotalsByProduct[product].OriginalPo += allPoTotal;
+                                grandTotalsByProduct[product].UnliftedLastMonth += unliftedLastMonth;
+                                grandTotalsByProduct[product].LiftedThisMonth += liftedThisMonth;
+                                grandTotalsByProduct[product].UnliftedThisMonth += unliftedThisMonth;
+                                grandTotalsByProduct[product].GrossAmount += grossOfLiftedThisMonth;
+                                grandTotalsByProduct[product].EwtAmount += totalEwt;
 
                                 // operations for subtotals
                                 unliftedLastMonthSubtotal += unliftedLastMonth;
@@ -5667,24 +4765,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 using var range = worksheet.Cells[row, 11, row, 15];
                                 range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
-                        }
-
-                        switch (product)
-                        {
-                            case "BIODIESEL":
-                                originalPoGrandTotalBiodiesel += tempForGrandTotal;
-                                tempForGrandTotal = 0m;
-                                break;
-
-                            case "ECONOGAS":
-                                originalPoGrandTotalEconogas += tempForGrandTotal;
-                                tempForGrandTotal = 0m;
-                                break;
-
-                            case "ENVIROGAS":
-                                originalPoGrandTotalEnvirogas += tempForGrandTotal;
-                                tempForGrandTotal = 0m;
-                                break;
                         }
 
                         row++;
@@ -5733,80 +4813,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
                 worksheet.Cells[row, 3].Value = "FILPRIDE";
 
-                decimal finalPo = originalPoGrandTotalBiodiesel + originalPoGrandTotalEconogas + originalPoGrandTotalEnvirogas;
-                decimal finalUnliftedLastMonth = unliftedLastMonthGrandTotalBiodiesel + unliftedLastMonthGrandTotalEconogas + unliftedLastMonthGrandTotalEnvirogas;
-                decimal finalLiftedThisMonth = liftedThisMonthGrandTotalBiodiesel + liftedThisMonthGrandTotalEconogas + liftedThisMonthGrandTotalEnvirogas;
-                decimal finalUnliftedThisMonth = unliftedThisMonthGrandTotalBiodiesel + unliftedThisMonthGrandTotalEconogas + unliftedThisMonthGrandTotalEnvirogas;
-                decimal finalGross = grossAmountGrandTotalBiodiesel + grossAmountGrandTotalEconogas + grossAmountGrandTotalEnvirogas;
-                decimal finalEwt = ewtGrandTotalBiodiesel + ewtGrandTotalEconogas + ewtGrandTotalEnvirogas;
+                decimal finalPo = grandTotalsByProduct.Values.Sum(metric => metric.OriginalPo);
+                decimal finalUnliftedLastMonth = grandTotalsByProduct.Values.Sum(metric => metric.UnliftedLastMonth);
+                decimal finalLiftedThisMonth = grandTotalsByProduct.Values.Sum(metric => metric.LiftedThisMonth);
+                decimal finalUnliftedThisMonth = grandTotalsByProduct.Values.Sum(metric => metric.UnliftedThisMonth);
+                decimal finalGross = grandTotalsByProduct.Values.Sum(metric => metric.GrossAmount);
+                decimal finalEwt = grandTotalsByProduct.Values.Sum(metric => metric.EwtAmount);
 
                 foreach (var product in productList)
                 {
                     worksheet.Cells[row, 4].Value = product;
                     worksheet.Cells[row, 5].Value = "ALL TERMS";
-
-                    switch (product)
+                    var grandTotalMetric = grandTotalsByProduct[product];
+                    worksheet.Cells[row, 7].Value = grandTotalMetric.OriginalPo;
+                    worksheet.Cells[row, 8].Value = grandTotalMetric.UnliftedLastMonth;
+                    worksheet.Cells[row, 9].Value = grandTotalMetric.LiftedThisMonth;
+                    worksheet.Cells[row, 10].Value = grandTotalMetric.UnliftedThisMonth;
+                    if (grandTotalMetric.LiftedThisMonth != 0)
                     {
-                        case "BIODIESEL":
-                            worksheet.Cells[row, 7].Value = originalPoGrandTotalBiodiesel;
-                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalBiodiesel;
-                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalBiodiesel;
-                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalBiodiesel;
-                            if (liftedThisMonthGrandTotalBiodiesel != 0)
-                            {
-                                worksheet.Cells[row, 11].Value = NetUnitValueOrZero(grossAmountGrandTotalBiodiesel, liftedThisMonthGrandTotalBiodiesel);
-                                worksheet.Cells[row, 12].Value = DivideOrZero(grossAmountGrandTotalBiodiesel, liftedThisMonthGrandTotalBiodiesel);
-                            }
-                            else
-                            {
-                                worksheet.Cells[row, 11].Value = 0m;
-                                worksheet.Cells[row, 12].Value = 0m;
-                            }
-                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalBiodiesel;
-                            worksheet.Cells[row, 14].Value = ewtGrandTotalBiodiesel;
-                            worksheet.Cells[row, 15].Value = RoundToFour(grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel);
-                            break;
-
-                        case "ECONOGAS":
-                            worksheet.Cells[row, 7].Value = originalPoGrandTotalEconogas;
-                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalEconogas;
-                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalEconogas;
-                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalEconogas;
-                            if (liftedThisMonthGrandTotalEconogas != 0)
-                            {
-                                worksheet.Cells[row, 11].Value = NetUnitValueOrZero(grossAmountGrandTotalEconogas, liftedThisMonthGrandTotalEconogas);
-                                worksheet.Cells[row, 12].Value = DivideOrZero(grossAmountGrandTotalEconogas, liftedThisMonthGrandTotalEconogas);
-                            }
-                            else
-                            {
-                                worksheet.Cells[row, 11].Value = 0m;
-                                worksheet.Cells[row, 12].Value = 0m;
-                            }
-                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalEconogas;
-                            worksheet.Cells[row, 14].Value = ewtGrandTotalEconogas;
-                            worksheet.Cells[row, 15].Value = RoundToFour(grossAmountGrandTotalEconogas - ewtGrandTotalEconogas);
-                            break;
-
-                        case "ENVIROGAS":
-                            worksheet.Cells[row, 7].Value = originalPoGrandTotalEnvirogas;
-                            worksheet.Cells[row, 8].Value = unliftedLastMonthGrandTotalEnvirogas;
-                            worksheet.Cells[row, 9].Value = liftedThisMonthGrandTotalEnvirogas;
-                            worksheet.Cells[row, 10].Value = unliftedThisMonthGrandTotalEnvirogas;
-                            if (liftedThisMonthGrandTotalEnvirogas != 0)
-                            {
-                                worksheet.Cells[row, 11].Value = NetUnitValueOrZero(grossAmountGrandTotalEnvirogas, liftedThisMonthGrandTotalEnvirogas);
-                                worksheet.Cells[row, 12].Value = DivideOrZero(grossAmountGrandTotalEnvirogas, liftedThisMonthGrandTotalEnvirogas);
-                            }
-                            else
-                            {
-                                worksheet.Cells[row, 11].Value = 0m;
-                                worksheet.Cells[row, 12].Value = 0m;
-                            }
-                            worksheet.Cells[row, 13].Value = grossAmountGrandTotalEnvirogas;
-                            worksheet.Cells[row, 14].Value = ewtGrandTotalEnvirogas;
-                            worksheet.Cells[row, 15].Value = RoundToFour(grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas);
-                            break;
+                        worksheet.Cells[row, 11].Value = NetUnitValueOrZero(grandTotalMetric.GrossAmount, grandTotalMetric.LiftedThisMonth);
+                        worksheet.Cells[row, 12].Value = DivideOrZero(grandTotalMetric.GrossAmount, grandTotalMetric.LiftedThisMonth);
                     }
+                    else
+                    {
+                        worksheet.Cells[row, 11].Value = 0m;
+                        worksheet.Cells[row, 12].Value = 0m;
+                    }
+                    worksheet.Cells[row, 13].Value = grandTotalMetric.GrossAmount;
+                    worksheet.Cells[row, 14].Value = grandTotalMetric.EwtAmount;
+                    worksheet.Cells[row, 15].Value = RoundToFour(grandTotalMetric.GrossAmount - grandTotalMetric.EwtAmount);
 
                     using (var range = worksheet.Cells[row, 6, row, 15])
                     {
