@@ -2660,7 +2660,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 var grossMarginProductList = GetOrderedProductNames(
                                     grossMarginReport,
-                                    report => report.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName);
+                                    report => report.DeliveryReceipt!.CustomerOrderSlip!.ProductName);
 
                                 foreach (var productName in grossMarginProductList)
                                 {
@@ -2694,7 +2694,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         foreach (var customerType in Enum.GetValues<CustomerType>())
                                         {
                                             var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
-                                            var productItems = list.Where(s => string.Equals(s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName, productName, StringComparison.OrdinalIgnoreCase)).ToList();
+                                            var productItems = list.Where(s => string.Equals(s.DeliveryReceipt!.CustomerOrderSlip!.ProductName, productName, StringComparison.OrdinalIgnoreCase)).ToList();
                                             var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
                                             var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                             var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;

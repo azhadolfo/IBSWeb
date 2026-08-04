@@ -1954,7 +1954,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 #region Computation for Overall
 
-                                                var list = sales.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                                                var list = sales.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.CustomerType == customerType.ToString()).ToList();
 
                                                 var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
                                                 var overallAmountSum = list.Sum(s => s.DeliveryReceipt.TotalAmount);
@@ -5256,12 +5256,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region == Product worksheets ==
 
                 var groupedByProductReport = salesReport
-                    .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName)
-                    .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName);
+                    .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.ProductName)
+                    .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.ProductName);
 
                 foreach (var productReport in groupedByProductReport)
                 {
-                    var productName = productReport.First().DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName;
+                    var productName = productReport.First().DeliveryReceipt.CustomerOrderSlip?.ProductName;
 
                     var worksheet = package.Workbook.Worksheets.Add(productName);
 
@@ -5315,8 +5315,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     var groupedByCustomer = productReport
-                        .OrderBy(pr => pr.DeliveryReceipt.Customer?.CustomerName)
-                        .GroupBy(pr => pr.DeliveryReceipt.Customer?.CustomerName);
+                        .OrderBy(pr => pr.DeliveryReceipt.CustomerOrderSlip!.CustomerName)
+                        .GroupBy(pr => pr.DeliveryReceipt.CustomerOrderSlip!.CustomerName);
 
                     foreach (var customer in groupedByCustomer)
                     {
@@ -5332,13 +5332,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             #region -- Assign Values to Cells --
 
                             worksheet.Cells[row, 1].Value = transaction.DeliveryReceipt.DeliveredDate; // Date
-                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.Customer?.CustomerName; // Account Name
-                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.CustomerType; // Account Type
                             worksheet.Cells[row, 4].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
                             worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
                             worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt.DeliveryReceiptNo; // New DR #
                             worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName; // Items
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
                             worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
@@ -5492,10 +5492,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     groupedByProductReport = salesReport
-                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName)
+                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.ProductName)
                         .ThenBy(sr => sr.DeliveryReceipt.Customer!.CustomerName)
                         .ThenBy(sr => sr.DeliveryReceipt.DeliveredDate)
-                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName);
+                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.ProductName);
 
                     // shows by product
                     foreach (var product in groupedByProductReport)
@@ -5508,13 +5508,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             #region -- Assign Values to Cells --
 
                             worksheet.Cells[row, 1].Value = transaction.DeliveryReceipt.DeliveredDate; // Date
-                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.Customer?.CustomerName; // Account Name
-                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.CustomerType; // Account Type
                             worksheet.Cells[row, 4].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
                             worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
                             worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt.DeliveryReceiptNo; // New DR #
                             worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName; // Items
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
                             worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
@@ -5630,11 +5630,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     bool isStation = true;
                     var productList = GetOrderedProductNames(
                         salesReport,
-                        sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName);
+                        sr => sr.DeliveryReceipt.CustomerOrderSlip!.ProductName);
 
                     var groupByCustomerType = salesReport
-                        .OrderBy(sr => sr.DeliveryReceipt.Customer?.CustomerType)
-                        .GroupBy(sr => sr.DeliveryReceipt.Customer?.CustomerType)
+                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.CustomerType)
+                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.CustomerType)
                         .OrderBy(g => g.Key != "Retail")
                         .ThenBy(g => g.Key);
 
@@ -5642,7 +5642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var ct in groupByCustomerType)
                     {
-                        worksheet.Cells[row, 1].Value = ct.First().DeliveryReceipt.Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Value = ct.First().DeliveryReceipt.CustomerOrderSlip!.CustomerType;
                         worksheet.Cells[row, 1].Style.Font.Bold = true;
                         worksheet.Cells[row, 1].Style.Font.Italic = true;
                         worksheet.Cells[row, 1].Style.Font.Size = 18;
@@ -5676,12 +5676,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row++;
 
                         var groupByCustomerName = ct
-                            .OrderBy(sr => sr.DeliveryReceipt.Customer?.CustomerName)
-                            .GroupBy(sr => sr.DeliveryReceipt.Customer?.CustomerName);
+                            .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.CustomerName)
+                            .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.CustomerName);
 
                         foreach (var customerGroup in groupByCustomerName)
                         {
-                            worksheet.Cells[row, 1].Value = customerGroup.First().DeliveryReceipt.Customer?.CustomerName;
+                            worksheet.Cells[row, 1].Value = customerGroup.First().DeliveryReceipt.CustomerOrderSlip!.CustomerName;
                             worksheet.Cells[row, 1].Style.Font.Bold = true;
 
                             var detailColumn = 2;
@@ -5690,12 +5690,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 worksheet.Cells[row, detailColumn].Value = SumQuantityByProduct(
                                     customerGroup,
                                     productName,
-                                    cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                    cg => cg.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                     cg => cg.DeliveryReceipt.Quantity);
                                 worksheet.Cells[row, detailColumn + 1].Value = SumAmountByProduct(
                                     customerGroup,
                                     productName,
-                                    cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                    cg => cg.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                     cg => cg.DeliveryReceipt.TotalAmount);
                                 detailColumn += 2;
                             }
@@ -5717,12 +5717,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, totalDetailColumn].Value = SumQuantityByProduct(
                                 ct,
                                 productName,
-                                si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                si => si.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                 si => si.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, totalDetailColumn + 1].Value = SumAmountByProduct(
                                 ct,
                                 productName,
-                                si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                si => si.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                 si => si.DeliveryReceipt.TotalAmount);
                             totalDetailColumn += 2;
                         }
@@ -5757,12 +5757,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, grandTotalDetailColumn].Value = SumQuantityByProduct(
                             salesReport,
                             productName,
-                            si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                            si => si.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                             si => si.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, grandTotalDetailColumn + 1].Value = SumAmountByProduct(
                             salesReport,
                             productName,
-                            si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                            si => si.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                             si => si.DeliveryReceipt.TotalAmount);
                         grandTotalDetailColumn += 2;
                     }
@@ -5811,7 +5811,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // summary values
                     foreach (var typeGroup in groupByCustomerType)
                     {
-                        worksheet.Cells[row, 1].Value = typeGroup.First().DeliveryReceipt.Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Value = typeGroup.First().DeliveryReceipt.CustomerOrderSlip!.CustomerType;
                         worksheet.Cells[row, 1].Style.Font.Italic = true;
                         worksheet.Cells[row, 1].Style.Font.Bold = true;
 
@@ -5821,7 +5821,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, summaryValueColumn].Value = SumQuantityByProduct(
                                 typeGroup,
                                 productName,
-                                tg => tg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName,
+                                tg => tg.DeliveryReceipt.CustomerOrderSlip!.ProductName,
                                 tg => tg.DeliveryReceipt.Quantity);
                             summaryValueColumn++;
                         }
