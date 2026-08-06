@@ -1388,41 +1388,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var worksheet = package.Workbook.Worksheets[0];
 
             // Fill in the data
-            var detailLines = GetEffectiveDeliveryReceiptDetails(deliveryReceipt);
-            var detailAtlNos = detailLines
-                .Select(d => d.AuthorityToLoadNo)
-                .Where(a => !string.IsNullOrWhiteSpace(a))
-                .Distinct()
-                .ToList();
-            var detailProducts = detailLines
-                .Select(d => d.ProductName)
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Distinct()
-                .ToList();
-            var detailPoNos = detailLines
-                .Select(d => d.PurchaseOrder?.PurchaseOrderNo)
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Distinct()
-                .ToList();
-
-            worksheet.Cells["H2"].Value = detailAtlNos.Count <= 1 ? detailAtlNos.FirstOrDefault() : string.Join(", ", detailAtlNos);
+            worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
             worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
             worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
             worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
-            worksheet.Cells["H12"].Value = string.Join(", ", detailLines
-                .Select(d => d.CustomerOrderSlip?.OldCosNo ?? d.CustomerOrderSlip?.CustomerOrderSlipNo)
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Distinct());
-            worksheet.Cells["B11"].Value = string.Join(", ", detailLines
-                .Select(d => d.CustomerOrderSlip?.PickUpPoint?.Depot)
-                .Where(d => !string.IsNullOrWhiteSpace(d))
-                .Select(d => d!.ToUpper())
-                .Distinct());
+            worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip!.OldCosNo;
+            worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint!.Depot.ToUpper();
             worksheet.Cells["C12"].Value = deliveryReceipt.Customer!.CustomerName.ToUpper();
             worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
-            worksheet.Cells["B17"].Value = detailProducts.Count <= 1 ? detailProducts.FirstOrDefault() : string.Join(", ", detailProducts);
+            worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.ProductName;
             worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-            worksheet.Cells["H19"].Value = $"{string.Join(", ", detailPoNos)} {deliveryReceipt.Remarks}".Trim();
+            worksheet.Cells["H19"].Value = $"{deliveryReceipt.PurchaseOrder?.PurchaseOrderNo} {deliveryReceipt.Remarks}";
 
             // === SIMPLE SECURITY PROTECTION ===
 
