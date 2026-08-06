@@ -1,9 +1,9 @@
-﻿@using IBS.Utility.Constants
+@using IBS.Utility.Constants
+@using IBS.Utility.Helpers
 @model DeliveryReceiptViewModel
 
 @{
     ViewData["Title"] = "Delivery Receipt - Edit";
-    var today = DateTimeHelper.GetCurrentPhilippineTime();
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -23,18 +23,14 @@
     <div class="card-body p-4">
         <form method="post" class="row">
             @Html.AntiForgeryToken()
-            <div class="border-2 p-3">
+            <div class="border-2">
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
                 <input asp-for="ATLId" type="hidden" />
-                <input asp-for="IsECCEdited" type="hidden" />
                 <input asp-for="ATLNo" type="hidden" />
+                <input asp-for="IsECCEdited" type="hidden" />
                 <div class="form-floating col-12">
-                    <input asp-for="Date" 
-                           type="date" 
-                           class="form-control border-0 shadow" 
-                           placeholder=""
-                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
+                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" min="@Model.MinDate.ToString("yyyy-MM-dd")" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
@@ -53,6 +49,7 @@
                                 <option value="" selected>Select customer</option>
                             </select>
                             <input type="hidden" asp-for="CustomerId" />
+                            <small class="fst-italic">Please note: Customer cannot be changed as the lifting date has already been added by TNS.</small>
                         }
                         else
                         {
@@ -61,10 +58,6 @@
                             </select>
                         }
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
-                        @if (Model.HasReceivingReport)
-                        {
-                            <small class="fst-italic">Please note: Customer cannot be changed as the lifting date has already been added by TNS.</small>
-                        }
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -88,6 +81,7 @@
                                 <option value="" selected>Select cos</option>
                             </select>
                             <input type="hidden" asp-for="CustomerOrderSlipId" />
+                            <small class="fst-italic">Please note: COS lines cannot be changed as the lifting date has already been added by TNS.</small>
                         }
                         else
                         {
@@ -96,26 +90,12 @@
                             </select>
                         }
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
-                        @if (Model.HasReceivingReport)
-                        {
-                            <small class="fst-italic">Please note: COS cannot be changed as the lifting date has already been added by TNS.</small>
-                        }
                     </div>
                     <div class="form-group py-2 col-12">
-                        <label class="control-label">Appointed POs<span class="required">*</span></label>
-                        @if (Model.HasReceivingReport)
-                        {
-                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
-                                <option value="" selected>Select po</option>
-                            </select>
-                            <input type="hidden" asp-for="PurchaseOrderId" />
-                        }
-                        else
-                        {
-                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                                <option value="" selected>Select po</option>
-                            </select>
-                        }
+                        <label class="control-label">Appointed POs / ATLs<span class="required">*</span></label>
+                        <select id="PurchaseOrderSelector" class="form-select js-multiple border-0 shadow" style="width:100%" multiple="multiple" @(Model.HasReceivingReport ? "disabled" : "")>
+                        </select>
+                        <input asp-for="PurchaseOrderId" type="hidden" />
                         <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
@@ -125,7 +105,7 @@
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CosVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="CosVolume">Cos Volume</label>
+                        <label asp-for="CosVolume">COS Volume</label>
                         <span asp-validation-for="CosVolume" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
@@ -147,36 +127,26 @@
                 <div class="form-floating py-2 col-12">
                     @if (Model.HasReceivingReport)
                     {
-                        <input asp-for="Volume"
-                               class="form-control border-0 shadow"
-                               placeholder=""
-                               required
-                               min="0.01"
-                               readonly=""
-                               value="@Model.Volume.ToString("0.0000")"/>
+                        <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" readonly />
                     }
                     else
                     {
-                        <input asp-for="Volume"
-                               class="form-control border-0 shadow"
-                               placeholder=""
-                               required
-                               min="0.01"
-                               value="@Model.Volume.ToString("0.0000")"/>
+                        <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     }
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
-                    @if (Model.HasReceivingReport)
-                    {
-                        <small class="fst-italic">Please note: The volume field cannot be edited as the lifting date has already been added by TNS.</small>
-                    }
+                </div>
+                <div class="col-12 py-2">
+                    <div class="small text-muted" id="selectedPoSummary">No ATL/PO selected.</div>
+                    <div id="detailInputs"></div>
+                    <div class="text-danger d-none" id="detailError">Please select ATL/PO entries and enter a valid volume within the selected balance.</div>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                     <label asp-for="ATLNo" class="ms-2">ATL#</label>
                     <span asp-validation-for="ATLNo" class="text-danger"></span>
                 </div>
-                <div class="form-group py-2 col-12" id="haulerList" style="display: none">
+                <div class="form-group py-2 col-12" id="haulerList">
                     <label class="control-label">Hauler List<span class="required">*</span></label>
                     <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         <option value="" selected>Select hauler</option>
@@ -193,7 +163,7 @@
                     <label asp-for="PlateNo" class="ms-2">Plate #<span class="required">*</span></label>
                     <span asp-validation-for="PlateNo" class="text-danger"></span>
                 </div>
-                <div class="form-floating py-2 col-12" style="display: none">
+                <div class="form-floating py-2 col-12">
                     <input asp-for="Freight" class="form-control border-0 shadow" min="0.01" placeholder="" />
                     <label asp-for="Freight">Freight</label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
@@ -213,12 +183,12 @@
                     <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
-                <div class="row pt-2">
+                <div class="row pt-3">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border form-control">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -233,291 +203,154 @@
 
     <script>
         $(document).ready(function () {
-            // Check if has receiving report
-            var hasReceivingReport = @Model.HasReceivingReport.ToString().ToLower();
-            
-            var initialCustomerId = '@Model.CustomerId';
-            var deliveryReceiptId = $("#DeliveryReceiptId").val();
-            var initialCosId = '@Model.CustomerOrderSlipId';
-            var currentVolume = parseNumber($('input[name="Volume"]').val());
-            var initialPoId = '@Model.PurchaseOrderId';
-            var initialAtlId = '@Model.ATLId';
-            
-            var selectedPoId = initialPoId;
-            var selectedAtlId = initialAtlId;
+            const hasReceivingReport = @Model.HasReceivingReport.ToString().ToLower();
+            const deliveryReceiptId = @Model.DeliveryReceiptId;
+            const initialCustomerId = '@Model.CustomerId';
+            const initialCosId = '@Model.CustomerOrderSlipId';
+            const initialPoIds = @Html.Raw(Json.Serialize(Model.Details.Select(d => d.PurchaseOrderId).Distinct().ToList()));
+            const initialAtlIds = @Html.Raw(Json.Serialize(Model.Details.Select(d => d.AuthorityToLoadId).Distinct().ToList()));
+            const initialHaulerId = '@Model.HaulerId';
+            const initialFreight = parseNumber('@Model.Freight');
+            const initialDriver = @Html.Raw(Json.Serialize(Model.Driver ?? string.Empty));
+            const initialPlateNo = @Html.Raw(Json.Serialize(Model.PlateNo ?? string.Empty));
+            const initialVolume = parseNumber('@Model.Volume');
+            const detailItems = [];
+            const $poSelect = $('#PurchaseOrderSelector');
+            const defaultDetailError = 'Please select ATL/PO entries and enter a valid volume within the selected balance.';
+            let suppressVolumeRefresh = false;
 
-            // Store initial hauler and freight values
-            var initialHaulerId = $('select[name="HaulerId"]').val();
-            var initialFreight = $('input[name="Freight"]').val();
-
-            // Load customer details if CustomerId exists
-            if (initialCustomerId) {
-                loadCustomerDetails(initialCustomerId, deliveryReceiptId);
+            function setDetailError(message) {
+                $('#detailError').removeClass('d-none').text(message);
             }
 
-            // Function to load customer details
-            function loadCustomerDetails(customerId, deliveryReceiptId) {
-                if (customerId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { id: customerId },
-                        success: function (data) {
-                            if (data) {
-                                $('input[name="CustomerAddress"]').val(data.address);
-                                $('input[name="CustomerTin"]').val(data.tinNo);
-                            } else {
-                                $('input[name="CustomerAddress"]').val('');
-                                $('input[name="CustomerTin"]').val('');
-                            }
-                            // Update COS list and then load COS details
-                            updateCustomerOrderSlips(customerId, deliveryReceiptId, function() {
-                                if (initialCosId) {
-                                    $('select[name="CustomerOrderSlipId"]').val(initialCosId);
-                                    loadCosDetails(initialCosId, true);
-                                }
-                            });
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
-                        }
-                    });
+            function clearDetailError() {
+                $('#detailError').addClass('d-none').text(defaultDetailError);
+            }
+
+            function calculateBuilderTotalAmount() {
+                const volume = parseNumber($('input[name="Volume"]').val());
+                const price = parseNumber($('input[name="Price"]').val());
+                $('input[name="TotalAmount"]').val(formatNumber(volume * price));
+            }
+
+            function getSelectedUnservedTotal() {
+                let total = 0;
+
+                $poSelect.find('option:selected').each(function () {
+                    total += parseFloat($(this).data('unserved')) || 0;
+                });
+
+                return total;
+            }
+
+            function refreshVolumeFromSelection() {
+                const remainingVolume = parseNumber($("#RemainingVolume").val());
+                const selectedUnservedTotal = getSelectedUnservedTotal();
+
+                if (selectedUnservedTotal <= 0 || hasReceivingReport || suppressVolumeRefresh) {
+                    return;
                 }
+
+                $('input[name="Volume"]').val(Math.min(remainingVolume, selectedUnservedTotal));
+                calculateBuilderTotalAmount();
             }
 
-            // Function to load COS details
-            function loadCosDetails(cosId, isInitialLoad = false) {
-                if (cosId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: {
-                            id: cosId,
-                            initialPoId: initialPoId,
-                            initialAtlId: initialAtlId,
-                            currentVolume: currentVolume,
-                        },
-                        success: function (data) {
-                            if (data) {
-                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().show();
-                                    $('input[name="ECC"]').parent().show();
+            function syncDetails() {
+                const $inputs = $('#detailInputs');
+                $inputs.empty();
 
-                                    // Set values based on whether it's initial load or not
-                                    if (isInitialLoad && initialHaulerId) {
-                                        $('select[name="HaulerId"]').val(initialHaulerId).change();
-                                        $('input[name="Freight"]').val(initialFreight);
-                                    } else {
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
-                                        $('input[name="Freight"]').val(data.freight);
-                                    }
-                                } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
-                                    $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().hide();
-                                    $('input[name="ECC"]').parent().hide();
+                let totalAmount = 0;
 
-                                    if (isInitialLoad && initialHaulerId) {
-                                        $('select[name="HaulerId"]').val(initialHaulerId).change();
-                                    } else {
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
-                                    }
-                                } else {
-                                    $('input[name="Freight"]').parent().hide();
-                                    $('input[name="ECC"]').parent().hide();
-                                    $('#haulerList').hide();
-                                }
+                detailItems.forEach((item, index) => {
+                    totalAmount += item.amount;
+                    $inputs.append(`
+                        <input type="hidden" name="Details[${index}].CustomerOrderSlipId" value="${item.customerOrderSlipId}" />
+                        <input type="hidden" name="Details[${index}].CustomerOrderSlipNo" value="${item.cosNo}" />
+                        <input type="hidden" name="Details[${index}].PurchaseOrderId" value="${item.purchaseOrderId}" />
+                        <input type="hidden" name="Details[${index}].AuthorityToLoadId" value="${item.authorityToLoadId}" />
+                        <input type="hidden" name="Details[${index}].AuthorityToLoadNo" value="${item.atlNo}" />
+                        <input type="hidden" name="Details[${index}].ProductName" value="${item.productName}" />
+                        <input type="hidden" name="Details[${index}].Price" value="${item.price}" />
+                        <input type="hidden" name="Details[${index}].Quantity" value="${item.quantity}" />
+                        <input type="hidden" name="Details[${index}].Amount" value="${item.amount}" />
+                    `);
+                });
 
-                                $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
-                                $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
+                $('input[name="PurchaseOrderId"]').val(detailItems.length ? detailItems[0].purchaseOrderId : '');
+                $('input[name="ATLId"]').val(detailItems.length ? detailItems[0].authorityToLoadId : '');
+                $('input[name="ATLNo"]').val(detailItems.length === 1 ? detailItems[0].atlNo : detailItems.length > 1 ? 'MULTIPLE' : '');
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount || parseNumber($('input[name="Volume"]').val()) * parseNumber($('input[name="Price"]').val())));
+                $('#selectedPoSummary').text(detailItems.length ? `${detailItems.length} ATL/PO selection(s) applied.` : 'No ATL/PO selected.');
+            }
 
-                                // Handle remaining volume calculation
-                                var remainingVolume = data.remainingVolume;
-                                if (isInitialLoad && currentVolume) {
-                                    remainingVolume = data.remainingVolume + currentVolume;
-                                }
+            function rebuildDetailItems() {
+                const cosId = parseInt($('select[name="CustomerOrderSlipId"]').val() || '0');
+                const cosNo = $('select[name="CustomerOrderSlipId"] option:selected').text();
+                const productName = $('input[name="Product"]').val();
+                const price = parseNumber($('input[name="Price"]').val());
+                const quantity = parseNumber($('input[name="Volume"]').val());
+                const remainingVolume = parseNumber($('#RemainingVolume').val());
+                const selectedOptions = $poSelect.find('option:selected');
 
-                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
-                                $('input[name="Product"]').val(formatNumber(data.product));
-                                $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
+                detailItems.length = 0;
 
-                                if (isInitialLoad && currentVolume) {
-                                    $('input[name="Volume"]').val(currentVolume);
-                                } else {
-                                    $('input[name="Volume"]').val(data.remainingVolume);
-                                }
-
-                                $('input[name="DeliveryOption"]').val(data.deliveryOption);
-                                $('input[name="Price"]').val(data.price);
-
-                                // Populate Purchase Orders dropdown
-                                var $poSelect = $('select[name="PurchaseOrderId"]');
-                                $poSelect.empty();
-
-                                if (data.purchaseOrders && data.purchaseOrders.length > 0) {
-                                    $poSelect.append('<option value="">Select po</option>');
-                                    
-                                    var poToSelect = isInitialLoad ? initialPoId : selectedPoId;
-                                    var atlToSelect = isInitialLoad ? initialAtlId : selectedAtlId;
-
-                                    $.each(data.purchaseOrders, function(index, item) {
-                                        const formattedOption =
-                                            'PO: ' + item.purchaseOrderNo + ' | ' +
-                                            'Supplier: ' + item.supplierName + ' | ' +
-                                            'ATL#: ' + (item.atlNo || '') + ' | ' +
-                                            'Unserved: ' + formatNumber(item.unservedQuantity);
-
-                                        const option = $('<option>', {
-                                            value: item.purchaseOrderId,
-                                            text: formattedOption,
-                                            'data-unserved': item.unservedQuantity,
-                                            'data-atl-id': item.atlId || '',
-                                            'data-atl-no': item.atlNo || ''
-                                        });
-                                        
-                                        var matchesPO = String(item.purchaseOrderId) === String(poToSelect);
-                                        var matchesATL = String(item.atlId || '') === String(atlToSelect || '');
-
-                                        if (matchesPO && matchesATL) {
-                                            option.prop('selected', true);
-                                        }
-
-                                        $poSelect.append(option);
-                                    });
-                                    
-                                    updateATLFields();
-                                } else {
-                                    $poSelect.append('<option value="">No purchase orders available</option>');
-                                }
-
-                                calculateTotalAmount();
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
-                        }
-                    });
+                if (!cosId || !selectedOptions.length || quantity <= 0) {
+                    syncDetails();
+                    return;
                 }
-            }
 
-            // Helper function to update ATL fields
-            function updateATLFields() {
-                var $selectedOption = $('select[name="PurchaseOrderId"]').find('option:selected');
-                var atlId = $selectedOption.data('atl-id') || '';
-                var atlNo = $selectedOption.data('atl-no') || '';
-                $('input[name="ATLId"]').val(atlId);
-                $('input[name="ATLNo"]').val(atlNo);
-            }
+                if (quantity > remainingVolume) {
+                    setDetailError('Volume exceeds the remaining COS balance.');
+                    syncDetails();
+                    return;
+                }
 
-            // Event handler for customer change - only if not hasReceivingReport
-            if (!hasReceivingReport) {
-                $('select[name="CustomerId"]').on('change', function () {
-                    var customerId = $(this).val();
-                    if (customerId !== initialCustomerId) {
-                        currentVolume = 0;
-                        initialHaulerId = null;
-                        initialFreight = null;
-                        selectedPoId = null; 
-                        selectedAtlId = null;
+                let remainingAllocation = quantity;
+
+                selectedOptions.each(function () {
+                    if (remainingAllocation <= 0) {
+                        return false;
                     }
-                    loadCustomerDetails(customerId);
-                });
-            }
 
-            // Event handler for COS change - only if not hasReceivingReport
-            if (!hasReceivingReport) {
-                $('select[name="CustomerOrderSlipId"]').on('change', function () {
-                    var cosId = $(this).val();
-                    var isInitialLoad = (cosId === initialCosId);
-                    loadCosDetails(cosId, isInitialLoad);
-                });
-            }
+                    const $option = $(this);
+                    const available = parseFloat($option.data('unserved')) || 0;
+                    const allocatedQuantity = Math.min(available, remainingAllocation);
 
-            // When Purchase Order selection changes
-            $('select[name="PurchaseOrderId"]').on('change', function() {
-                selectedPoId = $(this).val();
+                    if (allocatedQuantity <= 0) {
+                        return;
+                    }
 
-                var $selectedOption = $(this).find('option:selected');
-                var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
-                var atlId = $selectedOption.data('atl-id') || '';
-                var atlNo = $selectedOption.data('atl-no') || '';
-                
-                selectedAtlId = atlId;
-
-                $('input[name="ATLId"]').val(atlId);
-                $('input[name="ATLNo"]').val(atlNo);
-
-                // Set max volume to unserved quantity
-                if (unservedQuantity > 0 && !hasReceivingReport) {
-                    $('input[name="Volume"]').attr('max', unservedQuantity);
-                    $('input[name="Volume"]').val(unservedQuantity);
-                    calculateTotalAmount();
-                }
-            });
-
-            // Update COS list based on customer
-            function updateCustomerOrderSlips(customerId, deliveryReceiptId, callback) {
-                if (customerId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerOrderSlipList", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { customerId: customerId, deliveryReceiptId: deliveryReceiptId },
-                        success: function (data) {
-                            var $cosSelect = $('select[name="CustomerOrderSlipId"]');
-                            $cosSelect.empty();
-                            if (data && data.length > 0) {
-                                $cosSelect.append('<option value="">Select cos</option>');
-                                $.each(data, function (index, item) {
-                                    $cosSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
-                                });
-
-                                // Set the first COS as selected visually without triggering events
-                                if (data.length > 0) {
-                                    $cosSelect.val(data[0].value); // No trigger('change')
-                                }
-                            } else {
-                                $cosSelect.append('<option value="">No cos available</option>');
-                            }
-                            if (typeof callback === 'function') {
-                                callback();
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
-                        }
+                    detailItems.push({
+                        customerOrderSlipId: cosId,
+                        cosNo: cosNo,
+                        purchaseOrderId: parseInt($option.val() || '0'),
+                        purchaseOrderNo: $option.text(),
+                        authorityToLoadId: parseInt($option.data('atl-id') || '0'),
+                        atlNo: $option.data('atl-no') || '',
+                        productName: productName,
+                        price: price,
+                        quantity: allocatedQuantity,
+                        amount: allocatedQuantity * price
                     });
+
+                    remainingAllocation -= allocatedQuantity;
+                });
+
+                if (remainingAllocation > 0) {
+                    detailItems.length = 0;
+                    setDetailError('Selected ATL/PO balances are not enough for the requested volume.');
+                } else {
+                    clearDetailError();
                 }
-            }
 
-            // Calculate Total Amount - only bind if volume is not readonly
-            if (!hasReceivingReport) {
-                $('input[name="Volume"]').on('input', function () {
-                    calculateTotalAmount();
-                });
-            }
-
-            // Validate volume - only if not hasReceivingReport
-            if (!hasReceivingReport) {
-                $("#Volume").change(function () {
-                    validateVolume();
-                    calculateTotalAmount();
-                });
-            }
-
-            function calculateTotalAmount() {
-                var volume = parseNumber($('input[name="Volume"]').val());
-                var price = parseNumber($('input[name="Price"]').val());
-                var totalAmount = volume * price;
-                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+                syncDetails();
             }
 
             function validateVolume() {
-                var remainingVolume = parseNumber($("#RemainingVolume").val());
-                var volume = parseNumber($("#Volume").val());
-                var maxUnserved = parseFloat($('select[name="PurchaseOrderId"] option:selected').data('unserved')) || remainingVolume;
-
-                // Use the smaller of remaining volume or unserved quantity as max
-                var maxVolume = Math.min(remainingVolume, maxUnserved);
+                const remainingVolume = parseNumber($("#RemainingVolume").val());
+                const volume = parseNumber($("#Volume").val());
+                let maxUnserved = getSelectedUnservedTotal() || remainingVolume;
+                const maxVolume = Math.min(remainingVolume, maxUnserved);
 
                 if (volume > maxVolume) {
                     alert("Volume cannot exceed " + formatNumber(maxVolume));
@@ -525,46 +358,223 @@
                 }
             }
 
-            // Add event for checking if ManualDrNo exists
-            $('input[name="ManualDrNo"]').on('blur', function() {
-                var manualDrNo = $(this).val();
-                var drId = $('input[name="DeliveryReceiptId"]').val();
+            function updateCustomerOrderSlips(customerId, callback) {
+                if (!customerId) {
+                    return;
+                }
 
-                if (manualDrNo) {
-                    $.ajax({
-                        url: '@Url.Action("CheckManualDrNoExists", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { manualDrNo: manualDrNo, drId: drId },
-                        success: function(exists) {
-                            const submitButton = $('button[type="submit"]');
+                $.ajax({
+                    url: '@Url.Action("GetCustomerOrderSlipList", "DeliveryReceipt", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { customerId: customerId, deliveryReceiptId: deliveryReceiptId },
+                    success: function (data) {
+                        const $cosSelect = $('select[name="CustomerOrderSlipId"]');
+                        $cosSelect.empty();
 
-                            if (exists) {
-                                // Display error message if the ManualDrNo already exists
-                                alert("Manual DR# already exists. Please enter a different number.");
-                                $('input[name="ManualDrNo"]').addClass('is-invalid');
+                        if (data && data.length > 0) {
+                            $cosSelect.append('<option value="">Select cos</option>');
+                            $.each(data, function (_, item) {
+                                $cosSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                        } else {
+                            $cosSelect.append('<option value="">No cos available</option>');
+                        }
 
-                                // Optional: Add error message near the field
-                                if ($('input[name="ManualDrNo"]').next('.text-danger.manual-dr-exists').length === 0) {
-                                    $('input[name="ManualDrNo"]').after('<span class="text-danger manual-dr-exists">Manual DR# already exists</span>');
+                        if (callback) {
+                            callback();
+                        }
+                    }
+                });
+            }
+
+            function loadCustomerDetails(customerId) {
+                if (!customerId) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { id: customerId },
+                    success: function (data) {
+                        $('input[name="CustomerAddress"]').val(data ? data.address : '');
+                        $('input[name="CustomerTin"]').val(data ? data.tinNo : '');
+                        updateCustomerOrderSlips(customerId, function () {
+                            if (initialCosId) {
+                                $('select[name="CustomerOrderSlipId"]').val(initialCosId);
+                                loadCosDetails(initialCosId, true);
+                            }
+                        });
+                    }
+                });
+            }
+
+            function loadCosDetails(cosId, isInitialLoad) {
+                if (!cosId) {
+                    return;
+                }
+
+                suppressVolumeRefresh = isInitialLoad;
+
+                $.ajax({
+                    url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                    type: "GET",
+                    data: {
+                        id: cosId,
+                        currentVolume: parseNumber($('input[name="Volume"]').val()),
+                        deliveryReceiptId: deliveryReceiptId
+                    },
+                    success: function (data) {
+                        if (!data) {
+                            return;
+                        }
+
+                        if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
+                            $('#haulerList').show();
+                            $('input[name="Freight"]').parent().show();
+                            $('input[name="ECC"]').parent().show();
+                            $('select[name="HaulerId"]').val(initialHaulerId || data.haulerId).change();
+                            if (!isInitialLoad) {
+                                $('input[name="Freight"]').val(data.freight);
+                            }
+                        } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
+                            $('#haulerList').show();
+                            $('input[name="Freight"]').parent().hide();
+                            $('input[name="ECC"]').parent().hide();
+                            $('select[name="HaulerId"]').val(initialHaulerId || data.haulerId).change();
+                        } else {
+                            $('input[name="Freight"]').parent().hide();
+                            $('input[name="ECC"]').parent().hide();
+                            $('#haulerList').hide();
+                        }
+
+                        $('input[name="Driver"]').val($('input[name="Driver"]').val() || initialDriver || data.driver);
+                        $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() || initialPlateNo || data.plateNo);
+                        $('input[name="Product"]').val(data.product);
+                        $('input[name="CosVolume"]').val(formatNumber(data.quantity));
+                        $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
+                        $('input[name="DeliveryOption"]').val(data.deliveryOption);
+                        $('input[name="Price"]').val(data.price);
+
+                        $poSelect.empty();
+
+                        if (data.purchaseOrders && data.purchaseOrders.length > 0) {
+                            $.each(data.purchaseOrders, function (_, item) {
+                                const formattedOption =
+                                    'PO: ' + item.purchaseOrderNo + ' | ' +
+                                    'Supplier: ' + item.supplierName + ' | ' +
+                                    'ATL#: ' + (item.atlNo || '') + ' | ' +
+                                    'Unserved: ' + formatNumber(item.unservedQuantity);
+
+                                const option = $('<option>', {
+                                    value: item.purchaseOrderId,
+                                    text: formattedOption,
+                                    'data-unserved': item.unservedQuantity,
+                                    'data-atl-id': item.atlId || '',
+                                    'data-atl-no': item.atlNo || ''
+                                });
+
+                                if (isInitialLoad && initialPoIds.includes(item.purchaseOrderId) && initialAtlIds.includes(item.atlId || 0)) {
+                                    option.prop('selected', true);
                                 }
 
-                                // Disable the submit button
-                                submitButton.prop('disabled', true);
-
-                            } else {
-                                // Clear any error styling/messages
-                                $('input[name="ManualDrNo"]').removeClass('is-invalid');
-                                $('.manual-dr-exists').remove();
-
-                                submitButton.prop('disabled', false);
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Error checking ManualDrNo: " + error);
+                                $poSelect.append(option);
+                            });
                         }
-                    });
+
+                        if (!hasReceivingReport) {
+                            const maxUnserved = $poSelect.find('option:selected').toArray().reduce((sum, option) => {
+                                return sum + (parseFloat($(option).data('unserved')) || 0);
+                            }, 0);
+
+                            if (!isInitialLoad) {
+                                $('input[name="Volume"]').val(Math.min(data.remainingVolume, maxUnserved || data.remainingVolume));
+                            } else {
+                                $('input[name="Volume"]').val(initialVolume);
+                            }
+                        }
+
+                        refreshVolumeFromSelection();
+                        $poSelect.trigger('change');
+                        calculateBuilderTotalAmount();
+                        suppressVolumeRefresh = false;
+                    }
+                });
+            }
+
+            $('select[name="CustomerId"]').on('change', function () {
+                if (hasReceivingReport) {
+                    return;
+                }
+
+                const customerId = $(this).val();
+                $('input[name="CustomerAddress"]').val('');
+                $('input[name="CustomerTin"]').val('');
+                $('select[name="CustomerOrderSlipId"]').empty();
+                $poSelect.empty().trigger('change');
+                loadCustomerDetails(customerId);
+            });
+
+            $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                if (hasReceivingReport) {
+                    return;
+                }
+
+                loadCosDetails($(this).val(), false);
+            });
+
+            $poSelect.on('change', function () {
+                refreshVolumeFromSelection();
+                validateVolume();
+                rebuildDetailItems();
+            });
+
+            $('input[name="Volume"]').on('input change', function () {
+                validateVolume();
+                calculateBuilderTotalAmount();
+                rebuildDetailItems();
+            });
+
+            $('form').on('submit', function (e) {
+                rebuildDetailItems();
+                if (detailItems.length === 0) {
+                    e.preventDefault();
+                    setDetailError(defaultDetailError);
                 }
             });
+
+            $('input[name="ManualDrNo"]').on('blur', function () {
+                const manualDrNo = $(this).val();
+                if (!manualDrNo) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("CheckManualDrNoExists", "DeliveryReceipt", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { manualDrNo: manualDrNo, drId: deliveryReceiptId },
+                    success: function (exists) {
+                        const submitButton = $('button[type="submit"]');
+
+                        if (exists) {
+                            alert("Manual DR# already exists. Please enter a different number.");
+                            $('input[name="ManualDrNo"]').addClass('is-invalid');
+                            if ($('input[name="ManualDrNo"]').next('.text-danger.manual-dr-exists').length === 0) {
+                                $('input[name="ManualDrNo"]').after('<span class="text-danger manual-dr-exists">Manual DR# already exists</span>');
+                            }
+                            submitButton.prop('disabled', true);
+                        } else {
+                            $('input[name="ManualDrNo"]').removeClass('is-invalid');
+                            $('.manual-dr-exists').remove();
+                            submitButton.prop('disabled', false);
+                        }
+                    }
+                });
+            });
+
+            $('input[name="Freight"]').val(initialFreight ? formatNumber(initialFreight) : $('input[name="Freight"]').val());
+            syncDetails();
+            loadCustomerDetails(initialCustomerId);
         });
     </script>
 }

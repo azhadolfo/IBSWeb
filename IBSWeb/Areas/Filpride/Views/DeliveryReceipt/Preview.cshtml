@@ -16,6 +16,22 @@
     }
     
     var decimalFormat = Model.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var detailLines = Model.Details.Any()
+        ? Model.Details.ToList()
+        : new List<FilprideDeliveryReceiptDetail>
+        {
+            new()
+            {
+                CustomerOrderSlip = Model.CustomerOrderSlip,
+                PurchaseOrder = Model.PurchaseOrder,
+                AuthorityToLoad = Model.AuthorityToLoad,
+                AuthorityToLoadNo = Model.AuthorityToLoadNo,
+                ProductName = Model.CustomerOrderSlip?.Product?.ProductName ?? string.Empty,
+                Quantity = Model.Quantity
+            }
+        };
+    var poNos = string.Join(", ", detailLines.Select(d => d.PurchaseOrder?.PurchaseOrderNo).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct());
+    var depots = string.Join(", ", detailLines.Select(d => d.CustomerOrderSlip?.PickUpPoint?.Depot?.ToUpper()).Where(d => !string.IsNullOrWhiteSpace(d)).Distinct());
 
 }
 
@@ -67,11 +83,11 @@
             </tr>
             <tr>
                 <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
-                <td class="w-25 text-end align-text-top"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
+                <td class="w-25 text-end align-text-top"><b>PO No:</b> &nbsp;@poNos</td>
             </tr>
             <tr>
                 <td></td>
-                <td class="w-25 text-end align-text-top"><b>Terms:</b> &nbsp;@Model.CustomerOrderSlip.Terms</td>
+                <td class="w-25 text-end align-text-top"><b>Terms:</b> &nbsp;@string.Join(", ", detailLines.Select(d => d.CustomerOrderSlip?.Terms).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct())</td>
             </tr>
         </tbody>
     </table>
@@ -82,16 +98,23 @@
         <thead>
             <tr>
                 <th scope="col">Product</th>
+                <th scope="col">PO</th>
+                <th scope="col">ATL</th>
                 <th scope="col">Unit</th>
                 <th scope="col">Quantity</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>@Model.CustomerOrderSlip.Product?.ProductName.ToUpper()</td>
-                <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
-                <td>@Model.Quantity.ToString(decimalFormat)</td>
-            </tr>
+            @foreach (var detail in detailLines)
+            {
+                <tr>
+                    <td>@detail.ProductName.ToUpper()</td>
+                    <td>@detail.PurchaseOrder?.PurchaseOrderNo</td>
+                    <td>@(detail.AuthorityToLoadNo ?? detail.AuthorityToLoad?.AuthorityToLoadNo)</td>
+                    <td>@detail.CustomerOrderSlip?.Product?.ProductUnit</td>
+                    <td>@detail.Quantity.ToString(decimalFormat)</td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
@@ -109,7 +132,7 @@
                 <td class="p-4 w-50" style="padding-left:20px;">@Model.Remarks.ToUpper()</td>
                 <td class="p-4 w-50" style="padding-left:20px;">
                     <b>Hauler:</b> &nbsp; @Model.Hauler?.SupplierName.ToUpper()<br />
-                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PickUpPoint?.Depot.ToUpper()<br />
+                    <b>Load Port:</b> &nbsp; @depots<br />
                     <b>Freight:</b> &nbsp; @Html.DisplayFor(model => model.Freight)<br />
                 </td>
             </tr>

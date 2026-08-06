@@ -47,6 +47,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
 
+        public DbSet<FilprideDeliveryReceiptDetail> FilprideDeliveryReceiptDetails { get; set; }
+
         public DbSet<FilprideFreight> FilprideFreights { get; set; }
 
         public DbSet<FilprideAuthorityToLoad> FilprideAuthorityToLoads { get; set; }
@@ -233,6 +235,34 @@ namespace IBS.DataAccess.Data
                 dr.HasOne(dr => dr.AuthorityToLoad)
                     .WithMany()
                     .HasForeignKey(dr => dr.AuthorityToLoadId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideDeliveryReceiptDetail>(d =>
+            {
+                d.HasOne(d => d.DeliveryReceipt)
+                    .WithMany(dr => dr.Details)
+                    .HasForeignKey(d => d.DeliveryReceiptId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                d.HasOne(d => d.CustomerOrderSlip)
+                    .WithMany()
+                    .HasForeignKey(d => d.CustomerOrderSlipId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                d.HasOne(d => d.PurchaseOrder)
+                    .WithMany()
+                    .HasForeignKey(d => d.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                d.HasOne(d => d.AuthorityToLoad)
+                    .WithMany()
+                    .HasForeignKey(d => d.AuthorityToLoadId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                d.HasOne(d => d.Product)
+                    .WithMany()
+                    .HasForeignKey(d => d.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

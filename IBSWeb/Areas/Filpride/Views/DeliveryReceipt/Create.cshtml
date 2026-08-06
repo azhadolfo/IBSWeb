@@ -1,4 +1,4 @@
-﻿@using IBS.Models.Enums
+@using IBS.Models.Enums
 @using IBS.Utility.Constants
 @using IBS.Utility.Helpers
 @model DeliveryReceiptViewModel
@@ -82,10 +82,10 @@
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                     </div>
                     <div class="form-group py-2 col-12">
-                        <label class="control-label">Appointed POs<span class="required">*</span></label>
-                        <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                            <option value="" selected>Select po</option>
+                        <label class="control-label">Appointed POs / ATLs<span class="required">*</span></label>
+                        <select id="PurchaseOrderSelector" class="form-select js-multiple border-0 shadow" style="width:100%" multiple="multiple">
                         </select>
+                        <input asp-for="PurchaseOrderId" type="hidden" />
                         <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
@@ -118,6 +118,11 @@
                     <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
+                </div>
+                <div class="col-12 py-2">
+                    <div class="small text-muted" id="selectedPoSummary">No ATL/PO selected.</div>
+                    <div id="detailInputs"></div>
+                    <div class="text-danger d-none" id="detailError">Please select ATL/PO entries and enter a valid volume within the selected balance.</div>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
@@ -167,7 +172,7 @@
                         <button type="submit" class="btn btn-primary form-control">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border form-control">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -181,152 +186,149 @@
     }
     <script>
         $(document).ready(function () {
-            //Get customer
-            $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
-                if (customerId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { id: customerId },
-                        success: function (data) {
-                            if (data) {
-                                $('input[name="CustomerAddress"]').val(data.address);
-                                $('input[name="CustomerTin"]').val(data.tinNo);
-                            } else {
-                                $('input[name="CustomerAddress"]').val('');
-                                $('input[name="CustomerTin"]').val('');
-                            }
+            const detailItems = [];
+            const $poSelect = $('#PurchaseOrderSelector');
+            const defaultDetailError = 'Please select ATL/PO entries and enter a valid volume within the selected balance.';
 
-                            // Update COS list
-                            updateCustomerOrderSlips(customerId);
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
-                        }
+            function setDetailError(message) {
+                $('#detailError').removeClass('d-none').text(message);
+            }
+
+            function clearDetailError() {
+                $('#detailError').addClass('d-none').text(defaultDetailError);
+            }
+
+            function calculateBuilderTotalAmount() {
+                var volume = parseNumber($('input[name="Volume"]').val());
+                var price = parseNumber($('input[name="Price"]').val());
+                $('input[name="TotalAmount"]').val(formatNumber(volume * price));
+            }
+
+            function getSelectedUnservedTotal() {
+                let total = 0;
+
+                $poSelect.find('option:selected').each(function () {
+                    total += parseFloat($(this).data('unserved')) || 0;
+                });
+
+                return total;
+            }
+
+            function refreshVolumeFromSelection() {
+                const remainingVolume = parseNumber($("#RemainingVolume").val());
+                const selectedUnservedTotal = getSelectedUnservedTotal();
+
+                if (selectedUnservedTotal <= 0) {
+                    return;
+                }
+
+                $('input[name="Volume"]').val(Math.min(remainingVolume, selectedUnservedTotal));
+                calculateBuilderTotalAmount();
+            }
+
+            function syncDetails() {
+                const $inputs = $('#detailInputs');
+                $inputs.empty();
+
+                let totalAmount = 0;
+
+                detailItems.forEach((item, index) => {
+                    totalAmount += item.amount;
+                    $inputs.append(`
+                        <input type="hidden" name="Details[${index}].CustomerOrderSlipId" value="${item.customerOrderSlipId}" />
+                        <input type="hidden" name="Details[${index}].CustomerOrderSlipNo" value="${item.cosNo}" />
+                        <input type="hidden" name="Details[${index}].PurchaseOrderId" value="${item.purchaseOrderId}" />
+                        <input type="hidden" name="Details[${index}].AuthorityToLoadId" value="${item.authorityToLoadId}" />
+                        <input type="hidden" name="Details[${index}].AuthorityToLoadNo" value="${item.atlNo}" />
+                        <input type="hidden" name="Details[${index}].ProductName" value="${item.productName}" />
+                        <input type="hidden" name="Details[${index}].Price" value="${item.price}" />
+                        <input type="hidden" name="Details[${index}].Quantity" value="${item.quantity}" />
+                        <input type="hidden" name="Details[${index}].Amount" value="${item.amount}" />
+                    `);
+                });
+
+                $('input[name="PurchaseOrderId"]').val(detailItems.length ? detailItems[0].purchaseOrderId : '');
+                $('input[name="ATLId"]').val(detailItems.length ? detailItems[0].authorityToLoadId : '');
+                $('input[name="ATLNo"]').val(detailItems.length === 1 ? detailItems[0].atlNo : detailItems.length > 1 ? 'MULTIPLE' : '');
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount || parseNumber($('input[name="Volume"]').val()) * parseNumber($('input[name="Price"]').val())));
+                $('#selectedPoSummary').text(detailItems.length ? `${detailItems.length} ATL/PO selection(s) applied.` : 'No ATL/PO selected.');
+            }
+
+            function rebuildDetailItems() {
+                const cosId = parseInt($('select[name="CustomerOrderSlipId"]').val() || '0');
+                const cosNo = $('select[name="CustomerOrderSlipId"] option:selected').text();
+                const productName = $('input[name="Product"]').val();
+                const price = parseNumber($('input[name="Price"]').val());
+                const quantity = parseNumber($('input[name="Volume"]').val());
+                const remainingVolume = parseNumber($('#RemainingVolume').val());
+                const selectedOptions = $poSelect.find('option:selected');
+
+                detailItems.length = 0;
+
+                if (!cosId || !selectedOptions.length || quantity <= 0) {
+                    syncDetails();
+                    return;
+                }
+
+                if (quantity > remainingVolume) {
+                    setDetailError('Volume exceeds the remaining COS balance.');
+                    syncDetails();
+                    return;
+                }
+
+                let remainingAllocation = quantity;
+
+                selectedOptions.each(function () {
+                    if (remainingAllocation <= 0) {
+                        return false;
+                    }
+
+                    const $option = $(this);
+                    const available = parseFloat($option.data('unserved')) || 0;
+                    const allocatedQuantity = Math.min(available, remainingAllocation);
+
+                    if (allocatedQuantity <= 0) {
+                        return;
+                    }
+
+                    detailItems.push({
+                        customerOrderSlipId: cosId,
+                        cosNo: cosNo,
+                        purchaseOrderId: parseInt($option.val() || '0'),
+                        purchaseOrderNo: $option.text(),
+                        authorityToLoadId: parseInt($option.data('atl-id') || '0'),
+                        atlNo: $option.data('atl-no') || '',
+                        productName: productName,
+                        price: price,
+                        quantity: allocatedQuantity,
+                        amount: allocatedQuantity * price
                     });
+
+                    remainingAllocation -= allocatedQuantity;
+                });
+
+                if (remainingAllocation > 0) {
+                    detailItems.length = 0;
+                    setDetailError('Selected ATL/PO balances are not enough for the requested volume.');
                 } else {
-                    $('input[name="CustomerAddress"]').val('');
-                    $('input[name="CustomerTin"]').val('');
+                    clearDetailError();
                 }
-            });
 
-            //Get cos
-            $('select[name="CustomerOrderSlipId"]').on('change', function () {
-                var cosId = $(this).val();
-                $('input[name="Volume"]').val('0.0000');
-                if (cosId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { id: cosId },
-                        success: function (data) {
-                            if (data) {
+                syncDetails();
+            }
 
-                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().show();
-                                    $('input[name="ECC"]').parent().show();
-                                    $('input[name="Freight"]').val(data.freight);
-                                    $('select[name="HaulerId"]').val(data.haulerId).change();
-                                } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
+            function validateVolume() {
+                var remainingVolume = parseNumber($("#RemainingVolume").val());
+                var volume = parseNumber($("#Volume").val());
+                var maxUnserved = getSelectedUnservedTotal() || remainingVolume;
+                var maxVolume = Math.min(remainingVolume, maxUnserved);
 
-                                    $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().hide();
-                                    $('select[name="HaulerId"]').val(data.haulerId).change();
-                                    $('input[name="ECC"]').parent().hide();
-
-                                } else {
-                                    // hide the hauler list
-                                    $('input[name="Freight"]').parent().hide();
-                                    $('input[name="ECC"]').parent().hide();
-                                    $('#haulerList').hide();
-                                }
-
-                                $('input[name="Driver"]').val(data.driver);
-                                $('input[name="PlateNo"]').val(data.plateNo);
-
-                                $('input[name="Product"]').val(data.product);
-                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
-                                $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
-                                $('input[name="Volume"]').val(data.remainingVolume);
-                                $('input[name="DeliveryOption"]').val(data.deliveryOption);
-                                $('input[name="Price"]').val(data.price);
-                                $('input[name="TotalAmount"]').val(formatNumber(data.quantity * data.price))
-
-                                // Populate Purchase Orders dropdown
-                                var $poSelect = $('select[name="PurchaseOrderId"]');
-                                $poSelect.empty();
-                                if (data.purchaseOrders && data.purchaseOrders.length > 0) {
-                                    $poSelect.append('<option value="">Select po</option>');
-                                    $.each(data.purchaseOrders, function(index, item) {
-                                        const formattedOption =
-                                            'PO: ' + item.purchaseOrderNo + ' | ' +
-                                            'Supplier: ' + item.supplierName + ' | ' +
-                                            'ATL#: ' + (item.atlNo || '') + ' | ' +
-                                            'Unserved: ' + formatNumber(item.unservedQuantity);
-
-                                        $poSelect.append('<option value="' + item.purchaseOrderId + '" ' +
-                                            'data-unserved="' + item.unservedQuantity + '" ' +
-                                            'data-atl-id="' + item.atlId + '" ' +
-                                            'data-atl-no="' + (item.atlNo || '') + '">' +
-                                            formattedOption + '</option>');
-                                    });
-                                } else {
-                                    $poSelect.append('<option value="">No purchase orders available</option>');
-                                }
-
-                            } else {
-                                $('input[name="Product"]').val('');
-                                $('input[name="CosVolume"]').val('');
-                                $('input[name="RemainingVolume"]').val('');
-                                $('input[name="DeliveryOption"]').val('');
-                                $('input[name="Price"]').val('');
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
-                        }
-                    });
-                } else {
-                    $('input[name="Product"]').val('');
-                    $('input[name="CosVolume"]').val('');
-                    $('input[name="RemainingVolume"]').val('');
-                    $('input[name="DeliveryOption"]').val('');
-                    $('input[name="Price"]').val('');
+                if (volume > maxVolume) {
+                    alert("Volume cannot exceed " + formatNumber(maxVolume));
+                    $("#Volume").val(maxVolume);
                 }
-            });
+            }
 
-            // When Purchase Order selection changes, set max volume
-            $('select[name="PurchaseOrderId"]').on('change', function() {
-                var $selectedOption = $(this).find('option:selected');
-                var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
-                var atlId = $selectedOption.data('atl-id') || '';
-                var atlNo = $selectedOption.data('atl-no') || '';
-
-                $('input[name="ATLId"]').val(atlId);
-                $('input[name="ATLNo"]').val(atlNo);
-
-                // Set max volume to unserved quantity
-                if (unservedQuantity > 0) {
-                    $('input[name="Volume"]').attr('max', unservedQuantity);
-                    $('input[name="Volume"]').val(unservedQuantity);
-                    calculateTotalAmount();
-                }
-            });
-
-            // Calculate Total Amount
-            $('input[name="Volume"]').on('input', function () {
-                calculateTotalAmount();
-            });
-
-            //Validate volume
-            $("#Volume").change(function () {
-                validateVolume();
-                calculateTotalAmount();
-            });
-
-            // Update COS list based on customer
             function updateCustomerOrderSlips(customerId) {
                 if (customerId) {
                     $.ajax({
@@ -344,37 +346,125 @@
                             } else {
                                 $cosSelect.append('<option value="">No cos available</option>');
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
                         }
                     });
                 }
             }
 
-            function calculateTotalAmount() {
-                var volume = parseNumber($('input[name="Volume"]').val());
-                var price = parseNumber($('input[name="Price"]').val());
-                var totalAmount = volume * price;
-                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
-            }
-
-            // Update volume validation to check against PO unserved quantity
-            function validateVolume() {
-                var remainingVolume = parseNumber($("#RemainingVolume").val());
-                var volume = parseNumber($("#Volume").val());
-                var maxUnserved = parseFloat($('select[name="PurchaseOrderId"] option:selected').data('unserved')) || remainingVolume;
-
-                // Use the smaller of remaining volume or unserved quantity as max
-                var maxVolume = Math.min(remainingVolume, maxUnserved);
-
-                if (volume > maxVolume) {
-                    alert("Volume cannot exceed " + formatNumber(maxVolume));
-                    $("#Volume").val(maxVolume);
+            $('select[name="CustomerId"]').on('change', function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { id: customerId },
+                        success: function (data) {
+                            $('input[name="CustomerAddress"]').val(data ? data.address : '');
+                            $('input[name="CustomerTin"]').val(data ? data.tinNo : '');
+                            updateCustomerOrderSlips(customerId);
+                        }
+                    });
+                } else {
+                    $('input[name="CustomerAddress"]').val('');
+                    $('input[name="CustomerTin"]').val('');
                 }
-            }
+            });
 
-            // Add event for checking if ManualDrNo exists
+            $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                var cosId = $(this).val();
+                $('input[name="Volume"]').val('0.0000');
+                detailItems.length = 0;
+                syncDetails();
+                clearDetailError();
+
+                if (cosId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { id: cosId },
+                        success: function (data) {
+                            if (!data) {
+                                return;
+                            }
+
+                            if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
+                                $('#haulerList').show();
+                                $('input[name="Freight"]').parent().show();
+                                $('input[name="ECC"]').parent().show();
+                                $('input[name="Freight"]').val(data.freight);
+                                $('select[name="HaulerId"]').val(data.haulerId).change();
+                            } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
+                                $('#haulerList').show();
+                                $('input[name="Freight"]').parent().hide();
+                                $('input[name="ECC"]').parent().hide();
+                                $('select[name="HaulerId"]').val(data.haulerId).change();
+                            } else {
+                                $('input[name="Freight"]').parent().hide();
+                                $('input[name="ECC"]').parent().hide();
+                                $('#haulerList').hide();
+                            }
+
+                            $('input[name="Driver"]').val(data.driver);
+                            $('input[name="PlateNo"]').val(data.plateNo);
+                            $('input[name="Product"]').val(data.product);
+                            $('input[name="CosVolume"]').val(formatNumber(data.quantity));
+                            $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
+                            $('input[name="Volume"]').val(data.remainingVolume);
+                            $('input[name="DeliveryOption"]').val(data.deliveryOption);
+                            $('input[name="Price"]').val(data.price);
+                            calculateBuilderTotalAmount();
+
+                            $poSelect.empty();
+                            if (data.purchaseOrders && data.purchaseOrders.length > 0) {
+                                $.each(data.purchaseOrders, function(index, item) {
+                                    const formattedOption =
+                                        'PO: ' + item.purchaseOrderNo + ' | ' +
+                                        'Supplier: ' + item.supplierName + ' | ' +
+                                        'ATL#: ' + (item.atlNo || '') + ' | ' +
+                                        'Unserved: ' + formatNumber(item.unservedQuantity);
+
+                                    $poSelect.append('<option value="' + item.purchaseOrderId + '" ' +
+                                        'data-unserved="' + item.unservedQuantity + '" ' +
+                                        'data-atl-id="' + item.atlId + '" ' +
+                                        'data-atl-no="' + (item.atlNo || '') + '">' +
+                                        formattedOption + '</option>');
+                                });
+                            }
+
+                            refreshVolumeFromSelection();
+                            $poSelect.trigger('change');
+                        }
+                    });
+                } else {
+                    $('input[name="Product"]').val('');
+                    $('input[name="CosVolume"]').val('');
+                    $('input[name="RemainingVolume"]').val('');
+                    $('input[name="DeliveryOption"]').val('');
+                    $('input[name="Price"]').val('');
+                    $poSelect.empty().trigger('change');
+                }
+            });
+
+            $poSelect.on('change', function () {
+                refreshVolumeFromSelection();
+                validateVolume();
+                rebuildDetailItems();
+            });
+
+            $('input[name="Volume"]').on('input change', function () {
+                validateVolume();
+                calculateBuilderTotalAmount();
+                rebuildDetailItems();
+            });
+
+            $('form').on('submit', function(e) {
+                rebuildDetailItems();
+                if (detailItems.length === 0) {
+                    e.preventDefault();
+                    setDetailError(defaultDetailError);
+                }
+            });
+
             $('input[name="ManualDrNo"]').on('blur', function() {
                 var manualDrNo = $(this).val();
                 if (manualDrNo) {
@@ -383,37 +473,24 @@
                         type: "GET",
                         data: { manualDrNo: manualDrNo },
                         success: function(exists) {
-
                             const submitButton = $('button[type="submit"]');
 
                             if (exists) {
-                                // Display error message if the ManualDrNo already exists
                                 alert("Manual DR# already exists. Please enter a different number.");
                                 $('input[name="ManualDrNo"]').addClass('is-invalid');
-
-                                // Optional: Add error message near the field
                                 if ($('input[name="ManualDrNo"]').next('.text-danger.manual-dr-exists').length === 0) {
                                     $('input[name="ManualDrNo"]').after('<span class="text-danger manual-dr-exists">Manual DR# already exists</span>');
                                 }
-
-                                // Disable the submit button
                                 submitButton.prop('disabled', true);
-
                             } else {
-                                // Clear any error styling/messages
                                 $('input[name="ManualDrNo"]').removeClass('is-invalid');
                                 $('.manual-dr-exists').remove();
-
                                 submitButton.prop('disabled', false);
                             }
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Error checking ManualDrNo: " + error);
                         }
                     });
                 }
             });
         });
-
     </script>
 }
