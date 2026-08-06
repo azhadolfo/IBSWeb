@@ -36,16 +36,14 @@
 
             <div class="form-group py-2 col-12">
                 <label class="control-label">Supplier List<span class="required">*</span></label>
-                <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" id="SupplierId" style="width:100%">
-                    <option value="">Select supplier</option>
+                <select asp-for="SupplierIds" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" id="SupplierIds" style="width:100%" multiple="multiple">
                 </select>
-                <span asp-validation-for="SupplierId" class="text-danger"></span>
+                <span asp-validation-for="SupplierIds" class="text-danger"></span>
             </div>
 
-            <div class="form-floating py-2 col-12" id="uppiAtlWrapper" style="display:@(Model.SupplierId == 19 ? "block" : "none");">
-                <input asp-for="UPPIAtlNo" class="form-control border-0 shadow" required/>
-                <label asp-for="UPPIAtlNo" class="ms-2">UPPI ATL#<span class="required">*</span></label>
-                <span asp-validation-for="UPPIAtlNo" class="text-danger"></span>
+            <div class="form-group py-2 col-12 @(Model.SupplierIds.Any() ? "" : "d-none")" id="supplierAtlWrapper">
+                <label class="control-label">Supplier ATL References</label>
+                <div id="supplierAtlContainer" class="row g-2"></div>
             </div>
 
             <div class="form-group py-2 col-12">
@@ -71,37 +69,41 @@
 <script>
     let cosIndex = 0;
     const existingCosDetails = @Html.Raw(Json.Serialize(Model.SelectedCosDetails));
+    const supplierLookup = @Html.Raw(Json.Serialize(Model.SupplierList.Select(s => new { value = s.Value, text = s.Text })));
+    const existingSupplierAtlReferences = @Html.Raw(Json.Serialize(Model.SupplierAtlReferences));
 
     $(document).ready(function () {
-        const supplierIdInput = $('#SupplierId');
+        const supplierIdInput = $('#SupplierIds');
         const loadPortInput = $('#LoadPortSelect');
 
         // Load COS list on page load
         loadCosList();
 
         supplierIdInput.on('change', function () {
-            $('#uppiAtlWrapper').toggle($(this).val() === '19');
+            renderSupplierAtlInputs($(this).val() || []);
             loadCosList();
         });
 
         loadPortInput.on('change', loadCosList);
 
+        renderSupplierAtlInputs(supplierIdInput.val() || []);
+
         function loadCosList() {
-            const supplierId = supplierIdInput.val();
+            const supplierIds = supplierIdInput.val() || [];
             const loadPortId = loadPortInput.val();
             const container = $('#cosContainer');
             container.empty();
             cosIndex = 0;
             disableCreateButton(true);
 
-            if (!supplierId || !loadPortId) return;
+            if (!supplierIds.length || !loadPortId) return;
 
             $.ajax({
                 url: '@Url.Action("GetSupplierCOSForEdit", "AuthorityToLoad", new { area = "Filpride" })',
                 type: 'GET',
                 traditional: true,
                 data: {
-                    supplierId,
+                    supplierIds: supplierIds.join(','),
                     loadPortId,
                     atlId: @Model.AtlId
                 },
@@ -122,7 +124,7 @@
                                     <div class="col-md-8">
                                         <input type="checkbox" class="form-check-input me-1 cos-checkbox" ${isChecked ? 'checked' : ''} />
                                         <span class="fw-semibold">
-                                            ${cos.cosNo} | ${cos.poNo} | ${cos.customerName} | Available: ${formatNumber(cos.volume)}
+                                            ${cos.supplierName} | ${cos.cosNo} | ${cos.poNo} | ${cos.customerName} | Available: ${formatNumber(cos.volume)}
                                         </span>
                                     </div>
                                     <div class="col-md-4 volume-wrapper" style="display:${isChecked ? 'block' : 'none'};">
@@ -158,6 +160,50 @@
                     console.error("Failed to fetch COS list");
                 }
             });
+        }
+
+        function renderSupplierAtlInputs(selectedSuppliers) {
+            const container = $('#supplierAtlContainer');
+            const wrapper = $('#supplierAtlWrapper');
+            const existingValues = {};
+
+            existingSupplierAtlReferences.forEach(function (item) {
+                existingValues[item.supplierId?.toString()] = item.supplierAtlNo || '';
+            });
+
+            container.find('.supplier-atl-input').each(function () {
+                existingValues[$(this).data('supplier-id')] = $(this).val();
+            });
+
+            container.empty();
+
+            if (!selectedSuppliers.length) {
+                wrapper.addClass('d-none');
+                return;
+            }
+
+            selectedSuppliers.forEach((supplierId, index) => {
+                const supplier = supplierLookup.find(x => x.value === supplierId);
+                const isUppi = supplierId === '19';
+                const value = existingValues[supplierId] || '';
+
+                container.append(`
+                    <div class="col-12">
+                        <input type="hidden" name="SupplierAtlReferences[${index}].SupplierId" value="${supplierId}" />
+                        <input type="hidden" name="SupplierAtlReferences[${index}].SupplierName" value="${supplier?.text || ''}" />
+                        <label class="form-label fw-semibold">${supplier?.text || 'Supplier'} ATL#${isUppi ? '<span class="required">*</span>' : ''}</label>
+                        <input type="text"
+                               name="SupplierAtlReferences[${index}].SupplierAtlNo"
+                               value="${value}"
+                               class="form-control border-0 shadow supplier-atl-input"
+                               data-supplier-id="${supplierId}"
+                               maxlength="100"
+                               ${isUppi ? 'required' : ''} />
+                    </div>
+                `);
+            });
+
+            wrapper.removeClass('d-none');
         }
 
         function reindexSelectedCos() {
