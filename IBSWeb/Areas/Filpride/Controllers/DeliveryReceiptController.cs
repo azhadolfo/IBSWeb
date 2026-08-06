@@ -1379,8 +1379,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var receivingReport = await _unitOfWork.FilprideReceivingReport
-                .GetAsync(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId);
+            var receivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId))
+                .OrderBy(rr => rr.Date)
+                .ThenBy(rr => rr.ReceivingReportNo)
+                .ToList();
+
+            var rrReference = string.Join(", ", receivingReports
+                .Select(rr => rr.OldRRNo ?? rr.ReceivingReportNo)
+                .Where(rr => !string.IsNullOrWhiteSpace(rr)));
 
             // Get the full path to the template in the wwwroot folder
             var templatePath = Path.Combine(_webHostEnvironment.WebRootPath, "templates", "DR Format.xlsx");
@@ -1391,7 +1398,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Fill in the data
             worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-            worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
+            worksheet.Cells["H7"].Value = rrReference;
             worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
             worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
             worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip!.OldCosNo;

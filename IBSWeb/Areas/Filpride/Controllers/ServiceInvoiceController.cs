@@ -58,6 +58,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private async Task<decimal> ComputeTransactionFeeGrossTotalAsync(FilprideDeliveryReceipt dr, CancellationToken cancellationToken)
+        {
+            var cos = dr.CustomerOrderSlip ?? throw new NullReferenceException("Customer order slip not found.");
+            var details = dr.Details.Any()
+                ? dr.Details
+                : [];
+
+            if (!details.Any())
+            {
+                if (dr.PurchaseOrderId == null)
+                {
+                    return 0m;
+                }
+
+                var headerCost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(dr.PurchaseOrderId.Value, cancellationToken);
+                var headerGrossMargin = cos.DeliveredPrice - (headerCost + dr.Freight + dr.CommissionRate);
+                return dr.Quantity * headerGrossMargin;
+            }
+
+            decimal total = 0m;
+
+            foreach (var detail in details)
+            {
+                var cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(detail.PurchaseOrderId, cancellationToken);
+                var grossMargin = cos.DeliveredPrice - (cost + dr.Freight + dr.CommissionRate);
+                total += detail.Quantity * grossMargin;
+            }
+
+            return total;
+        }
+
+        private async Task<List<string>> GetReceivingReportReferencesByDeliveryReceiptAsync(int deliveryReceiptId, CancellationToken cancellationToken)
+        {
+            return (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(x => x.DeliveryReceiptId == deliveryReceiptId, cancellationToken))
+                .Select(x => x.ReceivingReportNo)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .Cast<string>()
+                .ToList();
+        }
+
         public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.ServiceInvoice))
@@ -762,7 +804,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDRsByCustomer(int customerId, int previousSelectedDr)
+        public async Task<IActionResult> GetDRsByCustomer(int customerId, int previousSelectedDr, CancellationToken cancellationToken)
         {
             var drs = await _unitOfWork.FilprideDeliveryReceipt
                 .GetAllAsync(x =>
@@ -774,12 +816,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var dr in drs)
             {
-                var cosPrice = dr.CustomerOrderSlip!.DeliveredPrice;
-                var cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)dr.PurchaseOrderId!);
-                var freight = dr.Freight;
-                var commission = dr.CommissionRate;
-                var grossMargin = cosPrice - (cost + freight + commission);
-                var total = dr.Quantity * grossMargin;
+                var total = await ComputeTransactionFeeGrossTotalAsync(dr, cancellationToken);
 
                 result.Add(new
                 {
@@ -794,12 +831,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private async Task RevertTheReversalOfDrEntries(FilprideDeliveryReceipt dr, string company, CancellationToken cancellationToken)
         {
-            var relatedRrNo = (await _unitOfWork.FilprideReceivingReport
-                    .GetAsync(x => x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken))?
-                .ReceivingReportNo;
+            var relatedRrNos = await GetReceivingReportReferencesByDeliveryReceiptAsync(dr.DeliveryReceiptId, cancellationToken);
 
             await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => (x.Reference == dr.DeliveryReceiptNo || (relatedRrNo != null && x.Reference == relatedRrNo))
+                .Where(x => (x.Reference == dr.DeliveryReceiptNo || relatedRrNos.Contains(x.Reference))
                             && x.Company == company && x.Description.Contains("Reversal of entries due to recording of transaction fee"))
                 .ExecuteDeleteAsync(cancellationToken);
 
@@ -808,12 +843,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private async Task ReverseTheDrEntries(FilprideDeliveryReceipt dr, string company, CancellationToken cancellationToken)
         {
-            var relatedRrNo = (await _unitOfWork.FilprideReceivingReport
-                    .GetAsync(x => x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken))?
-                .ReceivingReportNo;
+            var relatedRrNos = await GetReceivingReportReferencesByDeliveryReceiptAsync(dr.DeliveryReceiptId, cancellationToken);
 
             var originalEntries = await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => (x.Reference == dr.DeliveryReceiptNo || (relatedRrNo != null && x.Reference == relatedRrNo))
+                .Where(x => (x.Reference == dr.DeliveryReceiptNo || relatedRrNos.Contains(x.Reference))
                             && x.Company == company)
                 .ToListAsync(cancellationToken);
 

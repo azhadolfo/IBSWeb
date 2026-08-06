@@ -16,6 +16,12 @@
     }
 
     var decimalFormat = Model.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var poReferences = Model.Details.Any()
+        ? string.Join(", ", Model.Details
+            .Select(d => d.PurchaseOrder?.PurchaseOrderNo)
+            .Where(po => !string.IsNullOrWhiteSpace(po))
+            .Distinct())
+        : Model.PurchaseOrder?.PurchaseOrderNo;
 }
 
 @if (Model.Status == nameof(DRStatus.Canceled))
@@ -66,7 +72,7 @@
             </tr>
             <tr>
                 <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
-                <td class="w-25 text-end align-text-top"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
+                <td class="w-25 text-end align-text-top"><b>PO No:</b> &nbsp;@poReferences</td>
             </tr>
             <tr>
                 <td></td>
