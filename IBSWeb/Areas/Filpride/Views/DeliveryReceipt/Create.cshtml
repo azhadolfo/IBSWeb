@@ -82,8 +82,9 @@
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                     </div>
                     <div class="form-group py-2 col-12">
-                        <label class="control-label">Appointed POs / ATLs<span class="required">*</span></label>
-                        <select id="PurchaseOrderSelector" class="form-select js-multiple border-0 shadow" style="width:100%" multiple="multiple">
+                        <label class="control-label">ATL List<span class="required">*</span></label>
+                        <select id="AtlSelector" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="">Select ATL</option>
                         </select>
                         <input asp-for="PurchaseOrderId" type="hidden" />
                         <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
@@ -120,9 +121,9 @@
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
                 <div class="col-12 py-2">
-                    <div class="small text-muted" id="selectedPoSummary">No ATL/PO selected.</div>
+                    <div class="small text-muted" id="selectedPoSummary">No ATL selected.</div>
                     <div id="detailInputs"></div>
-                    <div class="text-danger d-none" id="detailError">Please select ATL/PO entries and enter a valid volume within the selected balance.</div>
+                    <div class="text-danger d-none" id="detailError">Please select an ATL and enter a valid volume within the selected ATL balance.</div>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
@@ -187,8 +188,9 @@
     <script>
         $(document).ready(function () {
             const detailItems = [];
-            const $poSelect = $('#PurchaseOrderSelector');
-            const defaultDetailError = 'Please select ATL/PO entries and enter a valid volume within the selected balance.';
+            const atlPurchaseOrders = [];
+            const $atlSelect = $('#AtlSelector');
+            const defaultDetailError = 'Please select an ATL and enter a valid volume within the selected ATL balance.';
 
             function setDetailError(message) {
                 $('#detailError').removeClass('d-none').text(message);
@@ -204,14 +206,46 @@
                 $('input[name="TotalAmount"]').val(formatNumber(volume * price));
             }
 
-            function getSelectedUnservedTotal() {
-                let total = 0;
+            function getSelectedAtlId() {
+                return parseInt($atlSelect.val() || '0');
+            }
 
-                $poSelect.find('option:selected').each(function () {
-                    total += parseFloat($(this).data('unserved')) || 0;
+            function getSelectedAtlPurchaseOrders() {
+                const selectedAtlId = getSelectedAtlId();
+                if (!selectedAtlId) {
+                    return [];
+                }
+
+                return atlPurchaseOrders.filter(item => item.atlId === selectedAtlId);
+            }
+
+            function getSelectedUnservedTotal() {
+                return getSelectedAtlPurchaseOrders().reduce((sum, item) => sum + item.unservedQuantity, 0);
+            }
+
+            function buildAtlOptions(purchaseOrders) {
+                const atlMap = new Map();
+
+                purchaseOrders.forEach(item => {
+                    if (!item.atlId) {
+                        return;
+                    }
+
+                    if (!atlMap.has(item.atlId)) {
+                        atlMap.set(item.atlId, {
+                            atlId: item.atlId,
+                            atlNo: item.atlNo || '',
+                            totalUnserved: 0,
+                            poCount: 0
+                        });
+                    }
+
+                    const atl = atlMap.get(item.atlId);
+                    atl.totalUnserved += item.unservedQuantity;
+                    atl.poCount += 1;
                 });
 
-                return total;
+                return Array.from(atlMap.values());
             }
 
             function refreshVolumeFromSelection() {
@@ -249,9 +283,11 @@
 
                 $('input[name="PurchaseOrderId"]').val(detailItems.length ? detailItems[0].purchaseOrderId : '');
                 $('input[name="ATLId"]').val(detailItems.length ? detailItems[0].authorityToLoadId : '');
-                $('input[name="ATLNo"]').val(detailItems.length === 1 ? detailItems[0].atlNo : detailItems.length > 1 ? 'MULTIPLE' : '');
+                $('input[name="ATLNo"]').val(detailItems.length ? detailItems[0].atlNo : '');
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount || parseNumber($('input[name="Volume"]').val()) * parseNumber($('input[name="Price"]').val())));
-                $('#selectedPoSummary').text(detailItems.length ? `${detailItems.length} ATL/PO selection(s) applied.` : 'No ATL/PO selected.');
+                $('#selectedPoSummary').text(detailItems.length
+                    ? `ATL ${detailItems[0].atlNo || ''} selected. ${detailItems.length} PO allocation(s) applied.`
+                    : 'No ATL selected.');
             }
 
             function rebuildDetailItems() {
@@ -261,11 +297,11 @@
                 const price = parseNumber($('input[name="Price"]').val());
                 const quantity = parseNumber($('input[name="Volume"]').val());
                 const remainingVolume = parseNumber($('#RemainingVolume').val());
-                const selectedOptions = $poSelect.find('option:selected');
+                const selectedPurchaseOrders = getSelectedAtlPurchaseOrders();
 
                 detailItems.length = 0;
 
-                if (!cosId || !selectedOptions.length || quantity <= 0) {
+                if (!cosId || !selectedPurchaseOrders.length || quantity <= 0) {
                     syncDetails();
                     return;
                 }
@@ -278,13 +314,12 @@
 
                 let remainingAllocation = quantity;
 
-                selectedOptions.each(function () {
+                selectedPurchaseOrders.forEach(item => {
                     if (remainingAllocation <= 0) {
-                        return false;
+                        return;
                     }
 
-                    const $option = $(this);
-                    const available = parseFloat($option.data('unserved')) || 0;
+                    const available = item.unservedQuantity || 0;
                     const allocatedQuantity = Math.min(available, remainingAllocation);
 
                     if (allocatedQuantity <= 0) {
@@ -294,10 +329,10 @@
                     detailItems.push({
                         customerOrderSlipId: cosId,
                         cosNo: cosNo,
-                        purchaseOrderId: parseInt($option.val() || '0'),
-                        purchaseOrderNo: $option.text(),
-                        authorityToLoadId: parseInt($option.data('atl-id') || '0'),
-                        atlNo: $option.data('atl-no') || '',
+                        purchaseOrderId: item.purchaseOrderId,
+                        purchaseOrderNo: item.purchaseOrderNo,
+                        authorityToLoadId: item.atlId,
+                        atlNo: item.atlNo || '',
                         productName: productName,
                         price: price,
                         quantity: allocatedQuantity,
@@ -309,7 +344,7 @@
 
                 if (remainingAllocation > 0) {
                     detailItems.length = 0;
-                    setDetailError('Selected ATL/PO balances are not enough for the requested volume.');
+                    setDetailError('Selected ATL balance is not enough for the requested volume.');
                 } else {
                     clearDetailError();
                 }
@@ -409,30 +444,37 @@
                             $('input[name="Product"]').val(data.product);
                             $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                             $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
-                            $('input[name="Volume"]').val(data.remainingVolume);
+                            $('input[name="Volume"]').val('0.0000');
                             $('input[name="DeliveryOption"]').val(data.deliveryOption);
                             $('input[name="Price"]').val(data.price);
                             calculateBuilderTotalAmount();
 
-                            $poSelect.empty();
-                            if (data.purchaseOrders && data.purchaseOrders.length > 0) {
-                                $.each(data.purchaseOrders, function(index, item) {
-                                    const formattedOption =
-                                        'PO: ' + item.purchaseOrderNo + ' | ' +
-                                        'Supplier: ' + item.supplierName + ' | ' +
-                                        'ATL#: ' + (item.atlNo || '') + ' | ' +
-                                        'Unserved: ' + formatNumber(item.unservedQuantity);
+                            atlPurchaseOrders.length = 0;
+                            $atlSelect.empty().append('<option value="">Select ATL</option>');
 
-                                    $poSelect.append('<option value="' + item.purchaseOrderId + '" ' +
-                                        'data-unserved="' + item.unservedQuantity + '" ' +
-                                        'data-atl-id="' + item.atlId + '" ' +
-                                        'data-atl-no="' + (item.atlNo || '') + '">' +
-                                        formattedOption + '</option>');
+                            if (data.purchaseOrders && data.purchaseOrders.length > 0) {
+                                $.each(data.purchaseOrders, function(_, item) {
+                                    atlPurchaseOrders.push({
+                                        purchaseOrderId: item.purchaseOrderId,
+                                        purchaseOrderNo: item.purchaseOrderNo,
+                                        supplierName: item.supplierName,
+                                        unservedQuantity: parseFloat(item.unservedQuantity) || 0,
+                                        atlId: item.atlId || 0,
+                                        atlNo: item.atlNo || ''
+                                    });
+                                });
+
+                                $.each(buildAtlOptions(atlPurchaseOrders), function(_, item) {
+                                    const formattedOption =
+                                        'ATL#: ' + (item.atlNo || '') + ' | ' +
+                                        'PO Count: ' + item.poCount + ' | ' +
+                                        'Unserved: ' + formatNumber(item.totalUnserved);
+
+                                    $atlSelect.append('<option value="' + item.atlId + '">' + formattedOption + '</option>');
                                 });
                             }
 
-                            refreshVolumeFromSelection();
-                            $poSelect.trigger('change');
+                            $atlSelect.val('').trigger('change');
                         }
                     });
                 } else {
@@ -441,11 +483,12 @@
                     $('input[name="RemainingVolume"]').val('');
                     $('input[name="DeliveryOption"]').val('');
                     $('input[name="Price"]').val('');
-                    $poSelect.empty().trigger('change');
+                    atlPurchaseOrders.length = 0;
+                    $atlSelect.empty().append('<option value="">Select ATL</option>').trigger('change');
                 }
             });
 
-            $poSelect.on('change', function () {
+            $atlSelect.on('change', function () {
                 refreshVolumeFromSelection();
                 validateVolume();
                 rebuildDetailItems();
