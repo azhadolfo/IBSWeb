@@ -1262,11 +1262,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var connectedReceivingReport = await _unitOfWork.FilprideReceivingReport
-                    .GetAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
-                                    && rr.Status == nameof(Status.Posted), cancellationToken);
+                var connectedReceivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
+                                       && rr.Status == nameof(Status.Posted), cancellationToken))
+                    .ToList();
 
-                if (connectedReceivingReport != null)
+                foreach (var connectedReceivingReport in connectedReceivingReports)
                 {
                     await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(
                         connectedReceivingReport.ReceivingReportId, GetUserFullName(), cancellationToken);
@@ -1313,11 +1314,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-                var existingInventories = await _dbContext.FilprideInventories
-                    .Include(i => i.Product)
-                    .Where(i => i.Reference == model.DeliveryReceiptNo
-                                && i.Company == model.Company)
-                    .ToListAsync(cancellationToken);
+            var existingInventories = await _dbContext.FilprideInventories
+                .Include(i => i.Product)
+                .Where(i => i.Reference == model.DeliveryReceiptNo
+                            && i.Company == model.Company)
+                .ToListAsync(cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -1334,11 +1335,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                 }
 
-                var connectedReceivingReport = await _unitOfWork.FilprideReceivingReport
-                    .GetAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
-                                    && rr.Status == nameof(Status.Posted), cancellationToken);
+                var connectedReceivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
+                                       && rr.Status == nameof(Status.Posted), cancellationToken))
+                    .ToList();
 
-                if (connectedReceivingReport != null)
+                foreach (var connectedReceivingReport in connectedReceivingReports)
                 {
                     await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
                 }
@@ -1486,17 +1488,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
-            var detailPoIds = GetEffectiveDeliveryReceiptDetails(model)
-                .Select(d => d.PurchaseOrderId)
-                .Distinct()
-                .ToList();
-
-            if (detailPoIds.Count > 1)
-            {
-                TempData["error"] = "Recording lifting date is only allowed for delivery receipts with one purchase order.";
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -1517,7 +1508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Delivery Receipt lifting date has been recorded successfully. " +
-                                      $"RR#{receivingReportNo} has been generated.";
+                                      $"Generated RR reference(s): {receivingReportNo}.";
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }

@@ -172,113 +172,142 @@ namespace IBS.DataAccess.Repository.Filpride
             return query;
         }
 
-        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, string userName, CancellationToken cancellationToken = default)
+        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt,
+            DateOnly liftingDate,
+            string userName,
+            CancellationToken cancellationToken = default)
         {
-            FilprideReceivingReport model = new()
+            var effectiveDetails = deliveryReceipt.Details.Any()
+                ? deliveryReceipt.Details
+                : throw new ArgumentException("Delivery receipt details are required to generate receiving reports.");
+
+            var detailGroups = effectiveDetails
+                .GroupBy(d => d.PurchaseOrderId)
+                .ToList();
+
+            var generatedReceivingReportNos = new List<string>();
+
+            foreach (var detailGroup in detailGroups)
             {
-                DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
-                Date = liftingDate,
-                POId = deliveryReceipt.PurchaseOrder!.PurchaseOrderId,
-                PONo = deliveryReceipt.PurchaseOrder.PurchaseOrderNo,
-                QuantityDelivered = deliveryReceipt.Quantity,
-                QuantityReceived = deliveryReceipt.Quantity,
-                TruckOrVessels = deliveryReceipt.CustomerOrderSlip!.PickUpPoint!.Depot,
-                AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
-                Remarks = "PENDING",
-                Company = deliveryReceipt.Company,
-                CreatedBy = userName,
-                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                PostedBy = userName,
-                PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Status = nameof(Status.Posted),
-                Type = deliveryReceipt.PurchaseOrder.Type,
-                TaxPercentage = deliveryReceipt.PurchaseOrder!.Supplier!.WithholdingTaxPercent ?? 0m
-            };
+                var firstDetail = detailGroup.First();
+                var purchaseOrder = firstDetail.PurchaseOrder
+                    ?? throw new ArgumentException($"Purchase order {firstDetail.PurchaseOrderId} not found for receiving report generation.");
+                var customerOrderSlip = firstDetail.CustomerOrderSlip ?? deliveryReceipt.CustomerOrderSlip
+                    ?? throw new ArgumentException("Customer order slip not found for receiving report generation.");
+                var groupedQuantity = detailGroup.Sum(d => d.Quantity);
+                var distinctAtlNos = detailGroup
+                    .Select(d => d.AuthorityToLoadNo)
+                    .Where(a => !string.IsNullOrWhiteSpace(a))
+                    .Distinct()
+                    .ToList();
 
-            if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
-            {
-                throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
-                                            $"{deliveryReceipt.PurchaseOrder.PurchaseOrderNo}.");
-            }
-
-            var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
-                ? (decimal)deliveryReceipt.CustomerOrderSlip!.Freight!
-                : 0;
-
-            model.ReceivedDate = model.Date;
-            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type!, cancellationToken);
-            model.DueDate = await ComputeDueDateAsync(deliveryReceipt.PurchaseOrder.Terms, model.Date, cancellationToken);
-            model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
-
-            var poActualPrice = await _db.FilpridePOActualPrices
-                .FirstOrDefaultAsync(a => a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId
-                                          && a.IsApproved
-                                          && a.AppliedVolume != a.TriggeredVolume,
-                    cancellationToken);
-
-            var remainingQuantity = model.QuantityReceived;
-            decimal totalAmount = 0;
-
-            if (poActualPrice != null)
-            {
-                var availableQuantity = poActualPrice.TriggeredVolume - poActualPrice.AppliedVolume;
-
-                // Compute using poActualPrice.Price for the available quantity
-                if (availableQuantity > 0)
+                FilprideReceivingReport model = new()
                 {
-                    var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
-                    var applicableUnitCost = RoundToFourDecimalPlaces(poActualPrice.TriggeredPrice + freight);
-                    totalAmount += applicableQuantity * applicableUnitCost;
-                    poActualPrice.AppliedVolume += applicableQuantity;
-                    remainingQuantity -= applicableQuantity;
+                    DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
+                    Date = liftingDate,
+                    POId = purchaseOrder.PurchaseOrderId,
+                    PONo = purchaseOrder.PurchaseOrderNo,
+                    QuantityDelivered = groupedQuantity,
+                    QuantityReceived = groupedQuantity,
+                    TruckOrVessels = customerOrderSlip.PickUpPoint!.Depot,
+                    AuthorityToLoadNo = distinctAtlNos.Count == 1 ? distinctAtlNos[0] : deliveryReceipt.AuthorityToLoadNo,
+                    Remarks = "PENDING",
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    PostedBy = userName,
+                    PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Status = nameof(Status.Posted),
+                    Type = purchaseOrder.Type,
+                    TaxPercentage = purchaseOrder.Supplier!.WithholdingTaxPercent ?? 0m
+                };
+
+                if (model.QuantityDelivered > purchaseOrder.Quantity - purchaseOrder.QuantityReceived)
+                {
+                    throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: {purchaseOrder.PurchaseOrderNo}.");
                 }
+
+                var freight = customerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
+                    ? (decimal)customerOrderSlip.Freight!
+                    : 0m;
+
+                model.ReceivedDate = model.Date;
+                model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type!, cancellationToken);
+                model.DueDate = await ComputeDueDateAsync(purchaseOrder.Terms, model.Date, cancellationToken);
+                model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
+
+                var poActualPrice = await _db.FilpridePOActualPrices
+                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == purchaseOrder.PurchaseOrderId
+                                              && a.IsApproved
+                                              && a.AppliedVolume != a.TriggeredVolume,
+                        cancellationToken);
+
+                var remainingQuantity = model.QuantityReceived;
+                decimal totalAmount = 0m;
+
+                if (poActualPrice != null)
+                {
+                    var availableQuantity = poActualPrice.TriggeredVolume - poActualPrice.AppliedVolume;
+
+                    if (availableQuantity > 0)
+                    {
+                        var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
+                        var applicableUnitCost = RoundToFourDecimalPlaces(poActualPrice.TriggeredPrice + freight);
+                        totalAmount += applicableQuantity * applicableUnitCost;
+                        poActualPrice.AppliedVolume += applicableQuantity;
+                        remainingQuantity -= applicableQuantity;
+                    }
+                }
+
+                var remainingUnitCost = RoundToFourDecimalPlaces((poActualPrice?.TriggeredPrice ?? purchaseOrder.Price) + freight);
+                totalAmount += remainingQuantity * remainingUnitCost;
+                model.Amount = totalAmount;
+
+                FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
+                    $"Created new receiving report# {model.ReceivingReportNo}",
+                    "Receiving Report",
+                    model.Company);
+
+                FilprideAuditTrail auditTrailPost = new(model.PostedBy,
+                    $"Posted receiving report# {model.ReceivingReportNo}",
+                    "Receiving Report",
+                    model.Company);
+
+                await _db.AddAsync(auditTrailCreate, cancellationToken);
+                await _db.AddAsync(auditTrailPost, cancellationToken);
+                await _db.AddAsync(model, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                await PostAsync(model, cancellationToken);
+                var unitOfWork = new UnitOfWork(_db);
+                await unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
+                await UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId, model.QuantityReceived, cancellationToken);
+
+                generatedReceivingReportNos.Add(model.ReceivingReportNo);
             }
-
-            // Compute the remaining using the default price
-            var remainingUnitCost = RoundToFourDecimalPlaces((poActualPrice?.TriggeredPrice ?? deliveryReceipt.PurchaseOrder.Price) + freight);
-            totalAmount += remainingQuantity * remainingUnitCost;
-            model.Amount = totalAmount;
-
-            #region --Audit Trail Recording
-
-            FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
-                $"Created new receiving report# {model.ReceivingReportNo}",
-                "Receiving Report",
-                model.Company);
-
-            FilprideAuditTrail auditTrailPost = new(model.PostedBy,
-                $"Posted receiving report# {model.ReceivingReportNo}",
-                "Receiving Report",
-                model.Company);
-
-            await _db.AddAsync(auditTrailCreate, cancellationToken);
-            await _db.AddAsync(auditTrailPost, cancellationToken);
-
-            #endregion --Audit Trail Recording
-
-            await _db.AddAsync(model, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-
-            #region Update the invoice if any
 
             var salesInvoice = await _db.FilprideSalesInvoices
-                .FirstOrDefaultAsync(si => si.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+                .FirstOrDefaultAsync(si => si.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId, cancellationToken);
 
             if (salesInvoice != null)
             {
-                salesInvoice.ReceivingReportId = model.ReceivingReportId;
+                if (generatedReceivingReportNos.Count == 1)
+                {
+                    var rrId = await _db.FilprideReceivingReports
+                        .Where(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId
+                                     && rr.ReceivingReportNo == generatedReceivingReportNos[0])
+                        .Select(rr => rr.ReceivingReportId)
+                        .FirstAsync(cancellationToken);
+
+                    salesInvoice.ReceivingReportId = rrId;
+                }
+                else
+                {
+                    salesInvoice.ReceivingReportId = 0;
+                }
             }
 
-            #endregion Update the invoice if any
-
-            await PostAsync(model, cancellationToken);
-            var unitOfWork = new UnitOfWork(_db);
-            await unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
-
-            await UpdatePoAsync(model.PurchaseOrder!.PurchaseOrderId,
-                model.QuantityReceived, cancellationToken);
-
-            return model.ReceivingReportNo;
+            return string.Join(", ", generatedReceivingReportNos);
         }
 
         public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
@@ -433,7 +462,6 @@ namespace IBS.DataAccess.Repository.Filpride
             model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
             model.Status = nameof(Status.Voided);
             model.PostedBy = null;
-            model.DeliveryReceipt!.HasReceivingReport = false;
 
             if (model.PurchaseOrder != null &&
                 (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid))
@@ -453,6 +481,17 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
             await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+
+            var hasActiveReceivingReports = await _db.FilprideReceivingReports
+                .AnyAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
+                                && rr.ReceivingReportId != model.ReceivingReportId
+                                && rr.Status != nameof(Status.Voided)
+                                && rr.Status != nameof(Status.Canceled), cancellationToken);
+
+            if (model.DeliveryReceipt != null)
+            {
+                model.DeliveryReceipt.HasReceivingReport = hasActiveReceivingReports;
+            }
 
             #region --Audit Trail Recording
 
