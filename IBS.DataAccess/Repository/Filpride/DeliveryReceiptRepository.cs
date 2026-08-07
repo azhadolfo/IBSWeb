@@ -1054,6 +1054,31 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
+        private static (int? SupplierId, string? SupplierName) ResolveLockedPeriodSupplier(FilprideDeliveryReceipt deliveryReceipt)
+        {
+            var suppliers = deliveryReceipt.Details
+                .Where(detail => detail.PurchaseOrder != null)
+                .GroupBy(detail => detail.PurchaseOrder!.SupplierId)
+                .Select(group => new
+                {
+                    SupplierId = group.Key,
+                    SupplierName = group.First().PurchaseOrder!.SupplierName
+                })
+                .ToList();
+
+            if (suppliers.Count == 1)
+            {
+                return (suppliers[0].SupplierId, suppliers[0].SupplierName);
+            }
+
+            if (suppliers.Count > 1)
+            {
+                return (null, "Multiple Suppliers");
+            }
+
+            return (deliveryReceipt.PurchaseOrder?.SupplierId, deliveryReceipt.PurchaseOrder?.SupplierName);
+        }
+
         private async Task CreateEntriesForUpdatingPrice(FilprideDeliveryReceipt deliveryReceipt, decimal difference, string userName, CancellationToken cancellationToken = default)
         {
             try
@@ -1082,6 +1107,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var signedDifference = difference;
                 var particulars = $"Update Price on DR#{deliveryReceipt.DeliveryReceiptNo}. DR dated {deliveryReceipt.DeliveredDate}";
                 var isIncremental = difference > 0;
+                var (supplierId, supplierName) = ResolveLockedPeriodSupplier(deliveryReceipt);
                 difference = Math.Abs(difference);
 
                 var netOfVatAmount = deliveryReceipt.CustomerOrderSlip!.VatType == SD.VatType_Vatable
@@ -1203,8 +1229,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     EntityNo = deliveryReceipt.DeliveryReceiptNo,
                     CustomerId = deliveryReceipt.CustomerId,
                     CustomerName = deliveryReceipt.CustomerOrderSlip?.CustomerName,
-                    SupplierId = deliveryReceipt.PurchaseOrder?.SupplierId,
-                    SupplierName = deliveryReceipt.PurchaseOrder?.SupplierName,
+                    SupplierId = supplierId,
+                    SupplierName = supplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.SellingPrice,
                     OldValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
                     NewValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
