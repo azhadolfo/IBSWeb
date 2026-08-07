@@ -368,66 +368,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .ThenInclude(dr => dr!.Hauler)
                 .ToListAsync(cancellationToken);
 
-            // For the additional delivery receipts part, apply similar date filtering logic
-            var additionalDeliveryReceiptsQuery = _db.FilprideDeliveryReceipts
-                .Where(dr => dr.Date >= dateFrom && dr.Date <= dateTo
-                          && (customerIds == null || customerIds.Contains(dr.CustomerId))
-                          && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value))
-                          && dr.Status == nameof(DRStatus.PendingDelivery));
-
-            var additionalDeliveryReceipts = await additionalDeliveryReceiptsQuery
-                .Include(dr => dr.CustomerOrderSlip)
-                .Include(dr => dr.Customer)
-                .Include(dr => dr.Hauler)
-                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
-                .Include(dr => dr.Details).ThenInclude(d => d.PurchaseOrder).ThenInclude(po => po!.Supplier)
-                .Include(dr => dr.Details).ThenInclude(d => d.PurchaseOrder).ThenInclude(po => po!.Product)
-                .ToListAsync(cancellationToken);
-
-            var inTransitReports = additionalDeliveryReceipts.SelectMany(dr =>
-            {
-                var detailGroups = dr.Details.Any()
-                    ? dr.Details
-                        .GroupBy(d => d.PurchaseOrderId)
-                        .Select(group => new
-                        {
-                            PurchaseOrder = group.First().PurchaseOrder,
-                            Quantity = group.Sum(d => d.Quantity)
-                        })
-                        .Where(group => group.PurchaseOrder != null)
-                        .ToList()
-                    : dr.PurchaseOrder != null
-                        ?
-                        [
-                            new
-                            {
-                                PurchaseOrder = (FilpridePurchaseOrder?)dr.PurchaseOrder,
-                                Quantity = dr.Quantity
-                            }
-                        ]
-                        : [];
-
-                return detailGroups.Select(group => new FilprideReceivingReport
-                {
-                    DeliveryReceipt = dr,
-                    Date = dr.Date,
-                    Company = company,
-                    PurchaseOrder = group.PurchaseOrder,
-                    QuantityReceived = group.Quantity,
-                    QuantityDelivered = group.Quantity,
-                    POId = group.PurchaseOrder!.PurchaseOrderId,
-                    PONo = group.PurchaseOrder.PurchaseOrderNo,
-                    AuthorityToLoadNo = dr.AuthorityToLoadNo,
-                    Status = nameof(Status.Pending),
-                    Type = group.PurchaseOrder.Type
-                });
-            });
-
-            var allReports = receivingReports
-                .Concat(inTransitReports)
-                .ToList();
-
-            return allReports
+            return receivingReports
                 .OrderBy(rr => rr.Date)
                 .ThenBy(rr => rr.ReceivingReportNo)
                 .ThenBy(rr => rr.PONo)

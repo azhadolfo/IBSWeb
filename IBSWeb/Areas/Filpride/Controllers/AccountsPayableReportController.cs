@@ -1497,7 +1497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
@@ -1905,11 +1905,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netFreight = isHaulerVatable && freight != 0m
                         ? NetOfVatOrZero(freight)
                         : freight; // freight n vat
-                    var freightAmount = pr.DeliveryReceipt!.FreightAmount; // purchase total net
+                    var freightAmount = RoundToFour(freight * volume); // freight total gross
                     var freightAmountNet =
-                        isHaulerVatable && freight != 0m
-                            ? NetOfVatOrZero(freight * volume)
-                            : freight * volume; // purchase total net
+                        isHaulerVatable && freightAmount != 0m
+                            ? NetOfVatOrZero(freightAmount)
+                            : freightAmount; // freight total net
                     var vatAmount = isSupplierVatable
                         ? VatAmountOrZero(netPurchases)
                         : 0m; // vat total
@@ -2112,7 +2112,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 purchaseReportWorksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 for (int index = 0; index < productList.Count; index++)
@@ -2171,13 +2171,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ? NetOfVatOrZero(product.Sum(pr => pr.Amount))
                                 : product.Sum(pr => pr.Amount); // Purchase Net Total
 
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1, row, startingColumn + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Value = grandTotalVolume;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalPurchaseNet;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
+                            purchaseReportWorksheet.Cells[row, startingColumn, row, startingColumn + 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Style.Numberformat.Format = currencyFormat2;
                             purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Style.Numberformat.Format = currencyFormat;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat;
                         }
 
                         startingColumn += 3;
@@ -2204,7 +2204,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     mergedCells = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     mergedCells.Style.Font.Bold = true;
                     mergedCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    mergedCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    mergedCells.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     mergedCells.Style.Font.Size = 11;
                     mergedCells.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     mergedCells.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
