@@ -24,7 +24,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region--COS
 
-        [Required(ErrorMessage = "COS No field is required.")]
         public int CustomerOrderSlipId { get; set; }
 
         public List<SelectListItem>? CustomerOrderSlips { get; set; }
@@ -82,12 +81,13 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region Purchase Order
 
-        [Required(ErrorMessage = "PO field is required.")]
         public int PurchaseOrderId { get; set; }
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
         #endregion
+
+        public List<DeliveryReceiptDetailInput> Details { get; set; } = new();
 
         public bool HasReceivingReport { get; set; }
 
@@ -96,5 +96,29 @@ namespace IBS.Models.Filpride.ViewModels
         public string Type { get; set; } = string.Empty;
 
         public DateTime MinDate { get; set; }
+    }
+
+    public class DeliveryReceiptDetailInput
+    {
+        public int CustomerOrderSlipId { get; set; }
+
+        public int PurchaseOrderId { get; set; }
+
+        public int AuthorityToLoadId { get; set; }
+
+        public string? AuthorityToLoadNo { get; set; }
+
+        public string? CustomerOrderSlipNo { get; set; }
+
+        public string? ProductName { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal Price { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal Quantity { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal Amount { get; set; }
     }
 }

@@ -30,5 +30,16 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(AppointedId))]
         public FilprideCOSAppointedSupplier? AppointedSupplier { get; set; }
+
+        public int SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public FilprideSupplier? Supplier { get; set; }
+
+        [StringLength(100)]
+        public string SupplierName { get; set; } = null!;
+
+        [StringLength(100)]
+        public string? SupplierAtlNo { get; set; }
     }
 }

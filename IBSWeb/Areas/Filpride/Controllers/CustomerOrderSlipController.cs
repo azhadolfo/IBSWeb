@@ -1408,7 +1408,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
                 {
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                    ProductId = existingRecord.ProductId,
                     COSVolume = existingRecord.Quantity,
                     Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
@@ -1555,7 +1554,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
                 {
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                    ProductId = existingRecord.ProductId,
                     Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                     COSVolume = existingRecord.Quantity,
@@ -1708,10 +1706,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> GetPurchaseOrders(string supplierIds, string depot, int? productId, int? cosId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPurchaseOrders(string supplierIds, string depot, int? cosId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            if (string.IsNullOrEmpty(supplierIds) || productId == null)
+            if (string.IsNullOrEmpty(supplierIds))
             {
                 return NotFound();
             }
@@ -1737,7 +1735,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(p => p.Supplier)
                 .Where(p => supplierIdList.Contains(p.SupplierId) &&
                             p.PickUpPoint!.Depot == depot &&
-                            p.ProductId == productId &&
                             !p.IsReceived && !p.IsSubPo &&
                             p.Status == nameof(Status.Posted) &&
                             p.Company == companyClaims)
