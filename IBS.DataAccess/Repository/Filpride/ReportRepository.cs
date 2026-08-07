@@ -380,22 +380,58 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(dr => dr.Details).ThenInclude(d => d.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(dr => dr.Details).ThenInclude(d => d.PurchaseOrder).ThenInclude(po => po!.Product)
                 .ToListAsync(cancellationToken);
 
-            /// TODO Call this if needs to implement the in-transit purchases
-            var allReports = receivingReports
-                .Concat(additionalDeliveryReceipts.Select(dr => new FilprideReceivingReport
+            var inTransitReports = additionalDeliveryReceipts.SelectMany(dr =>
+            {
+                var detailGroups = dr.Details.Any()
+                    ? dr.Details
+                        .GroupBy(d => d.PurchaseOrderId)
+                        .Select(group => new
+                        {
+                            PurchaseOrder = group.First().PurchaseOrder,
+                            Quantity = group.Sum(d => d.Quantity)
+                        })
+                        .Where(group => group.PurchaseOrder != null)
+                        .ToList()
+                    : dr.PurchaseOrder != null
+                        ?
+                        [
+                            new
+                            {
+                                PurchaseOrder = (FilpridePurchaseOrder?)dr.PurchaseOrder,
+                                Quantity = dr.Quantity
+                            }
+                        ]
+                        : [];
+
+                return detailGroups.Select(group => new FilprideReceivingReport
                 {
                     DeliveryReceipt = dr,
                     Date = dr.Date,
                     Company = company,
-                    PurchaseOrder = dr.PurchaseOrder,
-                    QuantityReceived = dr.Quantity,
-                    QuantityDelivered = dr.Quantity
-                }))
+                    PurchaseOrder = group.PurchaseOrder,
+                    QuantityReceived = group.Quantity,
+                    QuantityDelivered = group.Quantity,
+                    POId = group.PurchaseOrder!.PurchaseOrderId,
+                    PONo = group.PurchaseOrder.PurchaseOrderNo,
+                    AuthorityToLoadNo = dr.AuthorityToLoadNo,
+                    Status = nameof(Status.Pending),
+                    Type = group.PurchaseOrder.Type
+                });
+            });
+
+            var allReports = receivingReports
+                .Concat(inTransitReports)
                 .ToList();
 
-            return receivingReports.OrderBy(rr => rr.Date).ToList();
+            return allReports
+                .OrderBy(rr => rr.Date)
+                .ThenBy(rr => rr.ReceivingReportNo)
+                .ThenBy(rr => rr.PONo)
+                .ToList();
         }
 
         public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(
