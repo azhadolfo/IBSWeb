@@ -59,6 +59,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private static (int? SupplierId, string? SupplierName) ResolveLockedPeriodSupplier(FilprideSalesInvoice salesInvoice)
+        {
+            var deliveryReceipt = salesInvoice.DeliveryReceipt;
+            if (deliveryReceipt == null)
+            {
+                return (null, null);
+            }
+
+            var suppliers = deliveryReceipt.Details
+                .Where(detail => detail.PurchaseOrder != null)
+                .GroupBy(detail => detail.PurchaseOrder!.SupplierId)
+                .Select(group => new
+                {
+                    SupplierId = group.Key,
+                    SupplierName = group.First().PurchaseOrder!.SupplierName
+                })
+                .ToList();
+
+            if (suppliers.Count == 1)
+            {
+                return (suppliers[0].SupplierId, suppliers[0].SupplierName);
+            }
+
+            if (suppliers.Count > 1)
+            {
+                return (null, "Multiple Suppliers");
+            }
+
+            return (deliveryReceipt.PurchaseOrder?.SupplierId, deliveryReceipt.PurchaseOrder?.SupplierName);
+        }
+
         private const string FilterTypeClaimType = "DebitMemo_FilterType";
 
         private async Task UpdateFilterTypeClaim(string filterType)
@@ -449,6 +480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.SalesInvoice != null)
                 {
                     var oldBalance = model.SalesInvoice.Balance;
+                    var (supplierId, supplierName) = ResolveLockedPeriodSupplier(model.SalesInvoice);
                     model.SalesInvoice.Balance -= model.DebitAmount;
                     model.SalesInvoice.DebitAmount -= model.DebitAmount;
 
@@ -460,8 +492,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         EntityNo = model.DebitMemoNo ?? string.Empty,
                         CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
                         CustomerName = model.SalesInvoice.CustomerOrderSlip?.CustomerName ?? model.SalesInvoice.Customer?.CustomerName,
-                        SupplierId = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierId,
-                        SupplierName = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierName,
+                        SupplierId = supplierId,
+                        SupplierName = supplierName,
                         AdjustmentType = LockedPeriodAdjustmentType.DebitMemo,
                         OldValue = oldBalance,
                         NewValue = model.SalesInvoice.Balance,
@@ -1233,6 +1265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.SalesInvoice != null)
                 {
                     var oldBalance = model.SalesInvoice.Balance;
+                    var (supplierId, supplierName) = ResolveLockedPeriodSupplier(model.SalesInvoice);
                     model.SalesInvoice.Balance += model.DebitAmount;
                     model.SalesInvoice.DebitAmount += model.DebitAmount;
 
@@ -1244,8 +1277,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         EntityNo = model.DebitMemoNo ?? string.Empty,
                         CustomerId = model.SalesInvoice.CustomerOrderSlip?.CustomerId ?? model.SalesInvoice.CustomerId,
                         CustomerName = model.SalesInvoice.CustomerOrderSlip?.CustomerName ?? model.SalesInvoice.Customer?.CustomerName,
-                        SupplierId = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierId,
-                        SupplierName = model.SalesInvoice.DeliveryReceipt?.PurchaseOrder?.SupplierName,
+                        SupplierId = supplierId,
+                        SupplierName = supplierName,
                         AdjustmentType = LockedPeriodAdjustmentType.DebitMemo,
                         OldValue = oldBalance,
                         NewValue = model.SalesInvoice.Balance,

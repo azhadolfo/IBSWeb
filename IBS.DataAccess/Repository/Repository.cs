@@ -140,6 +140,7 @@ namespace IBS.DataAccess.Repository
                 "PET002" => ("101040200", "Inventory - Econogas"),
                 "PET003" => ("101040300", "Inventory - Envirogas"),
                 "PET006" => ("101040400", "Inventory - Diesel"),
+                "PET007" => ("101040500", "Inventory - CME"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }

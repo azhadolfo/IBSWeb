@@ -147,6 +147,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip!.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
                 .Include(dr => dr.Customer)
+                .Include(dr => dr.Details).ThenInclude(detail => detail.PurchaseOrder)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
                 .ThenBy(dr => dr.DeliveryReceiptNo)
@@ -212,6 +213,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(si => si.CustomerOrderSlip)
                 .Include(si => si.DeliveryReceipt)
                     .ThenInclude(dr => dr!.CustomerOrderSlip)
+                .Include(si => si.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.Details)
+                    .ThenInclude(detail => detail.PurchaseOrder)
                 .OrderBy(si => si.TransactionDate)
                 .ToListAsync(cancellationToken);
 
@@ -368,34 +372,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     .ThenInclude(dr => dr!.Hauler)
                 .ToListAsync(cancellationToken);
 
-            // For the additional delivery receipts part, apply similar date filtering logic
-            var additionalDeliveryReceiptsQuery = _db.FilprideDeliveryReceipts
-                .Where(dr => dr.Date >= dateFrom && dr.Date <= dateTo
-                          && (customerIds == null || customerIds.Contains(dr.CustomerId))
-                          && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value))
-                          && dr.Status == nameof(DRStatus.PendingDelivery));
-
-            var additionalDeliveryReceipts = await additionalDeliveryReceiptsQuery
-                .Include(dr => dr.CustomerOrderSlip)
-                .Include(dr => dr.Customer)
-                .Include(dr => dr.Hauler)
-                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
-                .ToListAsync(cancellationToken);
-
-            /// TODO Call this if needs to implement the in-transit purchases
-            var allReports = receivingReports
-                .Concat(additionalDeliveryReceipts.Select(dr => new FilprideReceivingReport
-                {
-                    DeliveryReceipt = dr,
-                    Date = dr.Date,
-                    Company = company,
-                    PurchaseOrder = dr.PurchaseOrder,
-                    QuantityReceived = dr.Quantity,
-                    QuantityDelivered = dr.Quantity
-                }))
+            return receivingReports
+                .OrderBy(rr => rr.Date)
+                .ThenBy(rr => rr.ReceivingReportNo)
+                .ThenBy(rr => rr.PONo)
                 .ToList();
-
-            return receivingReports.OrderBy(rr => rr.Date).ToList();
         }
 
         public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(
@@ -436,6 +417,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Supplier)
                 .Include(x => x.PurchaseOrder)
+                    .ThenInclude(x => x!.Product)
+                .Include(x => x.Details)
+                    .ThenInclude(x => x.PurchaseOrder)
+                    .ThenInclude(x => x!.Supplier)
+                .Include(x => x.Details)
+                    .ThenInclude(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Product)
                 .Include(x => x.CustomerOrderSlip)
                     .ThenInclude(x => x!.PickUpPoint)

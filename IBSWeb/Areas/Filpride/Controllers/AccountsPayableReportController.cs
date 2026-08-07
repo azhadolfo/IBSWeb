@@ -1497,7 +1497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.ProductName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
@@ -1905,11 +1905,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netFreight = isHaulerVatable && freight != 0m
                         ? NetOfVatOrZero(freight)
                         : freight; // freight n vat
-                    var freightAmount = pr.DeliveryReceipt!.FreightAmount; // purchase total net
+                    var freightAmount = RoundToFour(freight * volume); // freight total gross
                     var freightAmountNet =
-                        isHaulerVatable && freight != 0m
-                            ? NetOfVatOrZero(freight * volume)
-                            : freight * volume; // purchase total net
+                        isHaulerVatable && freightAmount != 0m
+                            ? NetOfVatOrZero(freightAmount)
+                            : freightAmount; // freight total net
                     var vatAmount = isSupplierVatable
                         ? VatAmountOrZero(netPurchases)
                         : 0m; // vat total
@@ -2112,7 +2112,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 purchaseReportWorksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 for (int index = 0; index < productList.Count; index++)
@@ -2171,13 +2171,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ? NetOfVatOrZero(product.Sum(pr => pr.Amount))
                                 : product.Sum(pr => pr.Amount); // Purchase Net Total
 
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1, row, startingColumn + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Value = grandTotalVolume;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalPurchaseNet;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
+                            purchaseReportWorksheet.Cells[row, startingColumn, row, startingColumn + 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Style.Numberformat.Format = currencyFormat2;
                             purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Style.Numberformat.Format = currencyFormat;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat;
                         }
 
                         startingColumn += 3;
@@ -2204,7 +2204,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     mergedCells = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     mergedCells.Style.Font.Bold = true;
                     mergedCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    mergedCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    mergedCells.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     mergedCells.Style.Font.Size = 11;
                     mergedCells.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     mergedCells.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -2598,11 +2598,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
                                         var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                         var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                                        var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
-                                        // Computation for Overall
-                                        var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var overallSalesSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                        var overallQuantitySum = list.Sum(s => s.QuantityReceived);
+                                        var overallSalesSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                         var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
                                                 ? NetOfVatOrZero(overallSalesSum)
                                                 : overallSalesSum;
@@ -2611,11 +2609,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(overallPurchasesSum)
                                                 : overallPurchasesSum;
                                         var overallGrossMarginSum = RoundToFour(overallNetOfSalesSum - overallNetOfPurchasesSum);
-                                        var overallFreightSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                        var overallFreightSum = RoundToFour(list.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                         var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
                                                 ? NetOfVatOrZero(overallFreightSum)
                                                 : overallFreightSum;
-                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                         var overallNetMarginSum = RoundToFour(overallGrossMarginSum - (overallFreightSum + overallCommissionSum));
                                         var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? DivideOrZero(overallNetMarginSum, overallQuantitySum) : 0m;
 
@@ -2699,8 +2697,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                             var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
-                                            var quantitySum = productItems.Sum(s => s.DeliveryReceipt!.Quantity);
-                                            var salesSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                            var quantitySum = productItems.Sum(s => s.QuantityReceived);
+                                            var salesSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                             var netOfSalesSum = isCustomerVatable && salesSum != 0m
                                                 ? NetOfVatOrZero(salesSum)
                                                 : salesSum;
@@ -2709,11 +2707,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(purchasesSum)
                                                 : purchasesSum;
                                             var grossMarginSum = RoundToFour(netOfSalesSum - netOfPurchasesSum);
-                                            var freightSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                            var freightSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                             var netOfFreightSum = isHaulerVatable && freightSum != 0m
                                                 ? NetOfVatOrZero(freightSum)
                                                 : freightSum;
-                                            var commissionSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                            var commissionSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                             var netMarginSum = RoundToFour(grossMarginSum - (freightSum + commissionSum));
                                             var netMarginPerLiterSum = quantitySum != 0m ? DivideOrZero(netMarginSum, quantitySum) : 0m;
 
@@ -2950,12 +2948,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Variables and Formulas --
 
                     // calculate values, put in variables to be displayed per cell
-                    var isSupplierVatable = dr.PurchaseOrder!.VatType == SD.VatType_Vatable;
                     var isHaulerVatable = dr.HaulerVatType == SD.VatType_Vatable;
                     var isCustomerVatable = dr.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
                     var relatedReceivingReports = dr.HasReceivingReport
                         ? rrLookup[dr.DeliveryReceiptId].OrderBy(rr => rr.Date).ToList()
                         : [];
+                    var purchaseOrders = dr.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .GroupBy(detail => detail.PurchaseOrderId)
+                        .Select(group => group.First().PurchaseOrder!)
+                        .ToList();
+
+                    if (purchaseOrders.Count == 0 && dr.PurchaseOrder != null)
+                    {
+                        purchaseOrders.Add(dr.PurchaseOrder);
+                    }
+
+                    var supplierNames = string.Join(", ", purchaseOrders
+                        .Select(po => po.SupplierName)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                    var terms = string.Join(", ", purchaseOrders
+                        .Select(po => po.Terms)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                    var poNumbers = string.Join(", ", purchaseOrders
+                        .Select(po => po.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
                     var rrNumbers = relatedReceivingReports
                         .Select(rr => rr.ReceivingReportNo)
                         .Where(rrNo => !string.IsNullOrWhiteSpace(rrNo));
@@ -2973,11 +2995,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : salesAmount;
                     var costAmount = relatedReceivingReports.Count > 0
                         ? relatedReceivingReports.Sum(rr => rr.Amount)
-                        : dr.PurchaseOrder.FinalPrice * volume; // purchase total
+                        : purchaseOrders.Count > 0
+                            ? dr.Details
+                                .Where(detail => detail.PurchaseOrder != null)
+                                .Sum(detail => detail.Quantity * detail.PurchaseOrder!.FinalPrice)
+                            : dr.PurchaseOrder!.FinalPrice * volume; // purchase total
                     var costPerLiter = DivideOrZero(costAmount, volume); // purchase per liter
-                    var netPurchases = isSupplierVatable
-                        ? NetOfVatOrZero(costAmount)
-                        : costAmount; // purchase total net
+                    var netPurchases = relatedReceivingReports.Count > 0
+                        ? relatedReceivingReports.Sum(rr => rr.PurchaseOrder?.VatType == SD.VatType_Vatable && rr.Amount != 0m
+                            ? NetOfVatOrZero(rr.Amount)
+                            : rr.Amount)
+                        : purchaseOrders.Count > 0
+                            ? dr.Details
+                                .Where(detail => detail.PurchaseOrder != null)
+                                .Sum(detail =>
+                                {
+                                    var detailCostAmount = detail.Quantity * detail.PurchaseOrder!.FinalPrice;
+                                    return detail.PurchaseOrder.VatType == SD.VatType_Vatable
+                                        ? NetOfVatOrZero(detailCostAmount)
+                                        : detailCostAmount;
+                                })
+                            : dr.PurchaseOrder!.VatType == SD.VatType_Vatable
+                                ? NetOfVatOrZero(costAmount)
+                                : costAmount; // purchase total net
                     var gmAmount = RoundToFour(netSales - netPurchases); // gross margin total
                     var gmPerLiter = DivideOrZero(gmAmount, volume); // gross margin per liter
                     var freightCharge = RoundToFour(dr.Freight + dr.ECC); // freight charge per liter
@@ -3046,9 +3086,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Assign Values to Cells --
 
                     gmReportWorksheet.Cells[row, 1].Value = rrDateDisplay;
-                    gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
-                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.Terms;
-                    gmReportWorksheet.Cells[row, 4].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 2].Value = supplierNames;
+                    gmReportWorksheet.Cells[row, 3].Value = terms;
+                    gmReportWorksheet.Cells[row, 4].Value = poNumbers;
                     gmReportWorksheet.Cells[row, 5].Value = string.Join(", ", rrNumbers);
                     gmReportWorksheet.Cells[row, 6].Value = dr.DeliveryReceiptNo;
                     gmReportWorksheet.Cells[row, 7].Value = dr.CustomerOrderSlip.CustomerName;
@@ -5434,7 +5474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var sumOfFreightAmountWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
-                    .Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    .Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
 
                 var sumOfQuantityWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
                     .Sum(rr => rr.QuantityReceived);
@@ -5443,7 +5483,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
@@ -6671,7 +6711,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;
@@ -6815,7 +6855,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;
@@ -6959,7 +6999,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;

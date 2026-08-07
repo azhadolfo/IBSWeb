@@ -59,6 +59,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private static string? GetSupplierAtlNo(BookATLViewModel viewModel, int supplierId)
+        {
+            return viewModel.SupplierAtlReferences
+                .FirstOrDefault(x => x.SupplierId == supplierId)?
+                .SupplierAtlNo?
+                .Trim();
+        }
+
+        private static string? ValidateSupplierAtlReferences(BookATLViewModel viewModel)
+        {
+            if (!viewModel.SupplierIds.Any())
+            {
+                return "Please select at least one supplier.";
+            }
+
+            if (viewModel.SupplierIds.Contains(19) &&
+                string.IsNullOrWhiteSpace(GetSupplierAtlNo(viewModel, 19)))
+            {
+                return "Supplier ATL# is required for UPPI.";
+            }
+
+            return null;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -88,8 +112,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.AuthorityToLoadNo.ToLower().Contains(searchValue) ||
                         (hasDateBooked && s.DateBooked == dateBooked) ||
                         (hasValidUntil && s.ValidUntil == validUntil) ||
-                        (s.UppiAtlNo != null &&
-                        s.UppiAtlNo.ToLower().Contains(searchValue) == true) ||
+                        s.Details.Any(d =>
+                            d.SupplierAtlNo != null &&
+                            d.SupplierAtlNo.ToLower().Contains(searchValue)) ||
                         s.Details.Any(d =>
                             d.CustomerOrderSlip!.CustomerOrderSlipNo.ToLower().Contains(searchValue)) ||
                         s.Remarks.ToLower().Contains(searchValue)
@@ -189,6 +214,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            var supplierAtlValidationMessage = ValidateSupplierAtlReferences(viewModel);
+            if (supplierAtlValidationMessage != null)
+            {
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                TempData["warning"] = supplierAtlValidationMessage;
+                return View(viewModel);
+            }
+
+            if (!viewModel.SelectedCosDetails.Any())
+            {
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                TempData["warning"] = "Please select at least one COS.";
+                return View(viewModel);
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -212,11 +254,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = cosRecord.Freight ?? 0m,
                     DateBooked = viewModel.Date,
                     ValidUntil = viewModel.Date.AddDays(4),
-                    UppiAtlNo = viewModel.UPPIAtlNo,
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = viewModel.SupplierId,
+                    SupplierId = viewModel.SupplierIds.First(),
                     Company = companyClaims
                 };
 
@@ -229,6 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Get all appointed suppliers for this COS in a single query
                     var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(c => c.CustomerOrderSlip)
+                        .Include(c => c.Supplier)
                         .Where(c => c.CustomerOrderSlipId == details.CosId)
                         .ToListAsync(cancellationToken);
 
@@ -249,6 +291,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Quantity = details.Volume,
                         UnservedQuantity = details.Volume,
                         AppointedId = appointedSupplier.SequenceId,
+                        SupplierId = appointedSupplier.SupplierId,
+                        SupplierName = appointedSupplier.Supplier!.SupplierName,
+                        SupplierAtlNo = GetSupplierAtlNo(viewModel, appointedSupplier.SupplierId)
                     });
 
                     if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
@@ -258,6 +303,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
+
+                var selectedSupplierNames = await _dbContext.FilprideSuppliers
+                    .Where(s => viewModel.SupplierIds.Contains(s.SupplierId))
+                    .OrderBy(s => s.SupplierName)
+                    .Select(s => s.SupplierName)
+                    .ToListAsync(cancellationToken);
+
+                model.SupplierName = selectedSupplierNames.Count switch
+                {
+                    0 => null,
+                    1 => selectedSupplierNames[0],
+                    _ => "Multiple Suppliers"
+                };
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
@@ -340,12 +398,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSupplierCOS(int supplierId, int loadPortId)
+        public async Task<IActionResult> GetSupplierCOS(string supplierIds, int loadPortId)
         {
+            if (string.IsNullOrWhiteSpace(supplierIds))
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            var supplierIdList = supplierIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(int.Parse)
+                .Distinct()
+                .ToList();
+
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
                 .Include(a => a.PurchaseOrder)
-                .Where(a => a.SupplierId == supplierId
+                .Include(a => a.Supplier)
+                .Where(a => supplierIdList.Contains(a.SupplierId)
                             && !a.CustomerOrderSlip!.IsCosAtlFinalized
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Closed)
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Expired)
@@ -360,14 +429,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     customerName = g.CustomerOrderSlip!.CustomerName,
                     volume = g.UnreservedQuantity,
                     poNo = g.PurchaseOrder!.PurchaseOrderNo,
+                    supplierId = g.SupplierId,
+                    supplierName = g.Supplier!.SupplierName,
                 })
+                .OrderBy(g => g.supplierName)
+                .ThenBy(g => g.cosNo)
                 .ToListAsync();
 
             return Json(cosList);
         }
 
-        public async Task<IActionResult> GetSupplierCOSForEdit(int supplierId, int loadPortId, int atlId)
+        public async Task<IActionResult> GetSupplierCOSForEdit(string supplierIds, int loadPortId, int atlId)
         {
+            if (string.IsNullOrWhiteSpace(supplierIds))
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            var supplierIdList = supplierIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(int.Parse)
+                .Distinct()
+                .ToList();
+
             // Get the COS IDs and appointed IDs that are currently in this ATL with their quantities
             var existingBookDetails = await _dbContext.FilprideBookAtlDetails
                 .Where(b => b.AuthorityToLoadId == atlId)
@@ -382,7 +465,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
                 .Include(a => a.PurchaseOrder)
-                .Where(a => a.SupplierId == supplierId
+                .Include(a => a.Supplier)
+                .Where(a => supplierIdList.Contains(a.SupplierId)
                             && a.CustomerOrderSlip!.Status != nameof(CosStatus.Closed)
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Expired)
                             && a.CustomerOrderSlip.Status != nameof(CosStatus.Disapproved)
@@ -395,6 +479,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     customerName = g.CustomerOrderSlip!.CustomerName,
                     volume = g.UnreservedQuantity,
                     poNo = g.PurchaseOrder!.PurchaseOrderNo,
+                    supplierId = g.SupplierId,
+                    supplierName = g.Supplier!.SupplierName,
                 })
                 .ToListAsync();
 
@@ -412,10 +498,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.cosNo,
                     volume = existingDetail != null ? cos.volume + existingDetail.Quantity : cos.volume,
                     cos.customerName,
-                    cos.poNo
+                    cos.poNo,
+                    cos.supplierId,
+                    cos.supplierName
                 };
             })
             .Where(x => x.volume > 0)
+            .OrderBy(x => x.supplierName)
+            .ThenBy(x => x.cosNo)
             .ToList();
 
             return Json(result);
@@ -529,13 +619,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Volume = b.Quantity
             }).ToList();
 
+            var appointedIds = atl.Details
+                .Where(d => d.AppointedId.HasValue)
+                .Select(d => d.AppointedId!.Value)
+                .ToList();
+
+            var supplierIds = await _dbContext.FilprideCOSAppointedSuppliers
+                .Where(x => appointedIds.Contains(x.SequenceId))
+                .Select(x => x.SupplierId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var supplierAtlReferences = atl.Details
+                .GroupBy(d => d.SupplierId)
+                .Select(g => new SupplierAtlReferenceInput
+                {
+                    SupplierId = g.Key,
+                    SupplierName = g.Select(x => x.SupplierName).FirstOrDefault(),
+                    SupplierAtlNo = g.Select(x => x.SupplierAtlNo).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+                })
+                .ToList();
+
             BookATLViewModel viewModel = new()
             {
                 AtlId = atl.AuthorityToLoadId,
                 Date = atl.DateBooked,
                 LoadPortId = atl.LoadPortId,
-                SupplierId = atl.SupplierId,
-                UPPIAtlNo = atl.UppiAtlNo,
+                SupplierIds = supplierIds,
+                SupplierAtlReferences = supplierAtlReferences,
                 SelectedCosDetails = selectedCosDetails,
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                 LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
@@ -562,6 +673,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            var supplierAtlValidationMessage = ValidateSupplierAtlReferences(viewModel);
+            if (supplierAtlValidationMessage != null)
+            {
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                TempData["warning"] = supplierAtlValidationMessage;
+                return View(viewModel);
+            }
+
+            if (!viewModel.SelectedCosDetails.Any())
+            {
+                viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                TempData["warning"] = "Please select at least one COS.";
                 return View(viewModel);
             }
 
@@ -620,8 +748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 atl.Freight = cosRecord.Freight ?? 0m;
                 atl.DateBooked = viewModel.Date;
                 atl.ValidUntil = viewModel.Date.AddDays(4);
-                atl.UppiAtlNo = viewModel.UPPIAtlNo;
-                atl.SupplierId = viewModel.SupplierId;
+                atl.SupplierId = viewModel.SupplierIds.First();
                 viewModel.CurrentUser = GetUserFullName();
 
                 var bookDetails = new List<FilprideBookAtlDetail>();
@@ -630,6 +757,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(c => c.CustomerOrderSlip)
+                        .Include(c => c.Supplier)
                         .Where(c => c.CustomerOrderSlipId == details.CosId)
                         .ToListAsync(cancellationToken);
 
@@ -649,6 +777,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Quantity = details.Volume,
                         UnservedQuantity = details.Volume,
                         AppointedId = appointedSupplier.SequenceId,
+                        SupplierId = appointedSupplier.SupplierId,
+                        SupplierName = appointedSupplier.Supplier!.SupplierName,
+                        SupplierAtlNo = GetSupplierAtlNo(viewModel, appointedSupplier.SupplierId)
                     });
 
                     if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
@@ -658,6 +789,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
+
+                var selectedSupplierNames = await _dbContext.FilprideSuppliers
+                    .Where(s => viewModel.SupplierIds.Contains(s.SupplierId))
+                    .OrderBy(s => s.SupplierName)
+                    .Select(s => s.SupplierName)
+                    .ToListAsync(cancellationToken);
+
+                atl.SupplierName = selectedSupplierNames.Count switch
+                {
+                    0 => null,
+                    1 => selectedSupplierNames[0],
+                    _ => "Multiple Suppliers"
+                };
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 

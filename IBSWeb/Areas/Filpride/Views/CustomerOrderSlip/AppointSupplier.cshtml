@@ -26,7 +26,6 @@
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <input asp-for="CustomerOrderSlipId" type="hidden"/>
-                <input asp-for="ProductId" type="hidden"/>
 
                 <!-- Progress indicator -->
                 <div class="progress mb-4" style="height: 20px;">
@@ -254,7 +253,6 @@
             function fetchPurchaseOrders() {
                 const supplierIds = $('#SupplierIds').val();
                 const depot = $('#PickUpPointId option:selected').text();
-                const productId = $('#ProductId').val();
                 const $poSelect = $('#PurchaseOrderIds');
 
                 // Show loading indicator
@@ -270,7 +268,6 @@
                         data: {
                             supplierIds: supplierIds.join(','),
                             depot: depot,
-                            productId: productId,
                         },
                         success: function (data) {
                             if (data.length === 0) {
