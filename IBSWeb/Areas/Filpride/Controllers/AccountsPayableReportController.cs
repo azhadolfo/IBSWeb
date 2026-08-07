@@ -1497,7 +1497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.ProductName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
@@ -2599,8 +2599,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                         var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
-                                        var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var overallSalesSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                        var overallQuantitySum = list.Sum(s => s.QuantityReceived);
+                                        var overallSalesSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                         var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
                                                 ? NetOfVatOrZero(overallSalesSum)
                                                 : overallSalesSum;
@@ -2609,11 +2609,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(overallPurchasesSum)
                                                 : overallPurchasesSum;
                                         var overallGrossMarginSum = RoundToFour(overallNetOfSalesSum - overallNetOfPurchasesSum);
-                                        var overallFreightSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                        var overallFreightSum = RoundToFour(list.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                         var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
                                                 ? NetOfVatOrZero(overallFreightSum)
                                                 : overallFreightSum;
-                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                         var overallNetMarginSum = RoundToFour(overallGrossMarginSum - (overallFreightSum + overallCommissionSum));
                                         var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? DivideOrZero(overallNetMarginSum, overallQuantitySum) : 0m;
 
@@ -2697,8 +2697,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                             var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
-                                            var quantitySum = productItems.Sum(s => s.DeliveryReceipt!.Quantity);
-                                            var salesSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                            var quantitySum = productItems.Sum(s => s.QuantityReceived);
+                                            var salesSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                             var netOfSalesSum = isCustomerVatable && salesSum != 0m
                                                 ? NetOfVatOrZero(salesSum)
                                                 : salesSum;
@@ -2707,11 +2707,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(purchasesSum)
                                                 : purchasesSum;
                                             var grossMarginSum = RoundToFour(netOfSalesSum - netOfPurchasesSum);
-                                            var freightSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                            var freightSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                             var netOfFreightSum = isHaulerVatable && freightSum != 0m
                                                 ? NetOfVatOrZero(freightSum)
                                                 : freightSum;
-                                            var commissionSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                            var commissionSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                             var netMarginSum = RoundToFour(grossMarginSum - (freightSum + commissionSum));
                                             var netMarginPerLiterSum = quantitySum != 0m ? DivideOrZero(netMarginSum, quantitySum) : 0m;
 
