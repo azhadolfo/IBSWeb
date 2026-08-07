@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260729053925_AddMarketingApprovalToCustomerOrderSlip")]
-    partial class AddMarketingApprovalToCustomerOrderSlip
+    [Migration("20260806012926_AddSupplierSnapshotToBookAtlDetail")]
+    partial class AddSupplierSnapshotToBookAtlDetail
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3359,6 +3359,21 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantity");
 
+                    b.Property<string>("SupplierAtlNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("supplier_atl_no");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("supplier_name");
+
                     b.Property<decimal>("UnservedQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unserved_quantity");
@@ -3374,6 +3389,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerOrderSlipId")
                         .HasDatabaseName("ix_filpride_book_atl_details_customer_order_slip_id");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_filpride_book_atl_details_supplier_id");
 
                     b.ToTable("filpride_book_atl_details", (string)null);
                 });
@@ -3658,15 +3676,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
-
-                    b.Property<string>("MarketingApprovedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("marketing_approved_by");
-
-                    b.Property<DateTime?>("MarketingApprovedDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("marketing_approved_date");
 
                     b.Property<string>("OMReason")
                         .HasColumnType("text")
@@ -4196,6 +4205,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("customer_name");
+
                     b.Property<int>("EntityType")
                         .HasColumnType("integer")
                         .HasColumnName("entity_type");
@@ -4221,6 +4238,14 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("reason");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("supplier_name");
 
                     b.HasKey("Id")
                         .HasName("pk_locked_period_adjustments");
@@ -4780,10 +4805,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsFilpride")
                         .HasColumnType("boolean")
                         .HasColumnName("is_filpride");
-
-                    b.Property<bool>("IsMnvP")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_mnv_p");
 
                     b.Property<string>("ProofOfExemptionFileName")
                         .HasMaxLength(200)
@@ -5921,11 +5942,20 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_book_atl_details_filpride_customer_order_slips_cus");
 
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_book_atl_details_filpride_suppliers_supplier_id");
+
                     b.Navigation("AppointedSupplier");
 
                     b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("Header");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCOSAppointedSupplier", b =>

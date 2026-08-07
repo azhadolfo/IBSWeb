@@ -143,16 +143,6 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
-        #region Approval of Marketing
-
-        [StringLength(100)]
-        public string? MarketingApprovedBy { get; set; }
-
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime? MarketingApprovedDate { get; set; }
-
-        #endregion
-
         #region Approval of Operation Manager
 
         [StringLength(100)]

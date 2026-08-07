@@ -2,7 +2,6 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class DashboardCountViewModel
     {
-        public int MarketingApprovalCount { get; set; }
         public int SupplierAppointmentCount { get; set; }
         public int HaulerAppointmentCount { get; set; }
         public int ATLBookingCount { get; set; }

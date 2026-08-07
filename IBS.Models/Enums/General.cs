@@ -29,7 +29,6 @@ namespace IBS.Models.Enums
 
     public enum CosStatus
     {
-        ForApprovalOfMarketing,
         Created,
         SupplierAppointed,
         HaulerAppointed,
