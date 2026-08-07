@@ -5474,7 +5474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var sumOfFreightAmountWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
-                    .Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    .Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
 
                 var sumOfQuantityWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
                     .Sum(rr => rr.QuantityReceived);
@@ -5483,7 +5483,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
