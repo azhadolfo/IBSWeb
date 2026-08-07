@@ -147,6 +147,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip!.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
                 .Include(dr => dr.Customer)
+                .Include(dr => dr.Details).ThenInclude(detail => detail.PurchaseOrder)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
                 .ThenBy(dr => dr.DeliveryReceiptNo)

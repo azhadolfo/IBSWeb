@@ -1857,6 +1857,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         var isCustomerVatable = record.DeliveryReceipt.CustomerOrderSlip?.VatType == SD.VatType_Vatable;
                                         var isHaulerVatable = record.DeliveryReceipt.HaulerVatType == SD.VatType_Vatable;
+                                        var poNumbers = string.Join(", ", record.DeliveryReceipt.Details
+                                            .Where(detail => detail.PurchaseOrder != null)
+                                            .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                                            .Where(value => !string.IsNullOrWhiteSpace(value))
+                                            .Distinct(StringComparer.OrdinalIgnoreCase));
                                         var quantity = record.DeliveryReceipt.Quantity;
                                         var freight = record.DeliveryReceipt.FreightAmount;
                                         var freightNetOfVat = isHaulerVatable
@@ -1876,7 +1881,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.DeliveryReceiptNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(!string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : record.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.ProductName);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity != 0 ? quantity < 0 ? $"({Math.Abs(quantity).ToString(SD.Two_Decimal_Format)})" : quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(quantity < 0 ? Colors.Red.Medium : Colors.Black);
@@ -2304,6 +2309,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         productMetric.NetOfSales += salesNetOfVat;
                     }
 
+                    var poNumbers = string.Join(", ", dr.DeliveryReceipt.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+                    var oldPoNumbers = string.Join(", ", dr.DeliveryReceipt.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.OldPoNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
                     worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
                     worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerName;
                     worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.CustomerOrderSlip?.Branch;
@@ -2314,8 +2330,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 8].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[row, 9].Value = dr.DeliveryReceipt.DeliveryReceiptNo;
                     worksheet.Cells[row, 10].Value = dr.DeliveryReceipt.ManualDrNo;
-                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 11].Value = !string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 12].Value = !string.IsNullOrWhiteSpace(oldPoNumbers) ? oldPoNumbers : dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption;
                     worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.CustomerOrderSlip!.ProductName;
                     worksheet.Cells[row, 15].Value = dr.DeliveryReceipt.Quantity;
