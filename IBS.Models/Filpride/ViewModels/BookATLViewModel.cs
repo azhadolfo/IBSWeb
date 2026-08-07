@@ -7,14 +7,11 @@ namespace IBS.Models.Filpride.ViewModels
     {
         public int? AtlId { get; set; }
 
-        public int SupplierId { get; set; }
+        public List<int> SupplierIds { get; set; } = new();
 
         public List<SelectListItem>? CosList { get; set; }
 
         public DateOnly Date { get; set; }
-
-        [StringLength(100)]
-        public string? UPPIAtlNo { get; set; }
 
         public int LoadPortId { get; set; }
 
@@ -24,7 +21,19 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem> LoadPorts { get; set; } = new();
 
+        public List<SupplierAtlReferenceInput> SupplierAtlReferences { get; set; } = new();
+
         public List<CosAppointedDetails> SelectedCosDetails { get; set; } = new();
+    }
+
+    public class SupplierAtlReferenceInput
+    {
+        public int SupplierId { get; set; }
+
+        public string? SupplierName { get; set; }
+
+        [StringLength(100)]
+        public string? SupplierAtlNo { get; set; }
     }
 
     public class CosAppointedDetails

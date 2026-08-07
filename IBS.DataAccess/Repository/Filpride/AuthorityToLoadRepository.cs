@@ -65,6 +65,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Hauler)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Customer)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint)
+                .Include(atl => atl.Details).ThenInclude(d => d.Supplier)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.AppointedSuppliers)!.ThenInclude(a => a.Supplier)
                 .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.AppointedSuppliers)!.ThenInclude(a => a.PurchaseOrder)
                 .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Customer)
                 .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Product)
