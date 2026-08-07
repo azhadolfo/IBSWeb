@@ -6,6 +6,15 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.1.0] - 2026-08-07
+
+### Added
+- Added the migration of blended product.
+
+### Changed
+- Modified the COS, DR, RR, AP and AR reports to adopt the changes.
+---
+
 ## [v3.0.10] - 2026-08-03
 
 ### Changed
