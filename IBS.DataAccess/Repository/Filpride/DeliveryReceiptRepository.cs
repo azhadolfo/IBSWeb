@@ -841,156 +841,172 @@ namespace IBS.DataAccess.Repository.Filpride
                     dr.Status == nameof(DRStatus.PendingDelivery), cancellationToken);
 
             var poRepo = new PurchaseOrderRepository(_db);
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
+            var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
             foreach (var dr in inTransits.OrderBy(dr => dr.DeliveryReceiptNo))
             {
-                var productCode = dr.PurchaseOrder!.Product!.ProductCode;
-                var productCostGrossAmount = dr.Quantity * await poRepo.GetPurchaseOrderCost(dr.PurchaseOrder.PurchaseOrderId, cancellationToken);
-                var productCostNetOfVatAmount = ComputeNetOfVat(productCostGrossAmount);
-                var productCostVatAmount = ComputeVatAmount(productCostNetOfVatAmount);
-                var productCostEwtAmount = ComputeEwtAmount(productCostNetOfVatAmount, 0.01m);
-                var productCostNetOfEwt = ComputeNetOfEwt(productCostGrossAmount, productCostEwtAmount);
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(productCode);
-                var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
-                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
-                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var purchaseOrderGroups = dr.Details.Any()
+                    ? dr.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .GroupBy(detail => detail.PurchaseOrderId)
+                        .Select(group => (PurchaseOrder: group.First().PurchaseOrder!, Quantity: group.Sum(detail => detail.Quantity)))
+                        .ToList()
+                    : dr.PurchaseOrder != null
+                        ? new List<(IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>
+                        {
+                            (dr.PurchaseOrder, dr.Quantity)
+                        }
+                        : new List<(IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>();
 
-                #region In-Transit Entries
-
-                ledgers.Add(new FilprideGeneralLedgerBook
+                foreach (var purchaseOrderGroup in purchaseOrderGroups)
                 {
-                    Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = inventoryTitle.AccountId,
-                    AccountNo = inventoryTitle.AccountNumber,
-                    AccountTitle = inventoryTitle.AccountName,
-                    Debit = productCostNetOfVatAmount,
-                    Credit = 0,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    var productCode = purchaseOrderGroup.PurchaseOrder.Product!.ProductCode;
+                    var productCostGrossAmount = purchaseOrderGroup.Quantity * await poRepo.GetPurchaseOrderCost(purchaseOrderGroup.PurchaseOrder.PurchaseOrderId, cancellationToken);
+                    var productCostNetOfVatAmount = ComputeNetOfVat(productCostGrossAmount);
+                    var productCostVatAmount = ComputeVatAmount(productCostNetOfVatAmount);
+                    var productCostEwtAmount = ComputeEwtAmount(productCostNetOfVatAmount, 0.01m);
+                    var productCostNetOfEwt = ComputeNetOfEwt(productCostGrossAmount, productCostEwtAmount);
+                    var (inventoryAcctNo, _) = GetInventoryAccountTitle(productCode);
+                    var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = vatInputTitle.AccountId,
-                    AccountNo = vatInputTitle.AccountNumber,
-                    AccountTitle = vatInputTitle.AccountName,
-                    Debit = productCostVatAmount,
-                    Credit = 0,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    #region In-Transit Entries
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = apTradeTitle.AccountId,
-                    AccountNo = apTradeTitle.AccountNumber,
-                    AccountTitle = apTradeTitle.AccountName,
-                    Debit = 0,
-                    Credit = productCostNetOfEwt,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SubAccountType = SubAccountType.Supplier,
-                    SubAccountId = dr.PurchaseOrder.SupplierId,
-                    SubAccountName = dr.PurchaseOrder.SupplierName
-                });
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = inventoryTitle.AccountId,
+                        AccountNo = inventoryTitle.AccountNumber,
+                        AccountTitle = inventoryTitle.AccountName,
+                        Debit = productCostNetOfVatAmount,
+                        Credit = 0,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = ewtOnePercent.AccountId,
-                    AccountNo = ewtOnePercent.AccountNumber,
-                    AccountTitle = ewtOnePercent.AccountName,
-                    Debit = 0,
-                    Credit = productCostEwtAmount,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = vatInputTitle.AccountId,
+                        AccountNo = vatInputTitle.AccountNumber,
+                        AccountTitle = vatInputTitle.AccountName,
+                        Debit = productCostVatAmount,
+                        Credit = 0,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
 
-                #endregion
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = apTradeTitle.AccountId,
+                        AccountNo = apTradeTitle.AccountNumber,
+                        AccountTitle = apTradeTitle.AccountName,
+                        Debit = 0,
+                        Credit = productCostNetOfEwt,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = purchaseOrderGroup.PurchaseOrder.SupplierId,
+                        SubAccountName = purchaseOrderGroup.PurchaseOrder.SupplierName
+                    });
 
-                #region Auto Reversal Entries
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = ewtOnePercent.AccountId,
+                        AccountNo = ewtOnePercent.AccountNumber,
+                        AccountTitle = ewtOnePercent.AccountName,
+                        Debit = 0,
+                        Credit = productCostEwtAmount,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(startOfMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = inventoryTitle.AccountId,
-                    AccountNo = inventoryTitle.AccountNumber,
-                    AccountTitle = inventoryTitle.AccountName,
-                    Debit = 0,
-                    Credit = productCostNetOfVatAmount,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    #endregion
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(startOfMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = vatInputTitle.AccountId,
-                    AccountNo = vatInputTitle.AccountNumber,
-                    AccountTitle = vatInputTitle.AccountName,
-                    Debit = 0,
-                    Credit = productCostVatAmount,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    #region Auto Reversal Entries
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(startOfMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = apTradeTitle.AccountId,
-                    AccountNo = apTradeTitle.AccountNumber,
-                    AccountTitle = apTradeTitle.AccountName,
-                    Debit = productCostNetOfEwt,
-                    Credit = 0,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SubAccountType = SubAccountType.Supplier,
-                    SubAccountId = dr.PurchaseOrder.SupplierId,
-                    SubAccountName = dr.PurchaseOrder.SupplierName
-                });
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(startOfMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = inventoryTitle.AccountId,
+                        AccountNo = inventoryTitle.AccountNumber,
+                        AccountTitle = inventoryTitle.AccountName,
+                        Debit = 0,
+                        Credit = productCostNetOfVatAmount,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
 
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = DateOnly.FromDateTime(startOfMonth),
-                    Reference = dr.DeliveryReceiptNo,
-                    Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountId = ewtOnePercent.AccountId,
-                    AccountNo = ewtOnePercent.AccountNumber,
-                    AccountTitle = ewtOnePercent.AccountName,
-                    Debit = productCostEwtAmount,
-                    Credit = 0,
-                    Company = dr.Company,
-                    CreatedBy = "SYSTEM GENERATED",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                });
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(startOfMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = vatInputTitle.AccountId,
+                        AccountNo = vatInputTitle.AccountNumber,
+                        AccountTitle = vatInputTitle.AccountName,
+                        Debit = 0,
+                        Credit = productCostVatAmount,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
 
-                #endregion
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(startOfMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = apTradeTitle.AccountId,
+                        AccountNo = apTradeTitle.AccountNumber,
+                        AccountTitle = apTradeTitle.AccountName,
+                        Debit = productCostNetOfEwt,
+                        Credit = 0,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SubAccountType = SubAccountType.Supplier,
+                        SubAccountId = purchaseOrderGroup.PurchaseOrder.SupplierId,
+                        SubAccountName = purchaseOrderGroup.PurchaseOrder.SupplierName
+                    });
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(startOfMonth),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                        AccountId = ewtOnePercent.AccountId,
+                        AccountNo = ewtOnePercent.AccountNumber,
+                        AccountTitle = ewtOnePercent.AccountName,
+                        Debit = productCostEwtAmount,
+                        Credit = 0,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
+
+                    #endregion
+                }
 
                 if (!IsJournalEntriesBalanced(ledgers))
                 {
