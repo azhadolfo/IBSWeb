@@ -213,6 +213,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(si => si.CustomerOrderSlip)
                 .Include(si => si.DeliveryReceipt)
                     .ThenInclude(dr => dr!.CustomerOrderSlip)
+                .Include(si => si.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.Details)
+                    .ThenInclude(detail => detail.PurchaseOrder)
                 .OrderBy(si => si.TransactionDate)
                 .ToListAsync(cancellationToken);
 

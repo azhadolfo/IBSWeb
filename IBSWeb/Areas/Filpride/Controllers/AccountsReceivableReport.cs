@@ -5145,6 +5145,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var dr in salesReport)
                 {
+                    var poNumbers = string.Join(", ", dr.DeliveryReceipt?.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase) ?? []);
+                    var oldPoNumbers = string.Join(", ", dr.DeliveryReceipt?.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.OldPoNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase) ?? []);
                     var quantity = dr.Quantity;
                     var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.Amount;
@@ -5161,8 +5171,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
                     worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
-                    worksheet.Cells[row, 10].Value = dr.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 11].Value = dr.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 10].Value = !string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : dr.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 11].Value = !string.IsNullOrWhiteSpace(oldPoNumbers) ? oldPoNumbers : dr.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
                     worksheet.Cells[row, 13].Value = dr.Product?.ProductName;
                     worksheet.Cells[row, 14].Value = quantity;
