@@ -120,9 +120,6 @@ namespace IBSWeb.Areas.User.Controllers
             var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var counts = new DashboardCountViewModel();
 
-            counts.MarketingApprovalCount = await ctx.FilprideCustomerOrderSlips
-                .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfMarketing) && cos.Company == companyClaims)
-                .CountAsync();
             counts.SupplierAppointmentCount = await ctx.FilprideCustomerOrderSlips
                 .Where(cos => (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
                 .CountAsync();
@@ -441,7 +438,6 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string GetFilterType(string type, string status) => (type, status) switch
         {
-            ("COS", nameof(CosStatus.ForApprovalOfMarketing)) => "ForMarketingApproval",
             ("COS", nameof(CosStatus.Created)) => "",
             ("COS", nameof(CosStatus.SupplierAppointed)) => "ForAppointSupplier",
             ("COS", nameof(CosStatus.HaulerAppointed)) => "ForAppointHauler",
@@ -463,7 +459,6 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string MapStatus(string status) => status switch
         {
-            nameof(CosStatus.ForApprovalOfMarketing) => "Marketing Approval",
             nameof(CosStatus.Created) => "Created",
             nameof(CosStatus.SupplierAppointed) => "Supplier Appointed",
             nameof(CosStatus.HaulerAppointed) => "Hauler Appointed",
