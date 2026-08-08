@@ -567,7 +567,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.Reference,
                         x.CheckVoucherHeaderNo,
-                        x.DcrDate
+                        x.DcrDate,
+                        x.BankAccount,
+                        x.BankAccountNumber,
+                        x.BankAccountName
                     })
                     .ToListAsync(cancellationToken);
 
@@ -615,6 +618,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV PAYMENT"; col++;
                 worksheet.Cells[row, col].Value = "DCR"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
@@ -662,8 +668,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
-                    worksheet.Cells[row, col].Style.WrapText = true; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccount!.Bank; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountNumber; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountName; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
@@ -820,6 +828,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV No."; col++;
                 worksheet.Cells[row, col].Value = "DCR DATE"; col++;
                 worksheet.Cells[row, col].Value = "CHECK #"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK NAME"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
@@ -864,11 +875,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
                         worksheet.Cells[row, col].Value = header.DcrDate?.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccount!.Bank; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountNumber; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountName; col++;
                         worksheet.Cells[row, col].Value = header.Payee; col++;
-                        worksheet.Cells[row, col].Value = header.Particulars;
-                        worksheet.Cells[row, col].Style.WrapText = true;
-                        col++;
-                        worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars; col++;
+                        worksheet.Cells[row, col].Value = header.Type; col++;
 
                         if (header.Category == "Trade")
                         {
@@ -920,7 +932,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             worksheet.Cells[row, col].Value = header.Reference;
                         }
-                        worksheet.Cells[row, col].Style.WrapText = true;
                         col++;
 
                         worksheet.Cells[row, col].Value = details.AccountNo; col++;
@@ -8272,7 +8283,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 2].Value = detail.JournalVoucherHeader.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 3].Value = detail.JournalVoucherHeader.Particulars;
-                    worksheet.Cells[row, 3].Style.WrapText = true;
                     worksheet.Cells[row, 4].Value = detail.Debit;
                     worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 5].Value = detail.Credit;
