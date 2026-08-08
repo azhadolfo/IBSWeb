@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -18,9 +20,6 @@ using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.Globalization;
-using System.Security.Claims;
-using IBS.Models.MasterFile;
 using Color = System.Drawing.Color;
 using DateTime = System.DateTime;
 
@@ -421,7 +420,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -567,7 +566,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.Reference,
                         x.CheckVoucherHeaderNo,
-                        x.DcrDate
+                        x.DcrDate,
+                        x.BankAccount,
+                        x.BankAccountNumber,
+                        x.BankAccountName
                     })
                     .ToListAsync(cancellationToken);
 
@@ -615,6 +617,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV PAYMENT"; col++;
                 worksheet.Cells[row, col].Value = "DCR"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
@@ -662,8 +667,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
-                    worksheet.Cells[row, col].Style.WrapText = true; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccount!.Bank; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountNumber; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountName; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
@@ -767,6 +774,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 : statusFilter != "InvalidOnly" || cvh.VoidedBy != null))
                         .Include(cvh => cvh.Details!)
                         .Include(cvh => cvh.Supplier)
+                        .Include(cvh => cvh.BankAccount)
                         .OrderBy(cvh => cvh.Date)
                         .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
                         .ToListAsync(cancellationToken);
@@ -820,6 +828,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV No."; col++;
                 worksheet.Cells[row, col].Value = "DCR DATE"; col++;
                 worksheet.Cells[row, col].Value = "CHECK #"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK NAME"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
@@ -864,11 +875,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
                         worksheet.Cells[row, col].Value = header.DcrDate?.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccount!.Bank; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountNumber; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountName; col++;
                         worksheet.Cells[row, col].Value = header.Payee; col++;
-                        worksheet.Cells[row, col].Value = header.Particulars;
-                        worksheet.Cells[row, col].Style.WrapText = true;
-                        col++;
-                        worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars; col++;
+                        worksheet.Cells[row, col].Value = header.Type; col++;
 
                         if (header.Category == "Trade")
                         {
@@ -920,7 +932,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             worksheet.Cells[row, col].Value = header.Reference;
                         }
-                        worksheet.Cells[row, col].Style.WrapText = true;
                         col++;
 
                         worksheet.Cells[row, col].Value = details.AccountNo; col++;
@@ -1250,7 +1261,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1854,7 +1865,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2060,7 +2071,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
                 using (var range = purchaseReportWorksheet.Cells[row, 17, row, 33])
@@ -2129,7 +2140,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.Font.Italic = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 row += 2;
@@ -2927,7 +2938,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -3188,7 +3199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
                 using (var range = gmReportWorksheet.Cells[row, 10, row, 27])
@@ -3978,7 +3989,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
                 titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                 titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -4004,7 +4015,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     titleCells.Style.Font.Size = 13;
                     titleCells.Style.Font.Bold = true;
                     titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                     titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -4079,7 +4090,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     + " " +
                                                     (sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     row++;
 
                     // LOOP BY SUPPLIER
@@ -4602,7 +4613,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 204, 172));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 172));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -5023,7 +5034,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 204, 172));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 172));
                             range.Style.Font.Bold = true;
                         }
 
@@ -5665,9 +5676,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Liquidation Vs Supplier's Billing";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5678,21 +5689,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Merge = true;
                     range.Value = "FILPRIDE RECORD BASED ON SYSTEM ";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 192, 0));
                 }
                 using (var range = worksheet.Cells[10, 11, 10, 13])
                 {
                     range.Merge = true;
                     range.Value = "PER SUPPLIER'S INVOICE";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                 }
                 using (var range = worksheet.Cells[10, 14, 10, 16])
                 {
                     range.Merge = true;
                     range.Value = "VARIANCE";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(146, 208, 80));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(146, 208, 80));
                 }
 
                 using (var range = worksheet.Cells[10, 8, 10, 16])
@@ -5809,9 +5820,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-3";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Summary";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5934,9 +5945,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-4";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "Withdrawal Certificate (WC) Distribution Summary";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5947,7 +5958,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Merge = true;
                     range.Value = "PO & RR LIQUIDATION";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
@@ -5983,7 +5994,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[12, (col - 2), 12, (col - 1)])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -6062,7 +6073,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Font.Bold = true;
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
@@ -6084,7 +6095,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Font.Bold = true;
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         }
@@ -6150,7 +6161,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -7591,7 +7602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
                 titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                 titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -7617,7 +7628,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     titleCells.Style.Font.Size = 13;
                     titleCells.Style.Font.Bold = true;
                     titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                     titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -7693,7 +7704,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     + " " +
                                                     (sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     row++;
 
                     // LOOP BY HAULER
@@ -8272,7 +8283,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 2].Value = detail.JournalVoucherHeader.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 3].Value = detail.JournalVoucherHeader.Particulars;
-                    worksheet.Cells[row, 3].Style.WrapText = true;
                     worksheet.Cells[row, 4].Value = detail.Debit;
                     worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 5].Value = detail.Credit;
