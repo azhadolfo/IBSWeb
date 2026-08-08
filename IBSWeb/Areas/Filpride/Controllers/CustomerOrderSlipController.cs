@@ -460,10 +460,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
-                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
-                {
-                    throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
-                }
+
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
+                // {
+                //     throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                // }
 
                 CustomerOrderSlipViewModel viewModel = new()
                 {
@@ -1346,10 +1348,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
-                {
-                    throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
-                }
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
+                // {
+                //     throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                // }
 
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
                 {
@@ -1492,10 +1495,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
-                {
-                    throw new ArgumentException($"Cannot reappoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
-                }
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // if (await _unitOfWork.IsPeriodPostedAsync(Module.CustomerOrderSlip, existingRecord.Date, cancellationToken))
+                // {
+                //     throw new ArgumentException($"Cannot reappoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                // }
 
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
                 {
