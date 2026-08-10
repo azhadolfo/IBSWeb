@@ -767,6 +767,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 : statusFilter != "InvalidOnly" || cvh.VoidedBy != null))
                         .Include(cvh => cvh.Details!)
                         .Include(cvh => cvh.Supplier)
+                        .Include(cvh => cvh.BankAccount)
                         .OrderBy(cvh => cvh.Date)
                         .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
                         .ToListAsync(cancellationToken);
