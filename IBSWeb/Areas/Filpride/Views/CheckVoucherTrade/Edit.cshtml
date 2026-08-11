@@ -253,6 +253,12 @@
                 var suppId = $(this).val();
                 computeDefaultEntry(suppId)
             });
+            const input = $('.paymentAmount:visible');
+
+            if (input.val() <= 0) {
+                alert('Amount must be greater than 0.');
+                input.focus();
+            }
         });
 
         function computeDefaultEntry(suppId) {
@@ -370,7 +376,11 @@
                             currentPO = rr.purchaseOrderNo;
                             const amountPaid = modelRRs.get(rr.id);
                             const initialBalance = parseNumber(rr.balance);
-                            const paymentInput = $('<input>').attr({ type: 'text', class: 'paymentAmount text-end' });
+                            const paymentInput = $('<input>').attr({
+                                type: 'text',
+                                class: 'paymentAmount text-end',
+                                min: '0.01'
+                            });
                             const displayedBalance = modelRRs.has(rr.id) ? initialBalance - (Number(amountPaid) || 0) : initialBalance;
 
                             if (modelRRs.has(rr.id)) {

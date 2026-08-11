@@ -511,7 +511,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.VoidedBy,
                         dr.CanceledBy,
                         dr.HasReceivingReport,
-                        dr.AuthorityToLoad!.UppiAtlNo,
+                        SupplierAtlNo = _dbContext.FilprideBookAtlDetails
+                            .Where(d => d.AuthorityToLoadId == dr.AuthorityToLoadId
+                                        && d.CustomerOrderSlipId == dr.CustomerOrderSlipId
+                                        && (!dr.PurchaseOrderId.HasValue
+                                            || (d.AppointedSupplier != null
+                                                && d.AppointedSupplier.PurchaseOrderId == dr.PurchaseOrderId)))
+                            .Select(d => d.SupplierAtlNo)
+                            .FirstOrDefault(),
                         dr.AuthorityToLoadNo,
                         dr.Freight,
                         dr.HaulerName
@@ -1098,6 +1105,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
+            decimal restoredCosQuantity = 0m;
+
             if (deliveryReceiptId.HasValue)
             {
                 var existingDetails = await _dbContext.FilprideDeliveryReceiptDetails
@@ -1110,6 +1119,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         d.Quantity
                     })
                     .ToListAsync();
+
+                restoredCosQuantity = existingDetails.Sum(d => d.Quantity);
 
                 foreach (var detail in existingDetails)
                 {
@@ -1139,7 +1150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Product = cosAtlDetails.First().CustomerOrderSlip!.ProductName,
                 cosAtlDetails.First().CustomerOrderSlip!.Quantity,
-                RemainingVolume = cosAtlDetails.First().CustomerOrderSlip!.BalanceQuantity,
+                RemainingVolume = cosAtlDetails.First().CustomerOrderSlip!.BalanceQuantity + restoredCosQuantity,
                 Price = cosAtlDetails.First().CustomerOrderSlip!.DeliveredPrice,
                 cosAtlDetails.First().CustomerOrderSlip!.DeliveryOption,
                 cosAtlDetails.First().CustomerOrderSlip!.Freight,
