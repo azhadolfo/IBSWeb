@@ -65,7 +65,7 @@ h2 {
     html {
         font-size: 16px;
     }
-    
+
     .responsive-index-button {
         font-size: 13px;
     }
@@ -573,7 +573,7 @@ table {
     table td {
         font-size: 0.80em; /* Adjust as needed */
     }
-    
+
 .glowfilter {
     -webkit-filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
@@ -707,4 +707,9 @@ body.loading {
 
 .dt-input {
     margin-right: .5rem;
+}
+
+.dt-layout-table {
+    height: 55vh !important;
+    overflow-y: scroll;
 }
