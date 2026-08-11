@@ -93,6 +93,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
+
         private static string NormalizeStatusFilter(string? statusFilter) => statusFilter switch
         {
             "All" => "All",
@@ -1919,6 +1920,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var atlLookup = atls
                     .GroupBy(x => x.AuthorityToLoadNo)
                     .ToDictionary(g => g.Key, g => g.First());
+                var purchaseReportDeliveryReceiptIds = purchaseReport
+                    .Where(pr => pr.DeliveryReceiptId.HasValue)
+                    .Select(pr => pr.DeliveryReceiptId!.Value)
+                    .Distinct()
+                    .ToList();
+                var purchaseReportPoIds = purchaseReport
+                    .Select(pr => pr.POId)
+                    .Distinct()
+                    .ToList();
+                var supplierAtlEntries = await _dbContext.FilprideDeliveryReceiptDetails
+                    .Where(d => purchaseReportDeliveryReceiptIds.Contains(d.DeliveryReceiptId)
+                                && purchaseReportPoIds.Contains(d.PurchaseOrderId)
+                                && atlNos.Contains(d.AuthorityToLoadNo!))
+                    .Join(_dbContext.FilprideBookAtlDetails,
+                        drDetail => new
+                        {
+                            drDetail.AuthorityToLoadId,
+                            drDetail.CustomerOrderSlipId,
+                            drDetail.PurchaseOrderId
+                        },
+                        atlDetail => new
+                        {
+                            atlDetail.AuthorityToLoadId,
+                            atlDetail.CustomerOrderSlipId,
+                            PurchaseOrderId = atlDetail.AppointedSupplier!.PurchaseOrderId
+                        },
+                        (drDetail, atlDetail) => new
+                        {
+                            drDetail.DeliveryReceiptId,
+                            drDetail.PurchaseOrderId,
+                            drDetail.AuthorityToLoadNo,
+                            atlDetail.SupplierAtlNo
+                        })
+                    .ToListAsync(cancellationToken);
 
                 #region -- Populate data rows --
 
@@ -1973,6 +2008,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         atl = null;
                     }
 
+                    var supplierAtlNo = pr.DeliveryReceiptId.HasValue && !string.IsNullOrWhiteSpace(pr.AuthorityToLoadNo)
+                        ? supplierAtlEntries
+                            .Where(x => x.DeliveryReceiptId == pr.DeliveryReceiptId.Value
+                                        && x.PurchaseOrderId == pr.POId
+                                        && x.AuthorityToLoadNo == pr.AuthorityToLoadNo)
+                            .Select(x => x.SupplierAtlNo)
+                            .FirstOrDefault()
+                        : null;
+
                     #endregion -- Variables and Formulas --
 
                     #region -- Assign Values to Cells --
@@ -1988,7 +2032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
                     purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.Depot; // Filpride DR
                     purchaseReportWorksheet.Cells[row, 11].Value = atl?.AuthorityToLoadNo; // ATL #
-                    purchaseReportWorksheet.Cells[row, 12].Value = atl?.UppiAtlNo; // Supplier ATL #
+                    purchaseReportWorksheet.Cells[row, 12].Value = supplierAtlNo; // Supplier ATL #
                     purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
                     purchaseReportWorksheet.Cells[row, 14].Value = pr.SupplierInvoiceDate; // Supplier's Sales Invoice
                     purchaseReportWorksheet.Cells[row, 15].Value = pr.SupplierDrNo; // Supplier's DR
@@ -6028,16 +6072,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var wcTotal = 0m;
                 int mostNumberOfCoLoads = 0;
                 var listOfCoLoadTotal = new List<decimal>();
+                var receivingReportDeliveryReceiptIds = receivingReports
+                    .Where(rr => rr.DeliveryReceiptId.HasValue)
+                    .Select(rr => rr.DeliveryReceiptId!.Value)
+                    .Distinct()
+                    .ToList();
+                var receivingReportPoIds = receivingReports
+                    .Select(rr => rr.POId)
+                    .Distinct()
+                    .ToList();
+                var receivingReportAtlNos = receivingReports
+                    .Select(rr => rr.AuthorityToLoadNo)
+                    .Where(rr => !string.IsNullOrWhiteSpace(rr))
+                    .Distinct()
+                    .ToList();
+                var supplierAtlEntries = await _dbContext.FilprideDeliveryReceiptDetails
+                    .Where(d => receivingReportDeliveryReceiptIds.Contains(d.DeliveryReceiptId)
+                                && receivingReportPoIds.Contains(d.PurchaseOrderId)
+                                && receivingReportAtlNos.Contains(d.AuthorityToLoadNo!))
+                    .Join(_dbContext.FilprideBookAtlDetails,
+                        drDetail => new
+                        {
+                            drDetail.AuthorityToLoadId,
+                            drDetail.CustomerOrderSlipId,
+                            drDetail.PurchaseOrderId
+                        },
+                        atlDetail => new
+                        {
+                            atlDetail.AuthorityToLoadId,
+                            atlDetail.CustomerOrderSlipId,
+                            PurchaseOrderId = atlDetail.AppointedSupplier!.PurchaseOrderId
+                        },
+                        (drDetail, atlDetail) => new
+                        {
+                            drDetail.DeliveryReceiptId,
+                            drDetail.PurchaseOrderId,
+                            drDetail.AuthorityToLoadNo,
+                            atlDetail.SupplierAtlNo
+                        })
+                    .ToListAsync(cancellationToken);
 
                 foreach (var rr in receivingReports)
                 {
                     var rrWithSameWC = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(wcs => wcs.WithdrawalCertificate == rr.WithdrawalCertificate && wcs.ReceivingReportId != rr.ReceivingReportId, cancellationToken))
                         .ToList();
-
-                    var atlEntry = await _dbContext.FilprideAuthorityToLoads
-                        .Where(atl => atl.AuthorityToLoadNo == rr.AuthorityToLoadNo)
-                        .FirstOrDefaultAsync(cancellationToken);
 
                     if (mostNumberOfCoLoads < rrWithSameWC.Count)
                     {
@@ -6064,9 +6143,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
                     worksheet.Cells[row, 7].Value = rr.AuthorityToLoadNo;
-                    if (atlEntry != null)
+                    var supplierAtlNo = rr.DeliveryReceiptId.HasValue && !string.IsNullOrWhiteSpace(rr.AuthorityToLoadNo)
+                        ? supplierAtlEntries
+                            .Where(x => x.DeliveryReceiptId == rr.DeliveryReceiptId.Value
+                                        && x.PurchaseOrderId == rr.POId
+                                        && x.AuthorityToLoadNo == rr.AuthorityToLoadNo)
+                            .Select(x => x.SupplierAtlNo)
+                            .FirstOrDefault()
+                        : null;
+                    if (!string.IsNullOrWhiteSpace(supplierAtlNo))
                     {
-                        worksheet.Cells[row, 8].Value = atlEntry!.UppiAtlNo ?? "";
+                        worksheet.Cells[row, 8].Value = supplierAtlNo;
                     }
                     worksheet.Cells[row, 9].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
                     worksheet.Cells[row, 10].Value = rr.PurchaseOrder!.ProductName;
