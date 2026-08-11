@@ -1748,7 +1748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var purchaseOrderList = purchaseOrders.OrderBy(p => p.PurchaseOrderNo).Select(p => new
             {
                 Value = p.PurchaseOrderId,
-                Text = p.PurchaseOrderNo,
+                Text = $"{p.PurchaseOrderNo} - {p.ProductName}",
                 AvailableBalance = p.Quantity - p.QuantityReceived,
                 p.SupplierId,
                 p.Supplier!.SupplierName,
