@@ -1105,6 +1105,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
+            decimal restoredCosQuantity = 0m;
+
             if (deliveryReceiptId.HasValue)
             {
                 var existingDetails = await _dbContext.FilprideDeliveryReceiptDetails
@@ -1117,6 +1119,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         d.Quantity
                     })
                     .ToListAsync();
+
+                restoredCosQuantity = existingDetails.Sum(d => d.Quantity);
 
                 foreach (var detail in existingDetails)
                 {
@@ -1146,7 +1150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Product = cosAtlDetails.First().CustomerOrderSlip!.ProductName,
                 cosAtlDetails.First().CustomerOrderSlip!.Quantity,
-                RemainingVolume = cosAtlDetails.First().CustomerOrderSlip!.BalanceQuantity,
+                RemainingVolume = cosAtlDetails.First().CustomerOrderSlip!.BalanceQuantity + restoredCosQuantity,
                 Price = cosAtlDetails.First().CustomerOrderSlip!.DeliveredPrice,
                 cosAtlDetails.First().CustomerOrderSlip!.DeliveryOption,
                 cosAtlDetails.First().CustomerOrderSlip!.Freight,
