@@ -821,6 +821,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Determine if we need to show void/cancel columns
                 bool showVoidCancelColumns = statusFilter != "ValidOnly";
 
+                const int dateColumn = 1;
+                const int dcrDateColumn = 3;
+                const int subAccountNameColumn = 14;
+                const int debitColumn = 15;
+                const int creditColumn = 16;
+                const int statusColumn = 17;
+
                 int row = 7;
                 int col = 1;
 
@@ -840,10 +847,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "SUB ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
-                worksheet.Cells[row, col].Value = "STATUS"; col++;
+                worksheet.Cells[row, col].Value = "STATUS";
 
                 if (showVoidCancelColumns)
                 {
+                    col++;
                     worksheet.Cells[row, col].Value = "VOIDED BY"; col++;
                     worksheet.Cells[row, col].Value = "VOIDED DATE";
                 }
@@ -939,19 +947,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, col].Value = details.SubAccountName; col++;
                         worksheet.Cells[row, col].Value = details.Debit; col++;
                         worksheet.Cells[row, col].Value = details.Credit; col++;
-                        worksheet.Cells[row, col].Value = header.Status; col++;
-
+                        worksheet.Cells[row, col].Value = header.Status;
 
                         if (showVoidCancelColumns)
                         {
+                            col++;
                             worksheet.Cells[row, col].Value = header.VoidedBy; col++;
                             worksheet.Cells[row, col].Value = header.VoidedDate;
                             worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                         }
 
-                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, dateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, dcrDateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, debitColumn].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, creditColumn].Style.Numberformat.Format = currencyFormat;
 
                         totalCredit += details.Credit;
                         totalDebit += details.Debit;
@@ -961,10 +970,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int totalRow = row;
-                int lastDataCol = showVoidCancelColumns ? 16 : 14;
-                worksheet.Cells[totalRow, 11].Value = "TOTAL: ";
-                worksheet.Cells[totalRow, 12].Value = totalDebit;
-                worksheet.Cells[totalRow, 13].Value = totalCredit;
+                int lastDataCol = showVoidCancelColumns ? statusColumn + 2 : statusColumn;
+                worksheet.Cells[totalRow, subAccountNameColumn].Value = "TOTAL: ";
+                worksheet.Cells[totalRow, debitColumn].Value = totalDebit;
+                worksheet.Cells[totalRow, creditColumn].Value = totalCredit;
 
                 using (var range = worksheet.Cells[totalRow, 1, totalRow, lastDataCol])
                 {
@@ -972,7 +981,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[totalRow, 11, totalRow, lastDataCol])
+                using (var range = worksheet.Cells[totalRow, debitColumn, totalRow, creditColumn])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
