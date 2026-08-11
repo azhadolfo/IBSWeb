@@ -511,7 +511,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.VoidedBy,
                         dr.CanceledBy,
                         dr.HasReceivingReport,
-                        dr.AuthorityToLoad!.UppiAtlNo,
+                        SupplierAtlNo = _dbContext.FilprideBookAtlDetails
+                            .Where(d => d.AuthorityToLoadId == dr.AuthorityToLoadId
+                                        && d.CustomerOrderSlipId == dr.CustomerOrderSlipId
+                                        && (!dr.PurchaseOrderId.HasValue
+                                            || (d.AppointedSupplier != null
+                                                && d.AppointedSupplier.PurchaseOrderId == dr.PurchaseOrderId)))
+                            .Select(d => d.SupplierAtlNo)
+                            .FirstOrDefault(),
                         dr.AuthorityToLoadNo,
                         dr.Freight,
                         dr.HaulerName
