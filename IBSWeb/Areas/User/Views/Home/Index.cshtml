@@ -139,7 +139,7 @@ else
                             </a>
                         }
 
-                        @if (isAdmin || isHead || isFinance || isCashier)
+                        @if (isAdmin || isHead || isFinance)
                         {
                             <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pri-card">
                                 <div class="pri-card-body">

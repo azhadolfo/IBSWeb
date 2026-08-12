@@ -1239,11 +1239,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                if (existingRecord.Status != nameof(CosStatus.ForApprovalOfMarketing))
+                {
+                    TempData["warning"] = "This customer order slip is not pending marketing approval.";
+                    return RedirectToAction(nameof(Preview), new { id });
+                }
+
                 existingRecord.MarketingApprovedBy = GetUserFullName();
                 existingRecord.MarketingApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
                 existingRecord.Terms = terms ?? existingRecord.Terms;
-                existingRecord.FinanceInstruction = instructions;
+
+                if (!string.IsNullOrWhiteSpace(instructions))
+                {
+                    existingRecord.FinanceInstruction = instructions;
+                }
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
