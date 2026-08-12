@@ -431,6 +431,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var payments = await _dbContext.FilprideCVTradePayments
                     .Where(x => x.DocumentType == "DR" &&
                                 x.CV.Status == nameof(Status.Posted) &&
+                                x.CV.CvType == nameof(CVType.Commission) &&
                                 x.CV.Date <= monthDate)
                     .Include(x => x.CV)
                     .ToListAsync(cancellationToken);
@@ -487,6 +488,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "DR DATE"; col++;
                 worksheet.Cells[row, col].Value = "GROSS OF VAT"; col++;
                 worksheet.Cells[row, col].Value = "COST OF MONEY"; col++;
+                worksheet.Cells[row, col].Value = "NET OF COST OF MONEY"; col++;
                 worksheet.Cells[row, col].Value = "NET OF VAT"; col++;
                 worksheet.Cells[row, col].Value = "EWT"; col++;
                 worksheet.Cells[row, col].Value = "NET OF TAX"; col++;
@@ -503,8 +505,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var range in new[]
                          {
-                             worksheet.Cells[row, 1, row, 9],
-                             worksheet.Cells[row, 11, row, col]
+                             worksheet.Cells[row, 1, row, 10],
+                             worksheet.Cells[row, 12, row, col]
                          })
                 {
                     range.Style.Font.Bold = true;
@@ -520,6 +522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var currencyFormat = "#,##0.00";
                 var grandTotalGrossOfVat = 0m;
                 var grandTotalCostOfMoney = 0m;
+                var grandTotalNetOfCostOfMoney = 0m;
                 var grandTotalNetOfTax = 0m;
                 var grandTotalNetOfVat = 0m;
                 var grandTotalEwt = 0m;
@@ -530,6 +533,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var subtotalGrossOfVat = 0m;
                     var subtotalCostOfMoney = 0m;
+                    var subtotalNetOfCostOfMoney = 0m;
                     var subtotalNetOfTax = 0m;
                     var subtotalNetOfVat = 0m;
                     var subtotalEwt = 0m;
@@ -540,17 +544,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         cvTradePayments.TryGetValue(item.DeliveryReceiptId, out var cvTradePayment);
 
+                        var costOfMoney = (item.Quantity * item.CommissionRate) - item.CommissionAmount;
+                        var netOfCostOfMoney = item.CommissionAmount;
+                        var grossAmount = netOfCostOfMoney + costOfMoney;
+
                         var netOfVatAmount = item.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
-                            ? NetOfVatOrZero(item.CommissionAmount)
-                            : item.CommissionAmount;
+                            ? NetOfVatOrZero(grossAmount)
+                            : grossAmount;
 
                         var taxPercent = item.Commissionee?.WithholdingTaxPercent ?? 0m;
 
                         var withHoldingTaxAmount = item.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax
                             ? EwtAmountOrZero(netOfVatAmount, taxPercent)
                             : 0m;
-
-                        var costOfMoney = (item.Quantity * item.CommissionRate) - item.CommissionAmount;
 
                         var netOfTax = item.CommissionAmount - withHoldingTaxAmount;
 
@@ -567,10 +573,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, col].Value = item.Date;
                             worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                             col++;
-                            worksheet.Cells[row, col].Value = item.CommissionAmount;
+                            worksheet.Cells[row, col].Value = grossAmount;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
                             col++;
                             worksheet.Cells[row, col].Value = costOfMoney;
+                            worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                            col++;
+                            worksheet.Cells[row, col].Value = netOfCostOfMoney;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
                             col++;
                             worksheet.Cells[row, col].Value = netOfVatAmount;
@@ -603,8 +612,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, col].Value = balance;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
 
-                            subtotalGrossOfVat += item.CommissionAmount;
+                            subtotalGrossOfVat += grossAmount;
                             subtotalCostOfMoney += costOfMoney;
+                            subtotalNetOfCostOfMoney += netOfCostOfMoney;
                             subtotalNetOfVat += netOfVatAmount;
                             subtotalEwt += withHoldingTaxAmount;
                             subtotalNetOfTax += netOfTax;
@@ -621,21 +631,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 6].Value = subtotalCostOfMoney;
                     worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 7].Value = subtotalNetOfVat;
+                    worksheet.Cells[row, 7].Value = subtotalNetOfCostOfMoney;
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 8].Value = subtotalEwt;
+                    worksheet.Cells[row, 8].Value = subtotalNetOfVat;
                     worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 9].Value = subtotalNetOfTax;
+                    worksheet.Cells[row, 9].Value = subtotalEwt;
                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 18].Value = subtotalAmountPaid;
-                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 19].Value = subtotalBalance;
+                    worksheet.Cells[row, 10].Value = subtotalNetOfTax;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 19].Value = subtotalAmountPaid;
                     worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 20].Value = subtotalBalance;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
 
                     foreach (var range in new[]
                              {
-                                 worksheet.Cells[row, 1, row, 9],
-                                 worksheet.Cells[row, 11, row, col]
+                                 worksheet.Cells[row, 1, row, 10],
+                                 worksheet.Cells[row, 12, row, col]
                              })
                     {
                         range.Style.Font.Bold = true;
@@ -647,6 +659,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     grandTotalGrossOfVat += subtotalGrossOfVat;
                     grandTotalCostOfMoney += subtotalCostOfMoney;
+                    grandTotalNetOfCostOfMoney += subtotalNetOfCostOfMoney;
                     grandTotalNetOfTax += subtotalNetOfTax;
                     grandTotalNetOfVat += subtotalNetOfVat;
                     grandTotalEwt += subtotalEwt;
@@ -662,21 +675,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 6].Value = grandTotalCostOfMoney;
                 worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 7].Value = grandTotalNetOfVat;
+                worksheet.Cells[row, 7].Value = grandTotalNetOfCostOfMoney;
                 worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 8].Value = grandTotalEwt;
+                worksheet.Cells[row, 8].Value = grandTotalNetOfVat;
                 worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 9].Value = grandTotalNetOfTax;
+                worksheet.Cells[row, 9].Value = grandTotalEwt;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 18].Value = grandTotalAmountPaid;
-                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 19].Value = grandTotalBalance;
+                worksheet.Cells[row, 10].Value = grandTotalNetOfTax;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 19].Value = grandTotalAmountPaid;
                 worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 20].Value = grandTotalBalance;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
 
                 foreach (var range in new[]
                          {
-                             worksheet.Cells[row, 1, row, 9],
-                             worksheet.Cells[row, 11, row, col]
+                             worksheet.Cells[row, 1, row, 10],
+                             worksheet.Cells[row, 12, row, col]
                          })
                 {
                     range.Style.Font.Bold = true;
@@ -752,6 +767,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var payments = await _dbContext.FilprideCVTradePayments
                     .Where(x => x.DocumentType == "DR" &&
                                 x.CV.Status == nameof(Status.Posted) &&
+                                x.CV.CvType == nameof(CVType.Hauler) &&
                                 x.CV.Date <= monthDate)
                     .Include(x => x.CV)
                     .ToListAsync(cancellationToken);
