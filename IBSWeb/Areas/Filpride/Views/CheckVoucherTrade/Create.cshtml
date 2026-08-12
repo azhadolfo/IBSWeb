@@ -368,7 +368,15 @@
                             tr.append($('<td>').text(rr.receivingReportNo));
                             tr.append($('<td>').text(rr.oldRRNo));
                             tr.append($('<td>').addClass('text-end grossAmount').text(formatNumberToFour(rr.netOfEwtAmount)));
-                            tr.append($('<td>').addClass('text-end').append($('<input>').attr({ type: 'text', class: 'paymentAmount text-end' }).hide()));
+                            tr.append(
+                                $('<td>').addClass('text-end').append(
+                                    $('<input>').attr({
+                                        type: 'text',
+                                        class: 'paymentAmount text-end',
+                                        min: '0.01'
+                                    }).hide()
+                                )
+                            );
                             tr.append($('<td>').addClass('text-end balance').text(formatNumberToFour(initialBalance)));
 
                             tbody.append(tr);
