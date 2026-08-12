@@ -27,12 +27,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<GeneralLedgerReportController> _logger;
+        private readonly ILogger<SubsidiaryLedgerReportController> _logger;
 
         public SubsidiaryLedgerReportController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
-            ILogger<GeneralLedgerReportController> logger)
+            ILogger<SubsidiaryLedgerReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -369,7 +369,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -707,7 +707,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -1015,7 +1015,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
