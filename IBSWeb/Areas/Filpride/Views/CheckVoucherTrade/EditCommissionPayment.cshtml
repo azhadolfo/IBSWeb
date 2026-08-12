@@ -443,8 +443,8 @@
             } else {
                 $(this).removeClass('is-invalid');
                 // negative values should not be allowed, reset to 0 if negative
-                if (paymentAmount < 0) {
-                    paymentAmount = 0;
+                if (paymentAmount <= 0) {
+                    paymentAmount = 1;
                     $(this).val(formatNumberToFour(paymentAmount));
                     row.attr('data-last-amount', paymentAmount);
                     row.find('.balance').text(formatNumberToFour(initialBalance));
@@ -559,11 +559,14 @@
             return isValid;
         }
 
-        $("#paymentForm").on("submit", function (event) {
-            if (!validateDebitAndCredit()) {
-                event.preventDefault();
-            }
-        });
+        $(document).ready(function () {
+            $("#paymentForm").on("submit", function (event) {
+                if (!validateDebitAndCredit()) {
+                    $(this).find('button[type="submit"], input[type="submit"]').prop("disabled", true);
+                    return false;
+                }
+            });
+        })
 
         function saveAccountingEntry(event) {
             var accountNumber = $("#AccountNo").val();

@@ -368,15 +368,7 @@
                             tr.append($('<td>').text(rr.receivingReportNo));
                             tr.append($('<td>').text(rr.oldRRNo));
                             tr.append($('<td>').addClass('text-end grossAmount').text(formatNumberToFour(rr.netOfEwtAmount)));
-                            tr.append(
-                                $('<td>').addClass('text-end').append(
-                                    $('<input>').attr({
-                                        type: 'text',
-                                        class: 'paymentAmount text-end',
-                                        min: '0.01'
-                                    }).hide()
-                                )
-                            );
+                            tr.append($('<td>').addClass('text-end').append($('<input>').attr({ type: 'text', class: 'paymentAmount text-end' }).hide()));
                             tr.append($('<td>').addClass('text-end balance').text(formatNumberToFour(initialBalance)));
 
                             tbody.append(tr);
@@ -555,8 +547,8 @@
             } else {
                 $(this).removeClass('is-invalid');
                 // negative values should not be allowed, reset to 0 if negative
-                if (paymentAmount < 0) {
-                    $(this).val(formatNumberToFour(0));
+                if (paymentAmount <= 0) {
+                    $(this).val(formatNumberToFour(1));
                     row.find('.balance').text(formatNumberToFour(initialBalance));
                     updateAmounts();
                     return;
@@ -620,11 +612,14 @@
             updateAmounts();
         });
 
-        $("#paymentForm").on("submit", function (event) {
-            if (!validateDebitAndCredit()) {
-                event.preventDefault();
-            }
-        });
+        $(document).ready(function () {
+            $("#paymentForm").on("submit", function (event) {
+                if (!validateDebitAndCredit()) {
+                    $(this).find('button[type="submit"], input[type="submit"]').prop("disabled", true);
+                    return false;
+                }
+            });
+        })
 
         function saveAccountingEntry(event) {
             var accountNumber = $("#AccountNo").val();
