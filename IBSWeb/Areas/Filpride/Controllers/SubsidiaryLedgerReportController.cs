@@ -27,12 +27,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<GeneralLedgerReportController> _logger;
+        private readonly ILogger<SubsidiaryLedgerReportController> _logger;
 
         public SubsidiaryLedgerReportController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
-            ILogger<GeneralLedgerReportController> logger)
+            ILogger<SubsidiaryLedgerReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -225,6 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var item in receivingReports)
                     {
+                        col = 1;
                         cvTradePayments.TryGetValue(item.ReceivingReportId, out var cvTradePayment);
 
                         var netOfVatAmount = item.PurchaseOrder!.VatType == SD.VatType_Vatable
@@ -239,62 +240,69 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var netOfTax = item.Amount - withHoldingTaxAmount;
 
-                        foreach (var checkVoucher in (cvTradePayment?.CheckVouchers ?? Enumerable.Empty<dynamic>()).DefaultIfEmpty())
+                        worksheet.Cells[row, col].Value = item.PurchaseOrder.SupplierName; col++;
+                        worksheet.Cells[row, col].Value = item.SupplierInvoiceNumber; col++;
+                        worksheet.Cells[row, col].Value = item.PONo; col++;
+                        worksheet.Cells[row, col].Value = item.ReceivingReportNo; col++;
+                        worksheet.Cells[row, col].Value = item.Date;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        col++;
+                        worksheet.Cells[row, col].Value = item.Amount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = netOfVatAmount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = withHoldingTaxAmount;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+                        col++;
+                        worksheet.Cells[row, col].Value = netOfTax;
+                        worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
+
+                        if (cvTradePayment?.CheckVouchers == null)
                         {
-                            col = 1;
-                            var amountPaid = checkVoucher?.AmountPaid ?? 0m;
+                            col += 10;
+                            row++;
+                            continue;
+                        }
+
+                        foreach (var checkVoucher in cvTradePayment.CheckVouchers)
+                        {
+                            var amountPaid = checkVoucher.AmountPaid;
 
                             var balance = netOfTax - amountPaid;
 
-                            worksheet.Cells[row, col].Value = item.PurchaseOrder.SupplierName; col++;
-                            worksheet.Cells[row, col].Value = item.SupplierInvoiceNumber; col++;
-                            worksheet.Cells[row, col].Value = item.PONo; col++;
-                            worksheet.Cells[row, col].Value = item.ReceivingReportNo; col++;
-                            worksheet.Cells[row, col].Value = item.Date;
-                            worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            col++;
-                            worksheet.Cells[row, col].Value = item.Amount;
-                            worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                            col++;
-                            worksheet.Cells[row, col].Value = netOfVatAmount;
-                            worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                            col++;
-                            worksheet.Cells[row, col].Value = withHoldingTaxAmount;
-                            worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
-                            col++;
-                            worksheet.Cells[row, col].Value = netOfTax;
-                            worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
                             col++;
                             worksheet.Cells[row, col].Value = "";
                             col++;
 
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.CheckVoucherHeaderNo; col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.Date;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.CheckVoucherHeaderNo; col++;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.Date;
                             worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                             col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.CheckNo; col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.DcrDate;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.CheckNo; col++;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.DcrDate;
                             worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                             col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.Payee; col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.Particulars; col++;
-                            worksheet.Cells[row, col].Value = checkVoucher?.CV.Type; col++;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.Payee; col++;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.Particulars; col++;
+                            worksheet.Cells[row, col].Value = checkVoucher.CV.Type; col++;
 
-                            worksheet.Cells[row, col].Value = checkVoucher != null ? amountPaid : 0m;
+                            worksheet.Cells[row, col].Value = amountPaid;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
                             col++;
                             worksheet.Cells[row, col].Value = balance;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
 
-                            subtotalGrossOfVat += item.Amount;
-                            subtotalNetOfVat += netOfVatAmount;
-                            subtotalEwt += withHoldingTaxAmount;
-                            subtotalNetOfTax += netOfTax;
                             subtotalAmountPaid += amountPaid;
                             subtotalBalance += balance;
-
-                            row++;
                         }
+                        subtotalGrossOfVat += item.Amount;
+                        subtotalNetOfVat += netOfVatAmount;
+                        subtotalEwt += withHoldingTaxAmount;
+                        subtotalNetOfTax += netOfTax;
+
+                        row++;
                     }
 
                     worksheet.Cells[row, 1].Value = $"SUBTOTAL: {receivingReports.Key}";
@@ -369,7 +377,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -707,7 +715,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -1015,7 +1023,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Accounts Payable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
