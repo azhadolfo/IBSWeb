@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -18,8 +20,6 @@ using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.Globalization;
-using System.Security.Claims;
 using Color = System.Drawing.Color;
 using DateTime = System.DateTime;
 
@@ -93,6 +93,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
+
         private static string NormalizeStatusFilter(string? statusFilter) => statusFilter switch
         {
             "All" => "All",
@@ -420,7 +421,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -566,7 +567,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         x.Reference,
                         x.CheckVoucherHeaderNo,
-                        x.DcrDate
+                        x.DcrDate,
+                        x.BankAccount,
+                        x.BankAccountNumber,
+                        x.BankAccountName
                     })
                     .ToListAsync(cancellationToken);
 
@@ -606,6 +610,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Determine if we need to show void/cancel columns
                 bool showVoidCancelColumns = statusFilter != "ValidOnly";
 
+                const int dateColumn = 1;
+                const int dcrDateColumn = 4;
+                const int subAccountNameColumn = 13;
+                const int debitColumn = 14;
+                const int creditColumn = 15;
+                const int statusColumn = 16;
+
                 var row = 7;
                 var col = 1;
 
@@ -614,6 +625,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV PAYMENT"; col++;
                 worksheet.Cells[row, col].Value = "DCR"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
@@ -621,16 +635,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "SUB ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
-                worksheet.Cells[row, col].Value = "STATUS"; col++;
+                worksheet.Cells[row, col].Value = "STATUS";
 
                 if (showVoidCancelColumns)
                 {
+                    col++;
                     worksheet.Cells[row, col].Value = "VOIDED BY"; col++;
                     worksheet.Cells[row, col].Value = "VOIDED DATE";
                     worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                 }
 
-                using (var range = worksheet.Cells[row, 1, row, col])
+                int lastHeaderCol = showVoidCancelColumns ? statusColumn + 2 : statusColumn;
+
+                using (var range = worksheet.Cells[row, 1, row, lastHeaderCol])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -661,8 +678,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;
-                    worksheet.Cells[row, col].Style.WrapText = true; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccount!.Bank; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountNumber; col++;
+                    worksheet.Cells[row, col].Value = paymentInfo?.BankAccountName; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars;col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
@@ -671,14 +690,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
                     worksheet.Cells[row, col].Value = inv.Credit;
                     worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
 
                     if (showVoidCancelColumns)
                     {
+                        col++;
                         worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.VoidedBy; col++;
                         worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.VoidedDate;
                         worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                     }
+
+                    worksheet.Cells[row, dateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, dcrDateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, debitColumn].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, creditColumn].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -687,10 +712,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int totalRow = row;
-                int lastDataCol = showVoidCancelColumns ? 15 : 13;
-                worksheet.Cells[totalRow, 10].Value = "TOTAL: ";
-                worksheet.Cells[totalRow, 11].Value = totalDebit;
-                worksheet.Cells[totalRow, 12].Value = totalCredit;
+                int lastDataCol = showVoidCancelColumns ? statusColumn + 2 : statusColumn;
+                worksheet.Cells[totalRow, subAccountNameColumn].Value = "TOTAL: ";
+                worksheet.Cells[totalRow, debitColumn].Value = totalDebit;
+                worksheet.Cells[totalRow, creditColumn].Value = totalCredit;
 
                 using (var range = worksheet.Cells[totalRow, 1, totalRow, lastDataCol])
                 {
@@ -698,7 +723,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[totalRow, 8, totalRow, lastDataCol])
+                using (var range = worksheet.Cells[totalRow, debitColumn, totalRow, creditColumn])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
@@ -766,6 +791,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 : statusFilter != "InvalidOnly" || cvh.VoidedBy != null))
                         .Include(cvh => cvh.Details!)
                         .Include(cvh => cvh.Supplier)
+                        .Include(cvh => cvh.BankAccount)
                         .OrderBy(cvh => cvh.Date)
                         .ThenBy(cvh => cvh.CheckVoucherHeaderNo)
                         .ToListAsync(cancellationToken);
@@ -812,6 +838,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Determine if we need to show void/cancel columns
                 bool showVoidCancelColumns = statusFilter != "ValidOnly";
 
+                const int dateColumn = 1;
+                const int dcrDateColumn = 3;
+                const int subAccountNameColumn = 14;
+                const int debitColumn = 15;
+                const int creditColumn = 16;
+                const int statusColumn = 17;
+
                 int row = 7;
                 int col = 1;
 
@@ -819,6 +852,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "CV No."; col++;
                 worksheet.Cells[row, col].Value = "DCR DATE"; col++;
                 worksheet.Cells[row, col].Value = "CHECK #"; col++;
+                worksheet.Cells[row, col].Value = "BANK"; col++;
+                worksheet.Cells[row, col].Value = "BANK ACCOUNT #"; col++;
+                worksheet.Cells[row, col].Value = "BANK NAME"; col++;
                 worksheet.Cells[row, col].Value = "PAYEE"; col++;
                 worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
                 worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
@@ -828,10 +864,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "SUB ACCOUNT NAME"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
-                worksheet.Cells[row, col].Value = "STATUS"; col++;
+                worksheet.Cells[row, col].Value = "STATUS";
 
                 if (showVoidCancelColumns)
                 {
+                    col++;
                     worksheet.Cells[row, col].Value = "VOIDED BY"; col++;
                     worksheet.Cells[row, col].Value = "VOIDED DATE";
                 }
@@ -863,11 +900,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, col].Value = header.CheckVoucherHeaderNo; col++;
                         worksheet.Cells[row, col].Value = header.DcrDate?.ToDateTime(TimeOnly.MinValue); col++;
                         worksheet.Cells[row, col].Value = header.CheckNo; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccount!.Bank; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountNumber; col++;
+                        worksheet.Cells[row, col].Value = header.BankAccountName; col++;
                         worksheet.Cells[row, col].Value = header.Payee; col++;
-                        worksheet.Cells[row, col].Value = header.Particulars;
-                        worksheet.Cells[row, col].Style.WrapText = true;
-                        col++;
-                        worksheet.Cells[row, col].Value = header.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
+                        worksheet.Cells[row, col].Value = header.Particulars; col++;
+                        worksheet.Cells[row, col].Value = header.Type; col++;
 
                         if (header.Category == "Trade")
                         {
@@ -919,7 +957,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             worksheet.Cells[row, col].Value = header.Reference;
                         }
-                        worksheet.Cells[row, col].Style.WrapText = true;
                         col++;
 
                         worksheet.Cells[row, col].Value = details.AccountNo; col++;
@@ -927,19 +964,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, col].Value = details.SubAccountName; col++;
                         worksheet.Cells[row, col].Value = details.Debit; col++;
                         worksheet.Cells[row, col].Value = details.Credit; col++;
-                        worksheet.Cells[row, col].Value = header.Status; col++;
-
+                        worksheet.Cells[row, col].Value = header.Status;
 
                         if (showVoidCancelColumns)
                         {
+                            col++;
                             worksheet.Cells[row, col].Value = header.VoidedBy; col++;
                             worksheet.Cells[row, col].Value = header.VoidedDate;
                             worksheet.Cells[row, col].Style.Numberformat.Format = "MMM/dd/yyyy";
                         }
 
-                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, dateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, dcrDateColumn].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, debitColumn].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, creditColumn].Style.Numberformat.Format = currencyFormat;
 
                         totalCredit += details.Credit;
                         totalDebit += details.Debit;
@@ -949,10 +987,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int totalRow = row;
-                int lastDataCol = showVoidCancelColumns ? 16 : 14;
-                worksheet.Cells[totalRow, 11].Value = "TOTAL: ";
-                worksheet.Cells[totalRow, 12].Value = totalDebit;
-                worksheet.Cells[totalRow, 13].Value = totalCredit;
+                int lastDataCol = showVoidCancelColumns ? statusColumn + 2 : statusColumn;
+                worksheet.Cells[totalRow, subAccountNameColumn].Value = "TOTAL: ";
+                worksheet.Cells[totalRow, debitColumn].Value = totalDebit;
+                worksheet.Cells[totalRow, creditColumn].Value = totalCredit;
 
                 using (var range = worksheet.Cells[totalRow, 1, totalRow, lastDataCol])
                 {
@@ -960,7 +998,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[totalRow, 11, totalRow, lastDataCol])
+                using (var range = worksheet.Cells[totalRow, debitColumn, totalRow, creditColumn])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
@@ -1249,7 +1287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1496,7 +1534,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.ProductName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
@@ -1853,7 +1891,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1882,6 +1920,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var atlLookup = atls
                     .GroupBy(x => x.AuthorityToLoadNo)
                     .ToDictionary(g => g.Key, g => g.First());
+                var purchaseReportDeliveryReceiptIds = purchaseReport
+                    .Where(pr => pr.DeliveryReceiptId.HasValue)
+                    .Select(pr => pr.DeliveryReceiptId!.Value)
+                    .Distinct()
+                    .ToList();
+                var purchaseReportPoIds = purchaseReport
+                    .Select(pr => pr.POId)
+                    .Distinct()
+                    .ToList();
+                var supplierAtlEntries = await _dbContext.FilprideDeliveryReceiptDetails
+                    .Where(d => purchaseReportDeliveryReceiptIds.Contains(d.DeliveryReceiptId)
+                                && purchaseReportPoIds.Contains(d.PurchaseOrderId)
+                                && atlNos.Contains(d.AuthorityToLoadNo!))
+                    .Join(_dbContext.FilprideBookAtlDetails,
+                        drDetail => new
+                        {
+                            drDetail.AuthorityToLoadId,
+                            drDetail.CustomerOrderSlipId,
+                            drDetail.PurchaseOrderId
+                        },
+                        atlDetail => new
+                        {
+                            atlDetail.AuthorityToLoadId,
+                            atlDetail.CustomerOrderSlipId,
+                            PurchaseOrderId = atlDetail.AppointedSupplier!.PurchaseOrderId
+                        },
+                        (drDetail, atlDetail) => new
+                        {
+                            drDetail.DeliveryReceiptId,
+                            drDetail.PurchaseOrderId,
+                            drDetail.AuthorityToLoadNo,
+                            atlDetail.SupplierAtlNo
+                        })
+                    .ToListAsync(cancellationToken);
 
                 #region -- Populate data rows --
 
@@ -1904,11 +1976,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netFreight = isHaulerVatable && freight != 0m
                         ? NetOfVatOrZero(freight)
                         : freight; // freight n vat
-                    var freightAmount = pr.DeliveryReceipt!.FreightAmount; // purchase total net
+                    var freightAmount = RoundToFour(freight * volume); // freight total gross
                     var freightAmountNet =
-                        isHaulerVatable && freight != 0m
-                            ? NetOfVatOrZero(freight * volume)
-                            : freight * volume; // purchase total net
+                        isHaulerVatable && freightAmount != 0m
+                            ? NetOfVatOrZero(freightAmount)
+                            : freightAmount; // freight total net
                     var vatAmount = isSupplierVatable
                         ? VatAmountOrZero(netPurchases)
                         : 0m; // vat total
@@ -1936,6 +2008,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         atl = null;
                     }
 
+                    var supplierAtlNo = pr.DeliveryReceiptId.HasValue && !string.IsNullOrWhiteSpace(pr.AuthorityToLoadNo)
+                        ? supplierAtlEntries
+                            .Where(x => x.DeliveryReceiptId == pr.DeliveryReceiptId.Value
+                                        && x.PurchaseOrderId == pr.POId
+                                        && x.AuthorityToLoadNo == pr.AuthorityToLoadNo)
+                            .Select(x => x.SupplierAtlNo)
+                            .FirstOrDefault()
+                        : null;
+
                     #endregion -- Variables and Formulas --
 
                     #region -- Assign Values to Cells --
@@ -1951,7 +2032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
                     purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.Depot; // Filpride DR
                     purchaseReportWorksheet.Cells[row, 11].Value = atl?.AuthorityToLoadNo; // ATL #
-                    purchaseReportWorksheet.Cells[row, 12].Value = atl?.UppiAtlNo; // Supplier ATL #
+                    purchaseReportWorksheet.Cells[row, 12].Value = supplierAtlNo; // Supplier ATL #
                     purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
                     purchaseReportWorksheet.Cells[row, 14].Value = pr.SupplierInvoiceDate; // Supplier's Sales Invoice
                     purchaseReportWorksheet.Cells[row, 15].Value = pr.SupplierDrNo; // Supplier's DR
@@ -2059,7 +2140,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
                 using (var range = purchaseReportWorksheet.Cells[row, 17, row, 33])
@@ -2111,7 +2192,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
                 purchaseReportWorksheet.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                purchaseReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 purchaseReportWorksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 for (int index = 0; index < productList.Count; index++)
@@ -2128,7 +2209,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.Font.Italic = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 row += 2;
@@ -2170,13 +2251,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ? NetOfVatOrZero(product.Sum(pr => pr.Amount))
                                 : product.Sum(pr => pr.Amount); // Purchase Net Total
 
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
-                            purchaseReportWorksheet.Cells[row, startingColumn + 1, row, startingColumn + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Value = grandTotalVolume;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalPurchaseNet;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = DivideOrZero(grandTotalPurchaseNet, grandTotalVolume); // Gross Margin Per Liter
+                            purchaseReportWorksheet.Cells[row, startingColumn, row, startingColumn + 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            purchaseReportWorksheet.Cells[row, startingColumn].Style.Numberformat.Format = currencyFormat2;
                             purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat2;
-                            purchaseReportWorksheet.Cells[row, startingColumn + 3].Style.Numberformat.Format = currencyFormat;
+                            purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat;
                         }
 
                         startingColumn += 3;
@@ -2203,7 +2284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     mergedCells = purchaseReportWorksheet.Cells[row, summaryStartColumn, row, summaryStartColumn + 2];
                     mergedCells.Style.Font.Bold = true;
                     mergedCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    mergedCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    mergedCells.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     mergedCells.Style.Font.Size = 11;
                     mergedCells.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     mergedCells.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -2597,11 +2678,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
                                         var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                         var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                                        var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
-                                        // Computation for Overall
-                                        var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
-                                        var overallSalesSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                        var overallQuantitySum = list.Sum(s => s.QuantityReceived);
+                                        var overallSalesSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                         var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
                                                 ? NetOfVatOrZero(overallSalesSum)
                                                 : overallSalesSum;
@@ -2610,11 +2689,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(overallPurchasesSum)
                                                 : overallPurchasesSum;
                                         var overallGrossMarginSum = RoundToFour(overallNetOfSalesSum - overallNetOfPurchasesSum);
-                                        var overallFreightSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                        var overallFreightSum = RoundToFour(list.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                         var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
                                                 ? NetOfVatOrZero(overallFreightSum)
                                                 : overallFreightSum;
-                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                        var overallCommissionSum = RoundToFour(list.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                         var overallNetMarginSum = RoundToFour(overallGrossMarginSum - (overallFreightSum + overallCommissionSum));
                                         var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? DivideOrZero(overallNetMarginSum, overallQuantitySum) : 0m;
 
@@ -2698,8 +2777,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
                                             var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
-                                            var quantitySum = productItems.Sum(s => s.DeliveryReceipt!.Quantity);
-                                            var salesSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
+                                            var quantitySum = productItems.Sum(s => s.QuantityReceived);
+                                            var salesSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice));
                                             var netOfSalesSum = isCustomerVatable && salesSum != 0m
                                                 ? NetOfVatOrZero(salesSum)
                                                 : salesSum;
@@ -2708,11 +2787,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 ? NetOfVatOrZero(purchasesSum)
                                                 : purchasesSum;
                                             var grossMarginSum = RoundToFour(netOfSalesSum - netOfPurchasesSum);
-                                            var freightSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC)));
+                                            var freightSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * (s.DeliveryReceipt!.Freight + s.DeliveryReceipt.ECC)));
                                             var netOfFreightSum = isHaulerVatable && freightSum != 0m
                                                 ? NetOfVatOrZero(freightSum)
                                                 : freightSum;
-                                            var commissionSum = RoundToFour(productItems.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
+                                            var commissionSum = RoundToFour(productItems.Sum(s => s.QuantityReceived * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate));
                                             var netMarginSum = RoundToFour(grossMarginSum - (freightSum + commissionSum));
                                             var netMarginPerLiterSum = quantitySum != 0m ? DivideOrZero(netMarginSum, quantitySum) : 0m;
 
@@ -2928,7 +3007,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2949,12 +3028,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Variables and Formulas --
 
                     // calculate values, put in variables to be displayed per cell
-                    var isSupplierVatable = dr.PurchaseOrder!.VatType == SD.VatType_Vatable;
                     var isHaulerVatable = dr.HaulerVatType == SD.VatType_Vatable;
                     var isCustomerVatable = dr.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
                     var relatedReceivingReports = dr.HasReceivingReport
                         ? rrLookup[dr.DeliveryReceiptId].OrderBy(rr => rr.Date).ToList()
                         : [];
+                    var purchaseOrders = dr.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .GroupBy(detail => detail.PurchaseOrderId)
+                        .Select(group => group.First().PurchaseOrder!)
+                        .ToList();
+
+                    if (purchaseOrders.Count == 0 && dr.PurchaseOrder != null)
+                    {
+                        purchaseOrders.Add(dr.PurchaseOrder);
+                    }
+
+                    var supplierNames = string.Join(", ", purchaseOrders
+                        .Select(po => po.SupplierName)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                    var terms = string.Join(", ", purchaseOrders
+                        .Select(po => po.Terms)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                    var poNumbers = string.Join(", ", purchaseOrders
+                        .Select(po => po.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
                     var rrNumbers = relatedReceivingReports
                         .Select(rr => rr.ReceivingReportNo)
                         .Where(rrNo => !string.IsNullOrWhiteSpace(rrNo));
@@ -2972,11 +3075,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : salesAmount;
                     var costAmount = relatedReceivingReports.Count > 0
                         ? relatedReceivingReports.Sum(rr => rr.Amount)
-                        : dr.PurchaseOrder.FinalPrice * volume; // purchase total
+                        : purchaseOrders.Count > 0
+                            ? dr.Details
+                                .Where(detail => detail.PurchaseOrder != null)
+                                .Sum(detail => detail.Quantity * detail.PurchaseOrder!.FinalPrice)
+                            : dr.PurchaseOrder!.FinalPrice * volume; // purchase total
                     var costPerLiter = DivideOrZero(costAmount, volume); // purchase per liter
-                    var netPurchases = isSupplierVatable
-                        ? NetOfVatOrZero(costAmount)
-                        : costAmount; // purchase total net
+                    var netPurchases = relatedReceivingReports.Count > 0
+                        ? relatedReceivingReports.Sum(rr => rr.PurchaseOrder?.VatType == SD.VatType_Vatable && rr.Amount != 0m
+                            ? NetOfVatOrZero(rr.Amount)
+                            : rr.Amount)
+                        : purchaseOrders.Count > 0
+                            ? dr.Details
+                                .Where(detail => detail.PurchaseOrder != null)
+                                .Sum(detail =>
+                                {
+                                    var detailCostAmount = detail.Quantity * detail.PurchaseOrder!.FinalPrice;
+                                    return detail.PurchaseOrder.VatType == SD.VatType_Vatable
+                                        ? NetOfVatOrZero(detailCostAmount)
+                                        : detailCostAmount;
+                                })
+                            : dr.PurchaseOrder!.VatType == SD.VatType_Vatable
+                                ? NetOfVatOrZero(costAmount)
+                                : costAmount; // purchase total net
                     var gmAmount = RoundToFour(netSales - netPurchases); // gross margin total
                     var gmPerLiter = DivideOrZero(gmAmount, volume); // gross margin per liter
                     var freightCharge = RoundToFour(dr.Freight + dr.ECC); // freight charge per liter
@@ -3045,9 +3166,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Assign Values to Cells --
 
                     gmReportWorksheet.Cells[row, 1].Value = rrDateDisplay;
-                    gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
-                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.Terms;
-                    gmReportWorksheet.Cells[row, 4].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 2].Value = supplierNames;
+                    gmReportWorksheet.Cells[row, 3].Value = terms;
+                    gmReportWorksheet.Cells[row, 4].Value = poNumbers;
                     gmReportWorksheet.Cells[row, 5].Value = string.Join(", ", rrNumbers);
                     gmReportWorksheet.Cells[row, 6].Value = dr.DeliveryReceiptNo;
                     gmReportWorksheet.Cells[row, 7].Value = dr.CustomerOrderSlip.CustomerName;
@@ -3147,7 +3268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
                 using (var range = gmReportWorksheet.Cells[row, 10, row, 27])
@@ -3937,7 +4058,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
                 titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                 titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -3963,7 +4084,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     titleCells.Style.Font.Size = 13;
                     titleCells.Style.Font.Bold = true;
                     titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                     titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -4038,7 +4159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     + " " +
                                                     (sameMonthYearGroupedBySupplier.FirstOrDefault()?.FirstOrDefault()?.Date!.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     row++;
 
                     // LOOP BY SUPPLIER
@@ -4561,7 +4682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 204, 172));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 172));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -4982,7 +5103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 204, 172));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 172));
                             range.Style.Font.Bold = true;
                         }
 
@@ -5433,7 +5554,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var sumOfFreightAmountWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
-                    .Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                    .Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
 
                 var sumOfQuantityWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
                     .Sum(rr => rr.QuantityReceived);
@@ -5442,7 +5563,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
+                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
@@ -5624,9 +5745,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Liquidation Vs Supplier's Billing";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5637,21 +5758,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Merge = true;
                     range.Value = "FILPRIDE RECORD BASED ON SYSTEM ";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 192, 0));
                 }
                 using (var range = worksheet.Cells[10, 11, 10, 13])
                 {
                     range.Merge = true;
                     range.Value = "PER SUPPLIER'S INVOICE";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                 }
                 using (var range = worksheet.Cells[10, 14, 10, 16])
                 {
                     range.Merge = true;
                     range.Value = "VARIANCE";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(146, 208, 80));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(146, 208, 80));
                 }
 
                 using (var range = worksheet.Cells[10, 8, 10, 16])
@@ -5768,9 +5889,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-3";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Summary";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5893,9 +6014,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-4";
-                worksheet.Cells[3, 16].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "Withdrawal Certificate (WC) Distribution Summary";
-                worksheet.Cells[4, 3].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                worksheet.Cells[4, 3].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[5, 3].Value = "Purchases to Supplier";
                 worksheet.Cells[6, 3].Value = "Month:";
                 worksheet.Cells[6, 4].Value = viewModel.Period?.ToString("MMM yyyy");
@@ -5906,7 +6027,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Merge = true;
                     range.Value = "PO & RR LIQUIDATION";
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
@@ -5942,7 +6063,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[12, (col - 2), 12, (col - 1)])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -5951,16 +6072,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var wcTotal = 0m;
                 int mostNumberOfCoLoads = 0;
                 var listOfCoLoadTotal = new List<decimal>();
+                var receivingReportDeliveryReceiptIds = receivingReports
+                    .Where(rr => rr.DeliveryReceiptId.HasValue)
+                    .Select(rr => rr.DeliveryReceiptId!.Value)
+                    .Distinct()
+                    .ToList();
+                var receivingReportPoIds = receivingReports
+                    .Select(rr => rr.POId)
+                    .Distinct()
+                    .ToList();
+                var receivingReportAtlNos = receivingReports
+                    .Select(rr => rr.AuthorityToLoadNo)
+                    .Where(rr => !string.IsNullOrWhiteSpace(rr))
+                    .Distinct()
+                    .ToList();
+                var supplierAtlEntries = await _dbContext.FilprideDeliveryReceiptDetails
+                    .Where(d => receivingReportDeliveryReceiptIds.Contains(d.DeliveryReceiptId)
+                                && receivingReportPoIds.Contains(d.PurchaseOrderId)
+                                && receivingReportAtlNos.Contains(d.AuthorityToLoadNo!))
+                    .Join(_dbContext.FilprideBookAtlDetails,
+                        drDetail => new
+                        {
+                            drDetail.AuthorityToLoadId,
+                            drDetail.CustomerOrderSlipId,
+                            drDetail.PurchaseOrderId
+                        },
+                        atlDetail => new
+                        {
+                            atlDetail.AuthorityToLoadId,
+                            atlDetail.CustomerOrderSlipId,
+                            PurchaseOrderId = atlDetail.AppointedSupplier!.PurchaseOrderId
+                        },
+                        (drDetail, atlDetail) => new
+                        {
+                            drDetail.DeliveryReceiptId,
+                            drDetail.PurchaseOrderId,
+                            drDetail.AuthorityToLoadNo,
+                            atlDetail.SupplierAtlNo
+                        })
+                    .ToListAsync(cancellationToken);
 
                 foreach (var rr in receivingReports)
                 {
                     var rrWithSameWC = (await _unitOfWork.FilprideReceivingReport
                         .GetAllAsync(wcs => wcs.WithdrawalCertificate == rr.WithdrawalCertificate && wcs.ReceivingReportId != rr.ReceivingReportId, cancellationToken))
                         .ToList();
-
-                    var atlEntry = await _dbContext.FilprideAuthorityToLoads
-                        .Where(atl => atl.AuthorityToLoadNo == rr.AuthorityToLoadNo)
-                        .FirstOrDefaultAsync(cancellationToken);
 
                     if (mostNumberOfCoLoads < rrWithSameWC.Count)
                     {
@@ -5987,9 +6143,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
                     worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
                     worksheet.Cells[row, 7].Value = rr.AuthorityToLoadNo;
-                    if (atlEntry != null)
+                    var supplierAtlNo = rr.DeliveryReceiptId.HasValue && !string.IsNullOrWhiteSpace(rr.AuthorityToLoadNo)
+                        ? supplierAtlEntries
+                            .Where(x => x.DeliveryReceiptId == rr.DeliveryReceiptId.Value
+                                        && x.PurchaseOrderId == rr.POId
+                                        && x.AuthorityToLoadNo == rr.AuthorityToLoadNo)
+                            .Select(x => x.SupplierAtlNo)
+                            .FirstOrDefault()
+                        : null;
+                    if (!string.IsNullOrWhiteSpace(supplierAtlNo))
                     {
-                        worksheet.Cells[row, 8].Value = atlEntry!.UppiAtlNo ?? "";
+                        worksheet.Cells[row, 8].Value = supplierAtlNo;
                     }
                     worksheet.Cells[row, 9].Value = rr.DeliveryReceipt!.Customer!.CustomerName;
                     worksheet.Cells[row, 10].Value = rr.PurchaseOrder!.ProductName;
@@ -6021,7 +6185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Font.Bold = true;
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 255, 0));
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
@@ -6043,7 +6207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Font.Bold = true;
                             range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         }
@@ -6109,7 +6273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(198, 224, 180));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(198, 224, 180));
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
@@ -6670,7 +6834,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;
@@ -6814,7 +6978,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;
@@ -6958,7 +7122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = receivingReport.ReceivingReportNo;
                         worksheet.Cells[row, 8].Value = receivingReport.DeliveryReceipt.DeliveryReceiptNo;
                         worksheet.Cells[row, 9].Value = receivingReport.DeliveryReceipt.Customer.CustomerName;
-                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.Product!.ProductName;
+                        worksheet.Cells[row, 10].Value = receivingReport.PurchaseOrder.ProductName;
                         worksheet.Cells[row, 11].Value = quantityServed;
                         worksheet.Cells[row, 12].Value = salesAmount;
                         worksheet.Cells[row, 13].Value = salesAmountVatEx;
@@ -7550,7 +7714,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 titleCells.Style.Font.Size = 13;
                 titleCells.Style.Font.Bold = true;
                 titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                 titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -7576,7 +7740,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     titleCells.Style.Font.Size = 13;
                     titleCells.Style.Font.Bold = true;
                     titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.Fill.BackgroundColor.SetColor(Color.Salmon);
                     titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
 
@@ -7652,7 +7816,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     + " " +
                                                     (sameMonthYearGroupedByHauler.FirstOrDefault()?.FirstOrDefault()?.DeliveredDate!.Value.Year.ToString() ?? " ");
                     worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                     row++;
 
                     // LOOP BY HAULER
@@ -8231,7 +8395,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 2].Value = detail.JournalVoucherHeader.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 3].Value = detail.JournalVoucherHeader.Particulars;
-                    worksheet.Cells[row, 3].Style.WrapText = true;
                     worksheet.Cells[row, 4].Value = detail.Debit;
                     worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 5].Value = detail.Credit;

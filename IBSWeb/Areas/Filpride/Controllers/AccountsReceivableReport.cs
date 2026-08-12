@@ -539,6 +539,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 deliveryReceipts = deliveryReceipts.OrderBy(dr => dr.Date);
+                var dispatchDrIds = deliveryReceipts.Select(dr => dr.DeliveryReceiptId).ToList();
+                var receivingReportAggregates = await _dbContext.FilprideReceivingReports
+                    .Where(rr => rr.DeliveryReceiptId.HasValue
+                                && dispatchDrIds.Contains(rr.DeliveryReceiptId.Value)
+                                && rr.Status == nameof(Status.Posted))
+                    .GroupBy(rr => rr.DeliveryReceiptId!.Value)
+                    .Select(group => new
+                    {
+                        DeliveryReceiptId = group.Key,
+                        LiftingDate = group.Max(rr => rr.Date),
+                        QuantityReceived = group.Sum(rr => rr.QuantityReceived)
+                    })
+                    .ToDictionaryAsync(x => x.DeliveryReceiptId, cancellationToken);
 
                 var document = Document.Create(container =>
                 {
@@ -674,6 +687,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var ecc = record.ECC;
                                         var totalFreight = record.FreightAmount;
                                         var liftedQuantity = 0m;
+                                        receivingReportAggregates.TryGetValue(record.DeliveryReceiptId, out var rrAggregate);
 
                                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                                             record.DeliveredDate != viewModel.DateFrom)
@@ -686,7 +700,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerName);
                                             table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerType);
                                             table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceiptNo);
-                                            table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.ProductName);
                                             table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity != 0 ? quantity < 0 ? $"({Math.Abs(quantity).ToString(SD.Two_Decimal_Format)})" : quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                             table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.Depot);
                                             table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
@@ -708,11 +722,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             }
                                             else
                                             {
-                                                if (record.HasReceivingReport)
+                                                if (record.HasReceivingReport && rrAggregate != null)
                                                 {
-                                                    var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == record.DeliveryReceiptId);
-                                                    liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
-                                                    table.Cell().Border(0.5f).Padding(3).Text(getReceivingReport?.Date.ToString(SD.Date_Format) ?? string.Empty);
+                                                    liftedQuantity = rrAggregate.QuantityReceived;
+                                                    table.Cell().Border(0.5f).Padding(3).Text(rrAggregate.LiftingDate.ToString(SD.Date_Format));
                                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(liftedQuantity != 0 ? liftedQuantity < 0 ? $"({Math.Abs(liftedQuantity).ToString(SD.Two_Decimal_Format)})" : liftedQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(liftedQuantity < 0 ? Colors.Red.Medium : Colors.Black);
                                                 }
                                                 else
@@ -795,7 +808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     var productList = GetOrderedProductNames(
                                         deliveryReceipts,
-                                        dr => dr.PurchaseOrder?.ProductName);
+                                        dr => dr.CustomerOrderSlip?.ProductName);
 
                                     col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
 
@@ -854,7 +867,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var totalProductToday = customerType.Where(x =>
                                                         x.Date == viewModel.DateFrom &&
-                                                        x.PurchaseOrder?.ProductName == productName)
+                                                        x.CustomerOrderSlip?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductToday != 0
@@ -889,7 +902,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var totalProductYesterday = customerType.Where(x =>
                                                         x.Date < viewModel.DateFrom &&
-                                                        x.PurchaseOrder?.ProductName == productName)
+                                                        x.CustomerOrderSlip?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductYesterday != 0
@@ -921,7 +934,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             foreach (var productName in productList)
                                             {
                                                 var totalProductMonthToDate = customerType
-                                                    .Where(x => x.PurchaseOrder?.ProductName == productName)
+                                                    .Where(x => x.CustomerOrderSlip?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                     .Text(totalProductMonthToDate != 0
@@ -969,7 +982,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         {
                                             var totalProductTodayOverAll = deliveryReceipts.Where(x =>
                                                     x.Date == viewModel.DateFrom &&
-                                                    x.PurchaseOrder?.ProductName == productName)
+                                                    x.CustomerOrderSlip?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight().Text(
                                                 totalProductTodayOverAll != 0
@@ -1003,7 +1016,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         {
                                             var totalProductYesterdayOverAll = deliveryReceipts.Where(x =>
                                                     x.Date < viewModel.DateFrom &&
-                                                    x.PurchaseOrder?.ProductName == productName)
+                                                    x.CustomerOrderSlip?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                 .Text(totalProductYesterdayOverAll != 0
@@ -1035,7 +1048,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         foreach (var productName in productList)
                                         {
                                             var totalProductMonthToDateOverAll = deliveryReceipts
-                                                .Where(x => x.PurchaseOrder?.ProductName == productName)
+                                                .Where(x => x.CustomerOrderSlip?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
                                             content.Cell().Border(0.5f).Padding(3).AlignRight()
                                                 .Text(totalProductMonthToDateOverAll != 0
@@ -1203,8 +1216,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 && drIds.Contains(rr.DeliveryReceiptId.Value)
                                 && rr.Status == nameof(Status.Posted))
                     .GroupBy(rr => rr.DeliveryReceiptId!.Value)
-                    .Select(g => g.OrderByDescending(rr => rr.Date).First())
-                    .ToDictionaryAsync(rr => rr.DeliveryReceiptId!.Value, cancellationToken);
+                    .Select(group => new
+                    {
+                        DeliveryReceiptId = group.Key,
+                        ReceivingReportNos = string.Join(", ", group
+                            .Select(rr => rr.OldRRNo ?? rr.ReceivingReportNo)
+                            .Where(rr => !string.IsNullOrWhiteSpace(rr))
+                            .Distinct()),
+                        SupplierInvoiceNumbers = string.Join(", ", group
+                            .Select(rr => rr.SupplierInvoiceNumber)
+                            .Where(si => !string.IsNullOrWhiteSpace(si))
+                            .Distinct()),
+                        WithdrawalCertificates = string.Join(", ", group
+                            .Select(rr => rr.WithdrawalCertificate)
+                            .Where(wc => !string.IsNullOrWhiteSpace(wc))
+                            .Distinct()),
+                        LiftingDate = group.Max(rr => rr.Date),
+                        QuantityReceived = group.Sum(rr => rr.QuantityReceived),
+                        Amount = group.Sum(rr => rr.Amount)
+                    })
+                    .ToDictionaryAsync(x => x.DeliveryReceiptId, cancellationToken);
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
@@ -1323,7 +1354,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 2].Value = dr.CustomerOrderSlip?.CustomerName;
                     worksheet.Cells[currentRow, 3].Value = dr.CustomerOrderSlip?.CustomerType;
                     worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                    worksheet.Cells[currentRow, 5].Value = dr.PurchaseOrder!.ProductName;
+                    worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip?.ProductName;
                     worksheet.Cells[currentRow, 6].Value = dr.CustomerOrderSlip?.DeliveredPrice;
                     worksheet.Cells[currentRow, 7].Value = dr.Quantity;
                     worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip?.Depot;
@@ -1338,12 +1369,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 17].Value = totalFreightAmount;
                     worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
-                    worksheet.Cells[currentRow, 20].Value = rr?.ReceivingReportNo;
+                    worksheet.Cells[currentRow, 20].Value = rr?.ReceivingReportNos;
                     worksheet.Cells[currentRow, 21].Value = rr?.QuantityReceived != 0
                         ? rr?.Amount / rr?.QuantityReceived
                         : 0m;
-                    worksheet.Cells[currentRow, 22].Value = rr?.SupplierInvoiceNumber;
-                    worksheet.Cells[currentRow, 23].Value = rr?.WithdrawalCertificate;
+                    worksheet.Cells[currentRow, 22].Value = rr?.SupplierInvoiceNumbers;
+                    worksheet.Cells[currentRow, 23].Value = rr?.WithdrawalCertificates;
 
                     if (viewModel.ReportType == "Delivered")
                     {
@@ -1356,7 +1387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (dr.HasReceivingReport)
                         {
                             liftedQuantity = rr?.QuantityReceived ?? 0m;
-                            worksheet.Cells[currentRow, 24].Value = rr?.Date;
+                    worksheet.Cells[currentRow, 24].Value = rr?.LiftingDate;
                             worksheet.Cells[currentRow, 24].Style.Numberformat.Format = "MMM/dd/yyyy";
                             worksheet.Cells[currentRow, 25].Value = liftedQuantity;
                             worksheet.Cells[currentRow, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -1446,7 +1477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var productList = GetOrderedProductNames(
                         deliveryReceipts,
-                        dr => dr.PurchaseOrder?.ProductName);
+                        dr => dr.CustomerOrderSlip?.ProductName);
                     var summaryHeaderStartColumn = 11;
                     var summaryOverallColumn = summaryHeaderStartColumn + 1;
                     var summaryProductStartColumn = summaryHeaderStartColumn + 2;
@@ -1485,7 +1516,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnOne = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductToday = customerType.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName)
+                            var totalProductToday = customerType.Where(x => x.DeliveredDate == viewModel.DateFrom && x.CustomerOrderSlip?.ProductName == productName)
                                 .Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnOne].Value = totalProductToday != 0 ? totalProductToday : 0m;
                             worksheet.Cells[startOfSummary, columnOne].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -1507,7 +1538,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnTwo = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductYesterday = customerType.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
+                            var totalProductYesterday = customerType.Where(x => x.DeliveredDate < viewModel.DateFrom && x.CustomerOrderSlip?.ProductName == productName).Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnTwo].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
                             worksheet.Cells[startOfSummary, columnTwo].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             columnTwo++;
@@ -1528,7 +1559,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int columnThree = summaryProductStartColumn;
                         foreach (var productName in productList)
                         {
-                            var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
+                            var totalProductMonthToDate = customerType.Where(x => x.CustomerOrderSlip?.ProductName == productName).Sum(dr => dr.Quantity);
                             worksheet.Cells[startOfSummary, columnThree].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
                             worksheet.Cells[startOfSummary, columnThree].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             columnThree++;
@@ -1572,7 +1603,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnOneOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductToday = deliveryReceipts.Where(x => x.DeliveredDate == viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName)
+                        var totalProductToday = deliveryReceipts.Where(x => x.DeliveredDate == viewModel.DateFrom && x.CustomerOrderSlip?.ProductName == productName)
                             .Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnOneOverAll].Value = totalProductToday != 0 ? totalProductToday : 0m;
                         worksheet.Cells[startOfSummary, columnOneOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -1594,7 +1625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnTwoOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductYesterday = deliveryReceipts.Where(x => x.DeliveredDate < viewModel.DateFrom && x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
+                        var totalProductYesterday = deliveryReceipts.Where(x => x.DeliveredDate < viewModel.DateFrom && x.CustomerOrderSlip?.ProductName == productName).Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnTwoOverAll].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
                         worksheet.Cells[startOfSummary, columnTwoOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         columnTwoOverAll++;
@@ -1615,7 +1646,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int columnThreeOverAll = summaryProductStartColumn;
                     foreach (var productName in productList)
                     {
-                        var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.ProductName == productName).Sum(dr => dr.Quantity);
+                        var totalProductMonthToDate = deliveryReceipts.Where(x => x.CustomerOrderSlip?.ProductName == productName).Sum(dr => dr.Quantity);
                         worksheet.Cells[startOfSummary, columnThreeOverAll].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
                         worksheet.Cells[startOfSummary, columnThreeOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         columnThreeOverAll++;
@@ -1826,6 +1857,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         var isCustomerVatable = record.DeliveryReceipt.CustomerOrderSlip?.VatType == SD.VatType_Vatable;
                                         var isHaulerVatable = record.DeliveryReceipt.HaulerVatType == SD.VatType_Vatable;
+                                        var poNumbers = string.Join(", ", record.DeliveryReceipt.Details
+                                            .Where(detail => detail.PurchaseOrder != null)
+                                            .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                                            .Where(value => !string.IsNullOrWhiteSpace(value))
+                                            .Distinct(StringComparer.OrdinalIgnoreCase));
                                         var quantity = record.DeliveryReceipt.Quantity;
                                         var freight = record.DeliveryReceipt.FreightAmount;
                                         var freightNetOfVat = isHaulerVatable
@@ -1845,7 +1881,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.DeliveryReceiptNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(!string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : record.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.ProductName);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity != 0 ? quantity < 0 ? $"({Math.Abs(quantity).ToString(SD.Two_Decimal_Format)})" : quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(quantity < 0 ? Colors.Red.Medium : Colors.Black);
@@ -2273,6 +2309,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         productMetric.NetOfSales += salesNetOfVat;
                     }
 
+                    var poNumbers = string.Join(", ", dr.DeliveryReceipt.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+                    var oldPoNumbers = string.Join(", ", dr.DeliveryReceipt.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.OldPoNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase));
+
                     worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
                     worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerName;
                     worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.CustomerOrderSlip?.Branch;
@@ -2283,8 +2330,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 8].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[row, 9].Value = dr.DeliveryReceipt.DeliveryReceiptNo;
                     worksheet.Cells[row, 10].Value = dr.DeliveryReceipt.ManualDrNo;
-                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 11].Value = !string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 12].Value = !string.IsNullOrWhiteSpace(oldPoNumbers) ? oldPoNumbers : dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption;
                     worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.CustomerOrderSlip!.ProductName;
                     worksheet.Cells[row, 15].Value = dr.DeliveryReceipt.Quantity;
@@ -5098,6 +5145,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var dr in salesReport)
                 {
+                    var poNumbers = string.Join(", ", dr.DeliveryReceipt?.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.PurchaseOrderNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase) ?? []);
+                    var oldPoNumbers = string.Join(", ", dr.DeliveryReceipt?.Details
+                        .Where(detail => detail.PurchaseOrder != null)
+                        .Select(detail => detail.PurchaseOrder!.OldPoNo)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase) ?? []);
                     var quantity = dr.Quantity;
                     var freightAmount = dr.DeliveryReceipt?.FreightAmount ?? 0m;
                     var segment = dr.Amount;
@@ -5114,8 +5171,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
                     worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
-                    worksheet.Cells[row, 10].Value = dr.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 11].Value = dr.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 10].Value = !string.IsNullOrWhiteSpace(poNumbers) ? poNumbers : dr.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 11].Value = !string.IsNullOrWhiteSpace(oldPoNumbers) ? oldPoNumbers : dr.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
                     worksheet.Cells[row, 13].Value = dr.Product?.ProductName;
                     worksheet.Cells[row, 14].Value = quantity;

@@ -6,14 +6,14 @@
 
 @{
     ViewData["Title"] = "Authority To Load - Preview";
-    var purchaseOrders = ViewData["PurchaseOrders"] as List<FilprideCOSAppointedSupplier>;
-        
-    var selectedCompany = string.Empty;
-
-    if (SignInManager.IsSignedIn(User))
-    {
-        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-    }
+    var detailRows = Model.Details
+        .OrderBy(d => d.CustomerOrderSlip!.CustomerId)
+        .ThenBy(d => d.CustomerOrderSlipId)
+        .ToList();
+    var freightValues = detailRows
+        .Select(x => x.CustomerOrderSlip?.Freight ?? 0m)
+        .Distinct()
+        .ToList();
 
 }
 
@@ -55,16 +55,17 @@
         <table class="table table-borderless">
             <tbody>
             <tr>
-                <td><b>Supplier:</b> @(Model.Supplier!.SupplierName.ToUpper())</td>
-                <td class="text-end"><b>Freight:</b> @Model.Freight.ToString(SD.Four_Decimal_Format)</td>
-            </tr>
-            <tr>
                 <td><b>Date Booked:</b> @Model.DateBooked.ToString(SD.Date_Format)</td>
-                <td class="text-end"><b>Load Port:</b> @Model.Depot</td>
+                <td class="text-end">
+                    <b>Freight:</b>
+                    @(freightValues.Count == 1
+                        ? freightValues[0].ToString(SD.Four_Decimal_Format)
+                        : "VARIOUS")
+                </td>
             </tr>
             <tr>
                 <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
-                <td></td>
+                <td class="text-end"><b>Load Port:</b> @Model.Depot</td>
             </tr>
             </tbody>
         </table>
@@ -73,29 +74,23 @@
         <table class="table table-bordered">
             <thead>
             <tr>
-                <th colspan="7" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
+                <th colspan="9" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
             </tr>
-            @if (Model.UppiAtlNo != null)
-            {
-                <tr>
-                    <th colspan="7" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo.ToUpper()</th>
-                </tr>
-            }
             <tr>
                 <th>COS#</th>
                 <th>Customer</th>
+                <th>Supplier</th>
                 <th>Product</th>
                 <th>Volume</th>
+                <th>Supplier ATL#</th>
                 <th>Supplier SO#</th>
                 <th>Filpride PO#</th>
                 <th>Customer PO#</th>
             </tr>
             </thead>
             <tbody>
-                
-            @foreach (var cos in Model.Details
-                          .OrderBy(d => d.CustomerOrderSlip!.CustomerId)
-                          .ThenBy(d => d.CustomerOrderSlipId))
+
+            @foreach (var cos in detailRows)
             {
                 <tr>
                     <td>
@@ -105,27 +100,29 @@
                         @cos.CustomerOrderSlip!.Customer!.CustomerName.ToUpper()
                     </td>
                     <td>
+                        @cos.SupplierName.ToUpper()
+                    </td>
+                    <td>
                         @cos.CustomerOrderSlip!.Product!.ProductName
                     </td>
                     <td>
                         @cos.Quantity.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td>
-                        @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                            .Where(a => a.SequenceId == cos.AppointedId)
-                            .Select(a => a.PurchaseOrder!.SupplierSalesOrderNo))
+                        @cos.SupplierAtlNo?.ToUpper()
                     </td>
                     <td>
-                        @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                            .Where(a => a.SequenceId == cos.AppointedId)
-                            .Select(x => x.PurchaseOrder!.PurchaseOrderNo))
+                        @cos.AppointedSupplier?.PurchaseOrder?.SupplierSalesOrderNo
+                    </td>
+                    <td>
+                        @cos.AppointedSupplier?.PurchaseOrder?.PurchaseOrderNo
                     </td>
                     <td>
                         @cos.CustomerOrderSlip.CustomerPoNo.ToUpper()
                     </td>
                 </tr>
             }
-                
+
             </tbody>
         </table>
     </div>
@@ -148,7 +145,7 @@
         </table>
     </div>
 
-    <div class="row mt-5">    
+    <div class="row mt-5">
         <div class="col text-center">
             <p style="font-size: 14px;"><b>Prepared by:</b></p>
             <br />
@@ -193,10 +190,9 @@
             window.addEventListener('afterprint', afterPrintHandler);
             window.print();
         }
-        
+
         function controllerThenPrint(id) {
-            var url = `@Url.Action("Printed", "AuthorityToLoad", new { area = "Filpride" })/${id}`;
-            window.location.href = url;
+            window.location.href = `@Url.Action("Printed", "AuthorityToLoad", new { area = "Filpride" })/${id}`;
         }
     </script>
 }

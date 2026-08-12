@@ -6,6 +6,26 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.1.1] - 2026-08-11
+
+### Fixed
+- Fixed the CV disbursement report format.
+- Fixed the non-trade invoice report format.
+- Fixed delivery receipt edit validation to restore the current reserved volume before checking remaining volume, preventing false over-allocation errors.
+- Fixed the delivery receipt record lifting date prompt to show the supplier ATL number.
+- Fixed accounts payable report supplier ATL output to use the supplier ATL number instead of the UPPI ATL number.
+
+---
+
+## [v3.1.0] - 2026-08-07
+
+### Added
+- Added the migration of blended product.
+
+### Changed
+- Modified the COS, DR, RR, AP and AR reports to adopt the changes.
+---
+
 ## [v3.0.10] - 2026-08-03
 
 ### Changed

@@ -117,10 +117,46 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task AddSalesToInventoryAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
         {
+            if (deliveryReceipt.Details.Any())
+            {
+                foreach (var detail in deliveryReceipt.Details)
+                {
+                    await AddSalesLineToInventoryAsync(
+                        deliveryReceipt,
+                        detail.ProductId,
+                        detail.PurchaseOrderId,
+                        detail.Quantity,
+                        detail.CustomerOrderSlip,
+                        detail.PurchaseOrder,
+                        cancellationToken);
+                }
+
+                return;
+            }
+
+            await AddSalesLineToInventoryAsync(
+                deliveryReceipt,
+                deliveryReceipt.CustomerOrderSlip!.ProductId,
+                (int)deliveryReceipt.PurchaseOrderId!,
+                deliveryReceipt.Quantity,
+                deliveryReceipt.CustomerOrderSlip,
+                deliveryReceipt.PurchaseOrder,
+                cancellationToken);
+        }
+
+        private async Task AddSalesLineToInventoryAsync(
+            FilprideDeliveryReceipt deliveryReceipt,
+            int productId,
+            int purchaseOrderId,
+            decimal quantity,
+            FilprideCustomerOrderSlip? customerOrderSlip,
+            FilpridePurchaseOrder? purchaseOrder,
+            CancellationToken cancellationToken)
+        {
             var sortedInventory = await _db.FilprideInventories
                 .Where(i => i.Company == deliveryReceipt.Company &&
-                            i.ProductId == deliveryReceipt.CustomerOrderSlip!.ProductId &&
-                            i.POId == deliveryReceipt.PurchaseOrderId)
+                            i.ProductId == productId &&
+                            i.POId == purchaseOrderId)
                 .ToListAsync(cancellationToken);
 
             sortedInventory = OrderInventoryTransactions(sortedInventory).ToList();
@@ -139,16 +175,16 @@ namespace IBS.DataAccess.Repository.Filpride
             var previousInventory = lastIndex >= 0 ? sortedInventory[lastIndex] : null;
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
             decimal cost;
-            var purchaseOrder = await _db.FilpridePurchaseOrders
-                                    .FirstOrDefaultAsync(x => x.PurchaseOrderId == deliveryReceipt.PurchaseOrderId, cancellationToken)
-                                ?? throw new NullReferenceException("Purchase order not found");
+            purchaseOrder ??= await _db.FilpridePurchaseOrders
+                                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == purchaseOrderId, cancellationToken)
+                             ?? throw new NullReferenceException("Purchase order not found");
 
             if (previousInventory == null)
             {
                 var unitOfWork = new UnitOfWork(_db);
 
-                var freight = deliveryReceipt.CustomerOrderSlip?.DeliveryOption == SD.DeliveryOption_DirectDelivery
-                    ? (decimal)deliveryReceipt.CustomerOrderSlip?.Freight!
+                var freight = customerOrderSlip?.DeliveryOption == SD.DeliveryOption_DirectDelivery
+                    ? (decimal)customerOrderSlip.Freight!
                     : 0;
 
                 var grossPoPrice = await unitOfWork.FilpridePurchaseOrder
@@ -162,21 +198,21 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Calculate initial values for new inventory entry
-            var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) - deliveryReceipt.Quantity;
+            var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) - quantity;
             var averageCost = cost;
-            var total = deliveryReceipt.Quantity * cost;
+            var total = quantity * cost;
             var totalBalance = inventoryBalance * averageCost;
 
             // Create new inventory entry
             var inventory = new FilprideInventory
             {
                 Date = (DateOnly)deliveryReceipt.DeliveredDate!,
-                ProductId = deliveryReceipt.CustomerOrderSlip!.ProductId,
+                ProductId = productId,
                 Particular = "Sales",
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Quantity = deliveryReceipt.Quantity,
+                Quantity = quantity,
                 Cost = cost,
-                POId = deliveryReceipt.PurchaseOrderId,
+                POId = purchaseOrderId,
                 IsValidated = true,
                 ValidatedBy = deliveryReceipt.CreatedBy,
                 ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
