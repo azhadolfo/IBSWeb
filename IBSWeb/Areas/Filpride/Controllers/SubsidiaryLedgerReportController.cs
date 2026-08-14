@@ -223,7 +223,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subtotalAmountPaid = 0m;
                     var subtotalBalance = 0m;
 
-                    foreach (var item in receivingReports)
+                    foreach (var item in receivingReports
+                                 .OrderBy(x => x.Date)
+                                 .ThenBy(x => x.ReceivingReportNo)
+                                 .ThenBy(x => x.ReceivingReportId))
                     {
                         cvTradePayments.TryGetValue(item.ReceivingReportId, out var cvTradePayment);
 
@@ -239,12 +242,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var netOfTax = item.Amount - withHoldingTaxAmount;
 
-                        foreach (var checkVoucher in (cvTradePayment?.CheckVouchers ?? Enumerable.Empty<dynamic>()).DefaultIfEmpty())
+                        List<(int receivingReportId, string receivingReportNo, decimal balance)> rrAmountPaidList = new();
+                        foreach (var checkVoucher in (cvTradePayment?.CheckVouchers
+                                     .OrderBy(x => x.CV.Date)
+                                     .ThenBy(x => x.CV.CheckVoucherHeaderNo)
+                                     .ThenBy(x => x.CV.CheckVoucherHeaderId) ?? Enumerable.Empty<dynamic>()).DefaultIfEmpty())
                         {
                             col = 1;
                             var amountPaid = checkVoucher?.AmountPaid ?? 0m;
+                            var runningBalances = rrAmountPaidList
+                                .Where(x => x.receivingReportNo == item.ReceivingReportNo)
+                                .OrderByDescending(x => x.receivingReportId)
+                                .Select(x => x.balance)
+                                .FirstOrDefault();
+                            var balance = 0m;
+                            if (runningBalances != 0m)
+                            {
+                                balance = runningBalances - amountPaid;
+                            }
+                            else
+                            {
+                                balance = netOfTax - amountPaid;
+                            }
 
-                            var balance = netOfTax - amountPaid;
+                            rrAmountPaidList.Add((item.ReceivingReportId,
+                                    item.ReceivingReportNo!,
+                                    balance
+                                ));
 
                             worksheet.Cells[row, col].Value = item.PurchaseOrder.SupplierName; col++;
                             worksheet.Cells[row, col].Value = item.SupplierInvoiceNumber; col++;
