@@ -564,7 +564,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subtotalAmountPaid = 0m;
                     var subtotalBalance = 0m;
 
-                    foreach (var item in deliveryReceipts)
+                    foreach (var item in deliveryReceipts
+                                 .OrderBy(x => x.Date)
+                                 .ThenBy(x => x.DeliveryReceiptNo)
+                                 .ThenBy(x => x.DeliveryReceiptId))
                     {
                         cvTradePayments.TryGetValue(item.DeliveryReceiptId, out var cvTradePayment);
 
@@ -584,12 +587,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var netOfTax = item.CommissionAmount - withHoldingTaxAmount;
 
-                        foreach (var checkVoucher in (cvTradePayment?.CheckVouchers ?? Enumerable.Empty<dynamic>()).DefaultIfEmpty())
+                        List<(int deliveryReceiptId, string deliveryReceiptNo, decimal balance)> drAmountPaidList = new();
+                        foreach (var checkVoucher in (cvTradePayment?.CheckVouchers
+                                     .OrderBy(x => x.CV.Date)
+                                     .ThenBy(x => x.CV.CheckVoucherHeaderNo)
+                                     .ThenBy(x => x.CV.CheckVoucherHeaderId)
+                                                      ?? Enumerable.Empty<dynamic>()).DefaultIfEmpty())
                         {
                             col = 1;
                             var amountPaid = checkVoucher?.AmountPaid ?? 0m;
+                            var runningBalances = drAmountPaidList
+                                .Where(x => x.deliveryReceiptNo == item.DeliveryReceiptNo)
+                                .OrderByDescending(x => x.deliveryReceiptId)
+                                .Select(x => x.balance)
+                                .FirstOrDefault();
+                            var balance = 0m;
+                            if (runningBalances != 0m)
+                            {
+                                balance = (runningBalances + costOfMoney) - amountPaid;
+                            }
+                            else
+                            {
+                                balance = (netOfTax + costOfMoney) - amountPaid;
+                            }
 
-                            var balance = (netOfTax + costOfMoney) - amountPaid;
+                            drAmountPaidList.Add((item.DeliveryReceiptId,
+                                    item.DeliveryReceiptNo,
+                                    balance
+                                ));
 
                             worksheet.Cells[row, col].Value = item.CustomerOrderSlip.CommissioneeName; col++;
                             worksheet.Cells[row, col].Value = item.ManualDrNo; col++;
