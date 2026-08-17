@@ -94,7 +94,10 @@ namespace IBS.Models.Enums
     public enum CVType
     {
         Invoicing,
-        Payment
+        Payment,
+        Supplier,
+        Commission,
+        Hauler
     }
 
     public enum ModuleType
