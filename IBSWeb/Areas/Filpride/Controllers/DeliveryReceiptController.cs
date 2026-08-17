@@ -824,11 +824,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return NotFound();
                 }
-                if (existingRecord.HasReceivingReport)
-                {
-                    TempData["error"] = "Cannot edit delivery receipt lines because a receiving report already exists.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
 
                 await RestoreDeliveryReceiptDetailsAsync(existingRecord, cancellationToken);
 
