@@ -73,13 +73,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList());
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(int parentId, string accountName, bool showHidden = false, CancellationToken cancellationToken = default)
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
+                var normalizedAccountName = NormalizeAccountName(accountName);
                 var parentAccount = await _unitOfWork.FilprideChartOfAccount
                     .GetAsyncIgnoreQueryFilters(c => c.AccountId == parentId, cancellationToken);
 
@@ -88,64 +90,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new InvalidOperationException("Parent Account not found");
                 }
 
-                var lastAccount = (await _unitOfWork.FilprideChartOfAccount
-                        .GetAllAsync(c => c.ParentAccountId == parentId, cancellationToken: cancellationToken))
-                    .OrderByDescending(c => c.AccountNumber)
-                    .FirstOrDefault();
-
-                var lastSeries = int.Parse(lastAccount?.AccountNumber ?? parentAccount.AccountNumber!);
-
                 var levelToCreate = parentAccount.Level + 1;
+                if (levelToCreate < 4 || levelToCreate > 5)
+                {
+                    throw new InvalidOperationException("Only Level 4 and Level 5 accounts can be created from this screen.");
+                }
 
                 var newAccount = new FilprideChartOfAccount
                 {
                     IsMain = false,
-                    AccountType = parentAccount?.AccountType,
-                    NormalBalance = parentAccount?.NormalBalance ?? "",
-                    AccountName = accountName,
+                    AccountType = parentAccount.AccountType,
+                    NormalBalance = parentAccount.NormalBalance,
+                    AccountName = normalizedAccountName,
                     ParentAccountId = parentId,
                     CreatedBy = GetUserFullName(),
                     Level = levelToCreate,
-                    FinancialStatementType = parentAccount?.FinancialStatementType ?? "",
+                    FinancialStatementType = parentAccount.FinancialStatementType,
+                    AccountNumber = await GenerateNextAccountNumberAsync(parentAccount, cancellationToken)
                 };
 
-                switch (levelToCreate)
-                {
-                    case 4:
-                        newAccount.AccountNumber = (lastSeries + 100).ToString();
-                        break;
-                    case 5:
-                        newAccount.AccountNumber = (lastSeries + 1).ToString();
-                        break;
-                }
+                parentAccount.HasChildren = true;
 
                 await _unitOfWork.FilprideChartOfAccount.AddAsync(newAccount, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                var companyClaim = await GetCompanyClaimAsync();
+                await _cacheService.RemoveAsync($"coa:{companyClaim}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", companyClaim! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
-                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
+                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride", showHidden }) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { showHidden });
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int accountId, string accountName, bool showHidden = false, CancellationToken cancellationToken = default)
         {
             var existingAccount = await _unitOfWork.FilprideChartOfAccount
                 .GetAsyncIgnoreQueryFilters(x => x.AccountId == accountId, cancellationToken);
@@ -159,30 +153,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                existingAccount.AccountName = accountName;
+                var normalizedAccountName = NormalizeAccountName(accountName);
+                if (string.Equals(existingAccount.AccountName, normalizedAccountName, StringComparison.Ordinal))
+                {
+                    TempData["success"] = "No changes were made.";
+                    return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride", showHidden }) });
+                }
+
+                existingAccount.AccountName = normalizedAccountName;
                 existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                var companyClaim = await GetCompanyClaimAsync();
+                await _cacheService.RemoveAsync($"coa:{companyClaim}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", companyClaim! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Account Edited Successfully";
-                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
+                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride", showHidden }) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { showHidden });
             }
         }
 
@@ -269,7 +271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     chartOfAccounts = chartOfAccounts
                         .Where(s =>
                             (s.AccountNumber != null && s.AccountNumber.ToLower().Contains(searchValue)) ||
-                            (s.AccountName != null && s.AccountName.ToLower().Contains(searchValue)) ||
+                            s.AccountName.ToLower().Contains(searchValue) ||
                             (s.AccountType != null && s.AccountType.ToLower().Contains(searchValue)) ||
                             (s.NormalBalance != null && s.NormalBalance.ToLower().Contains(searchValue)) ||
                             (s.IsHidden ? "hidden" : "visible").Contains(searchValue) ||
@@ -435,6 +437,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(coa => coa.AccountId) // Assuming Id is the primary key
                 .ToListAsync(cancellationToken);
             return Json(coaIds);
+        }
+
+        private static string NormalizeAccountName(string accountName)
+        {
+            return string.IsNullOrWhiteSpace(accountName)
+                ? throw new InvalidOperationException("Account name is required.")
+                : accountName.Trim();
+        }
+
+        private async Task<string> GenerateNextAccountNumberAsync(FilprideChartOfAccount parentAccount, CancellationToken cancellationToken)
+        {
+            var siblingAccounts = await _unitOfWork.FilprideChartOfAccount
+                .GetAllAsyncIgnoreQueryFilters(c => c.ParentAccountId == parentAccount.AccountId, cancellationToken);
+
+            var lastAccountNumber = siblingAccounts
+                .Where(c => !string.IsNullOrWhiteSpace(c.AccountNumber))
+                .Select(c => c.AccountNumber!)
+                .OrderByDescending(c => c.Length)
+                .ThenByDescending(c => c)
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(parentAccount.AccountNumber))
+            {
+                throw new InvalidOperationException("Parent account number is required.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(lastAccountNumber))
+            {
+                if (!long.TryParse(lastAccountNumber, out var lastSeries))
+                {
+                    throw new InvalidOperationException($"Invalid account number format: {lastAccountNumber}");
+                }
+
+                return parentAccount.Level + 1 == 4
+                    ? (lastSeries + 100).ToString()
+                    : (lastSeries + 1).ToString();
+            }
+
+            if (!long.TryParse(parentAccount.AccountNumber, out var parentSeries))
+            {
+                throw new InvalidOperationException($"Invalid parent account number format: {parentAccount.AccountNumber}");
+            }
+
+            return parentAccount.Level + 1 == 4
+                ? (parentSeries + 100).ToString()
+                : (parentSeries + 1).ToString();
         }
     }
 }

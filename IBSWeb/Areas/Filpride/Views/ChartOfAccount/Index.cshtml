@@ -18,9 +18,16 @@
     </div>
     <div class="card-body p-4 table-responsive">
         <div class="row pb-3">
-            <div class="col-6">
+            <div class="col-md-6 mb-2 mb-md-0">
+                <div class="text-muted small">
+                    Top-level accounts: @Model.Count
+                    @if (showHidden)
+                    {
+                        <span class="ms-2">Hidden accounts are included in this view.</span>
+                    }
+                </div>
             </div>
-            <div class="col-6 text-end">
+            <div class="col-md-6 text-md-end">
                 <a class="btn btn-outline-secondary me-2"
                    href="@Url.Action("Index", "ChartOfAccount", new { area = "Filpride", showHidden = !showHidden })">
                     @(showHidden ? "Hide hidden accounts" : "Show hidden accounts")
@@ -113,7 +120,12 @@
                                                                                     @(l3.IsHidden ? "Unhide Account" : "Hide Account")
                                                                                 </button>
 
-                                                                                <button class="btn btn-primary mb-3 createAccount" data-account-id="@l3.AccountId">Create Level 4 Account</button>
+                                                                                <button class="btn btn-primary mb-3 createAccount"
+                                                                                        data-account-id="@l3.AccountId"
+                                                                                        data-parent-number="@l3.AccountNumber"
+                                                                                        data-next-level="4">
+                                                                                    Create Level 4 Account
+                                                                                </button>
 
                                                                                 <div class="accordion" id="LGroup-@l3.AccountNumber">
                                                                                     @foreach (var l4 in l3.Children.OrderBy(coa => coa.AccountNumber))
@@ -143,7 +155,12 @@
                                                                                                             @(l4.IsHidden ? "Unhide Account" : "Hide Account")
                                                                                                         </button>
 
-                                                                                                        <button class="btn btn-primary mb-3 createAccount" data-account-id="@l4.AccountId">Create Level 5 Account</button>
+                                                                                                        <button class="btn btn-primary mb-3 createAccount"
+                                                                                                                data-account-id="@l4.AccountId"
+                                                                                                                data-parent-number="@l4.AccountNumber"
+                                                                                                                data-next-level="5">
+                                                                                                            Create Level 5 Account
+                                                                                                        </button>
 
                                                                                                         <div class="accordion" id="LGroup-@l4.AccountNumber">
                                                                                                             @foreach (var l5 in l4.Children.OrderBy(coa => coa.AccountNumber))
@@ -177,7 +194,12 @@
                                                                                                                         </div>
                                                                                                                     </div>
                                                                                                                     <div class="col-2 align-top align-text-top pt-2">
-                                                                                                                        <button class="btn btn-light mb-3 editAccount col-12" data-account-id="@l5.AccountId" data-account-name="@l5.AccountName">Edit</button>
+                                                                                                                        <button class="btn btn-light mb-3 editAccount col-12"
+                                                                                                                                data-account-id="@l5.AccountId"
+                                                                                                                                data-account-name="@l5.AccountName"
+                                                                                                                                data-account-number="@l5.AccountNumber">
+                                                                                                                            Edit
+                                                                                                                        </button>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             }
@@ -187,7 +209,12 @@
                                                                                                 </div>
                                                                                             </div>
                                                                                             <div class="col-2 align-top align-text-top text-center pt-2">
-                                                                                                <button class="btn btn-light mb-3 editAccount col-12" data-account-id="@l4.AccountId" data-account-name="@l4.AccountName">Edit</button>
+                                                                                                <button class="btn btn-light mb-3 editAccount col-12"
+                                                                                                        data-account-id="@l4.AccountId"
+                                                                                                        data-account-name="@l4.AccountName"
+                                                                                                        data-account-number="@l4.AccountNumber">
+                                                                                                    Edit
+                                                                                                </button>
                                                                                             </div>
                                                                                         </div>
                                                                                     }
@@ -245,10 +272,15 @@
             $('.createAccount').on('click', function(e) {
                 e.preventDefault();
                 let parentId = $(this).data('account-id');
+                let parentNumber = $(this).data('parent-number');
+                let nextLevel = $(this).data('next-level');
 
                 Swal.fire({
-                    title: 'Enter Account Name',
+                    title: `Create Level ${nextLevel} Account`,
+                    text: `Parent account: ${parentNumber}`,
                     input: 'text',
+                    inputLabel: 'Account name',
+                    inputPlaceholder: 'Enter account name',
                     inputAttributes: {
                         autocapitalize: 'off'
                     },
@@ -256,30 +288,35 @@
                     confirmButtonText: 'Create',
                     showLoaderOnConfirm: true,
                     preConfirm: (accountName) => {
-                        // Validation if needed
-                        if (!accountName || accountName.trim() === '') {
+                        const normalizedAccountName = accountName?.trim();
+                        if (!normalizedAccountName) {
                             Swal.showValidationMessage('Account name is required');
+                            return false;
                         }
-                        return accountName;
+                        return normalizedAccountName;
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         let accountName = result.value;
-                        console.log(accountName);
 
                         $.ajax({
                             url: '@Url.Action("Create", "ChartOfAccount", new { area = "Filpride" })',
-                            type: "GET",
-                            data: { parentId: parentId, accountName: accountName },
+                            type: 'POST',
+                            data: {
+                                __RequestVerificationToken: requestVerificationToken,
+                                parentId: parentId,
+                                accountName: accountName,
+                                showHidden: showHidden
+                            },
                             success: function (response) {
                                 if (response.redirectUrl) {
                                     window.location.href = response.redirectUrl;
                                 } else {
-                                    console.log("Operation was successful but no redirect.");
+                                    Swal.fire('Saved', 'Account created successfully.', 'success');
                                 }
                             },
                             error: function (xhr, status, error) {
-                                console.error("AJAX error:", error);
+                                Swal.fire('Error', xhr.responseText || 'Unable to create account.', 'error');
                             }
                         });
                     }
@@ -291,10 +328,12 @@
                 e.preventDefault();
                 let accountId = $(this).data('account-id');
                 let accountName = $(this).data('account-name');
+                let accountNumber = $(this).data('account-number');
 
                 Swal.fire({
-                    title: 'Edit Account Name',
+                    title: `Edit Account ${accountNumber}`,
                     input: 'text',
+                    inputLabel: 'Account name',
                     inputValue: accountName,
                     inputAttributes: {
                         autocapitalize: 'off'
@@ -303,31 +342,35 @@
                     confirmButtonText: 'Save',
                     showLoaderOnConfirm: true,
                     preConfirm: (accountName) => {
-                        if (!accountName || accountName.trim() === '') {
+                        const normalizedAccountName = accountName?.trim();
+                        if (!normalizedAccountName) {
                             Swal.showValidationMessage('Account name cannot be blank');
+                            return false;
                         }
-                        return accountName;
+                        return normalizedAccountName;
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         let accountName = result.value;
-                        console.log(accountName);
 
                         $.ajax({
                             url: '@Url.Action("Edit", "ChartOfAccount", new { area = "Filpride" })',
-                            type: "GET",
-                            data: { accountId: accountId, accountName: accountName },
+                            type: 'POST',
+                            data: {
+                                __RequestVerificationToken: requestVerificationToken,
+                                accountId: accountId,
+                                accountName: accountName,
+                                showHidden: showHidden
+                            },
                             success: function (response) {
                                 if (response.redirectUrl) {
-                                    // If the response includes a redirect URL, redirect the browser
                                     window.location.href = response.redirectUrl;
                                 } else {
-                                    // Handle other success scenarios if needed
-                                    console.log("Operation was successful but no redirect.");
+                                    Swal.fire('Saved', 'Account updated successfully.', 'success');
                                 }
                             },
                             error: function (xhr, status, error) {
-                                console.error("AJAX error:", error);
+                                Swal.fire('Error', xhr.responseText || 'Unable to update account.', 'error');
                             }
                         });
                     }
@@ -366,7 +409,7 @@
                             }
                         },
                         error: function(xhr, status, error) {
-                            console.error('AJAX error:', error);
+                            Swal.fire('Error', xhr.responseText || 'Unable to update account visibility.', 'error');
                         }
                     });
                 });
