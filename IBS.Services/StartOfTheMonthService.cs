@@ -136,7 +136,7 @@ namespace IBS.Services
                             Particulars = sourceJv.Particulars,
                             CRNo = sourceJv.CRNo,
                             JVReason = sourceJv.JVReason,
-                            CreatedBy = "SYSTEM",
+                            CreatedBy = "SYSTEM GENERATED",
                             Company = sourceJv.Company,
                             JvType = nameof(JvType.Amortization),
                             Status = nameof(JvStatus.Pending),
