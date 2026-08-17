@@ -417,7 +417,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!viewModel.CheckNo.Contains("DM"))
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
-                        .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+                        .GetAllAsync(cv =>
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
+                            cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
                     {
@@ -2574,7 +2579,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
                         .GetAllAsync(cv =>
-                            cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo &&
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
@@ -2942,7 +2950,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!viewModel.CheckNo.Contains("DM"))
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
-                        .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+                        .GetAllAsync(cv =>
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
+                            cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
                     {
