@@ -241,6 +241,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : 0m;
 
                         var netOfTax = item.Amount - withHoldingTaxAmount;
+                        var balance = 0m;
 
                         List<(int receivingReportId, string receivingReportNo, decimal balance)> rrAmountPaidList = new();
                         foreach (var checkVoucher in (cvTradePayment?.CheckVouchers
@@ -255,7 +256,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .OrderByDescending(x => x.receivingReportId)
                                 .Select(x => x.balance)
                                 .FirstOrDefault();
-                            var balance = 0m;
                             if (runningBalances != 0m)
                             {
                                 balance = runningBalances - amountPaid;
@@ -310,15 +310,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, col].Value = balance;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
 
-                            subtotalGrossOfVat += item.Amount;
-                            subtotalNetOfVat += netOfVatAmount;
-                            subtotalEwt += withHoldingTaxAmount;
-                            subtotalNetOfTax += netOfTax;
                             subtotalAmountPaid += amountPaid;
-                            subtotalBalance += balance;
-
                             row++;
                         }
+                        subtotalGrossOfVat += item.Amount;
+                        subtotalNetOfVat += netOfVatAmount;
+                        subtotalEwt += withHoldingTaxAmount;
+                        subtotalNetOfTax += netOfTax;
+                        subtotalBalance += balance;
                     }
 
                     worksheet.Cells[row, 1].Value = $"SUBTOTAL: {receivingReports.Key}";
@@ -586,6 +585,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : 0m;
 
                         var netOfTax = item.CommissionAmount - withHoldingTaxAmount;
+                        var balance = 0m;
 
                         List<(int deliveryReceiptId, string deliveryReceiptNo, decimal balance)> drAmountPaidList = new();
                         foreach (var checkVoucher in (cvTradePayment?.CheckVouchers
@@ -601,7 +601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .OrderByDescending(x => x.deliveryReceiptId)
                                 .Select(x => x.balance)
                                 .FirstOrDefault();
-                            var balance = 0m;
+
                             if (runningBalances != 0m)
                             {
                                 balance = (runningBalances + costOfMoney) - amountPaid;
@@ -661,17 +661,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, col].Value = balance;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
 
-                            subtotalGrossOfVat += grossAmount;
-                            subtotalCostOfMoney += costOfMoney;
-                            subtotalNetOfCostOfMoney += netOfCostOfMoney;
-                            subtotalNetOfVat += netOfVatAmount;
-                            subtotalEwt += withHoldingTaxAmount;
-                            subtotalNetOfTax += netOfTax;
                             subtotalAmountPaid += amountPaid;
-                            subtotalBalance += balance;
-
                             row++;
                         }
+                        subtotalGrossOfVat += grossAmount;
+                        subtotalCostOfMoney += costOfMoney;
+                        subtotalNetOfCostOfMoney += netOfCostOfMoney;
+                        subtotalNetOfVat += netOfVatAmount;
+                        subtotalEwt += withHoldingTaxAmount;
+                        subtotalNetOfTax += netOfTax;
+                        subtotalBalance += balance;
                     }
 
                     worksheet.Cells[row, 1].Value = $"SUBTOTAL: {deliveryReceipts.Key}";
@@ -937,6 +936,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : 0m;
 
                         var netOfTax = item.FreightAmount - withHoldingTaxAmount;
+                        var balance = 0m;
 
                         List<(int deliveryReceiptId, string deliveryReceiptNo, decimal balance)> drAmountPaidList = new();
                         foreach (var checkVoucher in (cvTradePayment?.CheckVouchers
@@ -952,7 +952,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .OrderByDescending(x => x.deliveryReceiptId)
                                 .Select(x => x.balance)
                                 .FirstOrDefault();
-                            var balance = 0m;
+
                             if (runningBalances != 0m)
                             {
                                 balance = runningBalances - amountPaid;
@@ -1006,15 +1006,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, col].Value = balance;
                             worksheet.Cells[row, col].Style.Numberformat.Format = currencyFormat;
 
-                            subtotalGrossOfVat += item.FreightAmount;
-                            subtotalNetOfVat += netOfVatAmount;
-                            subtotalEwt += withHoldingTaxAmount;
-                            subtotalNetOfTax += netOfTax;
                             subtotalAmountPaid += amountPaid;
-                            subtotalBalance += balance;
-
                             row++;
                         }
+                        subtotalGrossOfVat += item.FreightAmount;
+                        subtotalNetOfVat += netOfVatAmount;
+                        subtotalEwt += withHoldingTaxAmount;
+                        subtotalNetOfTax += netOfTax;
+                        subtotalBalance += balance;
                     }
 
                     worksheet.Cells[row, 1].Value = $"SUBTOTAL: {deliveryReceipts.Key}";
