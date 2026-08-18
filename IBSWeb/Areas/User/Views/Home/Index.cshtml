@@ -4,26 +4,21 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
-    var department = ViewBag.GetUserDepartment;
     ViewData["Title"] = "Dashboard";
     var selectedCompany = string.Empty;
-    var selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 
-    bool isAdmin = User.IsInRole("Admin");
-    bool isHead = User.IsInRole("HeadApprover");
-    bool isAccounting = User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager");
-    bool isFinance = User.IsInRole("FinanceManager");
-    bool isOps = User.IsInRole("OperationManager");
-    bool isCnc = User.IsInRole("CncManager");
-    bool isPort = User.IsInRole("PortCoordinator");
-    bool isCashier = User.IsInRole("Cashier");
-    bool isMarketing = User.IsInRole("MarketingSupervisor");
+    var isAdmin = User.IsInRole("Admin");
+    var isHead = User.IsInRole("HeadApprover");
+    var isAccounting = User.IsInRole("AccountingManager") || User.IsInRole("ManagementAccountingManager");
+    var isFinance = User.IsInRole("FinanceManager");
+    var isOps = User.IsInRole("OperationManager");
+    var isCnc = User.IsInRole("CncManager");
+    var isMarketing = User.IsInRole("MarketingSupervisor");
 
 }
 
@@ -61,16 +56,29 @@ else
                     </div>
                     <div class="pri-grid">
 
-                        @if (isAdmin || isHead || isFinance)
+                        @if (isAdmin || isHead || isMarketing)
                         {
-                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pri-card">
-                                <div class="pri-card-body">
-                                    <div class="pri-icon-wrap pri-icon-green">
-                                        <span class="material-symbols-outlined pri-icon">check_circle</span>
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card">
+                                <div class="pipe-card-top">
+                                    <div class="pipe-icon-wrap pipe-icon-green">
+                                        <span class="material-symbols-outlined pipe-icon">campaign</span>
                                     </div>
-                                    <span class="pri-label">FM Approval</span>
+                                    <span class="pipe-count">@Model.MarketingApprovalCount.ToString("N0")</span>
                                 </div>
-                                <span class="pri-count">@Model.FMApprovalCount.ToString("N0")</span>
+                                <span class="pipe-label">Marketing Approval</span>
+                            </a>
+                        }
+
+                        @if (isAdmin || isHead || isCnc)
+                        {
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-gray">
+                                        <span class="material-symbols-outlined pri-icon">fact_check</span>
+                                    </div>
+                                    <span class="pri-label">CNC Approval</span>
+                                </div>
+                                <span class="pri-count">@Model.CNCApprovalCount.ToString("N0")</span>
                             </a>
                         }
 
@@ -81,9 +89,60 @@ else
                                     <div class="pri-icon-wrap pri-icon-blue">
                                         <span class="material-symbols-outlined pri-icon">verified</span>
                                     </div>
-                                    <span class="pri-label">OM Approval</span>
+                                    <span class="pri-label">OM Approval (COS)</span>
                                 </div>
                                 <span class="pri-count">@Model.OMApprovalCOSCount.ToString("N0")</span>
+                            </a>
+
+                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                                <div class="pipe-card-top">
+                                    <div class="pipe-icon-wrap pipe-icon-blue">
+                                        <span class="material-symbols-outlined pipe-icon">verified</span>
+                                    </div>
+                                    <span class="pipe-count">@Model.OMApprovalDRCount.ToString("N0")</span>
+                                </div>
+                                <span class="pipe-label">OM Approval (DR)</span>
+                            </a>
+
+                            <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                                <div class="pipe-card-top">
+                                    <div class="pipe-icon-wrap pipe-icon-blue">
+                                        <span class="material-symbols-outlined pipe-icon">verified</span>
+                                    </div>
+                                    <span class="pipe-count">@Model.OMApprovalPOCount.ToString("N0")</span>
+                                </div>
+                                <span class="pipe-label">OM Approval (PO)</span>
+                            </a>
+                        }
+
+                        @if (isAdmin || isHead || isFinance)
+                        {
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="pri-card">
+                                <div class="pri-card-body">
+                                    <div class="pri-icon-wrap pri-icon-green">
+                                        <span class="material-symbols-outlined pri-icon">check_circle</span>
+                                    </div>
+                                    <span class="pri-label">FM Approval (COS)</span>
+                                </div>
+                                <span class="pri-count">@Model.FMApprovalCount.ToString("N0")</span>
+                            </a>
+                            <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                                <div class="pipe-card-top">
+                                    <div class="pipe-icon-wrap pipe-icon-red">
+                                        <span class="material-symbols-outlined pipe-icon">check_circle</span>
+                                    </div>
+                                    <span class="pipe-count">@Model.FMApprovalDMCount.ToString("N0")</span>
+                                </div>
+                                <span class="pipe-label">FM Approval (Debit Memo)</span>
+                            </a>
+                            <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                                <div class="pipe-card-top">
+                                    <div class="pipe-icon-wrap pipe-icon-red">
+                                        <span class="material-symbols-outlined pipe-icon">check_circle</span>
+                                    </div>
+                                    <span class="pipe-count">@Model.FMApprovalCMCount.ToString("N0")</span>
+                                </div>
+                                <span class="pipe-label">FM Approval (Credit Memo)</span>
                             </a>
                         }
 
@@ -113,52 +172,14 @@ else
                             </a>
                         }
 
-                        @if (isAdmin || isHead || isCnc)
-                        {
-                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pri-card">
-                                <div class="pri-card-body">
-                                    <div class="pri-icon-wrap pri-icon-gray">
-                                        <span class="material-symbols-outlined pri-icon">fact_check</span>
-                                    </div>
-                                    <span class="pri-label">CNC Approval</span>
-                                </div>
-                                <span class="pri-count">@Model.CNCApprovalCount.ToString("N0")</span>
-                            </a>
-                        }
-
-                        @if (isAdmin || isHead || isOps || isPort)
-                        {
-                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pri-card">
-                                <div class="pri-card-body">
-                                    <div class="pri-icon-wrap pri-icon-teal">
-                                        <span class="material-symbols-outlined pri-icon">local_shipping</span>
-                                    </div>
-                                    <span class="pri-label">Pending Delivery</span>
-                                </div>
-                                <span class="pri-count">@Model.InTransitCount.ToString("N0")</span>
-                            </a>
-                        }
-
-                        @if (isAdmin || isHead || isFinance)
-                        {
-                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="pri-card">
-                                <div class="pri-card-body">
-                                    <div class="pri-icon-wrap pri-icon-green">
-                                        <span class="material-symbols-outlined pri-icon">receipt_long</span>
-                                    </div>
-                                    <span class="pri-label">For Invoicing</span>
-                                </div>
-                                <span class="pri-count">@Model.ForInvoiceCount.ToString("N0")</span>
-                            </a>
-                        }
 
                     </div>
                 </section>
             }
 
                 @{
-                    bool hasApproval = Model.PendingMyApproval.Count > 0;
-                    bool hasSubmissions = Model.MySubmissions.Count > 0;
+                    var hasApproval = Model.PendingMyApproval.Count > 0;
+                    var hasSubmissions = Model.MySubmissions.Count > 0;
                 }
 
             <div class="mobile-sidebar" id="mobile-sidebar">
@@ -167,7 +188,7 @@ else
                     {
                         <button class="sidebar-tab active" data-tab="for-approval" onclick="switchSidebarTab('for-approval')" role="tab" aria-selected="true" aria-controls="mob-tab-for-approval">For Approval</button>
                     }
-                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="mob-tab-my-submissions">My Submissions</button>
+                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="mob-tab-my-submissions">My Pending Items</button>
                 </div>
 
                 @if (Model.ShowPriority)
@@ -229,18 +250,15 @@ else
                 </h2>
                 <div class="pipe-grid">
 
-                    @if (isAdmin || isHead || isMarketing)
-                    {
-                        <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card">
-                            <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-green">
-                                    <span class="material-symbols-outlined pipe-icon">campaign</span>
-                                </div>
-                                <span class="pipe-count">@Model.MarketingApprovalCount.ToString("N0")</span>
+                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForMarketingApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-green">
+                                <span class="material-symbols-outlined pipe-icon">campaign</span>
                             </div>
-                            <span class="pipe-label">Marketing Approval</span>
-                        </a>
-                    }
+                            <span class="pipe-count">@Model.MarketingApprovalCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">Marketing Approval</span>
+                    </a>
 
                     <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForCNCApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
@@ -312,16 +330,6 @@ else
                 </h2>
                 <div class="pipe-grid">
 
-                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
-                        <div class="pipe-card-top">
-                            <div class="pipe-icon-wrap pipe-icon-blue">
-                                <span class="material-symbols-outlined pipe-icon">verified</span>
-                            </div>
-                            <span class="pipe-count">@Model.OMApprovalDRCount.ToString("N0")</span>
-                        </div>
-                        <span class="pipe-label">OM Approval (DR)</span>
-                    </a>
-
                     <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
                         <div class="pipe-card-top">
                             <div class="pipe-icon-wrap pipe-icon-blue">
@@ -330,6 +338,16 @@ else
                             <span class="pipe-count">@Model.OMApprovalPOCount.ToString("N0")</span>
                         </div>
                         <span class="pipe-label">OM Approval (PO)</span>
+                    </a>
+
+                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForOMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-blue">
+                                <span class="material-symbols-outlined pipe-icon">verified</span>
+                            </div>
+                            <span class="pipe-count">@Model.OMApprovalDRCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">OM Approval (DR)</span>
                     </a>
 
                     <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="pipe-card">
@@ -375,53 +393,50 @@ else
                 </div>
             </section>
 
-            @if (isAdmin || isHead || isAccounting)
-            {
-                <section class="flow-section">
-                    <h2 class="flow-heading flow-heading-bordered">
-                        <span class="bar-secondary"></span>
-                        Finance &amp; Accounting
-                    </h2>
-                    <div class="pipe-grid pipe-grid-4">
-                        @* <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
-                            <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-red">
-                                    <span class="material-symbols-outlined pipe-icon">check_circle</span>
-                                </div>
-                                <span class="pipe-count">@Model.FMApprovalDMCount.ToString("N0")</span>
+            <section class="flow-section">
+                <h2 class="flow-heading flow-heading-bordered">
+                    <span class="bar-secondary"></span>
+                    Finance &amp; Accounting
+                </h2>
+                <div class="pipe-grid pipe-grid-4">
+                    <a href="@Url.Action("Index", "DebitMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-red">
+                                <span class="material-symbols-outlined pipe-icon">check_circle</span>
                             </div>
-                            <span class="pipe-label">FM Approval (Debit Memo)</span>
-                        </a>
-                        <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
-                            <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-red">
-                                    <span class="material-symbols-outlined pipe-icon">check_circle</span>
-                                </div>
-                                <span class="pipe-count">@Model.FMApprovalCMCount.ToString("N0")</span>
+                            <span class="pipe-count">@Model.FMApprovalDMCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">FM Approval (Debit Memo)</span>
+                    </a>
+                    <a href="@Url.Action("Index", "CreditMemo", new { area = "Filpride", filterType = "ForFMApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-red">
+                                <span class="material-symbols-outlined pipe-icon">check_circle</span>
                             </div>
-                            <span class="pipe-label">FM Approval (Credit Memo)</span>
-                        </a> *@
-                        <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
-                            <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-red">
-                                    <span class="material-symbols-outlined pipe-icon">assignment_late</span>
-                                </div>
-                                <span class="pipe-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
+                            <span class="pipe-count">@Model.FMApprovalCMCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">FM Approval (Credit Memo)</span>
+                    </a>
+                    <a href="@Url.Action("Index", "CheckVoucherNonTradeInvoice", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-red">
+                                <span class="material-symbols-outlined pipe-icon">assignment_late</span>
                             </div>
-                            <span class="pipe-label">CV Approval</span>
-                        </a>
-                        <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
-                            <div class="pipe-card-top">
-                                <div class="pipe-icon-wrap pipe-icon-red">
-                                    <span class="material-symbols-outlined pipe-icon">assignment</span>
-                                </div>
-                                <span class="pipe-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
+                            <span class="pipe-count">@Model.CheckVoucherNonTradeInvoiceForApprovalCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">CV Approval</span>
+                    </a>
+                    <a href="@Url.Action("Index", "JournalVoucher", new { area = "Filpride", filterType = "ForApproval" })" class="pipe-card">
+                        <div class="pipe-card-top">
+                            <div class="pipe-icon-wrap pipe-icon-red">
+                                <span class="material-symbols-outlined pipe-icon">assignment</span>
                             </div>
-                            <span class="pipe-label">JV Approval</span>
-                        </a>
-                    </div>
-                </section>
-            }
+                            <span class="pipe-count">@Model.JournalVoucherForApprovalCount.ToString("N0")</span>
+                        </div>
+                        <span class="pipe-label">JV Approval</span>
+                    </a>
+                </div>
+            </section>
 
             </div>
 
@@ -436,7 +451,7 @@ else
                     {
                         <button class="sidebar-tab active" data-tab="for-approval" onclick="switchSidebarTab('for-approval')" role="tab" aria-selected="true" aria-controls="tab-for-approval">For Approval</button>
                     }
-                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="tab-my-submissions">My Submissions</button>
+                    <button class="sidebar-tab @(!Model.ShowPriority ? "active" : "")" data-tab="my-submissions" onclick="switchSidebarTab('my-submissions')" role="tab" aria-selected="@(!Model.ShowPriority ? "true" : "false")" aria-controls="tab-my-submissions">My Pending Items</button>
                 </div>
 
                 @if (Model.ShowPriority)
