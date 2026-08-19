@@ -29,6 +29,7 @@ namespace IBS.Models.Enums
 
     public enum CosStatus
     {
+        ForApprovalOfMarketing,
         Created,
         SupplierAppointed,
         HaulerAppointed,
@@ -93,7 +94,10 @@ namespace IBS.Models.Enums
     public enum CVType
     {
         Invoicing,
-        Payment
+        Payment,
+        Supplier,
+        Commission,
+        Hauler
     }
 
     public enum ModuleType

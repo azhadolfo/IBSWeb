@@ -417,7 +417,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!viewModel.CheckNo.Contains("DM"))
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
-                        .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+                        .GetAllAsync(cv =>
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
+                            cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
                     {
@@ -555,7 +560,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = cashInBank,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
-                    CvType = "Supplier",
+                    CvType = nameof(CVType.Supplier),
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
                     OldCvNo = viewModel.OldCVNo,
@@ -1553,7 +1558,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var getSupplier = await _unitOfWork.FilprideSupplier
                 .GetAsync(s => s.SupplierId == supplierId && companyClaims == nameof(Filpride), cancellationToken);
 
-            if (header.CvType == "Supplier")
+            if (header.CvType == nameof(CVType.Supplier))
             {
                 var listOfRrIds = await _dbContext.FilprideCVTradePayments
                     .Where(x => x.CheckVoucherId == header.CheckVoucherHeaderId)
@@ -1702,7 +1707,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (item.CV.CvType == nameof(CVType.Commission))
                         {
                             var netAmount = item.CV.TaxType == SD.TaxType_WithTax
                                 ? deliveryReceipt!.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable
@@ -1716,7 +1721,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         }
 
-                        if (item.CV.CvType == "Hauler")
+                        if (item.CV.CvType == nameof(CVType.Hauler))
                         {
                             var netAmount = item.CV.TaxType == SD.TaxType_WithTax
                                 ? deliveryReceipt!.HaulerVatType == SD.VatType_Vatable
@@ -1809,12 +1814,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (item.CV.CvType == nameof(CVType.Commission))
                         {
                             deliveryReceipt!.IsCommissionPaid = false;
                             deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
                         }
-                        if (item.CV.CvType == "Hauler")
+                        if (item.CV.CvType == nameof(CVType.Hauler))
                         {
                             deliveryReceipt!.IsFreightPaid = false;
                             deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
@@ -1889,12 +1894,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                        if (item.CV.CvType == "Commission")
+                        if (item.CV.CvType == nameof(CVType.Commission))
                         {
                             deliveryReceipt!.IsCommissionPaid = false;
                             deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
                         }
-                        if (item.CV.CvType == "Hauler")
+                        if (item.CV.CvType == nameof(CVType.Hauler))
                         {
                             deliveryReceipt!.IsFreightPaid = false;
                             deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
@@ -1982,11 +1987,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
-                        if (item.CV.CvType == "Commission")
+                        if (item.CV.CvType == nameof(CVType.Commission))
                         {
                             deliveryReceipt!.IsCommissionPaid = false;
                         }
-                        if (item.CV.CvType == "Hauler")
+                        if (item.CV.CvType == nameof(CVType.Hauler))
                         {
                             deliveryReceipt!.IsFreightPaid = false;
                         }
@@ -2042,7 +2047,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Retrieve the selected invoices from the database
                 var selectedList = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cvh => recordIds.Contains(cvh.CheckVoucherHeaderId) && cvh.CvType != "Payment");
+                    .GetAllAsync(cvh => recordIds.Contains(cvh.CheckVoucherHeaderId) && cvh.CvType != nameof(CVType.Payment));
 
                 // Create the Excel package
                 using var package = new ExcelPackage();
@@ -2574,7 +2579,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
                         .GetAllAsync(cv =>
-                            cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo &&
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
@@ -2647,7 +2655,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     Type = viewModel.Type,
-                    CvType = "Commission",
+                    CvType = nameof(CVType.Commission),
                     SupplierName = supplier.SupplierName,
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
@@ -2942,7 +2950,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!viewModel.CheckNo.Contains("DM"))
                 {
                     var cv = await _unitOfWork.FilprideCheckVoucher
-                        .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+                        .GetAllAsync(cv =>
+                            cv.CanceledBy == null &&
+                            cv.VoidedBy == null &&
+                            cv.Company == companyClaims &&
+                            cv.CheckNo == viewModel.CheckNo &&
+                            cv.BankId == viewModel.BankId, cancellationToken);
 
                     if (cv.Any())
                     {
@@ -3009,7 +3022,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Payee = viewModel.Payee,
                     CheckDate = viewModel.CheckDate,
                     CheckAmount = cashInBank,
-                    CvType = "Hauler",
+                    CvType = nameof(CVType.Hauler),
                     Company = companyClaims,
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
@@ -4436,7 +4449,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != "Payment", cancellationToken);
+                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != nameof(CVType.Payment), cancellationToken);
 
                 // Apply date range filter if provided
                 if (dateFrom.HasValue)

@@ -235,6 +235,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         columns.RelativeColumn();
                                         columns.RelativeColumn();
                                         columns.RelativeColumn();
+                                        columns.RelativeColumn();
                                     });
 
                                 #endregion
@@ -243,7 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     table.Header(header =>
                                     {
-                                        header.Cell().ColumnSpan(11).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SUMMARY OF BOOKED SALES").SemiBold();
+                                        header.Cell().ColumnSpan(12).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SUMMARY OF BOOKED SALES").SemiBold();
 
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("COS Date").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Del").SemiBold();
@@ -252,6 +253,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO No.").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("COS No.").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Price").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Freight").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Unserved Volume").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("COS Status").SemiBold();
@@ -271,6 +273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CustomerPoNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlipNo);
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.DeliveredPrice != 0 ? record.DeliveredPrice < 0 ? $"({Math.Abs(record.DeliveredPrice).ToString(SD.Four_Decimal_Format)})" : record.DeliveredPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveredPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                    table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.Freight != 0 ? record.Freight < 0 ? $"({Math.Abs((decimal)record.Freight).ToString(SD.Four_Decimal_Format)})" : record.Freight?.ToString(SD.Four_Decimal_Format) : null).FontColor(record.Freight < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.TotalAmount != 0 ? record.TotalAmount < 0 ? $"({Math.Abs(record.TotalAmount).ToString(SD.Two_Decimal_Format)})" : record.TotalAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(record.TotalAmount < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Status.ToUpper());
@@ -281,7 +284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 #region -- Create Table Cell for Totals
 
-                                    table.Cell().ColumnSpan(7).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                    table.Cell().ColumnSpan(8).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(cosSummary.Sum(cos => cos.Quantity - cos.DeliveredQuantity) != 0 ? cosSummary.Sum(cos => cos.Quantity - cos.DeliveredQuantity) < 0 ? $"({Math.Abs(cosSummary.Sum(cos => cos.Quantity - cos.DeliveredQuantity)).ToString(SD.Two_Decimal_Format)})" : cosSummary.Sum(cos => cos.Quantity - cos.DeliveredQuantity).ToString(SD.Two_Decimal_Format) : null).FontColor(cosSummary.Sum(cos => cos.Quantity - cos.DeliveredQuantity) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(cosSummary.Sum(cos => cos.TotalAmount) != 0 ? cosSummary.Sum(cos => cos.TotalAmount) < 0 ? $"({Math.Abs(cosSummary.Sum(cos => cos.TotalAmount)).ToString(SD.Two_Decimal_Format)})" : cosSummary.Sum(cos => cos.TotalAmount).ToString(SD.Two_Decimal_Format) : null).FontColor(cosSummary.Sum(cos => cos.TotalAmount) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().ColumnSpan(2).Border(0.5f);
@@ -356,9 +359,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
                 worksheet.Cells["A2:B2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
                 worksheet.Cells["A2:B2"].Merge = true;
-                worksheet.Cells["A1:M1"].Merge = true;
-                worksheet.Cells["A1:M1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                worksheet.Cells["A1:M1"].Style.Font.Bold = true;
+                worksheet.Cells["A1:N1"].Merge = true;
+                worksheet.Cells["A1:N1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells["A1:N1"].Style.Font.Bold = true;
                 worksheet.Cells["A3:B3"].Value = $"Date and Time Generated: {DateTimeHelper.GetCurrentPhilippineTime()}";
                 worksheet.Cells["A3:B3"].Merge = true;
 
@@ -366,8 +369,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var headers = new[]
                 {
                     "COS Date", "Customer", "Branch", "Product", "P.O. No.",
-                    "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS",
-                    "Commissionee", "Commission Rate"
+                    "COS No.", "Price", "Freight", "Unserved Volume", "Amount", "COS Status",
+                    "Exp of COS", "Commissionee", "Commission Rate"
                 };
 
                 for (int i = 0; i < headers.Length; i++)
@@ -398,18 +401,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = item.CustomerPoNo;
                     worksheet.Cells[row, 6].Value = item.CustomerOrderSlipNo;
                     worksheet.Cells[row, 7].Value = item.DeliveredPrice;
-                    worksheet.Cells[row, 8].Value = unservedVolume;
-                    worksheet.Cells[row, 9].Value = item.TotalAmount;
-                    worksheet.Cells[row, 10].Value = item.Status.ToUpper();
-                    worksheet.Cells[row, 11].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
-                    worksheet.Cells[row, 12].Value = item.CommissioneeName;
-                    worksheet.Cells[row, 13].Value = item.CommissionRate;
+                    worksheet.Cells[row, 8].Value = item.Freight;
+                    worksheet.Cells[row, 9].Value = unservedVolume;
+                    worksheet.Cells[row, 10].Value = item.TotalAmount;
+                    worksheet.Cells[row, 11].Value = item.Status.ToUpper();
+                    worksheet.Cells[row, 12].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
+                    worksheet.Cells[row, 13].Value = item.CommissioneeName;
+                    worksheet.Cells[row, 14].Value = item.CommissionRate;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     row++;
 
                     totalUnservedVolume += unservedVolume;
@@ -417,12 +422,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Add total row
-                worksheet.Cells[row, 7].Value = "TOTAL";
-                worksheet.Cells[row, 8].Value = totalUnservedVolume;
-                worksheet.Cells[row, 9].Value = totalAmount;
-                worksheet.Cells[row, 7, row, 9].Style.Font.Bold = true;
-                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 8].Value = "TOTAL";
+                worksheet.Cells[row, 9].Value = totalUnservedVolume;
+                worksheet.Cells[row, 10].Value = totalAmount;
+                worksheet.Cells[row, 8, row, 10].Style.Font.Bold = true;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 // Auto-fit columns for readability
                 worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
@@ -5949,7 +5954,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generate Service Invoice Report Excel File --
+        #region -- Generate Cos Summary Report Excel File --
 
         public async Task<IActionResult> GenerateCosSummaryReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {

@@ -253,12 +253,6 @@
                 var suppId = $(this).val();
                 computeDefaultEntry(suppId)
             });
-            const input = $('.paymentAmount:visible');
-
-            if (input.val() <= 0) {
-                alert('Amount must be greater than 0.');
-                input.focus();
-            }
         });
 
         function computeDefaultEntry(suppId) {
@@ -376,11 +370,7 @@
                             currentPO = rr.purchaseOrderNo;
                             const amountPaid = modelRRs.get(rr.id);
                             const initialBalance = parseNumber(rr.balance);
-                            const paymentInput = $('<input>').attr({
-                                type: 'text',
-                                class: 'paymentAmount text-end',
-                                min: '0.01'
-                            });
+                            const paymentInput = $('<input>').attr({ type: 'text', class: 'paymentAmount text-end' });
                             const displayedBalance = modelRRs.has(rr.id) ? initialBalance - (Number(amountPaid) || 0) : initialBalance;
 
                             if (modelRRs.has(rr.id)) {
@@ -619,9 +609,9 @@
             } else {
                 $(this).removeClass('is-invalid');
                 // negative values should not be allowed, reset to 0 if negative
-                if (inputAmount < 0) {
-                    inputAmount = 0;
-                    $(this).val(formatNumberToFour(0));
+                if (inputAmount <= 0) {
+                    inputAmount = 1;
+                    $(this).val(formatNumberToFour(inputAmount));
                     row.attr('data-last-amount', inputAmount);
                     row.find('.balance').text(formatNumberToFour(initialBalance));
                     updateAmounts();
@@ -693,11 +683,14 @@
             updateAmounts();
         });
 
-        $("#paymentForm").on("submit", function (event) {
-            if (!validateDebitAndCredit()) {
-                event.preventDefault();
-            }
-        });
+        $(document).ready(function () {
+            $("#paymentForm").on("submit", function (event) {
+                if (!validateDebitAndCredit()) {
+                    $(this).find('button[type="submit"], input[type="submit"]').prop("disabled", true);
+                    return false;
+                }
+            });
+        })
 
         function saveAccountingEntry(event) {
             var accountNumber = $("#AccountNo").val();
