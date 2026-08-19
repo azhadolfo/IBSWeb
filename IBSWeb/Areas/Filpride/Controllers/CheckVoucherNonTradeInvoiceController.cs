@@ -813,8 +813,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : details.Debit;
 
                     decimal computedAmount = details.IsVatable
-                        ? Math.Round(baseAmount * 1.12m, 2)
-                        : Math.Round(baseAmount, 2);
+                        ? Math.Round(baseAmount * 1.12m, 4)
+                        : Math.Round(baseAmount, 4);
 
                     viewModel.AccountingEntries.Add(new AccountingEntryViewModel
                     {
