@@ -6,6 +6,31 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.2.0] - 2026-08-19
+
+### Added
+- Added a Filpride marketing approval stage for customer order slips, including marketing approver audit fields, a dedicated preview page, and the related database migration.
+- Added redesigned dashboard priority and submission panels with role-aware approval queues, direct preview links, and responsive sidebar navigation support.
+- Added Subsidiary Ledger trade fuel, commissionee, and hauler/freight report pages with Excel generation flows.
+- Added `Supplier`, `Commission`, and `Hauler` values to the check voucher type enum for stronger trade report filtering.
+- Added the Bienes company portal link to the login page portal switcher configuration.
+
+### Changed
+- Redesigned the user dashboard layout and quick-access sidebar behavior to improve mobile responsiveness, search, and navigation tracking.
+- Moved the trade supplier fuel, trade supplier commissionee, and trade supplier hauler/freight report entry pages out of Accounts Payable Reports into Subsidiary Ledger Reports.
+- Updated customer order slip routing and approval flow so newly submitted records go through marketing approval before CNC approval.
+- Updated the start-of-month generated journal entry user label from `SYSTEM` to `SYSTEM GENERATED`.
+- Updated the login page copy to make company portal switching clearer.
+
+### Fixed
+- Fixed subsidiary ledger trade fuel, commissionee, and hauler/freight reports to compute running balances correctly and prevent subtotal amounts from distorting grand totals.
+- Fixed inventory and check voucher report outputs to use enum-based trade voucher type comparisons consistently, including supplier, commission, and hauler records.
+- Fixed dashboard approval visibility, status labeling, company fallback handling, quick-access link detection, and navbar spacing across desktop and mobile layouts.
+- Fixed the login portal navigation so the Bienes portal link resolves correctly.
+- Removed the customer order slip edit restriction that blocked updates for posted periods in the current flow.
+
+---
+
 ## [v3.1.1] - 2026-08-11
 
 ### Fixed
