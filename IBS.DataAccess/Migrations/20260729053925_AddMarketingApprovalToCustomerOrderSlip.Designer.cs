@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260730014527_RemoveIsMnvPInSupplierModule")]
-    partial class RemoveIsMnvPInSupplierModule
+    [Migration("20260729053925_AddMarketingApprovalToCustomerOrderSlip")]
+    partial class AddMarketingApprovalToCustomerOrderSlip
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -4196,14 +4196,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("customer_name");
-
                     b.Property<int>("EntityType")
                         .HasColumnType("integer")
                         .HasColumnName("entity_type");
@@ -4229,14 +4221,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("reason");
-
-                    b.Property<int?>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("supplier_name");
 
                     b.HasKey("Id")
                         .HasName("pk_locked_period_adjustments");
@@ -4796,6 +4780,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsFilpride")
                         .HasColumnType("boolean")
                         .HasColumnName("is_filpride");
+
+                    b.Property<bool>("IsMnvP")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_mnv_p");
 
                     b.Property<string>("ProofOfExemptionFileName")
                         .HasMaxLength(200)

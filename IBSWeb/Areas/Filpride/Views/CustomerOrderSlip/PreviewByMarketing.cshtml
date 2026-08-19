@@ -1,0 +1,423 @@
+@using IBS.Models
+@using IBS.Models.Enums
+@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Identity
+@model CustomerOrderSlipForApprovalViewModel
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Customer Order Slip - Preview";
+    
+    var selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+    
+    var decimalFormat = Model.CustomerOrderSlip!.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+}
+
+<style>
+    @@media print {
+        .hide-in-print {
+            visibility: hidden;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    @if (Model.Status == nameof(CosStatus.Disapproved))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>DISAPPROVED</b>
+        </div>
+    }
+    
+    <div class="text-end">
+        <img src="~/img/Filpride-logo.png" width="130px"/>
+    </div>
+    <div class="text-center mb-4">
+        <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
+        <p>
+            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan,<br/>
+            Olongapo City, 2200 Zambales, Philippines<br/>
+            VAT Reg. TIN: 000-216-589-00000
+        </p>
+        <h3><b>CUSTOMER ORDER SLIP</b></h3>
+        <h6 class="text-end"><b>No.&nbsp;@Html.DisplayFor(model => model.CustomerOrderSlip!.CustomerOrderSlipNo)</b></h6>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-borderless">
+            <tbody>
+            <tr>
+                <td><b>Customer No:</b> @Model.CustomerOrderSlip.Customer?.CustomerCode</td>
+                <td class="text-end"><b>Date:</b> @Model.CustomerOrderSlip.Date.ToString(SD.Date_Format)</td>
+            </tr>
+            <tr>
+                <td><b>Customer Name:</b> @Model.CustomerOrderSlip.CustomerName.ToUpper()</td>
+                <td class="text-end"><b>Exp Date:</b> @Model.CustomerOrderSlip.ExpirationDate?.ToString(SD.Date_Format)</td>
+            </tr>
+            <tr>
+                <td><b>Terms:</b> @Model.CustomerOrderSlip.Terms</td>
+                <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
+            </tr>
+            <tr>
+                <td><b>Branch:</b> @Model.CustomerOrderSlip.Branch</td>
+                <td class="text-end"><b>@Model.CustomerOrderSlip.DeliveryOption?.ToUpper()</b></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Vat</th>
+                <th>Del Price</th>
+                <th>Total Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>@Model.CustomerOrderSlip.ProductName</td>
+                <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
+                <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
+                <td>@Model.VatAmount.ToString(decimalFormat)</td>
+                <td>
+                    @Html.DisplayFor(model => model.CustomerOrderSlip!.DeliveredPrice)
+                    @if (!string.IsNullOrEmpty(Model.PriceReference))
+                    {
+                        <span data-bs-toggle="tooltip" title="Updated based on price reference: @Model.PriceReference" class="text-muted ms-1">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </span>
+                    }
+                </td>
+                <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <tr>
+                <td><b>REMARKS:</b> @Model.CustomerOrderSlip.Remarks.ToUpper()</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th class="text-center table-primary" colspan="2">
+                    Net Delivered Price 
+                    <span data-bs-toggle="tooltip" title="All figures are exclusive of VAT." class="text-muted ms-1">
+                        <i class="bi bi-info-circle"></i>
+                    </span>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td class="text-center col-6">COS Price</td><td class="col-6">@Html.DisplayFor(model => model.NetOfVatCosPrice)</td></tr>
+            <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
+            <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
+            <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip!.CommissionRate)</td></tr>
+            <tr><td class="text-center">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th class="text-center table-secondary" colspan="2">Customer Credit Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Model.AvailableCreditLimit.ToString(decimalFormat)</td></tr>
+            <tr><td class="text-center">COS Amount</td><td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td></tr>
+            <tr><td class="text-center">Credit Balance</td><td>@Model.Total.ToString(decimalFormat)</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-3">
+        <table class="w-100">
+            <tbody>
+            <tr>
+                <td style="width: 5%;"></td>
+                <td class="text-end" style="width: 20%;">PREPARED BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">MAG</td>
+                <td class="text-end" style="width: 20%;">CHECKED BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">JBC/JTA</td>
+                <td style="width: 15%;"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td class="text-center">MARKETING ASSISTANT</td>
+                <td></td>
+                <td class="text-center">CNC STAFF</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-3">
+        <table class="w-100">
+            <tbody>
+            <tr>
+                <td style="width: 5%;"></td>
+                <td class="text-end" style="width: 20%;">ACKNOWLEDGE BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">RGB</td>
+                <td class="text-end" style="width: 20%;">ACKNOWLEDGE BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">MSA</td>
+                <td style="width: 15%;"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td class="text-center">TNS STAFF</td>
+                <td></td>
+                <td class="text-center">CNC MANAGER</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-3">
+        <table class="w-100">
+            <tbody>
+            <tr>
+                <td style="width: 5%;"></td>
+                <td class="text-end" style="width: 20%;">APPROVED BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">CMA</td>
+                <td class="text-end" style="width: 20%;">APPROVED BY:</td>
+                <td class="text-center border-bottom" style="width: 20%;">JVA</td>
+                <td style="width: 15%;"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td class="text-center">OPERATION MANAGER</td>
+                <td></td>
+                <td class="text-center">FINANCE MANAGER</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    @if (Model.UploadedFiles != null && Model.UploadedFiles.Count != 0)
+    {
+        <div class="hide-in-print px-1 row d-flex justify-content-start">
+            <label class="mt-3">Attachments: </label>
+        </div>
+        <div class="hide-in-print pt-2 px-1 row">
+            @foreach (var file in Model.UploadedFiles)
+            {
+                <div class="file-item d-inline-flex align-items-center mb-3 col-3">
+                    <a class="btn btn-outline-primary border shadow text-truncate" href="@file.SignedUrl" target="_blank" data-name="@file.FileName" data-url="@file.SignedUrl" title="@file.FileName">
+                        @file.FileName
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="row pt-2">
+        @{
+            if (User.IsInRole("MarketingSupervisor") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+            {
+                if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfMarketing))
+                {
+                    <div class="col-6 col-md-3">
+                        <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-6 col-md-3">
+                        <a onclick="confirmPrint(@Model.CustomerOrderSlip.CustomerOrderSlipId)" class="btn btn-primary form-control buttons">Print</a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="confirmPrint(@Model.CustomerOrderSlip.CustomerOrderSlipId)" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+            }
+            
+        }
+
+        <div class="col-6 col-md-3">
+            <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-route-filterType="@ViewBag.FilterType" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            function init() {
+                bindEvents();
+            }
+
+            function bindEvents() {
+                $(document).on('click', '.existingFile-link', showExistingUpload);
+            }
+
+            function showExistingUpload(event) {
+                const fileName = $(event.currentTarget).data('name');
+                const fileUrl = $(event.currentTarget).data('url');
+
+                Swal.fire({
+                    imageUrl: fileUrl,
+                    imageAlt: fileName,
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    customClass: {
+                        popup: 'custom-image-popup'
+                    },
+                    padding: '1rem',
+                    width: '90vw',
+                    heightAuto: true,
+                    didOpen: () => {
+                        $('.swal2-image').css({
+                            'max-height': '80vh',
+                            'max-width': '100%',
+                            'height': 'auto',
+                            'width': 'auto'
+                        });
+
+                        $('#custom-swal-close').remove();
+
+                        const closeButton = $('<button>×</button>').css({
+                            position: 'fixed',
+                            top: '10px',
+                            right: '10px',
+                            zIndex: '9999',
+                            background: 'rgba(202, 25, 41, 1)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '20%',
+                            width: '40px',
+                            height: '40px',
+                            fontSize: '30px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }).attr('id', 'custom-swal-close').on('click', () => Swal.close());
+
+                        $('body').append(closeButton);
+                    },
+                    willClose: () => {
+                        $('#custom-swal-close').remove();
+                        URL.revokeObjectURL(fileUrl);
+                    }
+                });
+            }
+
+            init();
+        });
+        
+        const approveBtn = document.getElementById('approveButton');
+        if (approveBtn) {
+            approveBtn.addEventListener('click', function () {
+                Swal.fire({
+                    title: 'Choose an action',
+                    text: "Approve or Disapprove the action.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: 'Approve',
+                    denyButtonText: 'Disapprove',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Do you want to change the terms?',
+                            text: "If yes, please select new terms. If not, submit to approve without changes.",
+                            icon: 'question',
+                            input: 'select',
+                            inputOptions: {
+                                '@SD.Terms_Cod': '@SD.Terms_Cod',
+                                '@SD.Terms_Prepaid': '@SD.Terms_Prepaid',
+                                '@SD.Terms_7d': '@SD.Terms_7d',
+                                '@SD.Terms_10d': '@SD.Terms_10d',
+                                '@SD.Terms_15d': '@SD.Terms_15d',
+                                '@SD.Terms_30d': '@SD.Terms_30d',
+                                '@SD.Terms_45d': '@SD.Terms_45d',
+                                '@SD.Terms_60d': '@SD.Terms_60d',
+                                '@SD.Terms_90d': '@SD.Terms_90d',
+                                '@SD.Terms_15pdc': '@SD.Terms_15pdc',
+                                '@SD.Terms_30pdc': '@SD.Terms_30pdc',
+                                '@SD.Terms_45pdc': '@SD.Terms_45pdc',
+                                '@SD.Terms_60pdc': '@SD.Terms_60pdc',
+                                '@SD.Terms_M15': '@SD.Terms_M15',
+                                '@SD.Terms_M29': '@SD.Terms_M29',
+                                '@SD.Terms_M30': '@SD.Terms_M30'
+                            },
+                            inputPlaceholder: 'Select terms (optional)',
+                            showCancelButton: false,
+                            confirmButtonText: 'Next'
+                        }).then((termResult) => {
+                            const selectedTerm = termResult.value || null;
+
+                            Swal.fire({
+                                title: 'Add any instructions (optional)',
+                                input: 'textarea',
+                                inputPlaceholder: 'Enter instructions here...',
+                                showCancelButton: false,
+                                confirmButtonText: 'Submit'
+                            }).then((instructionResult) => {
+                                const instruction = instructionResult.value || null;
+                                var url = '@Html.Raw(Url.Action("ApproveByMarketing", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
+                                url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
+                                url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
+                                window.location.href = url;
+                            });
+                        });
+                    } else if (result.isDenied) {
+                        window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
+                    }
+                });
+            });
+        }
+    </script>
+    
+    <script>
+        function confirmPrint(id)
+        {
+            const afterPrintHandler = () => {
+                window.removeEventListener('afterprint', afterPrintHandler);
+                controllerThenPrint(id);
+            };
+            
+            window.addEventListener('afterprint', afterPrintHandler);
+            window.print();
+        }
+    </script>
+    
+    <script>
+        function controllerThenPrint(id) {
+            var url = `@Url.Action("Printed", "CustomerOrderSlip", new { area = "Filpride" })/${id}`;
+            window.location.href = url; // only redirect
+        }
+    </script>
+
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
+}

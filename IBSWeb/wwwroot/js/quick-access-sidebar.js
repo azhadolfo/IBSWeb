@@ -2,7 +2,7 @@
  * Quick Access Sidebar
  * - Tracks frequently clicked nav links via localStorage
  * - Search scans ALL nav links in the DOM (not just tracked ones)
- * - Auto-opens on the home page (/)
+ * - Restores last open/closed state from localStorage
  *
  * Storage keys:
  *   qa_clicks   — JSON object { url: { label, count, company } }
@@ -156,7 +156,9 @@
     }
 
     function isHomeUrl(url) {
-        return url === '/' || url.toLowerCase().includes('/home/');
+        var path = url.split('?')[0].split('#')[0];
+        if (path === '/') return true;
+        return /^\/(user\/)?home(\/|$)/i.test(path);
     }
 
     /* ─── Breadcrumb resolver ─── */
@@ -256,8 +258,7 @@
         const panel = document.createElement('div');
         panel.id = 'qa-panel';
 
-        // Auto-open on home page, otherwise restore saved state
-        if (!isHomePage() && !isPanelOpen()) {
+        if (!isPanelOpen()) {
             panel.classList.add('qa-hidden');
         }
 
@@ -283,9 +284,9 @@
         toggleBtn.id = 'qa-toggle-btn';
         toggleBtn.title = 'Quick Access';
         toggleBtn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
-        toggleBtn.setAttribute('aria-expanded', String(isHomePage() || isPanelOpen()));
+        toggleBtn.setAttribute('aria-expanded', String(isPanelOpen()));
         toggleBtn.innerHTML = '';
-        if (isHomePage() || isPanelOpen()) toggleBtn.classList.add('qa-panel-open');
+        if (isPanelOpen()) toggleBtn.classList.add('qa-panel-open');
 
         document.body.appendChild(panel);
         document.body.appendChild(toggleBtn);
