@@ -11,6 +11,7 @@
             <div class="card shadow-lg border-0 rounded-4">
                 <div class="card-body p-5">
                     <h2 class="text-center mb-4">Welcome Back</h2>
+                    <p class="text-muted text-center mb-4">Sign in to the <b>FILPRIDE</b> portal using your assigned username and password.</p>
                     <form id="account" method="post" autocomplete="off">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
@@ -40,7 +41,8 @@
                     @if (Model.CompanyPortalLinks.Count != 0)
                     {
                         <div class="border-top mt-4 pt-4">
-                            <p class="text-muted small text-center mb-3">Other company portals</p>
+                            <p class="text-muted small text-center mb-1">Looking for a different company?</p>
+                            <p class="text-muted small text-center mb-3">Choose a company below to go to its login page.</p>
                             <div class="d-grid gap-2">
                                 @foreach (var companyPortal in Model.CompanyPortalLinks)
                                 {
@@ -48,7 +50,7 @@
                                        href="@companyPortal.Url"
                                        target="_blank"
                                        rel="noopener noreferrer">
-                                        <span>@companyPortal.Name</span>
+                                        <span>Open @companyPortal.Name portal</span>
                                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                                     </a>
                                 }
