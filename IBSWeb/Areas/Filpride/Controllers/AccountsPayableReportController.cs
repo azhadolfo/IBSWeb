@@ -799,11 +799,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradeHeaderIds = cvTradeHeaderReport.Select(cvh => cvh.CheckVoucherHeaderId).ToList();
                 var cvTradePayments = await _dbContext.FilprideCVTradePayments.Where(cvp => cvTradeHeaderIds.Contains(cvp.CheckVoucherId)).ToListAsync(cancellationToken);
 
-                var supplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType == "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var supplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType == nameof(CVType.Supplier)).Select(cvh => cvh.CheckVoucherHeaderId).ToList();
                 var receivingReportIds = cvTradePayments.Where(cvp => supplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
                 var receivingReports = await _unitOfWork.FilprideReceivingReport.GetAllAsync(dr => receivingReportIds.Contains(dr.ReceivingReportId), cancellationToken);
 
-                var notSupplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType != "Supplier").Select(cvh => cvh.CheckVoucherHeaderId).ToList();
+                var notSupplierIds = cvTradeHeaderReport.Where(cvh => cvh.Category == "Trade" && cvh.CvType != nameof(CVType.Supplier)).Select(cvh => cvh.CheckVoucherHeaderId).ToList();
                 var deliveryReceiptIds = cvTradePayments.Where(cvp => notSupplierIds.Contains(cvp.CheckVoucherId)).Select(cvp => cvp.DocumentId).ToList();
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetAllAsync(dr => deliveryReceiptIds.Contains(dr.DeliveryReceiptId), cancellationToken);
 
@@ -911,7 +911,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             var rrListOfString = new List<string>();
 
-                            if (header.CvType == "Supplier")
+                            if (header.CvType == nameof(CVType.Supplier))
                             {
                                 var cvTradeRrs = cvTradePayments
                                     .Where(ctp => ctp.CheckVoucherId == header.CheckVoucherHeaderId)
@@ -3925,7 +3925,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var currencyFormat = "#,##0.00";
 
                 var allCv = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cv => cv.Category == "Trade" && cv.CvType == "Supplier" && cv.Date <= dateTo)
+                    .Where(cv => cv.Category == "Trade" && cv.CvType == nameof(CVType.Supplier) && cv.Date <= dateTo)
                     .Include(cv => cv.Supplier)
                     .ToListAsync(cancellationToken);
 
@@ -7581,7 +7581,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var currencyFormat = "#,##0.00";
 
                 var allCv = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cv => cv.Category == "Trade" && cv.CvType == "Hauler" && cv.Date <= dateTo)
+                    .Where(cv => cv.Category == "Trade" && cv.CvType == nameof(CVType.Hauler) && cv.Date <= dateTo)
                     .Include(cv => cv.Supplier)
                     .ToListAsync(cancellationToken);
 
