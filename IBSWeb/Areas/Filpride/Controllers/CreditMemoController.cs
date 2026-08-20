@@ -356,7 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.ServiceInvoiceId = null;
                     model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
                     model.Type = existingSalesInvoice.Type;
-                    model.CreditAmount = (decimal)(model.Quantity! * -model.AdjustedPrice!);
+                    model.CreditAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(model.Quantity ?? 0m, -(model.AdjustedPrice ?? 0m));
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -472,7 +472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Amount = viewModel.Amount,
                 Remarks = viewModel.Remarks,
                 Description = viewModel.Description,
-                CreditAmount = (decimal)(viewModel.Quantity! * viewModel.AdjustedPrice!)
+                CreditAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity ?? 0m, viewModel.AdjustedPrice ?? 0m)
             };
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -511,7 +511,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion -- Saving Default Enries --
 
-                        existingCm.CreditAmount = (decimal)(model.Quantity! * -model.AdjustedPrice!);
+                        existingCm.CreditAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(model.Quantity ?? 0m, -(model.AdjustedPrice ?? 0m));
                         break;
 
                     case "Service Invoice":
@@ -1494,8 +1494,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.ServiceInvoice!.VatType == SD.VatType_Vatable)
                 {
                     netAmount = ((model.Amount ?? 0) - existingSv.Discount) / 1.12m;
-                    var total = Math.Round((model.Amount ?? 0) / 1.12m, 4);
-                    var roundedNetAmount = Math.Round(netAmount, 4);
+                    var total = DecimalRoundingHelper.ComputeNetOfVat(model.Amount ?? 0m);
+                    var roundedNetAmount = DecimalRoundingHelper.RoundToFour(netAmount);
 
                     if (roundedNetAmount > total)
                     {
@@ -1601,7 +1601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountId = serviceTitle.AccountId,
                     AccountNo = serviceTitle.AccountNumber,
                     AccountTitle = serviceTitle.AccountName,
-                    Debit = Math.Round(netAmount, 4),
+                    Debit = DecimalRoundingHelper.RoundToFour(netAmount),
                     Credit = 0,
                     Company = model.Company,
                     CreatedBy = model.PostedBy,

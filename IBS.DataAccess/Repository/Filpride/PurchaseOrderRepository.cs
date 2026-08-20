@@ -5,6 +5,7 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
 using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -230,7 +231,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToLookup(inv => new { inv.Reference, inv.Company });
 
             var unitOfWork = new UnitOfWork(_db);
-            var normalizedTriggeredPrice = RoundToFourDecimalPlaces(model.TriggeredPrice);
+            var normalizedTriggeredPrice = DecimalRoundingHelper.RoundToFour(model.TriggeredPrice);
             var remainingVolume = model.TriggeredVolume - model.AppliedVolume;
 
             // Process receiving reports
@@ -243,9 +244,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 // Calculate effective volume
                 var effectiveVolume = Math.Min(receivingReport.QuantityReceived, remainingVolume);
-                var updatedAmount = effectiveVolume * normalizedTriggeredPrice;
+                var updatedAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(effectiveVolume, normalizedTriggeredPrice);
                 var difference = updatedAmount - receivingReport.Amount;
-                var oldUnitCost = GetRoundedUnitValue(receivingReport.Amount, receivingReport.QuantityReceived);
+                var oldUnitCost = DecimalRoundingHelper.DivideOrZero(receivingReport.Amount, receivingReport.QuantityReceived);
 
                 // Update receiving report
                 receivingReport.Amount = updatedAmount;
@@ -263,14 +264,14 @@ namespace IBS.DataAccess.Repository.Filpride
                         ? ComputeNetOfVat(updatedAmount)
                         : updatedAmount;
 
-                    inventory.Cost = GetRoundedUnitValue(inventoryAmount, receivingReport.QuantityReceived);
+                    inventory.Cost = DecimalRoundingHelper.DivideOrZero(inventoryAmount, receivingReport.QuantityReceived);
                     inventory.Total = inventoryAmount;
 
                     // Update first inventory's average cost and total balance
                     if (inventories.FirstOrDefault()?.InventoryId == inventory.InventoryId)
                     {
                         inventory.AverageCost = inventory.Cost;
-                        inventory.TotalBalance = inventory.InventoryBalance * inventory.AverageCost;
+                        inventory.TotalBalance = DecimalRoundingHelper.ComputeAmountFromUnitPrice(inventory.InventoryBalance, inventory.AverageCost);
                     }
                 }
 
@@ -315,7 +316,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var hasTriggeredPrice = purchaseOrder.ActualPrices?.Count > 0 && purchaseOrder.ActualPrices.Any(x => x.IsApproved);
 
-            return RoundToFourDecimalPlaces(hasTriggeredPrice
+            return DecimalRoundingHelper.RoundToFour(hasTriggeredPrice
                 ? purchaseOrder.ActualPrices!
                     .OrderByDescending(x => x.ApprovedDate)
                     .First(x => x.IsApproved)

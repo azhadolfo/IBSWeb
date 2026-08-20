@@ -6,6 +6,7 @@ using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.DTOs;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository
 {
@@ -13,8 +14,6 @@ namespace IBS.DataAccess.Repository
     {
         private readonly ApplicationDbContext _db;
         internal DbSet<T> dbSet;
-
-        private const decimal VatRate = 0.12m;
 
         public Repository(ApplicationDbContext db)
         {
@@ -171,27 +170,12 @@ namespace IBS.DataAccess.Repository
 
         public decimal ComputeNetOfVat(decimal grossAmount)
         {
-            if (grossAmount == 0)
-            {
-                return grossAmount;
-            }
-
-            return RoundToFourDecimalPlaces(grossAmount / (1 + VatRate));
+            return DecimalRoundingHelper.ComputeNetOfVat(grossAmount);
         }
 
         public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
-            return netOfVatAmount == 0m ? 0m : RoundToFourDecimalPlaces(netOfVatAmount * VatRate);
-        }
-
-        protected static decimal RoundToFourDecimalPlaces(decimal value)
-        {
-            return Math.Round(value, 4, MidpointRounding.AwayFromZero);
-        }
-
-        protected static decimal GetRoundedUnitValue(decimal amount, decimal quantity)
-        {
-            return quantity == 0m ? 0m : RoundToFourDecimalPlaces(amount / quantity);
+            return DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount);
         }
 
         public async Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
@@ -229,14 +213,12 @@ namespace IBS.DataAccess.Repository
 
         public decimal ComputeEwtAmount(decimal netOfVatAmount, decimal percent)
         {
-            return netOfVatAmount == 0m || percent == 0m
-                ? 0m
-                : RoundToFourDecimalPlaces(netOfVatAmount * percent);
+            return DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, percent);
         }
 
         public decimal ComputeNetOfEwt(decimal grossAmount, decimal ewtAmount)
         {
-            return grossAmount - ewtAmount;
+            return DecimalRoundingHelper.ComputeNetOfEwt(grossAmount, ewtAmount);
         }
 
         public async Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default)

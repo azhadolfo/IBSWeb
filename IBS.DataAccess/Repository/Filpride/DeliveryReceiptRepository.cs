@@ -194,18 +194,18 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.Quantity = viewModel.Volume;
-            existingRecord.TotalAmount = viewModel.Volume * customerOrderSlip.DeliveredPrice;
+            existingRecord.TotalAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Volume, customerOrderSlip.DeliveredPrice);
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
             existingRecord.HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId;
             existingRecord.ECC = viewModel.ECC;
             existingRecord.Freight = viewModel.Freight;
-            existingRecord.FreightAmount = existingRecord.Quantity * (existingRecord.Freight + existingRecord.ECC);
+            existingRecord.FreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, existingRecord.Freight + existingRecord.ECC);
             existingRecord.AuthorityToLoadNo = viewModel.ATLNo;
             existingRecord.CommissioneeId = customerOrderSlip.CommissioneeId;
             existingRecord.CommissionRate = customerOrderSlip.CommissionRate;
-            existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
+            existingRecord.CommissionAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, existingRecord.CommissionRate);
             existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
             existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
             existingRecord.HaulerName = hauler?.SupplierName;
@@ -347,7 +347,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         lineGrossAmount = deliveryReceipt.Quantity == 0
                             ? 0m
-                            : RoundToFourDecimalPlaces(totalGrossAmount * (lineQuantity / deliveryReceipt.Quantity));
+                            : DecimalRoundingHelper.ComputeAmountFromUnitPrice(totalGrossAmount, lineQuantity / deliveryReceipt.Quantity);
                     }
 
                     allocatedGrossAmount += lineGrossAmount;
@@ -495,10 +495,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
                     else
                     {
-                        var poPrice = RoundToFourDecimalPlaces(
+                        var poPrice = DecimalRoundingHelper.RoundToFour(
                             await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(detail.PurchaseOrderId, cancellationToken) + deliveredFreight);
                         var cogsCost = purchaseOrder.VatType == SD.VatType_Vatable ? ComputeNetOfVat(poPrice) : poPrice;
-                        cogsNetOfVat = detail.Quantity * cogsCost;
+                        cogsNetOfVat = DecimalRoundingHelper.ComputeAmountFromUnitPrice(detail.Quantity, cogsCost);
                     }
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -679,7 +679,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         }
                     }
 
-                    var commissionGrossAmount = detail.Quantity * customerOrderSlip.CommissionRate;
+                    var commissionGrossAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(detail.Quantity, customerOrderSlip.CommissionRate);
                     if (commissionGrossAmount > 0 && customerOrderSlip.CommissioneeId.HasValue && customerOrderSlip.Commissionee != null)
                     {
                         var commissionEwtAmount = customerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax
@@ -865,7 +865,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 foreach (var purchaseOrderGroup in purchaseOrderGroups)
                 {
                     var productCode = purchaseOrderGroup.PurchaseOrder.Product!.ProductCode;
-                    var productCostGrossAmount = purchaseOrderGroup.Quantity * await poRepo.GetPurchaseOrderCost(purchaseOrderGroup.PurchaseOrder.PurchaseOrderId, cancellationToken);
+                    var productCostGrossAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(
+                        purchaseOrderGroup.Quantity,
+                        await poRepo.GetPurchaseOrderCost(purchaseOrderGroup.PurchaseOrder.PurchaseOrderId, cancellationToken));
                     var productCostNetOfVatAmount = ComputeNetOfVat(productCostGrossAmount);
                     var productCostVatAmount = ComputeVatAmount(productCostNetOfVatAmount);
                     var productCostEwtAmount = ComputeEwtAmount(productCostNetOfVatAmount, 0.01m);
@@ -1039,7 +1041,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             foreach (FilprideDeliveryReceipt deliveryReceipt in deliveryReceipts)
             {
-                decimal updatedAmount = deliveryReceipt.Quantity * updatedPrice;
+                var normalizedPrice = DecimalRoundingHelper.RoundToFour(updatedPrice);
+                decimal updatedAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(deliveryReceipt.Quantity, normalizedPrice);
                 decimal difference = updatedAmount - deliveryReceipt.TotalAmount;
                 deliveryReceipt.TotalAmount = updatedAmount;
 
@@ -1230,8 +1233,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     SupplierId = supplierId,
                     SupplierName = supplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.SellingPrice,
-                    OldValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
-                    NewValue = GetRoundedUnitValue(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
+                    OldValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
+                    NewValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,
                     Reason = "Update selling price in COS",
@@ -1361,7 +1364,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     SupplierId = deliveryReceipt.CommissioneeId,
                     SupplierName = deliveryReceipt.CustomerOrderSlip?.CommissioneeName,
                     AdjustmentType = LockedPeriodAdjustmentType.Commission,
-                    OldValue = GetRoundedUnitValue(deliveryReceipt.CommissionAmount - signedDifference, deliveryReceipt.Quantity),
+                    OldValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.CommissionAmount - signedDifference, deliveryReceipt.Quantity),
                     NewValue = deliveryReceipt.CommissionRate,
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,
@@ -1515,7 +1518,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     SupplierId = deliveryReceipt.HaulerId,
                     SupplierName = deliveryReceipt.HaulerName,
                     AdjustmentType = LockedPeriodAdjustmentType.Freight,
-                    OldValue = GetRoundedUnitValue(deliveryReceipt.FreightAmount - (deliveryReceipt.ECC * deliveryReceipt.Quantity) - signedDifference, deliveryReceipt.Quantity),
+                    OldValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.FreightAmount - (deliveryReceipt.ECC * deliveryReceipt.Quantity) - signedDifference, deliveryReceipt.Quantity),
                     NewValue = deliveryReceipt.Freight,
                     AdjustmentValue = signedDifference,
                     AffectedQuantity = deliveryReceipt.Quantity,

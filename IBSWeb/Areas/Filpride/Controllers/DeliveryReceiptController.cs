@@ -223,9 +223,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.Status = nameof(CosStatus.Completed);
                 }
 
-                var unitPrice = cos.DeliveredPrice;
-                var amount = input.Quantity * unitPrice;
-                var commissionAmount = input.Quantity * cos.CommissionRate;
+                var unitPrice = DecimalRoundingHelper.RoundToFour(cos.DeliveredPrice);
+                var amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(input.Quantity, unitPrice);
+                var commissionAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(input.Quantity, cos.CommissionRate);
 
                 model.Details.Add(new FilprideDeliveryReceiptDetail
                 {
@@ -264,7 +264,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.AuthorityToLoadNo = distinctAtlNos.Count == 1 ? distinctAtlNos[0] : "MULTIPLE";
             model.Quantity = totalQuantity;
             model.TotalAmount = totalAmount;
-            model.FreightAmount = totalQuantity * (model.Freight + model.ECC);
+            model.FreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(totalQuantity, model.Freight + model.ECC);
             model.CommissionAmount = totalCommission;
             model.CustomerAddress = firstCos.CustomerAddress;
             model.CustomerTin = firstCos.CustomerTin;
@@ -1636,11 +1636,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var newFreightAmount = (freight ?? 0m) * existingRecord.Quantity;
+                var newFreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, freight ?? 0m);
                 var difference = newFreightAmount - existingRecord.FreightAmount;
 
                 existingRecord.Freight = freight ?? 0m;
-                existingRecord.FreightAmount = existingRecord.Quantity * (existingRecord.Freight + existingRecord.ECC);
+                existingRecord.FreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, existingRecord.Freight + existingRecord.ECC);
                 existingRecord.HaulerId = hauler.SupplierId;
                 existingRecord.HaulerName = hauler.SupplierName;
                 existingRecord.HaulerVatType = hauler.VatType;

@@ -239,8 +239,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (serviceInvoice.VatType == SD.VatType_Vatable)
                 {
                     netAmount = ((model.Amount ?? 0m) - serviceInvoice.Discount) / 1.12m;
-                    var total = Math.Round((model.Amount ?? 0m) / 1.12m, 4);
-                    var roundedNetAmount = Math.Round(netAmount, 4);
+                    var total = DecimalRoundingHelper.ComputeNetOfVat(model.Amount ?? 0m);
+                    var roundedNetAmount = DecimalRoundingHelper.RoundToFour(netAmount);
                     if (roundedNetAmount > total)
                     {
                         var shortAmount = netAmount - total;

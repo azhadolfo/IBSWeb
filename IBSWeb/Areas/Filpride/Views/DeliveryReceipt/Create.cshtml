@@ -202,8 +202,8 @@
 
             function calculateBuilderTotalAmount() {
                 var volume = parseNumber($('input[name="Volume"]').val());
-                var price = parseNumber($('input[name="Price"]').val());
-                $('input[name="TotalAmount"]').val(formatNumber(volume * price));
+                var price = roundToFour(parseNumber($('input[name="Price"]').val()));
+                $('input[name="TotalAmount"]').val(formatNumber(roundToFour(volume * price)));
             }
 
             function getSelectedAtlId() {

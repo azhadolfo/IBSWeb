@@ -3078,8 +3078,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : purchaseOrders.Count > 0
                             ? dr.Details
                                 .Where(detail => detail.PurchaseOrder != null)
-                                .Sum(detail => detail.Quantity * detail.PurchaseOrder!.FinalPrice)
-                            : dr.PurchaseOrder!.FinalPrice * volume; // purchase total
+                                .Sum(detail => RoundToFour(detail.Quantity * detail.PurchaseOrder!.FinalPrice))
+                            : RoundToFour(dr.PurchaseOrder!.FinalPrice * volume); // purchase total
                     var costPerLiter = DivideOrZero(costAmount, volume); // purchase per liter
                     var netPurchases = relatedReceivingReports.Count > 0
                         ? relatedReceivingReports.Sum(rr => rr.PurchaseOrder?.VatType == SD.VatType_Vatable && rr.Amount != 0m
@@ -3090,7 +3090,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .Where(detail => detail.PurchaseOrder != null)
                                 .Sum(detail =>
                                 {
-                                    var detailCostAmount = detail.Quantity * detail.PurchaseOrder!.FinalPrice;
+                                    var detailCostAmount = RoundToFour(detail.Quantity * detail.PurchaseOrder!.FinalPrice);
                                     return detail.PurchaseOrder.VatType == SD.VatType_Vatable
                                         ? NetOfVatOrZero(detailCostAmount)
                                         : detailCostAmount;
@@ -5563,11 +5563,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
+                var sumOfFreightAmount = receivingReports.Sum(rr => RoundToFour(rr.DeliveryReceipt!.Freight * rr.QuantityReceived));
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
-                var sumOfAmountBasedOnSoa = (receivingReports.Sum(rr => rr.CostBasedOnSoa * rr.QuantityReceived));
+                var sumOfAmountBasedOnSoa = receivingReports.Sum(rr => RoundToFour(rr.CostBasedOnSoa * rr.QuantityReceived));
                 var averageCostBasedOnSoa = DivideOrZero(sumOfAmountBasedOnSoa, sumOfQuantity);
 
                 worksheet.Cells[28, 3].Value = "Volume Lifted: ";

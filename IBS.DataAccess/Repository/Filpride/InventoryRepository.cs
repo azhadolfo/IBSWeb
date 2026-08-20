@@ -48,12 +48,13 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Calculate initial values
 
-            var total = ComputeVatAwareAmount(receivingReport.Amount, receivingReport.PurchaseOrder!.VatType);
-            var cost = GetRoundedUnitValue(total, receivingReport.QuantityReceived);
+            var computedAmount = ComputeVatAwareAmount(receivingReport.Amount, receivingReport.PurchaseOrder!.VatType);
+            var cost = DecimalRoundingHelper.DivideOrZero(computedAmount, receivingReport.QuantityReceived);
 
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) + receivingReport.QuantityReceived;
             var averageCost = cost;
-            var totalBalance = inventoryBalance * averageCost;
+            var total = ComputeRoundedAmount(receivingReport.QuantityReceived, cost);
+            var totalBalance = ComputeRoundedAmount(inventoryBalance, averageCost);
 
             // Create new inventory entry
             var inventory = new FilprideInventory
@@ -190,7 +191,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var grossPoPrice = await unitOfWork.FilpridePurchaseOrder
                     .GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken) + freight;
 
-                cost = ComputeVatAwareCost(RoundToFourDecimalPlaces(grossPoPrice), purchaseOrder.VatType);
+                cost = ComputeVatAwareCost(DecimalRoundingHelper.RoundToFour(grossPoPrice), purchaseOrder.VatType);
             }
             else
             {
@@ -200,8 +201,8 @@ namespace IBS.DataAccess.Repository.Filpride
             // Calculate initial values for new inventory entry
             var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) - quantity;
             var averageCost = cost;
-            var total = quantity * cost;
-            var totalBalance = inventoryBalance * averageCost;
+            var total = ComputeRoundedAmount(quantity, cost);
+            var totalBalance = ComputeRoundedAmount(inventoryBalance, averageCost);
 
             // Create new inventory entry
             var inventory = new FilprideInventory
@@ -271,11 +272,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (!IsPurchase(previousInventory))
             {
-                previousInventory.Total = previousInventory.Quantity * previousInventory.Cost;
+                previousInventory.Cost = DecimalRoundingHelper.RoundToFour(previousInventory.Cost);
+                previousInventory.Total = ComputeRoundedAmount(previousInventory.Quantity, previousInventory.Cost);
             }
 
             previousInventory.AverageCost = previousInventory.Cost;
-            previousInventory.TotalBalance = previousInventory.InventoryBalance * previousInventory.AverageCost;
+            previousInventory.TotalBalance = ComputeRoundedAmount(previousInventory.InventoryBalance, previousInventory.AverageCost);
 
             await RecalculateTransactionsAsync(previousInventory, orderedInventories.Skip(1), cancellationToken);
 
@@ -296,19 +298,20 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (IsSales(transaction))
                 {
                     transaction.Cost = runningAverageCost != 0
-                        ? RoundToFourDecimalPlaces(runningAverageCost)
-                        : RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.Total = transaction.Quantity * transaction.Cost;
+                        ? DecimalRoundingHelper.RoundToFour(runningAverageCost)
+                        : DecimalRoundingHelper.RoundToFour(transaction.Cost);
+                    transaction.Total = ComputeRoundedAmount(transaction.Quantity, transaction.Cost);
                     transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
-                    transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
+                    transaction.AverageCost = DecimalRoundingHelper.RoundToFour(transaction.Cost);
+                    transaction.TotalBalance = ComputeRoundedAmount(transaction.InventoryBalance, transaction.AverageCost);
                 }
                 else if (IsPurchase(transaction))
                 {
-                    transaction.Cost = RoundToFourDecimalPlaces(transaction.Cost);
+                    transaction.Cost = DecimalRoundingHelper.RoundToFour(transaction.Cost);
+                    transaction.Total = ComputeRoundedAmount(transaction.Quantity, transaction.Cost);
                     transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = RoundToFourDecimalPlaces(transaction.Cost);
-                    transaction.TotalBalance = transaction.InventoryBalance * transaction.AverageCost;
+                    transaction.AverageCost = DecimalRoundingHelper.RoundToFour(transaction.Cost);
+                    transaction.TotalBalance = ComputeRoundedAmount(transaction.InventoryBalance, transaction.AverageCost);
                 }
 
                 runningAverageCost = transaction.AverageCost;
@@ -330,6 +333,11 @@ namespace IBS.DataAccess.Repository.Filpride
             return vatType == SD.VatType_Vatable
                 ? ComputeNetOfVat(grossAmount)
                 : grossAmount;
+        }
+
+        private static decimal ComputeRoundedAmount(decimal quantity, decimal unitCost)
+        {
+            return DecimalRoundingHelper.ComputeAmountFromUnitPrice(quantity, unitCost);
         }
 
         private static IOrderedEnumerable<FilprideInventory> OrderInventoryTransactions(IEnumerable<FilprideInventory> inventories)

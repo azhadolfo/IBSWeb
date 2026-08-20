@@ -1375,8 +1375,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
                     worksheet.Cells[currentRow, 20].Value = rr?.ReceivingReportNos;
-                    worksheet.Cells[currentRow, 21].Value = rr?.QuantityReceived != 0
-                        ? rr?.Amount / rr?.QuantityReceived
+                    worksheet.Cells[currentRow, 21].Value = rr != null
+                        ? DivideOrZero(rr.Amount, rr.QuantityReceived)
                         : 0m;
                     worksheet.Cells[currentRow, 22].Value = rr?.SupplierInvoiceNumbers;
                     worksheet.Cells[currentRow, 23].Value = rr?.WithdrawalCertificates;
