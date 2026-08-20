@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -5,7 +6,6 @@ using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -85,6 +85,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.StationCode = model.StationCode;
             existingCustomer.CommissionRate = model.CommissionRate;
             existingCustomer.CommissioneeId = model.CommissioneeId;
+            existingCustomer.CwtPercent = model.CwtPercent;
+            existingCustomer.CwVatPercent = model.CwVatPercent;
 
             if (_db.ChangeTracker.HasChanges())
             {

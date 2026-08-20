@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -6,7 +7,6 @@ using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -115,12 +115,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (customerOrderSlip.HasEWT)
                 {
-                    withHoldingTaxAmount = ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m) * -1m;
+                    withHoldingTaxAmount = ComputeEwtAmount(Math.Abs(netOfVatAmount), customerOrderSlip.CwtPercent) * -1m;
                 }
 
                 if (customerOrderSlip.HasWVAT)
                 {
-                    withHoldingVatAmount = ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m) * -1m;
+                    withHoldingVatAmount = ComputeEwtAmount(Math.Abs(netOfVatAmount), customerOrderSlip.CwVatPercent) * -1m;
                 }
 
                 var ledgers = new List<FilprideGeneralLedgerBook>

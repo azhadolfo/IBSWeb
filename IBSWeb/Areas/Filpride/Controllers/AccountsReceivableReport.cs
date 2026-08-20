@@ -1,24 +1,25 @@
+using System.Drawing;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using QuestPDF.Helpers;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
-using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
-using IBS.Models;
-using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Models.Enums;
-using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.Integrated;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using Color = System.Drawing.Color;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -377,7 +378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells[4, i + 1].Value = headers[i];
                     worksheet.Cells[4, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[4, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
+                    worksheet.Cells[4, i + 1].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#9966ff"));
                     worksheet.Cells[4, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     worksheet.Cells[4, i + 1].Style.Font.Bold = true;
                 }
@@ -3526,7 +3527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         ? NetOfVatOrZero(netDiscount)
                                         : netDiscount;
                                     var withHoldingTaxAmount = record.CustomerOrderSlip?.HasEWT ?? true
-                                        ? EwtAmountOrZero(netOfVatAmount, 0.01m)
+                                        ? EwtAmountOrZero(netOfVatAmount, record.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                                         : 0;
                                     var retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                                     var vcfAmount = 0.0000m;
@@ -3759,7 +3760,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ? NetOfVatOrZero(netDiscount)
                         : netDiscount;
                     var withHoldingTaxAmount = si.CustomerOrderSlip?.HasEWT ?? true
-                        ? EwtAmountOrZero(netOfVatAmount, 0.01m)
+                        ? EwtAmountOrZero(netOfVatAmount, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                         : 0;
                     var retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                     var vcfAmount = 0.0000m;
@@ -4096,7 +4097,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             : 0m;
                                         var vatPerLiter = DivideOrZero(vatAmount, record.Quantity);
                                         var ewtAmount = isTaxable
-                                            ? EwtAmountOrZero(netOfVat, 0.01m)
+                                            ? EwtAmountOrZero(netOfVat, record.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                                             : 0m;
                                         var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
                                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
@@ -4155,7 +4156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                                     var subTotalEwtAmount = isTaxableSub == true
-                                        ? EwtAmountOrZero(subTotalNetOfVat, 0.01m)
+                                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwtPercent).FirstOrDefault() ?? 0.0000m)
                                         : 0m;
                                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4392,10 +4393,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : siAmountIncludingDmCmAmount;
                         var vatAmount = isVatable ? VatAmountOrZero(netOfVat) : 0m;
                         var vatPerLiter = DivideOrZero(vatAmount, si.Quantity);
-                        var ewtAmount = isTaxable ? EwtAmountOrZero(netOfVat, 0.01m) : 0m;
+                        var ewtAmount = isTaxable ? EwtAmountOrZero(netOfVat, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m) : 0m;
                         var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
-                        var cwvatAmount = hasCwVat ? EwtAmountOrZero(netOfVat, 0.05m) : 0m;
+                        var cwvatAmount = hasCwVat ? EwtAmountOrZero(netOfVat, si.CustomerOrderSlip?.CwVatPercent ?? 0.0000m) : 0m;
                         var isCwvatAmountPaid = si.IsTaxAndVatPaid ? cwvatAmount : 0m;
                         var cwvatBalance = RoundToFour(cwvatAmount - isCwvatAmountPaid);
 
@@ -4497,7 +4498,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                     var subTotalEwtAmount = isTaxableSub == true
-                        ? EwtAmountOrZero(subTotalNetOfVat, 0.01m)
+                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwtPercent).FirstOrDefault() ?? 0.0000m)
                         : 0m;
                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4505,7 +4506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalBalance = groupByCustomer.Sum(x => x.Balance);
                     var subTotalEwtAmountPaid = isEwtAmountPaidSub;
                     var subTotalCwVatAmount = hasCwVatSub == true
-                        ? EwtAmountOrZero(subTotalNetOfVat, 0.05m)
+                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwVatPercent).FirstOrDefault() ?? 0.0000m)
                         : 0m;
                     var isCwVatAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalCwVatAmount : 0m;
                     var subTotalCwVatBalance = RoundToFour(subTotalCwVatAmount - isCwVatAmountPaidSub);

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -7,7 +8,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -142,6 +142,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissioneeTaxType = commissionee?.TaxType;
             existingRecord.BusinessStyle = customer.BusinessStyle;
             existingRecord.AvailableCreditLimit = await GetCustomerCreditBalance(customer.CustomerId, cancellationToken);
+            existingRecord.CwtPercent = customer.CwtPercent;
+            existingRecord.CwVatPercent = customer.CwVatPercent;
 
             if (existingRecord.Branch != null)
             {

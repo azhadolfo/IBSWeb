@@ -1,7 +1,9 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DTOs;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
@@ -9,7 +11,6 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -326,7 +327,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         .ToDictionaryAsync(c => c.CustomerOrderSlipId, cancellationToken);
 
                 var poLookup = missingPoIds.Count == 0
-                    ? new Dictionary<int, IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder>()
+                    ? new Dictionary<int, FilpridePurchaseOrder>()
                     : await _db.FilpridePurchaseOrders
                         .Include(p => p.Product)
                         .Include(p => p.Supplier)
@@ -384,8 +385,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                         ? ComputeVatAmount(netOfVatAmount)
                         : 0m;
-                    var arTradeCwtAmount = customerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
-                    var arTradeCwvAmount = customerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
+                    var arTradeCwtAmount = customerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwtPercent) : 0m;
+                    var arTradeCwvAmount = customerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwVatPercent) : 0m;
                     var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                         ? ComputeNetOfEwt(detail.TotalAmount, arTradeCwtAmount + arTradeCwvAmount)
                         : detail.TotalAmount;
@@ -858,11 +859,11 @@ namespace IBS.DataAccess.Repository.Filpride
                         .Select(group => (PurchaseOrder: group.First().PurchaseOrder!, Quantity: group.Sum(detail => detail.Quantity)))
                         .ToList()
                     : dr.PurchaseOrder != null
-                        ? new List<(IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>
+                        ? new List<(FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>
                         {
                             (dr.PurchaseOrder, dr.Quantity)
                         }
-                        : new List<(IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>();
+                        : new List<(FilpridePurchaseOrder PurchaseOrder, decimal Quantity)>();
 
                 foreach (var purchaseOrderGroup in purchaseOrderGroups)
                 {
@@ -1119,8 +1120,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeVatAmount(netOfVatAmount)
                     : 0m;
-                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CustomerOrderSlip.CwtPercent) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CustomerOrderSlip.CwVatPercent) : 0m;
                 var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                     ? ComputeNetOfEwt(difference, (arTradeCwtAmount + arTradeCwvAmount))
                     : difference;

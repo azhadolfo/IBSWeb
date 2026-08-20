@@ -1,7 +1,6 @@
 ﻿@using IBS.Models
 @using IBS.Models.Enums
 @using IBS.Utility.Constants
-@using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
 @model FilprideSalesInvoice
 @inject SignInManager<ApplicationUser> SignInManager
@@ -22,8 +21,8 @@
     var netDiscount = Model.Amount - Model.Discount;
     var netOfVatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeNetOfVat(netDiscount) : netDiscount;
     var vatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount) : 0;
-    var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-    var withHoldingVatAmount = hasWvat ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+    var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, netOfVatAmount * Model.CustomerOrderSlip?.CwtPercent ?? 0.0000m) : 0;
+    var withHoldingVatAmount = hasWvat ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CustomerOrderSlip?.CwVatPercent ?? 0.0000m) : 0;
 
     var selectedCompany = string.Empty;
 

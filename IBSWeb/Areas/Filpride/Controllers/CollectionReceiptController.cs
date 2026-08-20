@@ -1,3 +1,8 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using System.Text;
 using CsvHelper;
 using Humanizer;
 using IBS.DataAccess.Data;
@@ -7,6 +12,7 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -18,13 +24,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using System.Text;
-using IBS.DTOs;
-using IBS.Models.Filpride.MasterFile;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1233,10 +1232,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(balanceWithDmCmAmount)
                     : balanceWithDmCmAmount;
                 var withHoldingTaxAmount = hasEwt
-                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                     : 0;
                 var withHoldingVatAmount = hasWvat
-                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.CustomerOrderSlip?.CwVatPercent ?? 0.0000m)
                     : 0;
                 var balance = si.Balance;
                 var amountPaid = si.AmountPaid;
@@ -1331,10 +1330,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount)
                     : netDiscount;
                 var withHoldingTaxAmount = hasEwt
-                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                     : 0;
                 var withHoldingVatAmount = hasWvat
-                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.CustomerOrderSlip?.CwVatPercent ?? 0.0000m)
                     : 0;
 
                 return Json(new
@@ -2159,10 +2158,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount)
                 : 0m;
             var ewtAmount = hasEwt
-                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, salesInvoice.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
                 : 0m;
             var wvatAmount = hasWvat
-                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, salesInvoice.CustomerOrderSlip?.CwVatPercent ?? 0.0000m)
                 : 0m;
             var balance = balanceWithDmCmAmount;
 
@@ -2761,10 +2760,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(receipt.Amount)
                         : receipt.Amount;
                     var wvatAmount = hasWvat
-                        ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.05m)
+                        ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwVatPercent)
                         : 0m;
                     var wtaxAmount = hasWtax
-                        ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.01m)
+                        ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwtPercent)
                         : 0m;
 
                     var paymentAmount = receipt.Amount - wvatAmount - wtaxAmount;
@@ -4744,10 +4743,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(receipt.Amount)
                             : receipt.Amount;
                         var wvatAmount = hasWvat
-                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.05m)
+                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip!.CwVatPercent)
                             : 0m;
                         var wtaxAmount = hasWtax
-                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.01m)
+                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip!.CwtPercent)
                             : 0m;
                         var paymentAmount = receipt.Amount - wvatAmount - wtaxAmount;
 
@@ -4828,10 +4827,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(receipt.Amount)
                             : receipt.Amount;
                         var wvatAmount = hasWvat
-                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.05m)
+                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwVatPercent)
                             : 0m;
                         var wtaxAmount = hasWtax
-                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.01m)
+                            ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwtPercent)
                             : 0m;
 
                         var paymentAmount = receipt.Amount - wvatAmount - wtaxAmount;

@@ -158,8 +158,16 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         #endregion
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal DebitAmount { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal CreditAmount { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwtPercent { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwVatPercent { get; set; }
     }
 }

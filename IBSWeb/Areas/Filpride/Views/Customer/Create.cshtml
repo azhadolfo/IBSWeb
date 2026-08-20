@@ -70,7 +70,7 @@
                     <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="BusinessStyle" class="ms-2">Business Style</label>
                     <span asp-validation-for="BusinessStyle" class="text-danger"></span>
-                </div>   
+                </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="CommissionRate" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="CommissionRate" class="ms-2">Commission Rate</label>
@@ -84,7 +84,7 @@
                     </select>
                     <span asp-validation-for="CommissioneeId" class="text-danger"></span>
                 </div>
-                
+
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Cluster Area<span class="required">*</span></label>
                     <select asp-for="ClusterCode" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
@@ -137,7 +137,7 @@
                     </select>
                     <span asp-validation-for="RetentionRate" class="text-danger"></span>
                 </div>
-                
+
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Vat Type<span class="required">*</span></label>
                     <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
@@ -150,13 +150,27 @@
                 </div>
                 <div class="form-check pt-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingVat" /> @Html.DisplayNameFor(model => model.WithHoldingVat)
+                        <input class="form-check-input" asp-for="WithHoldingVat" onchange="toggleCwvFields(this)" /> @Html.DisplayNameFor(model => model.WithHoldingVat)
                     </label>
+                </div>
+                <div class="form-group mb-3" id="WithholdingVatPercent" style="display: none;">
+                    <label class="control-label">Withholding Vat Percentage</label>
+                    <select asp-for="CwVatPercent" asp-items="@Model.CwVatPercentList" class="form-select js-select2 withHoldingVatPercent" style="width: 100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="CwVatPercent" class="text-danger"></span>
                 </div>
                 <div class="form-check pb-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingTax" /> @Html.DisplayNameFor(model => model.WithHoldingTax)
+                        <input class="form-check-input" asp-for="WithHoldingTax" onchange="toggleCwtFields(this)"/> @Html.DisplayNameFor(model => model.WithHoldingTax)
                     </label>
+                </div>
+                <div class="form-group mb-3" id="WithholdingTaxPercent" style="display: none;">
+                    <label class="control-label">Withholding Tax Percentage</label>
+                    <select asp-for="CwtPercent" asp-items="@Model.CwtPercentList" class="form-select js-select2 withHoldingTaxPercent" style="width: 100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="CwtPercent" class="text-danger"></span>
                 </div>
                 <div class="form-check pb-2">
                     <label class="form-check-label">
@@ -210,6 +224,26 @@
             // Initial check on page load
             toggleStationDiv();
         });
-        
+
+        $(function () {
+            toggleCwvFields(document.getElementById("WithHoldingVat"));
+            toggleCwtFields(document.getElementById("WithHoldingTax"));
+        });
+
+        function toggleCwvFields(element) {
+            const withHoldingVatPercent = document.getElementById("WithholdingVatPercent");
+
+            withHoldingVatPercent.style.display = element.checked
+                ? "block"
+                : ($(".withHoldingVatPercent").val(0).trigger("change"), "none");
+        }
+
+        function toggleCwtFields(element) {
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+
+            withHoldingTaxPercent.style.display = element.checked
+                ? "block"
+                : ($(".withHoldingTaxPercent").val(0).trigger("change"), "none");
+        }
     </script>
 }

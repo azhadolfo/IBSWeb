@@ -1,7 +1,10 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
+using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
@@ -14,9 +17,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using IBS.Models.Filpride;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1371,12 +1371,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.SalesInvoice.CustomerOrderSlip.HasEWT)
                 {
-                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m) * -1;
+                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.CustomerOrderSlip.CwtPercent) * -1;
                 }
 
                 if (model.SalesInvoice.CustomerOrderSlip.HasWVAT)
                 {
-                    withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m) * -1;
+                    withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.CustomerOrderSlip.CwVatPercent) * -1;
                 }
 
                 var ledgers = new List<FilprideGeneralLedgerBook>

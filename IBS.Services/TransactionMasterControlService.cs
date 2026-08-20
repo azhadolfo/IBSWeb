@@ -2,13 +2,13 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace IBS.Services
 {
@@ -732,7 +732,7 @@ namespace IBS.Services
         }
 
         private async Task ReApplyCollectionCostOfMoneyAsync(
-            Models.Filpride.AccountsReceivable.FilprideCollectionReceipt collectionReceipt,
+            FilprideCollectionReceipt collectionReceipt,
             string company,
             CancellationToken cancellationToken)
         {
@@ -767,10 +767,10 @@ namespace IBS.Services
                     ? unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(receipt.Amount)
                     : receipt.Amount;
                 var wvatAmount = hasWvat
-                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.05m)
+                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwVatPercent)
                     : 0m;
                 var wtaxAmount = hasWtax
-                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.01m)
+                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwtPercent)
                     : 0m;
                 var paymentAmount = receipt.Amount - wvatAmount - wtaxAmount;
 
