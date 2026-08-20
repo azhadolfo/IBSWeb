@@ -21,8 +21,8 @@
     var netDiscount = Model.Amount - Model.Discount;
     var netOfVatAmount = customerVatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
     var vatAmount = customerVatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
-    var withHoldingTaxAmount = hasEwt ? netOfVatAmount * 0.01m : 0;
-    var withHoldingVatAmount = hasWvat ? netOfVatAmount * 0.05m : 0;
+    var withHoldingTaxAmount = hasEwt ? netOfVatAmount * Model.CustomerOrderSlip?.CwtPercent ?? 0.0000m : 0.0000m;
+    var withHoldingVatAmount = hasWvat ? netOfVatAmount * Model.CustomerOrderSlip?.CwVatPercent ?? 0.0000m : 0.0000m;
 
     var selectedCompany = string.Empty;
 

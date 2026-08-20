@@ -108,11 +108,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     : 0m;
 
                 var withHoldingTaxAmount = customerOrderSlip.HasEWT
-                    ? ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwtPercent)
                     : 0m;
 
                 var withHoldingVatAmount = customerOrderSlip.HasWVAT
-                    ? ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwVatPercent)
                     : 0m;
 
                 var ledgers = new List<FilprideGeneralLedgerBook>

@@ -699,10 +699,10 @@ namespace IBS.Services
                     ? unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(receipt.Amount)
                     : receipt.Amount;
                 var wvatAmount = hasWvat
-                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.05m)
+                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwVatPercent)
                     : 0m;
                 var wtaxAmount = hasWtax
-                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, 0.01m)
+                    ? unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVat, salesInvoice.CustomerOrderSlip.CwtPercent)
                     : 0m;
                 var paymentAmount = receipt.Amount - wvatAmount - wtaxAmount;
 
