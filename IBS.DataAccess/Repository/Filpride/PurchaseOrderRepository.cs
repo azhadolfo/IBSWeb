@@ -246,7 +246,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 var effectiveVolume = Math.Min(receivingReport.QuantityReceived, remainingVolume);
                 var updatedAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(effectiveVolume, normalizedTriggeredPrice);
                 var difference = updatedAmount - receivingReport.Amount;
-                var oldUnitCost = DecimalRoundingHelper.DivideOrZero(receivingReport.Amount, receivingReport.QuantityReceived);
+                var oldUnitCost = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                    ? DecimalRoundingHelper.ComputeNetUnitValue(receivingReport.Amount, receivingReport.QuantityReceived)
+                    : DecimalRoundingHelper.DivideOrZero(receivingReport.Amount, receivingReport.QuantityReceived);
 
                 // Update receiving report
                 receivingReport.Amount = updatedAmount;
@@ -264,7 +266,9 @@ namespace IBS.DataAccess.Repository.Filpride
                         ? ComputeNetOfVat(updatedAmount)
                         : updatedAmount;
 
-                    inventory.Cost = DecimalRoundingHelper.DivideOrZero(inventoryAmount, receivingReport.QuantityReceived);
+                    inventory.Cost = receivingReport.PurchaseOrder.VatType == SD.VatType_Vatable
+                        ? DecimalRoundingHelper.ComputeNetUnitValue(updatedAmount, receivingReport.QuantityReceived)
+                        : DecimalRoundingHelper.DivideOrZero(inventoryAmount, receivingReport.QuantityReceived);
                     inventory.Total = inventoryAmount;
 
                     // Update first inventory's average cost and total balance
@@ -292,7 +296,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     SupplierName = receivingReport.PurchaseOrder?.SupplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.UnitCost,
                     OldValue = oldUnitCost,
-                    NewValue = normalizedTriggeredPrice,
+                    NewValue = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                        ? DecimalRoundingHelper.ComputeNetUnitValue(updatedAmount, effectiveVolume)
+                        : normalizedTriggeredPrice,
                     AdjustmentValue = difference,
                     AffectedQuantity = effectiveVolume,
                     Reason = "Update approved unit cost in PO",

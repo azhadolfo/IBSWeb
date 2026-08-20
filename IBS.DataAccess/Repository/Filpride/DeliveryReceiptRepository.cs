@@ -497,8 +497,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         var poPrice = DecimalRoundingHelper.RoundToFour(
                             await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(detail.PurchaseOrderId, cancellationToken) + deliveredFreight);
-                        var cogsCost = purchaseOrder.VatType == SD.VatType_Vatable ? ComputeNetOfVat(poPrice) : poPrice;
-                        cogsNetOfVat = DecimalRoundingHelper.ComputeAmountFromUnitPrice(detail.Quantity, cogsCost);
+                        cogsNetOfVat = DecimalRoundingHelper.ComputeVatAwareAmountFromUnitPrice(
+                            detail.Quantity,
+                            poPrice,
+                            purchaseOrder.VatType == SD.VatType_Vatable);
                     }
 
                     ledgers.Add(new FilprideGeneralLedgerBook

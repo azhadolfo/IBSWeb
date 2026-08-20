@@ -1493,7 +1493,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal netAmount;
                 if (model.ServiceInvoice!.VatType == SD.VatType_Vatable)
                 {
-                    netAmount = ((model.Amount ?? 0) - existingSv.Discount) / 1.12m;
+                    netAmount = DecimalRoundingHelper.ComputeNetOfVat((model.Amount ?? 0m) - existingSv.Discount);
                     var total = DecimalRoundingHelper.ComputeNetOfVat(model.Amount ?? 0m);
                     var roundedNetAmount = DecimalRoundingHelper.RoundToFour(netAmount);
 

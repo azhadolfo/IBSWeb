@@ -898,7 +898,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     && rr.AmountPaid < (
                         rr.PurchaseOrder!.TaxType == SD.TaxType_WithTax
                             ? rr.PurchaseOrder.VatType == SD.VatType_Vatable
-                                ? rr.Amount - ((rr.Amount / 1.12m) * rr.TaxPercentage)    // Vatable + WithTax
+                                ? rr.Amount - DecimalRoundingHelper.ComputeEwtAmount(
+                                    DecimalRoundingHelper.ComputeNetOfVat(rr.Amount),
+                                    rr.TaxPercentage)    // Vatable + WithTax
                                 : rr.Amount - (rr.Amount * rr.TaxPercentage)               // Non-Vatable + WithTax
                             : rr.Amount                                                     // WithVat / Exempt
                     )
@@ -3256,8 +3258,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             && dr.CommissionAmountPaid < (
                                 dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                                     ? dr.CustomerOrderSlip.CommissioneeVatType == SD.VatType_Vatable
-                                        ? dr.CommissionAmount - ((dr.CommissionAmount / 1.12m) * dr.Commissionee!.WithholdingTaxPercent)    // Vatable + WithTax
-                                        : dr.CommissionAmount - (dr.CommissionAmount * dr.Commissionee!.WithholdingTaxPercent)              // Non-Vatable + WithTax
+                                        ? dr.CommissionAmount - DecimalRoundingHelper.ComputeEwtAmount(
+                                            DecimalRoundingHelper.ComputeNetOfVat(dr.CommissionAmount),
+                                            dr.Commissionee!.WithholdingTaxPercent ?? 0m)    // Vatable + WithTax
+                                        : dr.CommissionAmount - (dr.CommissionAmount * (dr.Commissionee!.WithholdingTaxPercent ?? 0m))              // Non-Vatable + WithTax
                                     : dr.CommissionAmount                                                                                    // WithVat / Exempt
                             ));
 
@@ -3341,8 +3345,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             && dr.FreightAmountPaid < (
                                 dr.HaulerTaxType == SD.TaxType_WithTax
                                     ? dr.HaulerVatType == SD.VatType_Vatable
-                                        ? dr.FreightAmount - ((dr.FreightAmount / 1.12m) * dr.Hauler!.WithholdingTaxPercent)    // Vatable + WithTax
-                                        : dr.FreightAmount - (dr.FreightAmount * dr.Hauler!.WithholdingTaxPercent)              // Non-Vatable + WithTax
+                                        ? dr.FreightAmount - DecimalRoundingHelper.ComputeEwtAmount(
+                                            DecimalRoundingHelper.ComputeNetOfVat(dr.FreightAmount),
+                                            dr.Hauler!.WithholdingTaxPercent ?? 0m)    // Vatable + WithTax
+                                        : dr.FreightAmount - (dr.FreightAmount * (dr.Hauler!.WithholdingTaxPercent ?? 0m))              // Non-Vatable + WithTax
                                     : dr.FreightAmount                                                                           // WithVat / Exempt
                             ));
 

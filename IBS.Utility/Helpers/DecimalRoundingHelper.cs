@@ -24,6 +24,12 @@ public static class DecimalRoundingHelper
         return MultiplyAndRound(quantity, RoundToFour(unitPrice));
     }
 
+    public static decimal ComputeVatAwareAmountFromUnitPrice(decimal quantity, decimal unitPrice, bool isVatable)
+    {
+        var grossAmount = ComputeAmountFromUnitPrice(quantity, unitPrice);
+        return isVatable ? ComputeNetOfVat(grossAmount) : grossAmount;
+    }
+
     public static decimal ComputeNetOfVat(decimal grossAmount)
     {
         return grossAmount == 0m ? 0m : DivideOrZero(grossAmount, 1 + VatRate);
@@ -46,6 +52,6 @@ public static class DecimalRoundingHelper
 
     public static decimal ComputeNetUnitValue(decimal grossAmount, decimal quantity)
     {
-        return quantity == 0m ? 0m : RoundToFour(grossAmount / quantity / (1 + VatRate));
+        return quantity == 0m ? 0m : DivideOrZero(ComputeNetOfVat(grossAmount), quantity);
     }
 }

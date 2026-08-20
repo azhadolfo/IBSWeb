@@ -1038,18 +1038,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (totalCosVolume > 0)
             {
                 var weightedAvgPrice = DecimalRoundingHelper.DivideOrZero(weightedCostTotal, totalCosVolume);
-                var finalWeightedAvgPrice = po.VatType == SD.VatType_Vatable
-                        ?_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedAvgPrice)
-                        : weightedAvgPrice;
-
-                return requiredQuantity * finalWeightedAvgPrice;
+                return DecimalRoundingHelper.ComputeVatAwareAmountFromUnitPrice(
+                    requiredQuantity,
+                    weightedAvgPrice,
+                    po.VatType == SD.VatType_Vatable);
             }
 
-            var finalPrice = po.VatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId))
-                    : await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId);
+            var finalPrice = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId);
 
-            return requiredQuantity * finalPrice;
+            return DecimalRoundingHelper.ComputeVatAwareAmountFromUnitPrice(
+                requiredQuantity,
+                finalPrice,
+                po.VatType == SD.VatType_Vatable);
         }
 
         [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
