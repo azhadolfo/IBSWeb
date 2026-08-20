@@ -262,20 +262,21 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 if (inventory != null)
                 {
-                    var inventoryAmount = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
+                    inventory.VatType = receivingReport.PurchaseOrder.VatType;
+                    inventory.Cost = DecimalRoundingHelper.DivideOrZero(updatedAmount, receivingReport.QuantityReceived);
+                    inventory.Total = updatedAmount;
+                    inventory.NetOfVatAmount = receivingReport.PurchaseOrder!.VatType == SD.VatType_Vatable
                         ? ComputeNetOfVat(updatedAmount)
                         : updatedAmount;
-
-                    inventory.Cost = receivingReport.PurchaseOrder.VatType == SD.VatType_Vatable
-                        ? DecimalRoundingHelper.ComputeNetUnitValue(updatedAmount, receivingReport.QuantityReceived)
-                        : DecimalRoundingHelper.DivideOrZero(inventoryAmount, receivingReport.QuantityReceived);
-                    inventory.Total = inventoryAmount;
 
                     // Update first inventory's average cost and total balance
                     if (inventories.FirstOrDefault()?.InventoryId == inventory.InventoryId)
                     {
                         inventory.AverageCost = inventory.Cost;
-                        inventory.TotalBalance = DecimalRoundingHelper.ComputeAmountFromUnitPrice(inventory.InventoryBalance, inventory.AverageCost);
+                        var grossTotalBalance = DecimalRoundingHelper.ComputeAmountFromUnitPrice(inventory.InventoryBalance, inventory.AverageCost);
+                        inventory.TotalBalance = receivingReport.PurchaseOrder.VatType == SD.VatType_Vatable
+                            ? ComputeNetOfVat(grossTotalBalance)
+                            : grossTotalBalance;
                     }
                 }
 

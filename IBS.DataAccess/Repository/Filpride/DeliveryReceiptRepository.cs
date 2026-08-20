@@ -491,7 +491,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     decimal cogsNetOfVat;
                     if (inventoryTransactions.Any())
                     {
-                        cogsNetOfVat = inventoryTransactions.Sum(i => i.Total);
+                        cogsNetOfVat = inventoryTransactions.Sum(i => i.NetOfVatAmount);
                     }
                     else
                     {
