@@ -85,6 +85,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.StationCode = model.StationCode;
             existingCustomer.CommissionRate = model.CommissionRate;
             existingCustomer.CommissioneeId = model.CommissioneeId;
+            existingCustomer.CwtPercent = model.CwtPercent;
+            existingCustomer.CwVatPercent = model.CwVatPercent;
 
             if (_db.ChangeTracker.HasChanges())
             {
