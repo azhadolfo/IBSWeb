@@ -201,6 +201,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(x => x.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+            if (customerOrderSlip == null)
+            {
+                return NotFound();
+            }
 
             try
             {
@@ -230,6 +237,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Terms = viewModel.Terms,
                     CustomerAddress = viewModel.CustomerAddress,
                     CustomerTin = viewModel.CustomerTin,
+                    CwVatPercent = customerOrderSlip.CwVatPercent,
+                    CwtPercent = customerOrderSlip.CwtPercent
                 };
 
                 if (model.Amount >= model.Discount)
@@ -408,6 +417,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(x => x.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                if (customerOrderSlip == null)
+                {
+                    return NotFound();
+                }
+
                 existingRecord.CustomerId = viewModel.CustomerId;
                 existingRecord.TransactionDate = viewModel.TransactionDate;
                 existingRecord.OtherRefNo = viewModel.OtherRefNo;
@@ -426,6 +443,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, viewModel.TransactionDate, cancellationToken);
                 existingRecord.CustomerAddress = viewModel.CustomerAddress;
                 existingRecord.CustomerTin = viewModel.CustomerTin;
+                existingRecord.CwVatPercent = customerOrderSlip.CwVatPercent;
+                existingRecord.CwtPercent = customerOrderSlip.CwtPercent;
 
                 existingRecord.EditedBy = GetUserFullName();
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
