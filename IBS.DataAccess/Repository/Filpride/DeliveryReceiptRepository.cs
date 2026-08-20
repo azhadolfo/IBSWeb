@@ -1031,13 +1031,11 @@ namespace IBS.DataAccess.Repository.Filpride
             string userName,
             CancellationToken cancellationToken = default)
         {
-            List<FilprideDeliveryReceipt> deliveryReceipts = await dbSet
-                .Where(x => x.CustomerOrderSlipId == customerOrderSlipId
-                            && x.VoidedBy == null
-                            && x.CanceledBy == null)
-                .Include(dr => dr.CustomerOrderSlip)
-                    .ThenInclude(cos => cos!.Product)
-                .ToListAsync(cancellationToken);
+            var deliveryReceipts = await GetAllAsync(x =>
+                x.CustomerOrderSlipId == customerOrderSlipId &&
+                x.VoidedBy == null &&
+                x.CanceledBy == null,
+                cancellationToken);
 
             foreach (FilprideDeliveryReceipt deliveryReceipt in deliveryReceipts)
             {

@@ -17,7 +17,7 @@ namespace IBS.Services
         Task<(string Type, string ReferenceNo)?> FindTransactionAsync(string referenceNo, string? company, CancellationToken cancellationToken);
         Task<TransactionMasterControlViewModel?> GetTransactionDetailsAsync(string referenceNo, string type, string? company, CancellationToken cancellationToken);
         Task UpdateTransactionAsync(TransactionMasterControlViewModel model, string? company, string userFullName, CancellationToken cancellationToken);
-        Task<ReJournalBatchResult> ReJournalAllAsync(int month, int year, string company, string userFullName, CancellationToken cancellationToken);
+        Task<ReJournalBatchResult> ReJournalAllAsync(int month, int year, string company, string userFullName, string transactionType, CancellationToken cancellationToken);
     }
 
     public sealed class ReJournalBatchResult
@@ -41,6 +41,30 @@ namespace IBS.Services
     {
         private const string _paymentForSeparator = ". Payment for ";
         private const string _dateFormat = "MM/dd/yyyy";
+        public const string ReJournalTypeAll = "All";
+        public const string ReJournalTypePurchase = "Purchase";
+        public const string ReJournalTypeSales = "Sales";
+        public const string ReJournalTypeService = "Service";
+        public const string ReJournalTypeCollection = "Collection";
+        public const string ReJournalTypeProvisionalReceipt = "ProvisionalReceipt";
+        public const string ReJournalTypeDebitMemo = "DebitMemo";
+        public const string ReJournalTypeCreditMemo = "CreditMemo";
+        public const string ReJournalTypePayment = "Payment";
+        public const string ReJournalTypeJv = "JV";
+
+        public static readonly IReadOnlyList<string> ReJournalTypes =
+        [
+            ReJournalTypeAll,
+            ReJournalTypePurchase,
+            ReJournalTypeSales,
+            ReJournalTypeService,
+            ReJournalTypeCollection,
+            ReJournalTypeProvisionalReceipt,
+            ReJournalTypeDebitMemo,
+            ReJournalTypeCreditMemo,
+            ReJournalTypePayment,
+            ReJournalTypeJv
+        ];
 
         public async Task<(string Type, string ReferenceNo)?> FindTransactionAsync(string referenceNo, string? company, CancellationToken cancellationToken)
         {
@@ -326,21 +350,65 @@ namespace IBS.Services
             header.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
         }
 
-        public async Task<ReJournalBatchResult> ReJournalAllAsync(int month, int year, string company, string userFullName, CancellationToken cancellationToken)
+        public async Task<ReJournalBatchResult> ReJournalAllAsync(int month, int year, string company, string userFullName, string transactionType, CancellationToken cancellationToken)
         {
+            transactionType = string.IsNullOrWhiteSpace(transactionType)
+                ? ReJournalTypeAll
+                : transactionType.Trim();
+
+            if (!ReJournalTypes.Contains(transactionType, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Invalid rejournal type selected.", nameof(transactionType));
+            }
+
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var purchaseCount = await ReJournalPurchaseAsync(month, year, company, cancellationToken);
-                var salesCount = await ReJournalSalesAsync(month, year, company, cancellationToken);
-                var serviceCount = await ReJournalServiceAsync(month, year, company, userFullName, cancellationToken);
-                var collectionCount = await ReJournalCollectionAsync(month, year, company, cancellationToken);
-                var provisionalReceiptCount = await ReJournalProvisionalReceiptAsync(month, year, company, cancellationToken);
-                var debitMemoCount = await ReJournalDebitMemoAsync(month, year, company, cancellationToken);
-                var creditMemoCount = await ReJournalCreditMemoAsync(month, year, company, cancellationToken);
-                var paymentCount = await ReJournalPaymentAsync(month, year, company, cancellationToken);
-                var jvCount = await ReJournalJvAsync(month, year, company, cancellationToken);
+                var purchaseCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                    transactionType.Equals(ReJournalTypePurchase, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalPurchaseAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var salesCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                 transactionType.Equals(ReJournalTypeSales, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalSalesAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var serviceCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                   transactionType.Equals(ReJournalTypeService, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalServiceAsync(month, year, company, userFullName, cancellationToken)
+                    : 0;
+
+                var collectionCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                      transactionType.Equals(ReJournalTypeCollection, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalCollectionAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var provisionalReceiptCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                              transactionType.Equals(ReJournalTypeProvisionalReceipt, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalProvisionalReceiptAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var debitMemoCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                     transactionType.Equals(ReJournalTypeDebitMemo, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalDebitMemoAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var creditMemoCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                      transactionType.Equals(ReJournalTypeCreditMemo, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalCreditMemoAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var paymentCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                                   transactionType.Equals(ReJournalTypePayment, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalPaymentAsync(month, year, company, cancellationToken)
+                    : 0;
+
+                var jvCount = transactionType.Equals(ReJournalTypeAll, StringComparison.OrdinalIgnoreCase) ||
+                              transactionType.Equals(ReJournalTypeJv, StringComparison.OrdinalIgnoreCase)
+                    ? await ReJournalJvAsync(month, year, company, cancellationToken)
+                    : 0;
 
                 await transaction.CommitAsync(cancellationToken);
 
