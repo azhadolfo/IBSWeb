@@ -132,5 +132,31 @@ namespace IBS.Models.Filpride.MasterFile
         public List<SelectListItem>? Commissionees { get; set; }
 
         public FilprideSupplier? Commissionee { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwtPercent { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? CwtPercentList { get; set; } =
+        [
+            new(".5%", "0.0050"),
+            new("1%", "0.0100"),
+            new("2%", "0.0200"),
+            new("5%", "0.0500"),
+            new("10%", "0.1000")
+        ];
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwVatPercent { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? CwVatPercentList { get; set; } =
+        [
+            new(".5%", "0.0050"),
+            new("1%", "0.0100"),
+            new("2%", "0.0200"),
+            new("5%", "0.0500"),
+            new("10%", "0.1000")
+        ];
     }
 }

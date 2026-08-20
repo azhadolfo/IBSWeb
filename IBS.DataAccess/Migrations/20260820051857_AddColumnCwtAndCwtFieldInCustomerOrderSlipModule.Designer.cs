@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820051857_AddColumnCwtAndCwtFieldInCustomerOrderSlipModule")]
+    partial class AddColumnCwtAndCwtFieldInCustomerOrderSlipModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2334,7 +2337,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<decimal>("CreditAmount")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("credit_amount");
 
                     b.Property<string>("CustomerAddress")
@@ -2357,16 +2360,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
-                    b.Property<decimal>("CwVatPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cw_vat_percent");
-
-                    b.Property<decimal>("CwtPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cwt_percent");
-
                     b.Property<decimal>("DebitAmount")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("debit_amount");
 
                     b.Property<int?>("DeliveryReceiptId")
