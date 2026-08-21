@@ -366,8 +366,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BusinessStyle = customer.BusinessStyle,
                     AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
-                    CwtPercent = customer.CwtPercent,
-                    CwVatPercent = customer.CwVatPercent,
                 };
 
                 ///TODO Temporary solution for 14 days expiration of GASSO FUEL TRADING customer

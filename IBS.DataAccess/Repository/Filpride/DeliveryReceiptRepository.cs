@@ -385,8 +385,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                         ? ComputeVatAmount(netOfVatAmount)
                         : 0m;
-                    var arTradeCwtAmount = customerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwtPercent) : 0m;
-                    var arTradeCwvAmount = customerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, customerOrderSlip.CwVatPercent) : 0m;
+                    var arTradeCwtAmount = customerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwtPercent) : 0m;
+                    var arTradeCwvAmount = customerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwvPercent) : 0m;
                     var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                         ? ComputeNetOfEwt(detail.TotalAmount, arTradeCwtAmount + arTradeCwvAmount)
                         : detail.TotalAmount;
@@ -1120,8 +1120,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeVatAmount(netOfVatAmount)
                     : 0m;
-                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CustomerOrderSlip.CwtPercent) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CustomerOrderSlip.CwVatPercent) : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwtPercent) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwvPercent) : 0m;
                 var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                     ? ComputeNetOfEwt(difference, (arTradeCwtAmount + arTradeCwvAmount))
                     : difference;

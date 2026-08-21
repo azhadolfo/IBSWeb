@@ -1371,12 +1371,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.SalesInvoice.CustomerOrderSlip.HasEWT)
                 {
-                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.CustomerOrderSlip.CwtPercent) * -1;
+                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.DeliveryReceipt!.CwtPercent) * -1;
                 }
 
                 if (model.SalesInvoice.CustomerOrderSlip.HasWVAT)
                 {
-                    withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.CustomerOrderSlip.CwVatPercent) * -1;
+                    withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), model.SalesInvoice.DeliveryReceipt!.CwvPercent) * -1;
                 }
 
                 var ledgers = new List<FilprideGeneralLedgerBook>

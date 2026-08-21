@@ -142,8 +142,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissioneeTaxType = commissionee?.TaxType;
             existingRecord.BusinessStyle = customer.BusinessStyle;
             existingRecord.AvailableCreditLimit = await GetCustomerCreditBalance(customer.CustomerId, cancellationToken);
-            existingRecord.CwtPercent = customer.CwtPercent;
-            existingRecord.CwVatPercent = customer.CwVatPercent;
 
             if (existingRecord.Branch != null)
             {

@@ -3527,7 +3527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         ? NetOfVatOrZero(netDiscount)
                                         : netDiscount;
                                     var withHoldingTaxAmount = record.CustomerOrderSlip?.HasEWT ?? true
-                                        ? EwtAmountOrZero(netOfVatAmount, record.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
+                                        ? EwtAmountOrZero(netOfVatAmount, record.DeliveryReceipt?.CwtPercent ?? 0.0100m)
                                         : 0;
                                     var retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                                     var vcfAmount = 0.0000m;
@@ -3760,7 +3760,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ? NetOfVatOrZero(netDiscount)
                         : netDiscount;
                     var withHoldingTaxAmount = si.CustomerOrderSlip?.HasEWT ?? true
-                        ? EwtAmountOrZero(netOfVatAmount, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
+                        ? EwtAmountOrZero(netOfVatAmount, si.DeliveryReceipt?.CwtPercent ?? 0.0100m)
                         : 0;
                     var retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
                     var vcfAmount = 0.0000m;
@@ -4097,7 +4097,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             : 0m;
                                         var vatPerLiter = DivideOrZero(vatAmount, record.Quantity);
                                         var ewtAmount = isTaxable
-                                            ? EwtAmountOrZero(netOfVat, record.CustomerOrderSlip?.CwtPercent ?? 0.0000m)
+                                            ? EwtAmountOrZero(netOfVat, record.DeliveryReceipt?.CwtPercent ?? 0.0100m)
                                             : 0m;
                                         var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
                                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
@@ -4156,7 +4156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                                     var subTotalEwtAmount = isTaxableSub == true
-                                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwtPercent).FirstOrDefault() ?? 0.0000m)
+                                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.DeliveryReceipt != null ? x.DeliveryReceipt.CwtPercent : 0.0100m).FirstOrDefault())
                                         : 0m;
                                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4393,10 +4393,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : siAmountIncludingDmCmAmount;
                         var vatAmount = isVatable ? VatAmountOrZero(netOfVat) : 0m;
                         var vatPerLiter = DivideOrZero(vatAmount, si.Quantity);
-                        var ewtAmount = isTaxable ? EwtAmountOrZero(netOfVat, si.CustomerOrderSlip?.CwtPercent ?? 0.0000m) : 0m;
+                        var ewtAmount = isTaxable ? EwtAmountOrZero(netOfVat, si.DeliveryReceipt?.CwtPercent ?? 0.0100m) : 0m;
                         var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
                         var ewtBalance = RoundToFour(ewtAmount - isEwtAmountPaid);
-                        var cwvatAmount = hasCwVat ? EwtAmountOrZero(netOfVat, si.CustomerOrderSlip?.CwVatPercent ?? 0.0000m) : 0m;
+                        var cwvatAmount = hasCwVat ? EwtAmountOrZero(netOfVat, si.DeliveryReceipt?.CwvPercent ?? 0.0500m) : 0m;
                         var isCwvatAmountPaid = si.IsTaxAndVatPaid ? cwvatAmount : 0m;
                         var cwvatBalance = RoundToFour(cwvatAmount - isCwvatAmountPaid);
 
@@ -4498,7 +4498,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
                     var subTotalVatPerLiter = DivideOrZero(subTotalVatAmount, subTotalQuantity);
                     var subTotalEwtAmount = isTaxableSub == true
-                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwtPercent).FirstOrDefault() ?? 0.0000m)
+                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.DeliveryReceipt != null ? x.DeliveryReceipt.CwtPercent : 0.0100m).FirstOrDefault())
                         : 0m;
                     var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
                     var subTotalEwtBalance = RoundToFour(subTotalEwtAmount - isEwtAmountPaidSub);
@@ -4506,7 +4506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var subTotalBalance = groupByCustomer.Sum(x => x.Balance);
                     var subTotalEwtAmountPaid = isEwtAmountPaidSub;
                     var subTotalCwVatAmount = hasCwVatSub == true
-                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.CustomerOrderSlip?.CwVatPercent).FirstOrDefault() ?? 0.0000m)
+                        ? EwtAmountOrZero(subTotalNetOfVat, groupByCustomer.Select(x => x.DeliveryReceipt != null ? x.DeliveryReceipt.CwvPercent : 0.0500m).FirstOrDefault())
                         : 0m;
                     var isCwVatAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalCwVatAmount : 0m;
                     var subTotalCwVatBalance = RoundToFour(subTotalCwVatAmount - isCwVatAmountPaidSub);
