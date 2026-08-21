@@ -755,10 +755,12 @@ namespace IBS.Services
                 var hasWtax = salesInvoice.CustomerOrderSlip.HasEWT;
                 var isVatable = salesInvoice.CustomerOrderSlip.VatType == SD.VatType_Vatable;
                 var dr = salesInvoice.DeliveryReceipt;
+                dr.CommissionAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(dr.Quantity, dr.CommissionRate);
+
                 var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, collectionReceipt.DepositedDate.Value);
                 var daysDelayed = collectionReceipt.DepositedDate.Value.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                if (daysDelayed <= 0 || dr.CommissionAmount <= 0 || dr.IsCostOfMoneyApplied)
+                if (daysDelayed <= 0 || dr.CommissionAmount <= 0)
                 {
                     continue;
                 }

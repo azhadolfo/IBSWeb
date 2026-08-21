@@ -833,7 +833,6 @@ namespace IBS.DataAccess.Repository.Filpride
             string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default)
         {
             deliveryReceipt.CommissionAmount -= costOfMoney;
-            deliveryReceipt.IsCostOfMoneyApplied = true;
             var commissionee = deliveryReceipt.Commissionee!;
             var ewtAmount = deliveryReceipt.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                 ? ComputeEwtAmount(costOfMoney, commissionee.WithholdingTaxPercent ?? 0m)
