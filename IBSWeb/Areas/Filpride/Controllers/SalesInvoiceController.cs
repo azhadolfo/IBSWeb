@@ -209,6 +209,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(x => x.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+            if (deliveryReceipt == null)
+            {
+                return NotFound();
+            }
+
             try
             {
                 #region Saving Default Entries
@@ -237,8 +245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Terms = viewModel.Terms,
                     CustomerAddress = viewModel.CustomerAddress,
                     CustomerTin = viewModel.CustomerTin,
-                    CwVatPercent = customerOrderSlip.CwVatPercent,
-                    CwtPercent = customerOrderSlip.CwtPercent
+                    CwVatPercent = deliveryReceipt.CwvPercent,
+                    CwtPercent = deliveryReceipt.CwtPercent
                 };
 
                 if (model.Amount >= model.Discount)
@@ -425,6 +433,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(x => x.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+                if (deliveryReceipt == null)
+                {
+                    return NotFound();
+                }
+
                 existingRecord.CustomerId = viewModel.CustomerId;
                 existingRecord.TransactionDate = viewModel.TransactionDate;
                 existingRecord.OtherRefNo = viewModel.OtherRefNo;
@@ -443,8 +459,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, viewModel.TransactionDate, cancellationToken);
                 existingRecord.CustomerAddress = viewModel.CustomerAddress;
                 existingRecord.CustomerTin = viewModel.CustomerTin;
-                existingRecord.CwVatPercent = customerOrderSlip.CwVatPercent;
-                existingRecord.CwtPercent = customerOrderSlip.CwtPercent;
+                existingRecord.CwVatPercent = deliveryReceipt.CwvPercent;
+                existingRecord.CwtPercent = deliveryReceipt.CwtPercent;
 
                 existingRecord.EditedBy = GetUserFullName();
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
