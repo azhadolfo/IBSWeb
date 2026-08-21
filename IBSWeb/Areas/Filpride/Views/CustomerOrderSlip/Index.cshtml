@@ -256,6 +256,7 @@
 
                             switch (status) {
                                 case '@CosStatus.ForApprovalOfCNC':
+                                case '@CosStatus.ForApprovalOfMarketing':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
