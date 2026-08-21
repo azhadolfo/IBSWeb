@@ -170,5 +170,11 @@ namespace IBS.Models.Filpride.Integrated
         public bool IsCostOfMoneyApplied { get; set; }
 
         public ICollection<FilprideDeliveryReceiptDetail> Details { get; set; } = new List<FilprideDeliveryReceiptDetail>();
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwtPercent { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CwvPercent { get; set; }
     }
 }

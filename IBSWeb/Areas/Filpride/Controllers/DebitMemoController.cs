@@ -1349,11 +1349,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     : 0m;
 
                 var withHoldingTaxAmount = model.SalesInvoice.CustomerOrderSlip!.HasEWT
-                    ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, model.SalesInvoice.CustomerOrderSlip.CwtPercent)
+                    ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, model.SalesInvoice.DeliveryReceipt!.CwtPercent)
                     : 0m;
 
                 var withHoldingVatAmount = model.SalesInvoice.CustomerOrderSlip!.HasWVAT
-                    ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, model.SalesInvoice.CustomerOrderSlip.CwVatPercent)
+                    ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, model.SalesInvoice.DeliveryReceipt!.CwvPercent)
                     : 0m;
 
                 var ledgers = new List<FilprideGeneralLedgerBook>
