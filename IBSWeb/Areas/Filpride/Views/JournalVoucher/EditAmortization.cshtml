@@ -309,10 +309,10 @@
                     expenseAccountDropdown.append("<option value=''></option>");
 
                     for (let i = 0; i < data.accountNo.length; i++) {
-                        if (data.debit[i] > 0) {
-                            let accountTitle = data.accountNo[i] + " " + data.accountName[i];
+                        for (let i = 0; i < data.chartOfAccount.length; i++) {
+                            let accountTitle = data.chartOfAccount[i].accountNumber + " " + data.chartOfAccount[i].accountName;
                             expenseAccountDropdown.append(
-                                `<option value="${data.accountNo[i]}" data-debit="${data.debit[i]}">${accountTitle}</option>`
+                                `<option value="${data.chartOfAccount[i].accountNumber}" data-debit="${data.debit[0]}">${accountTitle}</option>`
                             );
                         }
                     }

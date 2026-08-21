@@ -407,6 +407,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                var chartOfAccount = _unitOfWork.FilprideChartOfAccount
+                    .GetAllQuery(x => x.AccountNumber != null &&
+                                      x.AccountNumber.StartsWith("55") &&
+                                      !x.HasChildren)
+                    .Select(x => new
+                    {
+                        x.AccountNumber,
+                        x.AccountName
+                    })
+                    .OrderBy(x => x.AccountNumber)
+                    .ToList();
                 return Json(new
                 {
                     CVNo = model.CheckVoucherHeaderNo,
@@ -426,6 +437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Credit = model.Details!.Select(jvd => jvd.Credit),
                     TotalDebit = model.Details!.Sum(cvd => cvd.Debit),
                     TotalCredit = model.Details!.Sum(cvd => cvd.Credit),
+                    ChartOfAccount = chartOfAccount
                 });
             }
 
