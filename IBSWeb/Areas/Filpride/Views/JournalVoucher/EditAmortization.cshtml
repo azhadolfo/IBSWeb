@@ -308,13 +308,17 @@
                     expenseAccountDropdown.empty();
                     expenseAccountDropdown.append("<option value=''></option>");
 
-                    for (let i = 0; i < data.accountNo.length; i++) {
-                        if (data.debit[i] > 0) {
-                            let accountTitle = data.accountNo[i] + " " + data.accountName[i];
-                            expenseAccountDropdown.append(
-                                `<option value="${data.accountNo[i]}" data-debit="${data.debit[i]}">${accountTitle}</option>`
-                            );
+                    let debitAmount = 0;
+
+                    for (let i = 0; i < data.chartOfAccount.length; i++) {
+                        let accountTitle = data.chartOfAccount[i].accountNumber + " " + data.chartOfAccount[i].accountName;
+
+                        if (debitAmount === 0 && data.debit[i] > 0) {
+                            debitAmount = data.debit[i];
                         }
+                        expenseAccountDropdown.append(
+                            `<option value="${data.chartOfAccount[i].accountNumber}" data-debit="${debitAmount}">${accountTitle}</option>`
+                        );
                     }
 
                     if (defaultExpenseAccount) {
