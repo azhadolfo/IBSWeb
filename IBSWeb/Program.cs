@@ -9,6 +9,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility;
 using IBS.Utility.Helpers;
+using IBSWeb.Api;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -139,6 +140,8 @@ app.MapPost("/jobs/daily-service",
     .AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy")).AllowAnonymous();
+
+app.MapJournalVoucherEndpoints();
 
 app.UseSerilogRequestLogging();
 
