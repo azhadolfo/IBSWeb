@@ -119,31 +119,28 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task AddSalesToInventoryAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
         {
-            if (deliveryReceipt.Details.Any())
+            if (!deliveryReceipt.Details.Any())
             {
-                foreach (var detail in deliveryReceipt.Details)
-                {
-                    await AddSalesLineToInventoryAsync(
-                        deliveryReceipt,
-                        detail.ProductId,
-                        detail.PurchaseOrderId,
-                        detail.Quantity,
-                        detail.CustomerOrderSlip,
-                        detail.PurchaseOrder,
-                        cancellationToken);
-                }
-
-                return;
+                throw new InvalidOperationException(
+                    $"Delivery receipt '{deliveryReceipt.DeliveryReceiptNo}' has no detail lines for sales inventory creation.");
             }
 
-            await AddSalesLineToInventoryAsync(
-                deliveryReceipt,
-                deliveryReceipt.CustomerOrderSlip!.ProductId,
-                (int)deliveryReceipt.PurchaseOrderId!,
-                deliveryReceipt.Quantity,
-                deliveryReceipt.CustomerOrderSlip,
-                deliveryReceipt.PurchaseOrder,
-                cancellationToken);
+            foreach (var detail in deliveryReceipt.Details)
+            {
+                var purchaseOrder = detail.PurchaseOrder
+                                    ?? await _db.FilpridePurchaseOrders
+                                        .FirstOrDefaultAsync(x => x.PurchaseOrderId == detail.PurchaseOrderId, cancellationToken)
+                                    ?? throw new NullReferenceException("Purchase order not found");
+
+                await AddSalesLineToInventoryAsync(
+                    deliveryReceipt,
+                    purchaseOrder.ProductId,
+                    detail.PurchaseOrderId,
+                    detail.Quantity,
+                    detail.CustomerOrderSlip,
+                    purchaseOrder,
+                    cancellationToken);
+            }
         }
 
         private async Task AddSalesLineToInventoryAsync(

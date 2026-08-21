@@ -777,7 +777,7 @@ namespace IBS.Services
                 var costOfMoney = paymentAmount * .03m * daysDelayed / 360m;
 
                 await unitOfWork.FilprideCollectionReceipt.ApplyCostOfMoney(dr, costOfMoney,
-                    "Batch ReJournal", collectionReceipt.DepositedDate.Value, cancellationToken);
+                    "SYSTEM GENERATED", collectionReceipt.DepositedDate.Value, cancellationToken);
             }
         }
 

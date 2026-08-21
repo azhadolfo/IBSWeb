@@ -151,7 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     month.Value,
                     year.Value,
                     company,
-                    GetUserFullName(),
+                    "SYSTEM GENERATED",
                     transactionType,
                     cancellationToken);
 
