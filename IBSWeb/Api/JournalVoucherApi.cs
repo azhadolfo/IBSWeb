@@ -8,17 +8,35 @@ namespace IBSWeb.Api
 {
     public static class JournalVoucherApi
     {
-        public static void MapJournalVoucherEndpoints(this WebApplication app)
+        /// <summary>
+        /// Registers the journal voucher API endpoints, including the POST endpoint for creating
+        /// a balanced journal voucher with header and detail lines in a single transaction.
+        /// </summary>
+        public static void MapJournalVoucherEndpoints(this WebApplication app, string dmcmApiKey)
         {
-            app.MapPost("/api/journal-vouchers", async (CreateJournalVoucherDto dto, ApplicationDbContext db, IUnitOfWork uow, ILogger<Program> logger) =>
+            app.MapPost("/api/journal-vouchers", async (CreateJournalVoucherDto dto, ApplicationDbContext db,
+                IUnitOfWork uow, ILogger<Program> logger) =>
             {
                 if (dto.Details.Count == 0)
                 {
                     return Results.BadRequest(new { error = "At least one detail line is required." });
                 }
 
-                var totalDebit = Math.Round(dto.Details.Sum(d => d.Debit), 2);
-                var totalCredit = Math.Round(dto.Details.Sum(d => d.Credit), 2);
+                // Round once, canonically, and reuse everywhere — validation and persistence must agree.
+                var roundedDetails = dto.Details.Select(d => new
+                {
+                    d.AccountNo,
+                    Debit = Math.Round(d.Debit, 2),
+                    Credit = Math.Round(d.Credit, 2)
+                }).ToList();
+
+                if (roundedDetails.Any(d => d.Debit < 0 || d.Credit < 0))
+                {
+                    return Results.BadRequest(new { error = "Debit and Credit amounts cannot be negative." });
+                }
+
+                var totalDebit = roundedDetails.Sum(d => d.Debit);
+                var totalCredit = roundedDetails.Sum(d => d.Credit);
                 if (totalDebit != totalCredit)
                 {
                     return Results.BadRequest(new { error = $"Debit ({totalDebit}) and Credit ({totalCredit}) must be equal." });
@@ -49,36 +67,59 @@ namespace IBSWeb.Api
                     await db.SaveChangesAsync();
 
                     var details = new List<FilprideJournalVoucherDetail>();
-                    foreach (var detailDto in dto.Details)
+                    for (var i = 0; i < dto.Details.Count; i++)
                     {
+                        var detailDto = dto.Details[i];
+                        var rounded = roundedDetails[i];
+
                         var coa = await uow.FilprideChartOfAccount
                             .GetAsync(coa => coa.AccountNumber == detailDto.AccountNo);
+
+                        if (coa == null)
+                        {
+                            await tx.RollbackAsync();
+                            return Results.BadRequest(new { error = $"Unknown account number: {detailDto.AccountNo}" });
+                        }
 
                         details.Add(new FilprideJournalVoucherDetail
                         {
                             AccountNo = detailDto.AccountNo,
-                            AccountName = coa?.AccountName ?? detailDto.AccountNo,
+                            AccountName = coa.AccountName,
                             TransactionNo = jvNo,
                             JournalVoucherHeaderId = header.JournalVoucherHeaderId,
-                            Debit = detailDto.Debit,
-                            Credit = detailDto.Credit,
+                            Debit = rounded.Debit,
+                            Credit = rounded.Credit,
                         });
                     }
 
                     db.AddRange(details);
-                    db.Add(new FilprideAuditTrail(dto.CreatedBy, $"Created new journal voucher# {jvNo}", "Journal Voucher", dto.Company));
+                    db.Add(new FilprideAuditTrail(dto.CreatedBy, $"Created new journal voucher# {jvNo}",
+                        "Journal Voucher", dto.Company));
                     await db.SaveChangesAsync();
                     await tx.CommitAsync();
 
-                    return Results.Ok(new { journalVoucherHeaderNo = jvNo, journalVoucherHeaderId = header.JournalVoucherHeaderId });
+                    return Results.Ok(new
+                    {
+                        journalVoucherHeaderNo = jvNo, journalVoucherHeaderId = header.JournalVoucherHeaderId
+                    });
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Failed to create journal voucher via API");
                     await tx.RollbackAsync();
-                    return Results.Problem(detail: ex.Message, statusCode: 400);
+                    return Results.Problem(statusCode: StatusCodes.Status500InternalServerError);
                 }
-            }).AllowAnonymous();
+            }).AddEndpointFilter(async (context, next) =>
+            {
+                var apiKey = context.HttpContext.Request.Headers["X-API-Key"].FirstOrDefault();
+                if (string.IsNullOrEmpty(apiKey) || apiKey != dmcmApiKey)
+                {
+                    return Results.Unauthorized();
+                }
+
+                return await next(context);
+            })
+            .AllowAnonymous(); // still needed since there's no [Authorize] user principal, but the filter gates access
         }
     }
 

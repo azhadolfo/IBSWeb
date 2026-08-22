@@ -141,7 +141,9 @@ app.MapPost("/jobs/daily-service",
 
 app.MapGet("/health", () => Results.Ok("Healthy")).AllowAnonymous();
 
-app.MapJournalVoucherEndpoints();
+var dmcmApiKey = builder.Configuration["ApiKeys:DMCM_API_KEY"]
+                 ?? throw new InvalidOperationException("ApiKeys:DMCM_API_KEY is not configured");
+app.MapJournalVoucherEndpoints(dmcmApiKey);
 
 app.UseSerilogRequestLogging();
 
