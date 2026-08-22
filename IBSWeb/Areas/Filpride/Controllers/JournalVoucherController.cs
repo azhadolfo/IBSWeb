@@ -550,11 +550,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                if (modelHeader.JvType == nameof(JvType.Accrual))
-                {
-                    await ReverseAccrual(modelHeader.JournalVoucherHeaderId, cancellationToken);
-                }
-
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording
@@ -1675,7 +1670,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
                     JvType = nameof(JvType.Accrual),
-                    Payee = cv.Payee
+                    Payee = cv.Payee,
+                    AutoReverseNextMonth = viewModel.AutoReverseNextMonth
                 };
 
                 await _dbContext.AddAsync(model, cancellationToken);
@@ -1787,7 +1783,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Text = cvh.CheckVoucherHeaderNo
                         })
                         .ToListAsync(cancellationToken),
-                    MinDate = minDate
+                    MinDate = minDate,
+                    AutoReverseNextMonth = existingHeaderModel.AutoReverseNextMonth
                 };
 
                 foreach (var detail in existingDetailsModel)
@@ -1883,6 +1880,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingHeaderModel.Status = nameof(JvStatus.ForApproval);
                 existingHeaderModel.Payee = cv.Payee;
+                existingHeaderModel.AutoReverseNextMonth = viewModel.AutoReverseNextMonth;
 
                 #endregion --Saving the default entries
 

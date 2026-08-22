@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Enums
-@model JvEditAccrualViewModel
+﻿@model JvEditAccrualViewModel
 
 @{
     ViewData["Title"] = "Journal Voucher - Edit Accrual";
@@ -55,6 +54,11 @@
                         <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
                         <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
                         <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label fw-bold text-danger">
+                            <input class="form-check-input" asp-for="AutoReverseNextMonth"/> Automatically reverse this entry next month
+                        </label>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -166,14 +170,56 @@
                                 <th class="w-50">Account No.</th>
                                 <th class="w-25">Debit</th>
                                 <th class="w-25">Credit</th>
+                                <th></th>
                             </tr>
                         </thead>
-                        <tbody id="accountingEntriesBody"></tbody>
+                        <tbody id="accountingEntriesBody">
+                        @{
+                            var rowIndex = 0;
+                            foreach (var entry in Model.Details)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="Details[@(rowIndex)].AccountNo" value="@entry.AccountNo"/>
+                                        <input type="text"   name="Details[@(rowIndex)].AccountTitle" value="@entry.AccountNo @entry.AccountTitle"
+                                               style="border:none" class="w-100" readonly />
+                                    </td>
+                                    <td>
+                                        <input name="Details[@(rowIndex)].Debit"
+                                               id="debit_@entry.AccountNo"
+                                               value="@entry.Debit.ToString("N4")"
+                                               style="border:none"
+                                               class="w-100 money editable-amount"
+                                               oninput='updateTotalDebitAndCredit()'
+                                               @(entry.AccountNo == "201020300" ? "readonly" : "") />
+                                    </td>
+                                    <td>
+                                        <input name="Details[@(rowIndex)].Credit"
+                                               id="credit_@entry.AccountNo"
+                                               value="@entry.Credit.ToString("N4")"
+                                               style="border:none"
+                                               class="w-100 money"
+                                               readonly />
+                                    </td>
+                                    <td>
+                                        @if(entry.AccountNo != "201020300"){
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="removeRow(this)">Remove</button>
+                                        }
+                                    </td>
+                                </tr>
+
+                                rowIndex++;
+                            }
+                        }
+                        </tbody>
                         <tbody>
                             <tr>
                                 <td class="text-end">TOTAL:</td>
                                 <td class="totalDebit">0.0000</td>
                                 <td class="totalCredit">0.0000</td>
+                                <th></th>
                             </tr>
                         </tbody>
                     </table>
@@ -181,7 +227,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event)">Save</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event) && handleCreate()" >Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -226,7 +272,33 @@
             validateDebitAndCredit();
         }
 
-        function cvDetails(cvId) {
+        // Function to remove the corresponding row and reindex
+        function removeRow(button) {
+            // Remove the row
+            $(button).closest("tr").remove();
+
+            // Reindex all remaining rows
+            reindexRows();
+
+            updateTotalDebitAndCredit();
+        }
+
+        // Function to reindex all rows after deletion
+        function reindexRows() {
+            $("#accountingEntriesBody tr").each(function(index) {
+                $(this).attr('data-index', index);
+
+                // Update all input names with the new index
+                $(this).find('input[name^="Details"]').each(function() {
+                    var name = $(this).attr('name');
+                    var fieldName = name.substring(name.indexOf('].') + 2);
+                    $(this).attr('name', 'Details[' + index + '].' + fieldName);
+                });
+            });
+        }
+
+
+        function cvDetails(cvId, triggerType) {
 
             if (!cvId) {
                 clearFields();
@@ -238,10 +310,12 @@
                 method: "GET",
                 data: { id: cvId },
                 success: function (data) {
-                    let tableBody = $("#tableBody");
                     let accountingEntriesBody = $("#accountingEntriesBody");
+                    if(triggerType === "change"){
+                        accountingEntriesBody.empty();
+                    }
+                    let tableBody = $("#tableBody");
                     tableBody.empty();
-                    accountingEntriesBody.empty();
 
                     if (data === null) {
                         clearFields();
@@ -261,32 +335,33 @@
                     $("#totalDebit").text(formatNumberToFour(data.totalDebit));
                     $("#totalCredit").text(formatNumberToFour(data.totalCredit));
 
-                    const ACCRUAL_ACCOUNT_NO = "201020300";
-                    const ACCRUAL_ACCOUNT_NAME = "AP - Accrued Expenses";
-                    const ACCRUAL_ACCOUNT_TITLE = `${ACCRUAL_ACCOUNT_NO} ${ACCRUAL_ACCOUNT_NAME}`;
+                    if(triggerType === "change"){
+                        const ACCRUAL_ACCOUNT_NO = "201020300";
+                        const ACCRUAL_ACCOUNT_NAME = "AP - Accrued Expenses";
+                        const ACCRUAL_ACCOUNT_TITLE = `${ACCRUAL_ACCOUNT_NO} ${ACCRUAL_ACCOUNT_NAME}`;
 
-                    let rowIndex = 0;
-                    let totalDebitSum = 0;
+                        let rowIndex = 0;
+                        let totalDebitSum = 0;
 
-                    for (let i = 0; i < data.accountNo.length; i++) {
+                        for (let i = 0; i < data.accountNo.length; i++) {
 
-                        const accountNumber  = data.accountNo[i];
-                        const accountTitle   = `${accountNumber} ${data.accountName[i]}`;
-                        const debitFormatted = formatNumberToFour(parseNumber(String(data.debit[i] ?? "")));
-                        const creditFormatted = formatNumberToFour(parseNumber(String(data.credit[i] ?? "")));
+                            const accountNumber  = data.accountNo[i];
+                            const accountTitle   = `${accountNumber} ${data.accountName[i]}`;
+                            const debitFormatted = formatNumberToFour(parseNumber(String(data.debit[i] ?? "")));
+                            const creditFormatted = formatNumberToFour(parseNumber(String(data.credit[i] ?? "")));
 
-                        let previewRow = $("<tr></tr>");
-                        previewRow.append(`<td style='width:60%; padding-left:20px;'>${accountTitle}</td>`);
-                        previewRow.append(`<td class='text-end' style='width:7%;'>${debitFormatted}</td>`);
-                        previewRow.append(`<td class='text-end' style='width:7%;'>${creditFormatted}</td>`);
-                        tableBody.append(previewRow);
+                            let previewRow = $("<tr></tr>");
+                            previewRow.append(`<td style='width:60%; padding-left:20px;'>${accountTitle}</td>`);
+                            previewRow.append(`<td class='text-end' style='width:7%;'>${debitFormatted}</td>`);
+                            previewRow.append(`<td class='text-end' style='width:7%;'>${creditFormatted}</td>`);
+                            tableBody.append(previewRow);
 
-                        const debitVal = parseNumber(String(data.debit[i] ?? ""));
-                        if (debitVal === 0) continue;
+                            const debitVal = parseNumber(String(data.debit[i] ?? ""));
+                            if (debitVal === 0) continue;
 
-                        totalDebitSum += debitVal;
+                            totalDebitSum += debitVal;
 
-                        accountingEntriesBody.append(`
+                            accountingEntriesBody.append(`
                             <tr>
                                 <td>
                                     <input type='hidden' name='Details[${rowIndex}].AccountNo' value='${accountNumber}'/>
@@ -298,8 +373,7 @@
                                            id='debit_${accountNumber}'
                                            value='${debitFormatted}'
                                            style='border:none'
-                                           class='w-100 money'
-                                           readonly />
+                                           class='w-100 money editable-amount'  />
                                 </td>
                                 <td>
                                     <input name='Details[${rowIndex}].Credit'
@@ -309,14 +383,19 @@
                                            class='w-100 money'
                                            readonly />
                                 </td>
+                                <td>
+                                 <button type='button'
+                                         class='btn btn-danger btn-sm'
+                                         onclick='removeRow(this)'>Remove</button>
+                                </td>
                             </tr>`);
 
-                        rowIndex++;
-                    }
+                            rowIndex++;
+                        }
 
-                    const creditTotal = formatNumberToFour(totalDebitSum);
+                        const creditTotal = formatNumberToFour(totalDebitSum);
 
-                    accountingEntriesBody.append(`
+                        accountingEntriesBody.append(`
                         <tr>
                             <td>
                                 <input type='hidden' name='Details[${rowIndex}].AccountNo' value='${ACCRUAL_ACCOUNT_NO}'/>
@@ -339,8 +418,28 @@
                                        class='w-100 money'
                                        readonly />
                             </td>
+                            <th></th>
                         </tr>`);
+                    }
+                    else
+                    {
+                        let rowIndex = 0;
+                        for (let i = 0; i < data.accountNo.length; i++) {
 
+                            const accountNumber  = data.accountNo[i];
+                            const accountTitle   = `${accountNumber} ${data.accountName[i]}`;
+                            const debitFormatted = formatNumberToFour(parseNumber(String(data.debit[i] ?? "")));
+                            const creditFormatted = formatNumberToFour(parseNumber(String(data.credit[i] ?? "")));
+
+                            let previewRow = $("<tr></tr>");
+                            previewRow.append(`<td style='width:60%; padding-left:20px;'>${accountTitle}</td>`);
+                            previewRow.append(`<td class='text-end' style='width:7%;'>${debitFormatted}</td>`);
+                            previewRow.append(`<td class='text-end' style='width:7%;'>${creditFormatted}</td>`);
+                            tableBody.append(previewRow);
+
+                            rowIndex++;
+                        }
+                    }
                     updateTotalDebitAndCredit();
                 },
                 error: function (xhr, status, error) {
@@ -366,29 +465,36 @@
             $("#accountingEntriesBody").empty();
         }
 
-        $(".checkVoucher").each(function () {
-            var cvId = $(this).val();
-            cvDetails(cvId);
+        let checkVoucher = $(".checkVoucher");
+        checkVoucher.each(function () {
+            let cvId = $(this).val();
+            cvDetails(cvId, "each");
         });
 
-        $(".checkVoucher").change(function () {
-            var cvId = $(this).val();
-            cvDetails(cvId);
+        checkVoucher.change(function () {
+            let cvId = $(this).val();
+            cvDetails(cvId, "change");
         });
 
     </script>
     <script>
-        
+
     </script>
     <script>
         function validateDebitAndCredit(event) {
-            var totalDebit = parseNumber($(".totalDebit").text());
-            var totalCredit = parseNumber($(".totalCredit").text());
-            var errorMessage = "";
-            var isValid = true;
+            let totalDebit = parseNumber($(".totalDebit").text());
+            let totalCredit = parseNumber($(".totalCredit").text());
+            let errorMessage = "";
+            let isValid = true;
+            let balanceErrorMessage = $("#balance-error-message");
 
-            if ($("#balance-error-message").length === 0) {
-                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            if (balanceErrorMessage.length === 0) {
+                $("#accountingEntriesBody").after(
+                    '<div id="balance-error-message" class="text-danger mt-2"></div>'
+                );
+
+                // Refresh the reference
+                balanceErrorMessage = $("#balance-error-message");
             }
 
             if (totalDebit !== totalCredit) {
@@ -400,7 +506,7 @@
             }
 
             // Display or clear the error message
-            $("#balance-error-message").text(errorMessage);
+            balanceErrorMessage.text(errorMessage);
 
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
@@ -412,10 +518,58 @@
             return isValid;
         }
     </script>
-    <script>    
+    <script>
         // Recalculate on any input change
         $(document).on("input", ".editable-amount", function() {
             updateTotalDebitAndCredit();
         });
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            let value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
+        });
+
+    </script>
+    <script>
+        function handleCreate() {
+            if ($('#AutoReverseNextMonth').is(':checked')) {
+                confirmAutoReverse();
+            } else {
+                $('form').submit();
+            }
+
+            return false;
+        }
+
+        function confirmAutoReverse() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Should this entry be automatically reversed next month?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Reverse Next Month',
+                cancelButtonText: 'No, Keep Editing',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Yes
+                    $('#AutoReverseNextMonth').val('true');
+                    $('form').submit();
+                }
+                else if (result.isDenied) {
+                    // No
+                    $('#AutoReverseNextMonth').val('false');
+                }
+            })
+        }
     </script>
 }

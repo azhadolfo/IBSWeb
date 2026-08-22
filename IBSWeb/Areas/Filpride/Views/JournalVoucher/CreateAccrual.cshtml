@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Enums
-@model JvCreateAccrualViewModel
+﻿@model JvCreateAccrualViewModel
 
 @{
     ViewData["Title"] = "Journal Voucher - Create Accrual";
@@ -56,6 +55,11 @@
                         <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
                         <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
                         <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label fw-bold text-danger">
+                            <input class="form-check-input" asp-for="AutoReverseNextMonth" checked/> Automatically reverse this entry next month
+                        </label>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -167,6 +171,7 @@
                                 <th class="w-50">Account No.</th>
                                 <th class="w-25">Debit</th>
                                 <th class="w-25">Credit</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
@@ -176,6 +181,7 @@
                                 <td class="text-end">TOTAL:</td>
                                 <td class="totalDebit">0.0000</td>
                                 <td class="totalCredit">0.0000</td>
+                                <th></th>
                             </tr>
                         </tbody>
                     </table>
@@ -183,7 +189,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event)">Create</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="return validateDebitAndCredit(event) && handleCreate()" >Create</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -226,6 +232,31 @@
             $("#credit").val("0.0000");
 
             validateDebitAndCredit();
+        }
+
+        // Function to remove the corresponding row and reindex
+        function removeRow(button) {
+            // Remove the row
+            $(button).closest("tr").remove();
+
+            // Reindex all remaining rows
+            reindexRows();
+
+            updateTotalDebitAndCredit();
+        }
+
+        // Function to reindex all rows after deletion
+        function reindexRows() {
+            $("#accountingEntriesBody tr").each(function(index) {
+                $(this).attr('data-index', index);
+
+                // Update all input names with the new index
+                $(this).find('input[name^="Details"]').each(function() {
+                    var name = $(this).attr('name');
+                    var fieldName = name.substring(name.indexOf('].') + 2);
+                    $(this).attr('name', 'Details[' + index + '].' + fieldName);
+                });
+            });
         }
 
         function cvDetails(cvId) {
@@ -300,8 +331,7 @@
                                            id='debit_${accountNumber}'
                                            value='${debitFormatted}'
                                            style='border:none'
-                                           class='w-100 money'
-                                           readonly />
+                                           class='w-100 money editable-amount' />
                                 </td>
                                 <td>
                                     <input name='Details[${rowIndex}].Credit'
@@ -310,6 +340,11 @@
                                            style='border:none'
                                            class='w-100 money'
                                            readonly />
+                                </td>
+                                <td>
+                                 <button type='button'
+                                         class='btn btn-danger btn-sm'
+                                         onclick='removeRow(this)'>Remove</button>
                                 </td>
                             </tr>`);
 
@@ -341,6 +376,7 @@
                                        class='w-100 money'
                                        readonly />
                             </td>
+                            <th></th>
                         </tr>`);
 
                     updateTotalDebitAndCredit();
@@ -367,20 +403,20 @@
             $("#tableBody").empty();
             $("#accountingEntriesBody").empty();
         }
-
-        $(".checkVoucher").each(function () {
+        let checkVoucher = $(".checkVoucher");
+        checkVoucher.each(function () {
             var cvId = $(this).val();
             cvDetails(cvId);
         });
 
-        $(".checkVoucher").change(function () {
+        checkVoucher.change(function () {
             var cvId = $(this).val();
             cvDetails(cvId);
         });
 
     </script>
     <script>
-        
+
     </script>
     <script>
         function validateDebitAndCredit(event) {
@@ -388,9 +424,15 @@
             var totalCredit = parseNumber($(".totalCredit").text());
             var errorMessage = "";
             var isValid = true;
+            let balanceErrorMessage = $("#balance-error-message");
 
-            if ($("#balance-error-message").length === 0) {
-                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            if (balanceErrorMessage.length === 0) {
+                $("#accountingEntriesBody").after(
+                    '<div id="balance-error-message" class="text-danger mt-2"></div>'
+                );
+
+                // Refresh the reference
+                balanceErrorMessage = $("#balance-error-message");
             }
 
             if (totalDebit !== totalCredit) {
@@ -402,7 +444,7 @@
             }
 
             // Display or clear the error message
-            $("#balance-error-message").text(errorMessage);
+            balanceErrorMessage.text(errorMessage);
 
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);
@@ -412,6 +454,53 @@
             }
 
             return isValid;
+        }
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            let value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
+        });
+    </script>
+    <script>
+        function handleCreate() {
+            if ($('#AutoReverseNextMonth').is(':checked')) {
+                confirmAutoReverse();
+            } else {
+                $('form').submit();
+            }
+
+            return false;
+        }
+
+        function confirmAutoReverse() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Should this entry be automatically reversed next month?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Reverse Next Month',
+                cancelButtonText: 'No, Keep Editing',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Yes
+                    $('#AutoReverseNextMonth').val('true');
+                    $('form').submit();
+                }
+                else if (result.isDenied) {
+                    // No
+                    $('#AutoReverseNextMonth').val('false');
+                }
+            })
         }
     </script>
 }
