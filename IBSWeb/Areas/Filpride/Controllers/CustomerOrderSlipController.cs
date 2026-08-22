@@ -17,7 +17,6 @@ using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -342,8 +341,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerPoNo = viewModel.CustomerPoNo,
                     Quantity = viewModel.Quantity,
                     BalanceQuantity = viewModel.Quantity,
-                    DeliveredPrice = viewModel.DeliveredPrice,
-                    TotalAmount = viewModel.Quantity * viewModel.DeliveredPrice,
+                    DeliveredPrice = DecimalRoundingHelper.RoundToFour(viewModel.DeliveredPrice),
+                    TotalAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, viewModel.DeliveredPrice),
                     AccountSpecialist = viewModel.AccountSpecialist,
                     Remarks = viewModel.Remarks,
                     Company = companyClaims,
@@ -354,7 +353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Terms = viewModel.Terms,
                     Branch = viewModel.SelectedBranch,
                     CustomerType = viewModel.CustomerType!,
-                    OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
+                    OldPrice = !customer.RequiresPriceAdjustment ? DecimalRoundingHelper.RoundToFour(viewModel.DeliveredPrice) : 0,
                     Freight = viewModel.Freight,
                     CustomerName = customer.CustomerName,
                     ProductName = product.ProductName,
@@ -1026,8 +1025,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             foreach (var price in po.ActualPrices!.Where(p => p.IsApproved).OrderBy(p => p.TriggeredDate))
             {
                 var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCosVolume);
+                var roundedTriggeredPrice = DecimalRoundingHelper.RoundToFour(price.TriggeredPrice);
 
-                weightedCostTotal += effectiveVolume * price.TriggeredPrice;
+                weightedCostTotal += effectiveVolume * roundedTriggeredPrice;
                 totalCosVolume += effectiveVolume;
 
                 if (totalCosVolume >= requiredQuantity)
@@ -1036,19 +1036,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (totalCosVolume > 0)
             {
-                var weightedAvgPrice = weightedCostTotal / totalCosVolume;
-                var finalWeightedAvgPrice = po.VatType == SD.VatType_Vatable
-                        ?_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedAvgPrice)
-                        : weightedAvgPrice;
-
-                return requiredQuantity * finalWeightedAvgPrice;
+                var weightedAvgPrice = DecimalRoundingHelper.DivideOrZero(weightedCostTotal, totalCosVolume);
+                return DecimalRoundingHelper.ComputeVatAwareAmountFromUnitPrice(
+                    requiredQuantity,
+                    weightedAvgPrice,
+                    po.VatType == SD.VatType_Vatable);
             }
 
-            var finalPrice = po.VatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId))
-                    : await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId);
+            var finalPrice = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId);
 
-            return requiredQuantity * finalPrice;
+            return DecimalRoundingHelper.ComputeVatAwareAmountFromUnitPrice(
+                requiredQuantity,
+                finalPrice,
+                po.VatType == SD.VatType_Vatable);
         }
 
         [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
@@ -1851,8 +1851,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 existingRecord.OldPrice = existingRecord.DeliveredPrice;
-                existingRecord.DeliveredPrice = newPrice;
-                existingRecord.TotalAmount = existingRecord.Quantity * existingRecord.DeliveredPrice;
+                existingRecord.DeliveredPrice = DecimalRoundingHelper.RoundToFour(newPrice);
+                existingRecord.TotalAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, existingRecord.DeliveredPrice);
                 existingRecord.PriceReference = referenceNo;
                 var userName = GetUserFullName();
 
@@ -2018,11 +2018,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var dr in drs)
                 {
-                    var newCommissionAmount = existingRecord.CommissionRate * dr.Quantity;
+                    var newCommissionAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(dr.Quantity, existingRecord.CommissionRate);
                     var difference = newCommissionAmount - dr.CommissionAmount;
 
                     dr.CommissionRate = existingRecord.CommissionRate;
-                    dr.CommissionAmount = existingRecord.CommissionRate * dr.Quantity;
+                    dr.CommissionAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(dr.Quantity, existingRecord.CommissionRate);
                     dr.CommissioneeId = existingRecord.CommissioneeId;
 
                     if (dr.DeliveredDate != null)

@@ -302,7 +302,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     QuantityReceived = viewModel.QuantityReceived,
                     QuantityDelivered = viewModel.QuantityDelivered,
                     GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
-                    Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken),
+                    Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(
+                        viewModel.QuantityReceived,
+                        await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken)),
                     AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
                     Remarks = viewModel.Remarks,
                     CreatedBy = GetUserFullName(),
@@ -476,7 +478,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
                     existingModel.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
                     existingModel.ReceivedDate = viewModel.ReceivedDate;
-                    existingModel.Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
+                    existingModel.Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(
+                        viewModel.QuantityReceived,
+                        await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken));
                 }
 
                 if (!_dbContext.ChangeTracker.HasChanges())

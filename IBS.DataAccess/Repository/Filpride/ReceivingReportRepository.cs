@@ -252,15 +252,15 @@ namespace IBS.DataAccess.Repository.Filpride
                     if (availableQuantity > 0)
                     {
                         var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
-                        var applicableUnitCost = RoundToFourDecimalPlaces(poActualPrice.TriggeredPrice + freight);
-                        totalAmount += applicableQuantity * applicableUnitCost;
+                        var applicableUnitCost = DecimalRoundingHelper.RoundToFour(poActualPrice.TriggeredPrice + freight);
+                        totalAmount += DecimalRoundingHelper.ComputeAmountFromUnitPrice(applicableQuantity, applicableUnitCost);
                         poActualPrice.AppliedVolume += applicableQuantity;
                         remainingQuantity -= applicableQuantity;
                     }
                 }
 
-                var remainingUnitCost = RoundToFourDecimalPlaces((poActualPrice?.TriggeredPrice ?? purchaseOrder.Price) + freight);
-                totalAmount += remainingQuantity * remainingUnitCost;
+                var remainingUnitCost = DecimalRoundingHelper.RoundToFour((poActualPrice?.TriggeredPrice ?? purchaseOrder.Price) + freight);
+                totalAmount += DecimalRoundingHelper.ComputeAmountFromUnitPrice(remainingQuantity, remainingUnitCost);
                 model.Amount = totalAmount;
 
                 FilprideAuditTrail auditTrailCreate = new(model.PostedBy,

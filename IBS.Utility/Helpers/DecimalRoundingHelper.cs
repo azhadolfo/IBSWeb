@@ -14,6 +14,22 @@ public static class DecimalRoundingHelper
         return divisor == 0m ? 0m : RoundToFour(dividend / divisor);
     }
 
+    public static decimal MultiplyAndRound(decimal multiplicand, decimal multiplier)
+    {
+        return RoundToFour(multiplicand * multiplier);
+    }
+
+    public static decimal ComputeAmountFromUnitPrice(decimal quantity, decimal unitPrice)
+    {
+        return MultiplyAndRound(quantity, RoundToFour(unitPrice));
+    }
+
+    public static decimal ComputeVatAwareAmountFromUnitPrice(decimal quantity, decimal unitPrice, bool isVatable)
+    {
+        var grossAmount = ComputeAmountFromUnitPrice(quantity, unitPrice);
+        return isVatable ? ComputeNetOfVat(grossAmount) : grossAmount;
+    }
+
     public static decimal ComputeNetOfVat(decimal grossAmount)
     {
         return grossAmount == 0m ? 0m : DivideOrZero(grossAmount, 1 + VatRate);
@@ -29,8 +45,13 @@ public static class DecimalRoundingHelper
         return netOfVatAmount == 0m || percent == 0m ? 0m : RoundToFour(netOfVatAmount * percent);
     }
 
+    public static decimal ComputeNetOfEwt(decimal grossAmount, decimal ewtAmount)
+    {
+        return grossAmount - ewtAmount;
+    }
+
     public static decimal ComputeNetUnitValue(decimal grossAmount, decimal quantity)
     {
-        return quantity == 0m ? 0m : RoundToFour(grossAmount / quantity / (1 + VatRate));
+        return quantity == 0m ? 0m : DivideOrZero(ComputeNetOfVat(grossAmount), quantity);
     }
 }

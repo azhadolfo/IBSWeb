@@ -197,6 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -211,7 +212,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Reference").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Quantity").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Cost").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Gross").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Net of VAT").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Inventory Balance").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Unit Cost Average").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Balance").SemiBold();
@@ -223,9 +225,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 var grandTotalInventoryBalance = 0m;
                                 var grandTotalTotalBalance = 0m;
+                                var grandTotalGross = 0m;
+                                var grandTotalNetOfVat = 0m;
                                 string? previousProductName = null;
                                 var productTotalInventoryBalance = 0m;
                                 var productTotalTotalBalance = 0m;
+                                var productTotalGross = 0m;
+                                var productTotalNetOfVat = 0m;
 
                                 for (var groupIndex = 0; groupIndex < inventories.Count; groupIndex++)
                                 {
@@ -234,7 +240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     if (showProductSections && !string.Equals(previousProductName, currentProductName, StringComparison.Ordinal))
                                     {
-                                        table.Cell().ColumnSpan(10)
+                                        table.Cell().ColumnSpan(11)
                                             .Background(Colors.Grey.Lighten2)
                                             .Border(0.5f)
                                             .PaddingVertical(5)
@@ -248,6 +254,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var subTotalInventoryBalance = 0m;
                                     var subTotalAverageCost = 0m;
                                     var subTotalTotalBalance = 0m;
+                                    var subTotalGross = 0m;
+                                    var subTotalNetOfVat = 0m;
 
                                     foreach (var record in group.OrderBy(e => e.Date)
                                                  .ThenBy(x => x.Particular == "Purchases" ? 0 : 1)
@@ -260,26 +268,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Cost != 0 ? record.Cost < 0 ? $"({Math.Abs(record.Cost).ToString(SD.Four_Decimal_Format)})" : record.Cost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.Cost < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Total != 0 ? record.Total < 0 ? $"({Math.Abs(record.Total).ToString(SD.Two_Decimal_Format)})" : record.Total.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Total < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.NetOfVatAmount != 0 ? record.NetOfVatAmount < 0 ? $"({Math.Abs(record.NetOfVatAmount).ToString(SD.Two_Decimal_Format)})" : record.NetOfVatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(record.NetOfVatAmount < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.InventoryBalance != 0 ? record.InventoryBalance < 0 ? $"({Math.Abs(record.InventoryBalance).ToString(SD.Two_Decimal_Format)})" : record.InventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.InventoryBalance < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AverageCost != 0 ? record.AverageCost < 0 ? $"({Math.Abs(record.AverageCost).ToString(SD.Four_Decimal_Format)})" : record.AverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.AverageCost < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.TotalBalance != 0 ? record.TotalBalance < 0 ? $"({Math.Abs(record.TotalBalance).ToString(SD.Two_Decimal_Format)})" : record.TotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.TotalBalance < 0 ? Colors.Red.Medium : Colors.Black);
 
+                                        subTotalGross += record.Total;
+                                        subTotalNetOfVat += record.NetOfVatAmount;
                                         subTotalInventoryBalance = record.InventoryBalance;
                                         subTotalAverageCost = record.AverageCost;
                                         subTotalTotalBalance = record.TotalBalance;
 
                                     }
 
-                                    table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f);
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Sub Total").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalGross != 0 ? subTotalGross < 0 ? $"({Math.Abs(subTotalGross).ToString(SD.Two_Decimal_Format)})" : subTotalGross.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalGross < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalNetOfVat != 0 ? subTotalNetOfVat < 0 ? $"({Math.Abs(subTotalNetOfVat).ToString(SD.Two_Decimal_Format)})" : subTotalNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalNetOfVat < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalInventoryBalance != 0 ? subTotalInventoryBalance < 0 ? $"({Math.Abs(subTotalInventoryBalance).ToString(SD.Two_Decimal_Format)})" : subTotalInventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalInventoryBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalAverageCost != 0 ? subTotalAverageCost < 0 ? $"({Math.Abs(subTotalAverageCost).ToString(SD.Four_Decimal_Format)})" : subTotalAverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(subTotalAverageCost < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalTotalBalance != 0 ? subTotalTotalBalance < 0 ? $"({Math.Abs(subTotalTotalBalance).ToString(SD.Two_Decimal_Format)})" : subTotalTotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalTotalBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                                     grandTotalInventoryBalance += subTotalInventoryBalance;
                                     grandTotalTotalBalance += subTotalTotalBalance;
+                                    grandTotalGross += subTotalGross;
+                                    grandTotalNetOfVat += subTotalNetOfVat;
                                     productTotalInventoryBalance += subTotalInventoryBalance;
                                     productTotalTotalBalance += subTotalTotalBalance;
+                                    productTotalGross += subTotalGross;
+                                    productTotalNetOfVat += subTotalNetOfVat;
 
                                     var isLastGroupForProduct = groupIndex == inventories.Count - 1 ||
                                         !string.Equals(
@@ -291,20 +308,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         var productAverageCost = DivideOrZero(productTotalTotalBalance, productTotalInventoryBalance);
 
-                                        table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten2).Border(0.5f);
+                                        table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten2).Border(0.5f);
                                         table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).Text($"Product Total - {currentProductName}").SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).AlignRight().Text(productTotalGross != 0 ? productTotalGross < 0 ? $"({Math.Abs(productTotalGross).ToString(SD.Two_Decimal_Format)})" : productTotalGross.ToString(SD.Two_Decimal_Format) : null).FontColor(productTotalGross < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).AlignRight().Text(productTotalNetOfVat != 0 ? productTotalNetOfVat < 0 ? $"({Math.Abs(productTotalNetOfVat).ToString(SD.Two_Decimal_Format)})" : productTotalNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(productTotalNetOfVat < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).AlignRight().Text(productTotalInventoryBalance != 0 ? productTotalInventoryBalance < 0 ? $"({Math.Abs(productTotalInventoryBalance).ToString(SD.Two_Decimal_Format)})" : productTotalInventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(productTotalInventoryBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).AlignRight().Text(productAverageCost != 0 ? productAverageCost < 0 ? $"({Math.Abs(productAverageCost).ToString(SD.Four_Decimal_Format)})" : productAverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(productAverageCost < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().Background(Colors.Grey.Lighten2).Border(0.5f).Padding(3).AlignRight().Text(productTotalTotalBalance != 0 ? productTotalTotalBalance < 0 ? $"({Math.Abs(productTotalTotalBalance).ToString(SD.Two_Decimal_Format)})" : productTotalTotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(productTotalTotalBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                                         productTotalInventoryBalance = 0m;
                                         productTotalTotalBalance = 0m;
+                                        productTotalGross = 0m;
+                                        productTotalNetOfVat = 0m;
                                     }
                                 }
 
                             var grandTotalAverageCost = DivideOrZero(grandTotalTotalBalance, grandTotalInventoryBalance);
-                            table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                            table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Grand Total").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalGross != 0 ? grandTotalGross < 0 ? $"({Math.Abs(grandTotalGross).ToString(SD.Two_Decimal_Format)})" : grandTotalGross.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalGross < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalNetOfVat != 0 ? grandTotalNetOfVat < 0 ? $"({Math.Abs(grandTotalNetOfVat).ToString(SD.Two_Decimal_Format)})" : grandTotalNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalNetOfVat < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalInventoryBalance != 0 ? grandTotalInventoryBalance < 0 ? $"({Math.Abs(grandTotalInventoryBalance).ToString(SD.Two_Decimal_Format)})" : grandTotalInventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalInventoryBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalAverageCost != 0 ? grandTotalAverageCost < 0 ? $"({Math.Abs(grandTotalAverageCost).ToString(SD.Four_Decimal_Format)})" : grandTotalAverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(grandTotalAverageCost < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalTotalBalance != 0 ? grandTotalTotalBalance < 0 ? $"({Math.Abs(grandTotalTotalBalance).ToString(SD.Two_Decimal_Format)})" : grandTotalTotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(grandTotalTotalBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
@@ -402,24 +425,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var worksheet = package.Workbook.Worksheets.Add("Inventory Report");
 
                 // Set up the header section
-                worksheet.Cells["A1:P1"].Merge = true;
+                worksheet.Cells["A1:R1"].Merge = true;
                 worksheet.Cells["A1"].Value = "INVENTORY REPORT";
                 worksheet.Cells["A1"].Style.Font.Size = 20;
                 worksheet.Cells["A1"].Style.Font.Bold = true;
                 worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                worksheet.Cells["A2:P2"].Merge = true;
+                worksheet.Cells["A2:R2"].Merge = true;
                 worksheet.Cells["A2"].Value = $"As of {viewModel.DateTo:MMMM yyyy}";
                 worksheet.Cells["A2"].Style.Font.Size = 12;
                 worksheet.Cells["A2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                worksheet.Cells["A3:P3"].Merge = true;
+                worksheet.Cells["A3:R3"].Merge = true;
                 worksheet.Cells["A3"].Value = $"Product Name: {productName}";
                 worksheet.Cells["A3"].Style.Font.Size = 14;
                 worksheet.Cells["A3"].Style.Font.Bold = true;
                 worksheet.Cells["A3"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                worksheet.Cells["A4:P4"].Merge = true;
+                worksheet.Cells["A4:R4"].Merge = true;
                 worksheet.Cells["A4"].Value = $"Date and Time Generated: {DateTimeHelper.GetCurrentPhilippineTime()}";
                 worksheet.Cells["A4"].Style.Font.Size = 12;
                 worksheet.Cells["A4"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -432,9 +455,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var headerGroups = new (string Range, string Title)[]
                 {
                     ("E5:G5", "Beginning Balance"),
-                    ("H5:J5", "Purchases"),
-                    ("K5:M5", "Sales"),
-                    ("N5:P5", "Inventory Balance"),
+                    ("H5:K5", "Purchases"),
+                    ("L5:O5", "Sales"),
+                    ("P5:R5", "Inventory Balance"),
                 };
 
                 foreach (var (rangeAddress, title) in headerGroups)
@@ -462,10 +485,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "Total",
                     "Quantity",
                     "Cost",
-                    "Total",
+                    "Total Gross",
+                    "Total Net of VAT",
                     "Quantity",
                     "Cost",
-                    "Total",
+                    "Total Gross",
+                    "Total Net of VAT",
                     "Inventory Balance",
                     "Unit Cost Average",
                     "Total Balance"
@@ -486,8 +511,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var grandTotalPurchasesQty = 0m;
                 var grandTotalPurchasesAmt = 0m;
+                var grandTotalPurchasesNetOfVat = 0m;
                 var grandTotalSalesQty = 0m;
                 var grandTotalSalesAmt = 0m;
+                var grandTotalSalesNetOfVat = 0m;
                 var grandTotalBegbalQty = 0m;
                 var grandTotalBegbalAmt = 0m;
                 var grandTotalInventoryBalance = 0m;
@@ -495,8 +522,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string? previousProductName = null;
                 var productTotalPurchasesQty = 0m;
                 var productTotalPurchasesAmt = 0m;
+                var productTotalPurchasesNetOfVat = 0m;
                 var productTotalSalesQty = 0m;
                 var productTotalSalesAmt = 0m;
+                var productTotalSalesNetOfVat = 0m;
                 var productTotalBegBalQty = 0m;
                 var productTotalBegBalAmt = 0m;
                 var productTotalInventoryBalance = 0m;
@@ -510,21 +539,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (showProductSections && !string.Equals(previousProductName, currentProductName, StringComparison.Ordinal))
                     {
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Merge = true;
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Merge = true;
                         worksheet.Cells[currentRow, 1].Value = $"PRODUCT: {currentProductName}";
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Font.Bold = true;
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Font.Color.SetColor(System.Drawing.Color.Black);
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Gainsboro);
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Font.Bold = true;
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Font.Color.SetColor(System.Drawing.Color.Black);
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Gainsboro);
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                         currentRow++;
                         previousProductName = currentProductName;
                     }
 
                     var subTotalPurchasesQty = 0m;
                     var subTotalPurchasesAmt = 0m;
+                    var subTotalPurchasesNetOfVat = 0m;
                     var subTotalSalesQty = 0m;
                     var subTotalSalesAmt = 0m;
+                    var subTotalSalesNetOfVat = 0m;
                     var subTotalBegBalQty = 0m;
                     var subTotalBegBalAmt = 0m;
                     var subTotalInventoryBalance = 0m;
@@ -556,8 +587,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[currentRow, 7].Style.Numberformat.Format = currencyTwoDecimalFormat;
                         worksheet.Cells[currentRow, 5, currentRow, 7].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Font.Bold = true;
-                        worksheet.Cells[currentRow, 1, currentRow, 16].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Font.Bold = true;
+                        worksheet.Cells[currentRow, 1, currentRow, 18].Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
                         subTotalInventoryBalance += subTotalBegBalQty;
                         subTotalTotalBalance += subTotalBegBalAmt;
@@ -583,7 +614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[currentRow, 4].Value = record.Reference;
                         worksheet.Cells[currentRow, 4].Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
-                        for (var col = 5; col <= 16; col++)
+                        for (var col = 5; col <= 18; col++)
                         {
                             worksheet.Cells[currentRow, col].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                         }
@@ -599,47 +630,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[currentRow, 9].Value = record.Cost != 0 ? record.Cost : 0;
                             worksheet.Cells[currentRow, 9].Style.Numberformat.Format = currencyFourDecimalFormat;
 
-                            // Purchases Amt
+                            // Purchases Gross Amt
                             worksheet.Cells[currentRow, 10].Value = record.Total != 0 ? record.Total : 0;
                             worksheet.Cells[currentRow, 10].Style.Numberformat.Format = currencyTwoDecimalFormat;
                             subTotalPurchasesAmt += record.Total;
+
+                            // Purchases Net of VAT Amt
+                            worksheet.Cells[currentRow, 11].Value = record.NetOfVatAmount != 0 ? record.NetOfVatAmount : 0;
+                            worksheet.Cells[currentRow, 11].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                            subTotalPurchasesNetOfVat += record.NetOfVatAmount;
                         }
 
-                        worksheet.Cells[currentRow, 8, currentRow, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[currentRow, 8, currentRow, 11].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
                         if (record.Particular == "Sales")
                         {
                             // Sales Qty
-                            worksheet.Cells[currentRow, 11].Value = record.Quantity != 0 ? record.Quantity : 0;
-                            worksheet.Cells[currentRow, 11].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                            worksheet.Cells[currentRow, 12].Value = record.Quantity != 0 ? record.Quantity : 0;
+                            worksheet.Cells[currentRow, 12].Style.Numberformat.Format = currencyTwoDecimalFormat;
                             subTotalSalesQty += record.Quantity;
 
                             // Sales Cost
-                            worksheet.Cells[currentRow, 12].Value = record.Cost != 0 ? record.Cost : 0;
-                            worksheet.Cells[currentRow, 12].Style.Numberformat.Format = currencyFourDecimalFormat;
+                            worksheet.Cells[currentRow, 13].Value = record.Cost != 0 ? record.Cost : 0;
+                            worksheet.Cells[currentRow, 13].Style.Numberformat.Format = currencyFourDecimalFormat;
 
-                            // Sales Amt
-                            worksheet.Cells[currentRow, 13].Value = record.Total != 0 ? record.Total : 0;
-                            worksheet.Cells[currentRow, 13].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                            // Sales Gross Amt
+                            worksheet.Cells[currentRow, 14].Value = record.Total != 0 ? record.Total : 0;
+                            worksheet.Cells[currentRow, 14].Style.Numberformat.Format = currencyTwoDecimalFormat;
                             subTotalSalesAmt += record.Total;
+
+                            // Sales Net of VAT Amt
+                            worksheet.Cells[currentRow, 15].Value = record.NetOfVatAmount != 0 ? record.NetOfVatAmount : 0;
+                            worksheet.Cells[currentRow, 15].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                            subTotalSalesNetOfVat += record.NetOfVatAmount;
 
                         }
 
-                        worksheet.Cells[currentRow, 11, currentRow, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[currentRow, 12, currentRow, 15].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
                         // Inventory Balance
-                        worksheet.Cells[currentRow, 14].Value = record.InventoryBalance;
-                        worksheet.Cells[currentRow, 14].Style.Numberformat.Format = currencyTwoDecimalFormat;
-
-                        // Unit Cost Average
-                        worksheet.Cells[currentRow, 15].Value = record.AverageCost;
-                        worksheet.Cells[currentRow, 15].Style.Numberformat.Format = currencyFourDecimalFormat;
-
-                        // Total Balance
-                        worksheet.Cells[currentRow, 16].Value = record.TotalBalance;
+                        worksheet.Cells[currentRow, 16].Value = record.InventoryBalance;
                         worksheet.Cells[currentRow, 16].Style.Numberformat.Format = currencyTwoDecimalFormat;
 
-                        worksheet.Cells[currentRow, 14, currentRow, 16].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        // Unit Cost Average
+                        worksheet.Cells[currentRow, 17].Value = record.AverageCost;
+                        worksheet.Cells[currentRow, 17].Style.Numberformat.Format = currencyFourDecimalFormat;
+
+                        // Total Balance
+                        worksheet.Cells[currentRow, 18].Value = record.TotalBalance;
+                        worksheet.Cells[currentRow, 18].Style.Numberformat.Format = currencyTwoDecimalFormat;
+
+                        worksheet.Cells[currentRow, 16, currentRow, 18].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
                         subTotalInventoryBalance = record.InventoryBalance;
                         subTotalTotalBalance = record.TotalBalance;
@@ -661,34 +702,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 8], subTotalPurchasesQty, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 9], DivideOrZero(subTotalPurchasesAmt, subTotalPurchasesQty), currencyFourDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 10], subTotalPurchasesAmt, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 11], subTotalSalesQty, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 12], DivideOrZero(subTotalSalesAmt, subTotalSalesQty), currencyFourDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 13], subTotalSalesAmt, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 14], subTotalInventoryBalance, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 11], subTotalPurchasesNetOfVat, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 12], subTotalSalesQty, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 13], DivideOrZero(subTotalSalesAmt, subTotalSalesQty), currencyFourDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 14], subTotalSalesAmt, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 15], subTotalSalesNetOfVat, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 16], subTotalInventoryBalance, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(
-                        worksheet.Cells[currentRow, 15],
+                        worksheet.Cells[currentRow, 17],
                         orderedGroup.LastOrDefault()?.AverageCost ?? 0m,
                         currencyFourDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 16], subTotalTotalBalance, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 18], subTotalTotalBalance, currencyTwoDecimalFormat);
 
                     // Apply borders to subtotal row
-                    for (int i = 1; i <= 16; i++)
+                    for (int i = 1; i <= 18; i++)
                     {
                         worksheet.Cells[currentRow, i].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                     }
 
                     // Update grand totals
                     grandTotalPurchasesAmt += subTotalPurchasesAmt;
+                    grandTotalPurchasesNetOfVat += subTotalPurchasesNetOfVat;
                     grandTotalPurchasesQty += subTotalPurchasesQty;
                     grandTotalSalesAmt += subTotalSalesAmt;
+                    grandTotalSalesNetOfVat += subTotalSalesNetOfVat;
                     grandTotalSalesQty += subTotalSalesQty;
                     grandTotalBegbalAmt += subTotalBegBalAmt;
                     grandTotalBegbalQty += subTotalBegBalQty;
                     grandTotalInventoryBalance += subTotalInventoryBalance;
                     grandTotalTotalBalance += subTotalTotalBalance;
                     productTotalPurchasesAmt += subTotalPurchasesAmt;
+                    productTotalPurchasesNetOfVat += subTotalPurchasesNetOfVat;
                     productTotalPurchasesQty += subTotalPurchasesQty;
                     productTotalSalesAmt += subTotalSalesAmt;
+                    productTotalSalesNetOfVat += subTotalSalesNetOfVat;
                     productTotalSalesQty += subTotalSalesQty;
                     productTotalBegBalAmt += subTotalBegBalAmt;
                     productTotalBegBalQty += subTotalBegBalQty;
@@ -722,14 +769,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ApplySubtotalStyle(worksheet.Cells[currentRow, 8], productTotalPurchasesQty, currencyTwoDecimalFormat);
                         ApplySubtotalStyle(worksheet.Cells[currentRow, 9], productTotalPurchasesAverageCost, currencyFourDecimalFormat);
                         ApplySubtotalStyle(worksheet.Cells[currentRow, 10], productTotalPurchasesAmt, currencyTwoDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 11], productTotalSalesQty, currencyTwoDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 12], productTotalSalesAverageCost, currencyFourDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 13], productTotalSalesAmt, currencyTwoDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 14], productTotalInventoryBalance, currencyTwoDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 15], productTotalAverageCost, currencyFourDecimalFormat);
-                        ApplySubtotalStyle(worksheet.Cells[currentRow, 16], productTotalTotalBalance, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 11], productTotalPurchasesNetOfVat, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 12], productTotalSalesQty, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 13], productTotalSalesAverageCost, currencyFourDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 14], productTotalSalesAmt, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 15], productTotalSalesNetOfVat, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 16], productTotalInventoryBalance, currencyTwoDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 17], productTotalAverageCost, currencyFourDecimalFormat);
+                        ApplySubtotalStyle(worksheet.Cells[currentRow, 18], productTotalTotalBalance, currencyTwoDecimalFormat);
 
-                        for (int i = 1; i <= 16; i++)
+                        for (int i = 1; i <= 18; i++)
                         {
                             worksheet.Cells[currentRow, i].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                             worksheet.Cells[currentRow, i].Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -739,8 +788,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         currentRow += 2;
                         productTotalPurchasesQty = 0m;
                         productTotalPurchasesAmt = 0m;
+                        productTotalPurchasesNetOfVat = 0m;
                         productTotalSalesQty = 0m;
                         productTotalSalesAmt = 0m;
+                        productTotalSalesNetOfVat = 0m;
                         productTotalBegBalQty = 0m;
                         productTotalBegBalAmt = 0m;
                         productTotalInventoryBalance = 0m;
@@ -768,15 +819,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ApplySubtotalStyle(worksheet.Cells[currentRow, 8], grandTotalPurchasesQty, currencyTwoDecimalFormat);
                 ApplySubtotalStyle(worksheet.Cells[currentRow, 9], grandTotalPurchasesAverageCost, currencyFourDecimalFormat);
                 ApplySubtotalStyle(worksheet.Cells[currentRow, 10], grandTotalPurchasesAmt, currencyTwoDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 11], grandTotalSalesQty, currencyTwoDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 12], grandTotalSalesAverageCost, currencyFourDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 13], grandTotalSalesAmt, currencyTwoDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 14], grandTotalInventoryBalance, currencyTwoDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 15], grandTotalAverageCost, currencyFourDecimalFormat);
-                ApplySubtotalStyle(worksheet.Cells[currentRow, 16], grandTotalTotalBalance, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 11], grandTotalPurchasesNetOfVat, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 12], grandTotalSalesQty, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 13], grandTotalSalesAverageCost, currencyFourDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 14], grandTotalSalesAmt, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 15], grandTotalSalesNetOfVat, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 16], grandTotalInventoryBalance, currencyTwoDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 17], grandTotalAverageCost, currencyFourDecimalFormat);
+                ApplySubtotalStyle(worksheet.Cells[currentRow, 18], grandTotalTotalBalance, currencyTwoDecimalFormat);
 
                 // Apply borders to grand total row
-                for (int i = 1; i <= 16; i++)
+                for (int i = 1; i <= 18; i++)
                 {
                     worksheet.Cells[currentRow, i].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                 }

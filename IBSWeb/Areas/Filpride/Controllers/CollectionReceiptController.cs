@@ -1,3 +1,8 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using System.Text;
 using CsvHelper;
 using Humanizer;
 using IBS.DataAccess.Data;
@@ -7,6 +12,7 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -18,13 +24,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using System.Text;
-using IBS.DTOs;
-using IBS.Models.Filpride.MasterFile;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -2752,7 +2751,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, model.DepositedDate.Value);
                     var daysDelayed = model.DepositedDate.Value.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                    if (daysDelayed <= 0 || dr.CommissionAmount <= 0 || dr.IsCostOfMoneyApplied)
+                    if (daysDelayed <= 0 || dr.CommissionAmount <= 0)
                     {
                         continue;
                     }
@@ -4819,7 +4818,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, model.DepositedDate.Value);
                         var daysDelayed = model.DepositedDate.Value.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                        if (daysDelayed <= 0 || dr.CommissionAmount <= 0 || dr.IsCostOfMoneyApplied)
+                        if (daysDelayed <= 0 || dr.CommissionAmount <= 0)
                         {
                             continue;
                         }
