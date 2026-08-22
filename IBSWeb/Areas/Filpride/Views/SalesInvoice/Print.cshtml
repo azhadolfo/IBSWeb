@@ -21,7 +21,7 @@
     var netDiscount = Model.Amount - Model.Discount;
     var netOfVatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeNetOfVat(netDiscount) : netDiscount;
     var vatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount) : 0;
-    var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, netOfVatAmount * Model.CwtPercent) : 0;
+    var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwtPercent) : 0;
     var withHoldingVatAmount = hasWvat ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwVatPercent) : 0;
 
     var selectedCompany = string.Empty;

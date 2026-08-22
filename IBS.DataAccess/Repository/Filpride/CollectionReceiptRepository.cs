@@ -1,16 +1,16 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.DTOs;
 using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using IBS.DTOs;
-using IBS.Models.Filpride.MasterFile;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -832,6 +832,16 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney,
             string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default)
         {
+            var hasExistingCostOfMoneyEntry = await _db.FilprideGeneralLedgerBooks.AnyAsync(entry =>
+                entry.Company == deliveryReceipt.Company &&
+                entry.Reference == deliveryReceipt.DeliveryReceiptNo &&
+                entry.Description.StartsWith("Cost of money from late deposit"), cancellationToken);
+
+            if (hasExistingCostOfMoneyEntry)
+            {
+                return;
+            }
+
             deliveryReceipt.CommissionAmount -= costOfMoney;
             var commissionee = deliveryReceipt.Commissionee!;
             var ewtAmount = deliveryReceipt.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
