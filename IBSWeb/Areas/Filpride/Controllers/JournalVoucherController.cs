@@ -550,11 +550,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
 
-                if (modelHeader.JvType == nameof(JvType.Accrual))
-                {
-                    await ReverseAccrual(modelHeader.JournalVoucherHeaderId, cancellationToken);
-                }
-
                 await _unitOfWork.FilprideJournalVoucher.PostAsync(modelHeader, modelDetails, cancellationToken);
 
                 #region --Audit Trail Recording

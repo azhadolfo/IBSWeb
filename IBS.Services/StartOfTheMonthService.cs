@@ -218,22 +218,25 @@ namespace IBS.Services
 
         private async Task ReverseTheJvEntries()
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                var currentDateTime = DateTimeHelper.GetCurrentPhilippineTime();
+            var currentDateTime = DateTimeHelper.GetCurrentPhilippineTime();
                 var currentDate = DateOnly.FromDateTime(currentDateTime);
 
                 var journalVouchers = await _unitOfWork.FilprideJournalVoucher
                     .GetAllAsync(x => x.AutoReverseNextMonth &&
                         !x.IsAutoReverseNextMonthProcessed);
 
+                IEnumerable<FilprideJournalVoucherHeader> filprideJournalVoucherHeaders = journalVouchers as FilprideJournalVoucherHeader[] ?? journalVouchers.ToArray();
+                var journalVoucherNo = filprideJournalVoucherHeaders
+                    .Select(x => x.JournalVoucherHeaderNo)
+                    .ToList();
+
                 var generalLedgerList = await _dbContext.FilprideGeneralLedgerBooks
-                    .Where(x => journalVouchers.Select(x => x.JournalVoucherHeaderNo).Contains(x.Reference))
+                    .Where(x => journalVoucherNo.Contains(x.Reference))
                     .ToListAsync();
 
                 var generalLedger = new List<FilprideGeneralLedgerBook>();
+
+                var processedReferences = new List<string>();
 
                 foreach (var journalVoucher in generalLedgerList)
                 {
@@ -243,7 +246,7 @@ namespace IBS.Services
                         Reference = journalVoucher.Reference,
                         AccountNo = journalVoucher.AccountNo,
                         AccountTitle = journalVoucher.AccountTitle,
-                        Description = "Reversal of entries due to accrual",
+                        Description = journalVoucher.Description,
                         Debit = journalVoucher.Credit,
                         Credit = journalVoucher.Debit,
                         CreatedBy = "SYSTEM GENERATED",
@@ -258,22 +261,17 @@ namespace IBS.Services
                     };
 
                     generalLedger.Add(reversalEntry);
+
+                    processedReferences.Add(journalVoucher.Reference);
                 }
-                foreach (var journalVoucher in journalVouchers)
+                foreach (var journalVoucher in filprideJournalVoucherHeaders)
                 {
-                    journalVoucher.IsAutoReverseNextMonthProcessed = true;
+                    journalVoucher.IsAutoReverseNextMonthProcessed =
+                        processedReferences.Contains(journalVoucher.JournalVoucherHeaderNo ?? "");
                 }
 
                 await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(generalLedger);
                 await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to do reverse journal voucher entries. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, "SYSTEM GENERATED");
-                await transaction.RollbackAsync();
-            }
         }
     }
 }

@@ -427,7 +427,12 @@
             let balanceErrorMessage = $("#balance-error-message");
 
             if (balanceErrorMessage.length === 0) {
-                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+                $("#accountingEntriesBody").after(
+                    '<div id="balance-error-message" class="text-danger mt-2"></div>'
+                );
+
+                // Refresh the reference
+                balanceErrorMessage = $("#balance-error-message");
             }
 
             if (totalDebit !== totalCredit) {
