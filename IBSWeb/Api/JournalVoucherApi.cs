@@ -21,6 +21,10 @@ namespace IBSWeb.Api
                 {
                     return Results.BadRequest(new { error = "At least one detail line is required." });
                 }
+                if (string.IsNullOrWhiteSpace(dto.Particulars) || string.IsNullOrWhiteSpace(dto.JVReason))
+                {
+                    return Results.BadRequest(new { error = "Particulars and JVReason are required." });
+                }
 
                 // Round once, canonically, and reuse everywhere — validation and persistence must agree.
                 var roundedDetails = dto.Details.Select(d => new
