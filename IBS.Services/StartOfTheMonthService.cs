@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ namespace IBS.Services
                 await ProcessAmortization(today);
                 await SendNotificationToManagementAccounting(previousMonthDate);
                 await SendNotificationToCNC(previousMonthDate);
+                await ReverseTheJvEntries();
 
                 await transaction.CommitAsync();
             }
@@ -212,6 +214,66 @@ namespace IBS.Services
             var message = $"Please ensure the transaction fee is created before the system closes the books for {previousMonth:MMM yyyy}.";
 
             await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+        }
+
+        private async Task ReverseTheJvEntries()
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var currentDateTime = DateTimeHelper.GetCurrentPhilippineTime();
+                var currentDate = DateOnly.FromDateTime(currentDateTime);
+
+                var journalVouchers = await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(x => x.AutoReverseNextMonth &&
+                        !x.IsAutoReverseNextMonthProcessed);
+
+                var generalLedgerList = await _dbContext.FilprideGeneralLedgerBooks
+                    .Where(x => journalVouchers.Select(x => x.JournalVoucherHeaderNo).Contains(x.Reference))
+                    .ToListAsync();
+
+                var generalLedger = new List<FilprideGeneralLedgerBook>();
+
+                foreach (var journalVoucher in generalLedgerList)
+                {
+                    var reversalEntry = new FilprideGeneralLedgerBook
+                    {
+                        Date = currentDate,
+                        Reference = journalVoucher.Reference,
+                        AccountNo = journalVoucher.AccountNo,
+                        AccountTitle = journalVoucher.AccountTitle,
+                        Description = "Reversal of entries due to accrual",
+                        Debit = journalVoucher.Credit,
+                        Credit = journalVoucher.Debit,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = currentDateTime,
+                        IsPosted = true,
+                        Company = journalVoucher.Company,
+                        AccountId = journalVoucher.AccountId,
+                        SubAccountType = journalVoucher.SubAccountType,
+                        SubAccountId = journalVoucher.SubAccountId,
+                        SubAccountName = journalVoucher.SubAccountName,
+                        ModuleType = journalVoucher.ModuleType,
+                    };
+
+                    generalLedger.Add(reversalEntry);
+                }
+                foreach (var journalVoucher in journalVouchers)
+                {
+                    journalVoucher.IsAutoReverseNextMonthProcessed = true;
+                }
+
+                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(generalLedger);
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to do reverse journal voucher entries. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, "SYSTEM GENERATED");
+                await transaction.RollbackAsync();
+            }
         }
     }
 }

@@ -92,5 +92,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "Payee")]
         [StringLength(150)]
         public string? Payee { get; set; }
+
+        public bool AutoReverseNextMonth { get; set; }
+
+        public bool IsAutoReverseNextMonthProcessed { get; set; }
     }
 }

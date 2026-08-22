@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Enums
-@model JvCreateAccrualViewModel
+﻿@model JvCreateAccrualViewModel
 
 @{
     ViewData["Title"] = "Journal Voucher - Create Accrual";
@@ -56,6 +55,11 @@
                         <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
                         <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
                         <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label fw-bold">
+                            <input class="form-check-input" asp-for="AutoReverseNextMonth" checked/> Automatically reverse this entry next month
+                        </label>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -399,13 +403,13 @@
             $("#tableBody").empty();
             $("#accountingEntriesBody").empty();
         }
-
-        $(".checkVoucher").each(function () {
+        let checkVoucher = $(".checkVoucher");
+        checkVoucher.each(function () {
             var cvId = $(this).val();
             cvDetails(cvId);
         });
 
-        $(".checkVoucher").change(function () {
+        checkVoucher.change(function () {
             var cvId = $(this).val();
             cvDetails(cvId);
         });
@@ -420,8 +424,9 @@
             var totalCredit = parseNumber($(".totalCredit").text());
             var errorMessage = "";
             var isValid = true;
+            let balanceErrorMessage = $("#balance-error-message");
 
-            if ($("#balance-error-message").length === 0) {
+            if (balanceErrorMessage.length === 0) {
                 $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
             }
 
@@ -434,7 +439,7 @@
             }
 
             // Display or clear the error message
-            $("#balance-error-message").text(errorMessage);
+            balanceErrorMessage.text(errorMessage);
 
             // Optionally disable/enable the submit button based on validation
             $("button[type='submit']").prop("disabled", !isValid);

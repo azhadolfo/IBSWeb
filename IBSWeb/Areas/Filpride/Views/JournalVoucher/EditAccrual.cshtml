@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Enums
-@model JvEditAccrualViewModel
+﻿@model JvEditAccrualViewModel
 
 @{
     ViewData["Title"] = "Journal Voucher - Edit Accrual";
@@ -55,6 +54,11 @@
                         <textarea asp-for="Reason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
                         <label asp-for="Reason" class="control-label">Reason<span class="required">*</span></label>
                         <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label fw-bold">
+                            <input class="form-check-input" asp-for="AutoReverseNextMonth"/> Automatically reverse this entry next month
+                        </label>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 tradeList">
@@ -416,9 +420,9 @@
                             </td>
                             <th></th>
                         </tr>`);
-
-                        updateTotalDebitAndCredit();
-                    }else{
+                    }
+                    else
+                    {
                         let rowIndex = 0;
                         for (let i = 0; i < data.accountNo.length; i++) {
 
@@ -436,6 +440,7 @@
                             rowIndex++;
                         }
                     }
+                    updateTotalDebitAndCredit();
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching cv:', error);
@@ -460,12 +465,13 @@
             $("#accountingEntriesBody").empty();
         }
 
-        $(".checkVoucher").each(function () {
+        let checkVoucher = $(".checkVoucher");
+        checkVoucher.each(function () {
             let cvId = $(this).val();
             cvDetails(cvId, "each");
         });
 
-        $(".checkVoucher").change(function () {
+        checkVoucher.change(function () {
             let cvId = $(this).val();
             cvDetails(cvId, "change");
         });
