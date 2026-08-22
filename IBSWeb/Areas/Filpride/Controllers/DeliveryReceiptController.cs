@@ -1636,7 +1636,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var newFreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, freight ?? 0m);
+                var newFreightAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, (freight ?? 0m) + existingRecord.ECC);
                 var difference = newFreightAmount - existingRecord.FreightAmount;
 
                 existingRecord.Freight = freight ?? 0m;

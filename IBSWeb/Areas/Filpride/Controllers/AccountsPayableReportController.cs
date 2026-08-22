@@ -5553,17 +5553,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
 
-                var sumOfFreightAmountWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
-                    .Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
+                var receivingReportsWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0).ToList();
+                var sumOfFreightAmountWithFreight = receivingReportsWithFreight
+                    .Sum(rr => RoundToFour(rr.DeliveryReceipt!.FreightAmount));
 
-                var sumOfQuantityWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                var sumOfQuantityWithFreight = receivingReportsWithFreight
                     .Sum(rr => rr.QuantityReceived);
 
                 var sumOfQuantity = receivingReports.Sum(rr => rr.QuantityReceived);
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => RoundToFour(rr.DeliveryReceipt!.Freight * rr.QuantityReceived));
+                var sumOfFreightAmount = sumOfFreightAmountWithFreight;
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
@@ -5675,7 +5676,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
 
-                    totalFreightAmount += rrByHauler.Sum(rr => rr.DeliveryReceipt!.FreightAmount); // get the total of all freight
+                    totalFreightAmount += rrByHauler
+                        .Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                        .Sum(rr => RoundToFour(rr.DeliveryReceipt!.FreightAmount));
                 }
 
                 worksheet.Cells[39, col].Value = totalFreightAmount; // total of freight
@@ -5807,7 +5810,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var rr in receivingReports)
                 {
                     var costPerLiter = DivideOrZero(rr.Amount, rr.QuantityReceived);
-                    var amountBasedOnSoa = (rr.CostBasedOnSoa * rr.QuantityReceived);
+                    var amountBasedOnSoa = RoundToFour(rr.CostBasedOnSoa * rr.QuantityReceived);
 
                     worksheet.Cells[row, 3].Value = rr.Date;
                     worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;

@@ -832,6 +832,17 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney,
             string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default)
         {
+            var hasExistingCostOfMoneyEntry = await _db.FilprideGeneralLedgerBooks.AnyAsync(entry =>
+                entry.Company == deliveryReceipt.Company &&
+                entry.Reference == deliveryReceipt.DeliveryReceiptNo &&
+                entry.Description != null &&
+                entry.Description.StartsWith("Cost of money from late deposit"), cancellationToken);
+
+            if (hasExistingCostOfMoneyEntry)
+            {
+                return;
+            }
+
             deliveryReceipt.CommissionAmount -= costOfMoney;
             var commissionee = deliveryReceipt.Commissionee!;
             var ewtAmount = deliveryReceipt.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax

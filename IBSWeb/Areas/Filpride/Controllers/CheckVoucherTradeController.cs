@@ -4,6 +4,7 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -275,6 +276,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var ewtAmount = DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, taxPercent);
             return DecimalRoundingHelper.ComputeNetOfEwt(grossAmount, ewtAmount);
+        }
+
+        private static decimal GetNetOfEwtAmount(FilprideReceivingReport receivingReport)
+        {
+            return ComputeNetAfterWithholding(
+                receivingReport.Amount,
+                receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable,
+                receivingReport.PurchaseOrder?.TaxType == SD.TaxType_WithTax,
+                receivingReport.TaxPercentage);
+        }
+
+        private static decimal GetCommissionNetOfEwtAmount(FilprideDeliveryReceipt deliveryReceipt)
+        {
+            return ComputeNetAfterWithholding(
+                deliveryReceipt.CommissionAmount,
+                deliveryReceipt.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable,
+                deliveryReceipt.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax,
+                deliveryReceipt.Commissionee?.WithholdingTaxPercent ?? 0m);
+        }
+
+        private static decimal GetFreightNetOfEwtAmount(FilprideDeliveryReceipt deliveryReceipt)
+        {
+            return ComputeNetAfterWithholding(
+                deliveryReceipt.FreightAmount,
+                deliveryReceipt.HaulerVatType == SD.VatType_Vatable,
+                deliveryReceipt.HaulerTaxType == SD.TaxType_WithTax,
+                deliveryReceipt.Hauler?.WithholdingTaxPercent ?? 0m);
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -895,23 +923,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                    && rr.AmountPaid < (
-                        rr.PurchaseOrder!.TaxType == SD.TaxType_WithTax
-                            ? rr.PurchaseOrder.VatType == SD.VatType_Vatable
-                                ? rr.Amount - DecimalRoundingHelper.ComputeEwtAmount(
-                                    DecimalRoundingHelper.ComputeNetOfVat(rr.Amount),
-                                    rr.TaxPercentage)    // Vatable + WithTax
-                                : rr.Amount - (rr.Amount * rr.TaxPercentage)               // Non-Vatable + WithTax
-                            : rr.Amount                                                     // WithVat / Exempt
-                    )
                     && poNumber.Contains(rr.PONo)
                     && rr.PostedBy != null);
 
             var rrAmountPaidById = new Dictionary<int, decimal>();
+            var rrIds = new List<int>();
 
             if (cvId != null)
             {
-                var rrIds = await _dbContext.FilprideCVTradePayments
+                rrIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "RR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -930,6 +950,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ThenInclude(rr => rr!.Supplier)
                 .OrderBy(rr => rr.PurchaseOrder!.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);
+
+            receivingReports = receivingReports
+                .Where(rr => rrIds.Contains(rr.ReceivingReportId) || rr.AmountPaid < GetNetOfEwtAmount(rr))
+                .ToList();
 
             if (!receivingReports.Any())
             {
@@ -3251,25 +3275,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => companyClaims != null
-                            && dr.Company == companyClaims
-                            && commissioneeId == dr.CommissioneeId
-                            && !dr.IsCommissionPaid
-                            && dr.PostedBy != null
-                            && dr.CommissionAmountPaid < (
-                                dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                                    ? dr.CustomerOrderSlip.CommissioneeVatType == SD.VatType_Vatable
-                                        ? dr.CommissionAmount - DecimalRoundingHelper.ComputeEwtAmount(
-                                            DecimalRoundingHelper.ComputeNetOfVat(dr.CommissionAmount),
-                                            dr.Commissionee!.WithholdingTaxPercent ?? 0m)    // Vatable + WithTax
-                                        : dr.CommissionAmount - (dr.CommissionAmount * (dr.Commissionee!.WithholdingTaxPercent ?? 0m))              // Non-Vatable + WithTax
-                                    : dr.CommissionAmount                                                                                    // WithVat / Exempt
-                            ));
+                             && dr.Company == companyClaims
+                             && commissioneeId == dr.CommissioneeId
+                             && !dr.IsCommissionPaid
+                             && dr.PostedBy != null);
 
             var drAmountPaid = 0m;
+            var drIds = new List<int>();
 
             if (cvId != null)
             {
-                var drIds = await _dbContext.FilprideCVTradePayments
+                drIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -3287,6 +3303,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(dr => dr.Commissionee)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
+
+            deliverReceipt = deliverReceipt
+                .Where(dr => drIds.Contains(dr.DeliveryReceiptId) || dr.CommissionAmountPaid < GetCommissionNetOfEwtAmount(dr))
+                .ToList();
 
             var drPaymentLookup = cvId != null
                 ? (await _dbContext.FilprideCVTradePayments
@@ -3339,24 +3359,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
-                            && dr.HaulerId == haulerId
-                            && !dr.IsFreightPaid
-                            && dr.PostedBy != null
-                            && dr.FreightAmountPaid < (
-                                dr.HaulerTaxType == SD.TaxType_WithTax
-                                    ? dr.HaulerVatType == SD.VatType_Vatable
-                                        ? dr.FreightAmount - DecimalRoundingHelper.ComputeEwtAmount(
-                                            DecimalRoundingHelper.ComputeNetOfVat(dr.FreightAmount),
-                                            dr.Hauler!.WithholdingTaxPercent ?? 0m)    // Vatable + WithTax
-                                        : dr.FreightAmount - (dr.FreightAmount * (dr.Hauler!.WithholdingTaxPercent ?? 0m))              // Non-Vatable + WithTax
-                                    : dr.FreightAmount                                                                           // WithVat / Exempt
-                            ));
+                             && dr.HaulerId == haulerId
+                             && !dr.IsFreightPaid
+                             && dr.PostedBy != null);
 
             var drAmountPaid = 0m;
+            var drIds = new List<int>();
 
             if (cvId != null)
             {
-                var drIds = await _dbContext.FilprideCVTradePayments
+                drIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -3373,6 +3385,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(dr => dr.Hauler)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
+
+            deliverReceipt = deliverReceipt
+                .Where(dr => drIds.Contains(dr.DeliveryReceiptId) || dr.FreightAmountPaid < GetFreightNetOfEwtAmount(dr))
+                .ToList();
 
             if (!deliverReceipt.Any())
             {

@@ -21,7 +21,7 @@
             <div class="alert alert-warning mb-3" role="alert">
                 <strong>Effect of this action:</strong> Existing posted general ledger entries for the selected month and year will be deleted and rebuilt.
                 When <strong>All</strong> is selected, Purchase, Sales, Service, Collection, Provisional Receipt, Debit Memo, Credit Memo, Payment, and JV entries will be regenerated in sequence. This is intended for accounting correction and
-                rejournal purposes only. Inventory and other operational records are not recreated by this batch action.
+                rejournal purposes only. Purchase and Sales also remove and rebuild matching inventory records. Other operational records are not recreated by this batch action.
             </div>
 
             <form id="rejournalAllForm" asp-action="ReJournalAll" method="post">
@@ -79,7 +79,7 @@
                 const confirmed = confirm(
                     `This will delete and rebuild posted general ledger entries for ${transactionLabel} for ${month}/${year}.` +
                     `${transactionType === "All" ? `\nIt will run in this order:\n${sequenceText}.\n` : "\n"}\n` +
-                    `Inventory and other operational records will not be recreated by this batch action.\n\n` +
+                    `Purchase and Sales also remove and rebuild matching inventory records. Other operational records will not be recreated by this batch action.\n\n` +
                     `Do you want to continue?`
                 );
 
