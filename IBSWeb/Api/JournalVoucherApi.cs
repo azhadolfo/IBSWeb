@@ -31,7 +31,13 @@ namespace IBSWeb.Api
                         error = "Company, CreatedBy, Particulars, and JVReason are required."
                     });
                 }
-                if (dto.Details.Any(_ => false))
+
+                if (dto.Date == DateOnly.MinValue)
+                {
+                    return Results.BadRequest(new { error = "Date is required." });
+                }
+
+                if (dto.Details.Any(detail => detail is null))
                 {
                     return Results.BadRequest(new { error = "Detail lines cannot be null." });
                 }
