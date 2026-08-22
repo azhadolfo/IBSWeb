@@ -630,6 +630,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     HaulerName = hauler?.SupplierName,
                     HaulerVatType = hauler?.VatType,
                     HaulerTaxType = hauler?.TaxType,
+                    CwtPercent = customer.CwtPercent,
+                    CwvPercent = customer.CwVatPercent,
                     Status = await ResolveDeliveryReceiptStatusAsync(normalizedDetails, viewModel.Freight, cancellationToken)
                 };
 
@@ -825,6 +827,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var customer = await _dbContext.FilprideCustomers
+                    .FirstOrDefaultAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                if (customer == null)
+                {
+                    return BadRequest();
+                }
+
                 await RestoreDeliveryReceiptDetailsAsync(existingRecord, cancellationToken);
 
                 var hauler = await _unitOfWork.FilprideSupplier
@@ -842,6 +852,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.HaulerName = hauler?.SupplierName;
                 existingRecord.HaulerVatType = hauler?.VatType;
                 existingRecord.HaulerTaxType = hauler?.TaxType;
+                existingRecord.CwtPercent = customer.CwtPercent;
+                existingRecord.CwvPercent = customer.CwVatPercent;
                 existingRecord.Status = await ResolveDeliveryReceiptStatusAsync(normalizedDetails, viewModel.Freight, cancellationToken);
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
