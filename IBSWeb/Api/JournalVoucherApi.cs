@@ -17,7 +17,7 @@ namespace IBSWeb.Api
             app.MapPost("/api/journal-vouchers", async (CreateJournalVoucherDto dto, ApplicationDbContext db,
                 IUnitOfWork uow, ILogger<Program> logger) =>
             {
-                if (dto.Details.Count == 0)
+                if (dto.Details is not { Count: > 0 })
                 {
                     return Results.BadRequest(new { error = "At least one detail line is required." });
                 }
@@ -119,7 +119,7 @@ namespace IBSWeb.Api
 
                 return await next(context);
             })
-            .AllowAnonymous(); // still needed since there's no [Authorize] user principal, but the filter gates access
+            .AllowAnonymous(); // no ASP.NET user principal; access is gated by the X-API-Key filter above
         }
     }
 
