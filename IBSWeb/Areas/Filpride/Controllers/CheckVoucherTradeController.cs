@@ -4,6 +4,7 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -238,6 +239,70 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return details
                 .Where(d => !d.IsDisplayEntry && d.AccountNo == accountNumber)
                 .Sum(d => isDebit ? d.Debit : d.Credit);
+        }
+
+        private static decimal RoundToFour(decimal value) => DecimalRoundingHelper.RoundToFour(value);
+
+        private static decimal ComputeVoucherBaseAmount(decimal netAmount, bool isVatable, bool isTaxable, decimal taxPercent)
+        {
+            if (isTaxable)
+            {
+                return DecimalRoundingHelper.DivideOrZero(netAmount, isVatable ? 1.12m - taxPercent : 1m - taxPercent);
+            }
+
+            return DecimalRoundingHelper.DivideOrZero(netAmount, isVatable ? 1.12m : 1m);
+        }
+
+        private static decimal ComputeVoucherVatAmount(decimal baseAmount, bool isVatable)
+        {
+            return isVatable ? DecimalRoundingHelper.ComputeVatAmount(baseAmount) : 0m;
+        }
+
+        private static decimal ComputeVoucherTaxAmount(decimal baseAmount, bool isTaxable, decimal taxPercent)
+        {
+            return isTaxable ? DecimalRoundingHelper.ComputeEwtAmount(baseAmount, taxPercent) : 0m;
+        }
+
+        private static decimal ComputeNetAfterWithholding(decimal grossAmount, bool isVatable, bool isTaxable, decimal taxPercent)
+        {
+            if (!isTaxable)
+            {
+                return grossAmount;
+            }
+
+            var netOfVatAmount = isVatable
+                ? DecimalRoundingHelper.ComputeNetOfVat(grossAmount)
+                : grossAmount;
+
+            var ewtAmount = DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, taxPercent);
+            return DecimalRoundingHelper.ComputeNetOfEwt(grossAmount, ewtAmount);
+        }
+
+        private static decimal GetNetOfEwtAmount(FilprideReceivingReport receivingReport)
+        {
+            return ComputeNetAfterWithholding(
+                receivingReport.Amount,
+                receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable,
+                receivingReport.PurchaseOrder?.TaxType == SD.TaxType_WithTax,
+                receivingReport.TaxPercentage);
+        }
+
+        private static decimal GetCommissionNetOfEwtAmount(FilprideDeliveryReceipt deliveryReceipt)
+        {
+            return ComputeNetAfterWithholding(
+                deliveryReceipt.CommissionAmount,
+                deliveryReceipt.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable,
+                deliveryReceipt.CustomerOrderSlip?.CommissioneeTaxType == SD.TaxType_WithTax,
+                deliveryReceipt.Commissionee?.WithholdingTaxPercent ?? 0m);
+        }
+
+        private static decimal GetFreightNetOfEwtAmount(FilprideDeliveryReceipt deliveryReceipt)
+        {
+            return ComputeNetAfterWithholding(
+                deliveryReceipt.FreightAmount,
+                deliveryReceipt.HaulerVatType == SD.VatType_Vatable,
+                deliveryReceipt.HaulerTaxType == SD.TaxType_WithTax,
+                deliveryReceipt.Hauler?.WithholdingTaxPercent ?? 0m);
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -697,26 +762,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = apTradeDetail.Debit;
                     var baseAmount = 0m;
 
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
 
                     cvDetails.Add(
                     new FilprideCheckVoucherDetail
@@ -768,7 +818,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         });
                     }
 
-                    var displayCashInBankAmount = Math.Round(cashInBank, 4);
+                    var displayCashInBankAmount = RoundToFour(cashInBank);
 
                     cvDetails.Add(
                     new FilprideCheckVoucherDetail
@@ -873,21 +923,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && !rr.IsPaid
-                    && rr.AmountPaid < (
-                        rr.PurchaseOrder!.TaxType == SD.TaxType_WithTax
-                            ? rr.PurchaseOrder.VatType == SD.VatType_Vatable
-                                ? rr.Amount - ((rr.Amount / 1.12m) * rr.TaxPercentage)    // Vatable + WithTax
-                                : rr.Amount - (rr.Amount * rr.TaxPercentage)               // Non-Vatable + WithTax
-                            : rr.Amount                                                     // WithVat / Exempt
-                    )
                     && poNumber.Contains(rr.PONo)
                     && rr.PostedBy != null);
 
             var rrAmountPaidById = new Dictionary<int, decimal>();
+            var rrIds = new List<int>();
 
             if (cvId != null)
             {
-                var rrIds = await _dbContext.FilprideCVTradePayments
+                rrIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "RR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -906,6 +950,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ThenInclude(rr => rr!.Supplier)
                 .OrderBy(rr => rr.PurchaseOrder!.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);
+
+            receivingReports = receivingReports
+                .Where(rr => rrIds.Contains(rr.ReceivingReportId) || rr.AmountPaid < GetNetOfEwtAmount(rr))
+                .ToList();
 
             if (!receivingReports.Any())
             {
@@ -1380,26 +1428,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = apTradeDetail.Debit;
                     var baseAmount = 0m;
 
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
@@ -1453,7 +1486,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         }
 
-                        var displayCashInBankAmount = Math.Round(cashInBank, 4);
+                        var displayCashInBankAmount = RoundToFour(cashInBank);
 
                         details.Add(
                         new FilprideCheckVoucherDetail
@@ -1689,11 +1722,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var receivingReport = await _unitOfWork.FilprideReceivingReport
                             .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
-                        var netAmount = receivingReport!.PurchaseOrder?.TaxType == SD.TaxType_WithTax
-                            ? receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable
-                                ? Math.Round(receivingReport.Amount - ((receivingReport.Amount / 1.12m) * receivingReport.TaxPercentage), 4)    // Vatable + WithTax
-                                : Math.Round(receivingReport.Amount - (receivingReport.Amount * receivingReport.TaxPercentage), 4)              // Non-Vatable + WithTax
-                            : receivingReport.Amount;                                                                                            // WithVat / Exempt                                                                                    // Non-Vatable + Non-Taxable                                  // Non-Vatable + Exempt/WithVat               // Non-Vatable + Exempt
+                        var netAmount = ComputeNetAfterWithholding(
+                            receivingReport!.Amount,
+                            receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable,
+                            receivingReport.PurchaseOrder?.TaxType == SD.TaxType_WithTax,
+                            receivingReport.TaxPercentage);
 
                         if (receivingReport.AmountPaid >= netAmount)
                         {
@@ -1709,11 +1742,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (item.CV.CvType == nameof(CVType.Commission))
                         {
-                            var netAmount = item.CV.TaxType == SD.TaxType_WithTax
-                                ? deliveryReceipt!.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable
-                                    ? Math.Round(deliveryReceipt.CommissionAmount - ((deliveryReceipt.CommissionAmount / 1.12m) * item.CV.TaxPercent), 4)    // Vatable + WithTax
-                                    : Math.Round(deliveryReceipt.CommissionAmount - (deliveryReceipt.CommissionAmount * item.CV.TaxPercent), 4)             // Non-Vatable + WithTax
-                                : deliveryReceipt!.CommissionAmount;                                                                                         // WithVat / Exempt                                                                                  // Non-Vatable + Non-Taxable                               // Non-Vatable + Exempt/WithVat   // Non-Vatable + Exempt
+                            var netAmount = ComputeNetAfterWithholding(
+                                deliveryReceipt!.CommissionAmount,
+                                deliveryReceipt.CustomerOrderSlip?.CommissioneeVatType == SD.VatType_Vatable,
+                                item.CV.TaxType == SD.TaxType_WithTax,
+                                item.CV.TaxPercent);
 
                             if (deliveryReceipt.CommissionAmountPaid >= netAmount)
                             {
@@ -1723,11 +1756,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (item.CV.CvType == nameof(CVType.Hauler))
                         {
-                            var netAmount = item.CV.TaxType == SD.TaxType_WithTax
-                                ? deliveryReceipt!.HaulerVatType == SD.VatType_Vatable
-                                    ? Math.Round(deliveryReceipt.FreightAmount - ((deliveryReceipt.FreightAmount / 1.12m) * item.CV.TaxPercent), 4)    // Vatable + WithTax
-                                    : Math.Round(deliveryReceipt.FreightAmount - (deliveryReceipt.FreightAmount * item.CV.TaxPercent), 4)              // Non-Vatable + WithTax
-                                : deliveryReceipt!.FreightAmount;                                                                                        // WithVat / Exempt                                                                         // Non-Vatable + Non-Taxable                     // Non-Vatable + Exempt/WithVat          // Non-Vatable + Exempt
+                            var netAmount = ComputeNetAfterWithholding(
+                                deliveryReceipt!.FreightAmount,
+                                deliveryReceipt.HaulerVatType == SD.VatType_Vatable,
+                                item.CV.TaxType == SD.TaxType_WithTax,
+                                item.CV.TaxPercent);
 
                             if (deliveryReceipt.FreightAmountPaid >= netAmount)
                             {
@@ -2743,27 +2776,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = commissionDetail.Debit;
                     var baseAmount = 0m;
 
-                    // Base computation (reversible correct formula)
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
 
                     cvDetails.Add(
                         new FilprideCheckVoucherDetail
@@ -3115,27 +3132,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = haulingDetail.Debit;
                     var baseAmount = 0m;
 
-                    // Base computation (reversible correct formula)
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - cvh.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - cvh.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * cvh.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
 
                     cvDetails.Add(
                         new FilprideCheckVoucherDetail
@@ -3274,23 +3275,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => companyClaims != null
-                            && dr.Company == companyClaims
-                            && commissioneeId == dr.CommissioneeId
-                            && !dr.IsCommissionPaid
-                            && dr.PostedBy != null
-                            && dr.CommissionAmountPaid < (
-                                dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
-                                    ? dr.CustomerOrderSlip.CommissioneeVatType == SD.VatType_Vatable
-                                        ? dr.CommissionAmount - ((dr.CommissionAmount / 1.12m) * dr.Commissionee!.WithholdingTaxPercent)    // Vatable + WithTax
-                                        : dr.CommissionAmount - (dr.CommissionAmount * dr.Commissionee!.WithholdingTaxPercent)              // Non-Vatable + WithTax
-                                    : dr.CommissionAmount                                                                                    // WithVat / Exempt
-                            ));
+                             && dr.Company == companyClaims
+                             && commissioneeId == dr.CommissioneeId
+                             && !dr.IsCommissionPaid
+                             && dr.PostedBy != null);
 
             var drAmountPaid = 0m;
+            var drIds = new List<int>();
 
             if (cvId != null)
             {
-                var drIds = await _dbContext.FilprideCVTradePayments
+                drIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -3308,6 +3303,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(dr => dr.Commissionee)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
+
+            deliverReceipt = deliverReceipt
+                .Where(dr => drIds.Contains(dr.DeliveryReceiptId) || dr.CommissionAmountPaid < GetCommissionNetOfEwtAmount(dr))
+                .ToList();
 
             var drPaymentLookup = cvId != null
                 ? (await _dbContext.FilprideCVTradePayments
@@ -3360,22 +3359,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
-                            && dr.HaulerId == haulerId
-                            && !dr.IsFreightPaid
-                            && dr.PostedBy != null
-                            && dr.FreightAmountPaid < (
-                                dr.HaulerTaxType == SD.TaxType_WithTax
-                                    ? dr.HaulerVatType == SD.VatType_Vatable
-                                        ? dr.FreightAmount - ((dr.FreightAmount / 1.12m) * dr.Hauler!.WithholdingTaxPercent)    // Vatable + WithTax
-                                        : dr.FreightAmount - (dr.FreightAmount * dr.Hauler!.WithholdingTaxPercent)              // Non-Vatable + WithTax
-                                    : dr.FreightAmount                                                                           // WithVat / Exempt
-                            ));
+                             && dr.HaulerId == haulerId
+                             && !dr.IsFreightPaid
+                             && dr.PostedBy != null);
 
             var drAmountPaid = 0m;
+            var drIds = new List<int>();
 
             if (cvId != null)
             {
-                var drIds = await _dbContext.FilprideCVTradePayments
+                drIds = await _dbContext.FilprideCVTradePayments
                     .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
@@ -3392,6 +3385,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(dr => dr.Hauler)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
+
+            deliverReceipt = deliverReceipt
+                .Where(dr => drIds.Contains(dr.DeliveryReceiptId) || dr.FreightAmountPaid < GetFreightNetOfEwtAmount(dr))
+                .ToList();
 
             if (!deliverReceipt.Any())
             {
@@ -3707,26 +3704,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = commissionDetail.Debit;
                     var baseAmount = 0m;
 
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
@@ -4157,27 +4139,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var netAmount = haulingDetail.Debit;
                     var baseAmount = 0m;
 
-                    // Base computation (reversible correct formula)
-                    if (isTaxable)
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / (1.12m - existingHeaderModel.TaxPercent), 4)
-                            : Math.Round(netAmount / (1m - existingHeaderModel.TaxPercent), 4);
-                    }
-                    else
-                    {
-                        baseAmount = isVatable
-                            ? Math.Round(netAmount / 1.12m, 4)
-                            : Math.Round(netAmount / 1m, 4);
-                    }
+                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
 
-                    var inputVat = isVatable
-                        ? Math.Round(baseAmount * 0.12m, 4)
-                        : 0m;
+                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
 
-                    var ewt = isTaxable
-                        ? Math.Round(baseAmount * existingHeaderModel.TaxPercent, 4)
-                        : 0m;
+                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {

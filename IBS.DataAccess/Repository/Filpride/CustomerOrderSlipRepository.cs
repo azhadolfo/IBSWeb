@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Enums;
@@ -7,7 +8,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -118,8 +118,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.BalanceQuantity = existingRecord.Quantity;
-            existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
-            existingRecord.TotalAmount = existingRecord.Quantity * viewModel.DeliveredPrice;
+            existingRecord.DeliveredPrice = DecimalRoundingHelper.RoundToFour(viewModel.DeliveredPrice);
+            existingRecord.TotalAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(existingRecord.Quantity, existingRecord.DeliveredPrice);
             existingRecord.AccountSpecialist = viewModel.AccountSpecialist;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
@@ -130,7 +130,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Branch = viewModel.SelectedBranch;
             existingRecord.Terms = viewModel.Terms;
             existingRecord.CustomerType = viewModel.CustomerType!;
-            existingRecord.OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0;
+            existingRecord.OldPrice = !customer.RequiresPriceAdjustment ? existingRecord.DeliveredPrice : 0;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.CustomerName = customer.CustomerName;
             existingRecord.ProductName = product.ProductName;

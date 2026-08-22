@@ -46,6 +46,10 @@ function formatNumberToFour(number) {
     return number.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 }
 
+function roundToFour(number) {
+    return Number.parseFloat((parseNumber(number)).toFixed(4)) || 0;
+}
+
 function parseNumber(formattedNum) {
     return parseFloat(String(formattedNum).replace(/,/g, '')) || 0;
 }

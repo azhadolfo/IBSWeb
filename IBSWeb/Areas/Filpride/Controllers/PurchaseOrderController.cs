@@ -301,8 +301,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ProductName = product.ProductName,
                     Terms = viewModel.Terms,
                     Quantity = viewModel.Quantity,
-                    Price = viewModel.Price,
-                    Amount = viewModel.Quantity * viewModel.Price,
+                    Price = DecimalRoundingHelper.RoundToFour(viewModel.Price),
+                    Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, viewModel.Price),
                     Remarks = viewModel.Remarks,
                     CreatedBy = GetUserFullName(),
                     Company = companyClaims,
@@ -313,7 +313,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     VatType = supplier.VatType,
                     TaxType = supplier.TaxType,
                     OldPoNo = string.Empty,
-                    FinalPrice = viewModel.Price,
+                    FinalPrice = DecimalRoundingHelper.RoundToFour(viewModel.Price),
                     TypeOfPurchase = viewModel.TypeOfPurchase.ToUpper(),
                 };
 
@@ -444,9 +444,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.ProductId = viewModel.ProductId;
                 existingModel.Quantity = viewModel.Quantity;
                 existingModel.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : existingModel.Quantity;
-                existingModel.Price = viewModel.Price;
+                existingModel.Price = DecimalRoundingHelper.RoundToFour(viewModel.Price);
                 existingModel.FinalPrice = existingModel.Price;
-                existingModel.Amount = viewModel.Quantity * viewModel.Price;
+                existingModel.Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, existingModel.Price);
                 existingModel.SupplierSalesOrderNo = viewModel.SupplierSalesOrderNo;
                 existingModel.Remarks = viewModel.Remarks;
                 existingModel.Terms = viewModel.Terms;

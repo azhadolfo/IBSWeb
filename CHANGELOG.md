@@ -6,6 +6,13 @@ and this project adheres to **Semantic Versioning (SemVer)**.
 
 ---
 
+## [v3.2.1] - 2026-08-20
+
+### Changed
+- Updated Filpride Transaction Master Control batch rejournal so admins can run the process for a selected transaction type or for all supported transaction types in the existing sequence.
+
+---
+
 ## [v3.2.0] - 2026-08-19
 
 ### Added

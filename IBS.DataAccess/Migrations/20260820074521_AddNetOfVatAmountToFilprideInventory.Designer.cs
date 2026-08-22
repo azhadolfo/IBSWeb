@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820074521_AddNetOfVatAmountToFilprideInventory")]
+    partial class AddNetOfVatAmountToFilprideInventory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2334,7 +2337,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<decimal>("CreditAmount")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("credit_amount");
 
                     b.Property<string>("CustomerAddress")
@@ -2357,16 +2360,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
-                    b.Property<decimal>("CwVatPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cw_vat_percent");
-
-                    b.Property<decimal>("CwtPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cwt_percent");
-
                     b.Property<decimal>("DebitAmount")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("debit_amount");
 
                     b.Property<int?>("DeliveryReceiptId")
@@ -2924,10 +2919,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("ValidatedDate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("validated_date");
-
-                    b.Property<string>("VatType")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("vat_type");
 
                     b.HasKey("InventoryId")
                         .HasName("pk_filpride_inventories");
@@ -3909,14 +3900,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
-                    b.Property<decimal>("CwtPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cwt_percent");
-
-                    b.Property<decimal>("CwvPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cwv_percent");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
@@ -3990,6 +3973,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsCommissionPaid")
                         .HasColumnType("boolean")
                         .HasColumnName("is_commission_paid");
+
+                    b.Property<bool>("IsCostOfMoneyApplied")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cost_of_money_applied");
 
                     b.Property<bool>("IsFreightPaid")
                         .HasColumnType("boolean")
@@ -4585,14 +4572,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("customer_type");
-
-                    b.Property<decimal>("CwVatPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cw_vat_percent");
-
-                    b.Property<decimal>("CwtPercent")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cwt_percent");
 
                     b.Property<string>("EditedBy")
                         .HasMaxLength(50)
