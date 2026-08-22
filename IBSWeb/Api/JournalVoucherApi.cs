@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+﻿﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
@@ -21,9 +21,19 @@ namespace IBSWeb.Api
                 {
                     return Results.BadRequest(new { error = "At least one detail line is required." });
                 }
-                if (string.IsNullOrWhiteSpace(dto.Particulars) || string.IsNullOrWhiteSpace(dto.JVReason))
+                if (string.IsNullOrWhiteSpace(dto.Company) ||
+                    string.IsNullOrWhiteSpace(dto.CreatedBy) ||
+                    string.IsNullOrWhiteSpace(dto.Particulars) ||
+                    string.IsNullOrWhiteSpace(dto.JVReason))
                 {
-                    return Results.BadRequest(new { error = "Particulars and JVReason are required." });
+                    return Results.BadRequest(new
+                    {
+                        error = "Company, CreatedBy, Particulars, and JVReason are required."
+                    });
+                }
+                if (dto.Details.Any(_ => false))
+                {
+                    return Results.BadRequest(new { error = "Detail lines cannot be null." });
                 }
 
                 // Round once, canonically, and reuse everywhere — validation and persistence must agree.
