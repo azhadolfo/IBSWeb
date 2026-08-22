@@ -167,6 +167,7 @@
                                 <th class="w-50">Account No.</th>
                                 <th class="w-25">Debit</th>
                                 <th class="w-25">Credit</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
@@ -176,6 +177,7 @@
                                 <td class="text-end">TOTAL:</td>
                                 <td class="totalDebit">0.0000</td>
                                 <td class="totalCredit">0.0000</td>
+                                <th></th>
                             </tr>
                         </tbody>
                     </table>
@@ -226,6 +228,31 @@
             $("#credit").val("0.0000");
 
             validateDebitAndCredit();
+        }
+
+        // Function to remove the corresponding row and reindex
+        function removeRow(button) {
+            // Remove the row
+            $(button).closest("tr").remove();
+
+            // Reindex all remaining rows
+            reindexRows();
+
+            updateTotalDebitAndCredit();
+        }
+
+        // Function to reindex all rows after deletion
+        function reindexRows() {
+            $("#accountingEntriesBody tr").each(function(index) {
+                $(this).attr('data-index', index);
+
+                // Update all input names with the new index
+                $(this).find('input[name^="Details"]').each(function() {
+                    var name = $(this).attr('name');
+                    var fieldName = name.substring(name.indexOf('].') + 2);
+                    $(this).attr('name', 'Details[' + index + '].' + fieldName);
+                });
+            });
         }
 
         function cvDetails(cvId) {
@@ -300,8 +327,7 @@
                                            id='debit_${accountNumber}'
                                            value='${debitFormatted}'
                                            style='border:none'
-                                           class='w-100 money'
-                                           readonly />
+                                           class='w-100 money editable-amount' />
                                 </td>
                                 <td>
                                     <input name='Details[${rowIndex}].Credit'
@@ -310,6 +336,11 @@
                                            style='border:none'
                                            class='w-100 money'
                                            readonly />
+                                </td>
+                                <td>
+                                 <button type='button'
+                                         class='btn btn-danger btn-sm'
+                                         onclick='removeRow(this)'>Remove</button>
                                 </td>
                             </tr>`);
 
@@ -341,6 +372,7 @@
                                        class='w-100 money'
                                        readonly />
                             </td>
+                            <th></th>
                         </tr>`);
 
                     updateTotalDebitAndCredit();
@@ -380,7 +412,7 @@
 
     </script>
     <script>
-        
+
     </script>
     <script>
         function validateDebitAndCredit(event) {
@@ -413,5 +445,18 @@
 
             return isValid;
         }
+    </script>
+    <script>
+        // Format number on blur (when user leaves the field)
+        $(document).on("blur", ".editable-amount", function() {
+            let value = parseNumber($(this).val());
+            $(this).val(formatNumber(value));
+            updateTotalDebitAndCredit();
+        });
+
+        // Recalculate on any input change
+        $(document).on("input", ".editable-amount", function() {
+            updateTotalDebitAndCredit();
+        });
     </script>
 }
