@@ -209,8 +209,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(rr => rr.DeliveryReceipt)
                     .ThenInclude(dr => dr!.CustomerOrderSlip)
                 .Where(r => r.POId == model.PurchaseOrderId
-                            && r.Status == nameof(Status.Posted)
-                            && !r.IsCostUpdated)
+                            && r.Status == nameof(Status.Posted))
                 .OrderBy(r => r.ReceivingReportId)
                 .ToListAsync(cancellationToken);
 
