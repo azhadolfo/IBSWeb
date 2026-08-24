@@ -74,6 +74,7 @@ namespace IBSWeb.Api
                 {
                     string jvNo;
                     FilprideJournalVoucherHeader header;
+                    DbUpdateException? conflictException = null;
 
                     // Retry on the JV-no unique constraint when concurrent requests race to grab the same number.
                     for (var attempt = 1; ; attempt++)
@@ -105,6 +106,18 @@ namespace IBSWeb.Api
                         {
                             db.ChangeTracker.Clear();
                         }
+                        catch (DbUpdateException ex) when (attempt >= 3 && IsUniqueViolation(ex))
+                        {
+                            db.ChangeTracker.Clear();
+                            conflictException = ex;
+                            break;
+                        }
+                    }
+
+                    if (conflictException is not null)
+                    {
+                        await tx.RollbackAsync();
+                        return Results.Conflict(new { error = "Journal voucher number conflict after retries. Please retry." });
                     }
 
                     var details = new List<FilprideJournalVoucherDetail>();
