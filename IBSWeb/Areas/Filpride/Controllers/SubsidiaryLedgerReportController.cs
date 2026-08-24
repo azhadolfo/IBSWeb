@@ -10,6 +10,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -28,6 +29,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<SubsidiaryLedgerReportController> _logger;
+
+        private const string _apNonTradeAccount = "201020200";
+        private const string _apTradeAccount = "201010100";
+        private const string _arTradeAccount = "101020100";
+        private const string _advancesToSupplierAccount = "101060100";
+        private const string _advancesToEmployeeAccount = "101020400";
+
+        private static readonly string[] _supplierEntries =
+        [
+            "501010100",
+            "501010200",
+            "501010300",
+            "101040100",
+            "101040200",
+            "101040300"
+        ];
+
+        private static readonly string[] _haulerEntries =
+        [
+            "502010100",
+            "502010200",
+            "502010300",
+            "101060200",
+            "201030220"
+        ];
+
+        private static readonly string[] _commissionEntries =
+        [
+            "503010100",
+            "503010200",
+            "503010300",
+            "201030240"
+        ];
 
         public SubsidiaryLedgerReportController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
@@ -1109,5 +1143,443 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        #region -- Generate Subsidiary Ledger as Excel File
+
+        [HttpGet]
+        public async Task<IActionResult> SubsidiaryLedgerReport()
+        {
+            var viewModel = new SubsidiaryLedgerReportViewModel
+            {
+                ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                    .IgnoreQueryFilters()
+                    .Where(coa => !coa.HasChildren)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber + " " + s.AccountName,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(),
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateSubsidiaryLedgerExcelFile(SubsidiaryLedgerReportViewModel model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Please input date range";
+                return RedirectToAction(nameof(SubsidiaryLedgerReport));
+            }
+
+            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                .IgnoreQueryFilters()
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName, Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+            try
+            {
+                var asOfSelectedMonth = model.MonthDate.AddMonths(1).AddDays(-1);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var selectedAccountNo = model.AccountNo?
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault();
+
+                var selectedAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsyncIgnoreQueryFilters(coa => selectedAccountNo != null && coa.AccountNumber == selectedAccountNo, cancellationToken);
+
+                var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
+                    .Where(g =>
+                        g.Date >= model.MonthDate && g.Date <= asOfSelectedMonth &&
+                        (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
+                        g.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                if (generalLedgerByAccountNo.Count == 0)
+                {
+                    TempData["info"] = "No Record Found";
+                    return RedirectToAction(nameof(SubsidiaryLedgerReport));
+                }
+
+                var accountNumbers = generalLedgerByAccountNo
+                    .Select(g => g.AccountNo)
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .Distinct()
+                    .ToList();
+
+                var accounts = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsyncIgnoreQueryFilters(a => accountNumbers.Contains(a.AccountNumber!), cancellationToken);
+
+                var accountDictionary = accounts
+                    .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
+                    .ToDictionary(a => a.AccountNumber!, a => a);
+
+                var previousPeriodEndDate = asOfSelectedMonth.AddMonths(-1);
+                var glPeriodBalances = await _dbContext.FilprideGlSubAccountBalances
+                    .IgnoreQueryFilters()
+                    .Include(g => g.Account)
+                    .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
+                                 pb.IsValid &&
+                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var beginningBalanceDictionary = glPeriodBalances
+                    .GroupBy(x => new
+                    {
+                        x.AccountId,
+                        x.SubAccountId
+                    })
+                    .ToDictionary(
+                        g => g.Key.AccountId + "_" + g.Key.SubAccountId,
+                        g => g.Select(pb => pb.EndingBalance).ToList()
+                    );
+                var subAccountNames = await ResolveSubAccountNamesAsync(generalLedgerByAccountNo, cancellationToken);
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("SubsidiaryLedger");
+
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "SUBSIDIARY LEDGER";
+                mergedCells.Style.Font.Size = 13;
+                mergedCells.Style.Font.Bold = true;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Account No:";
+                worksheet.Cells["A4"].Value = "Account Name:";
+                worksheet.Cells["A5"].Value = "Date and Time Generated:";
+
+                worksheet.Cells["B2"].Value = "As of " + model.MonthDate.ToString("MMM yyyy");
+                worksheet.Cells["B3"].Value = $"{selectedAccount?.AccountNumber}";
+                worksheet.Cells["B4"].Value = $"{selectedAccount?.AccountName}";
+                worksheet.Cells["B5"].Value = $"{DateTimeHelper.GetCurrentPhilippineTime()}";
+
+                worksheet.Cells["A7"].Value = "Date";
+                worksheet.Cells["B7"].Value = "Module";
+                worksheet.Cells["C7"].Value = "Reference";
+                worksheet.Cells["D7"].Value = "Particular";
+                worksheet.Cells["E7"].Value = "Account No";
+                worksheet.Cells["F7"].Value = "Account Name";
+                worksheet.Cells["G7"].Value = "Sub-Account";
+                worksheet.Cells["H7"].Value = "Debit";
+                worksheet.Cells["I7"].Value = "Credit";
+                worksheet.Cells["J7"].Value = "Month to Date";
+                worksheet.Cells["K7"].Value = "Running Balance";
+
+                using (var range = worksheet.Cells["A7:K7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+                decimal totalDebit = 0;
+                decimal totalCredit = 0;
+                decimal totalMtd = 0;
+                decimal finalBalance = 0;
+
+                var accountBalances = new Dictionary<int, decimal>();
+
+                foreach (var grouped in generalLedgerByAccountNo
+                    .Where(g => !string.IsNullOrEmpty(g.AccountNo))
+                    .OrderBy(g => g.AccountNo)
+                    .GroupBy(g => new
+                    {
+                        g.AccountNo,
+                        g.SubAccountId,
+                        g.AccountId
+                    }))
+                {
+                    var subAccountId = grouped.Key.SubAccountId ?? 0;
+                    var accountNo = grouped.Key.AccountNo;
+                    var accountId = grouped.Key.AccountId;
+
+                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(accountId + "_" + subAccountId)?.Sum() ?? 0m;
+
+                    // Initialize running balance for this account
+                    accountBalances[subAccountId] = accountBeginningBalance;
+
+                    // Get account details from dictionary
+                    var account = accountDictionary.TryGetValue(accountNo, out var value)
+                        ? value
+                        : null;
+
+                    var isDebitAccount = account?.NormalBalance == nameof(NormalBalance.Debit);
+
+                    // Add beginning balance row for this account
+                    worksheet.Cells[row, 4].Value = "Beginning Balance";
+                    worksheet.Cells[row, 5].Value = accountNo;
+                    worksheet.Cells[row, 6].Value = account?.AccountName;
+                    worksheet.Cells[row, 11].Value = accountBeginningBalance;
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    {
+                        range.Style.Font.Italic = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(242, 242, 242));
+                    }
+
+                    row++;
+
+                    decimal groupDebit = 0;
+                    decimal groupCredit = 0;
+                    decimal groupMtd = 0;
+
+                    foreach (var journal in grouped.OrderBy(g => g.Date))
+                    {
+                        decimal transaction;
+
+                        if (isDebitAccount)
+                        {
+                            transaction = journal.Debit - journal.Credit;
+                            groupMtd += transaction;
+                            accountBalances[subAccountId] += transaction;
+                        }
+                        else
+                        {
+                            transaction = journal.Credit - journal.Debit;
+                            groupMtd += transaction;
+                            accountBalances[subAccountId] += transaction;
+                        }
+
+                        worksheet.Cells[row, 1].Value = journal.Date.ToString("dd-MMM-yyyy");
+                        worksheet.Cells[row, 2].Value = journal.ModuleType;
+                        worksheet.Cells[row, 3].Value = journal.Reference;
+                        worksheet.Cells[row, 4].Value = journal.Description;
+                        worksheet.Cells[row, 5].Value = journal.AccountNo;
+                        worksheet.Cells[row, 6].Value = journal.AccountTitle;
+                        worksheet.Cells[row, 7].Value = subAccountNames.GetValueOrDefault(journal.GeneralLedgerBookId);
+                        worksheet.Cells[row, 8].Value = journal.Debit;
+                        worksheet.Cells[row, 9].Value = journal.Credit;
+                        worksheet.Cells[row, 10].Value = groupMtd;
+                        worksheet.Cells[row, 11].Value = accountBalances[subAccountId];
+
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                        groupDebit += journal.Debit;
+                        groupCredit += journal.Credit;
+
+                        row++;
+                    }
+
+                    // Subtotal for this account
+                    worksheet.Cells[row, 7].Value = "Total " + account?.AccountName;
+                    worksheet.Cells[row, 8].Value = groupDebit;
+                    worksheet.Cells[row, 9].Value = groupCredit;
+                    worksheet.Cells[row, 10].Value = groupMtd;
+                    worksheet.Cells[row, 11].Value = accountBalances[subAccountId];
+
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                    }
+
+                    totalDebit += groupDebit;
+                    totalCredit += groupCredit;
+                    totalMtd += groupMtd;
+                    finalBalance += accountBalances[subAccountId];
+
+                    row++;
+                }
+
+                // Grand total
+                using (var range = worksheet.Cells[row, 7, row, 11])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+
+                worksheet.Cells[row, 7].Value = "Total";
+                worksheet.Cells[row, 7].Style.Font.Bold = true;
+                worksheet.Cells[row, 8].Value = totalDebit;
+                worksheet.Cells[row, 9].Value = totalCredit;
+                worksheet.Cells[row, 10].Value = totalMtd;
+                worksheet.Cells[row, 11].Value = finalBalance;
+
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report excel file", "General Ledger Report", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail --
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerByAccountNo_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate general ledger by account number report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(SubsidiaryLedgerReport));
+            }
+        }
+
+        #endregion -- Generate Subsidiary Ledger as Excel File
+
+        private async Task<Dictionary<int, string?>> ResolveSubAccountNamesAsync(
+            IReadOnlyCollection<FilprideGeneralLedgerBook> generalLedgerBooks,
+            CancellationToken cancellationToken)
+        {
+            var salesDrReferences = generalLedgerBooks
+                .Where(gl => gl.ModuleType == nameof(ModuleType.Sales) && gl.Reference.StartsWith("DR"))
+                .Select(gl => gl.Reference)
+                .Distinct()
+                .ToList();
+
+            var deliveryReceipts = salesDrReferences.Count == 0
+                ? new Dictionary<string, DeliveryReceiptSubAccountNames>()
+                : await _dbContext.FilprideDeliveryReceipts
+                    .Where(dr => salesDrReferences.Contains(dr.DeliveryReceiptNo))
+                    .Select(dr => new
+                    {
+                        dr.DeliveryReceiptNo,
+                        dr.CustomerOrderSlip!.CustomerName,
+                        dr.HaulerName,
+                        dr.PurchaseOrder!.SupplierName,
+                        dr.CustomerOrderSlip!.CommissioneeName
+                    })
+                    .ToDictionaryAsync(
+                        dr => dr.DeliveryReceiptNo,
+                        dr => new DeliveryReceiptSubAccountNames(
+                            dr.CustomerName,
+                            dr.HaulerName,
+                            dr.SupplierName,
+                            dr.CommissioneeName),
+                        cancellationToken);
+            var generalLedgerBooksByReference = generalLedgerBooks.ToLookup(gl => gl.Reference);
+
+            return generalLedgerBooks.ToDictionary(
+                gl => gl.GeneralLedgerBookId,
+                gl => ResolveSubAccountName(gl, generalLedgerBooksByReference, deliveryReceipts));
+        }
+
+        private sealed record DeliveryReceiptSubAccountNames(
+            string CustomerName,
+            string? HaulerName,
+            string SupplierName,
+            string? CommissioneeName);
+
+        private static string? ResolveSubAccountName(
+            FilprideGeneralLedgerBook gl,
+            ILookup<string, FilprideGeneralLedgerBook> generalLedgerBooksByReference,
+            IReadOnlyDictionary<string, DeliveryReceiptSubAccountNames> deliveryReceipts)
+        {
+            if (!string.IsNullOrWhiteSpace(gl.SubAccountName))
+            {
+                return gl.SubAccountName;
+            }
+
+            return gl.ModuleType switch
+            {
+                nameof(ModuleType.Disbursement) => ResolveDisbursementSubAccountName(gl, generalLedgerBooksByReference),
+                nameof(ModuleType.Purchase) => FindSubAccountName(generalLedgerBooksByReference, gl.Reference, _apTradeAccount),
+                nameof(ModuleType.Sales) => ResolveSalesSubAccountName(gl, generalLedgerBooksByReference, deliveryReceipts),
+                nameof(ModuleType.Collection) => FindSubAccountName(generalLedgerBooksByReference, gl.Reference, _arTradeAccount),
+                _ => null
+            };
+        }
+
+        private static string? ResolveDisbursementSubAccountName(
+            FilprideGeneralLedgerBook gl,
+            ILookup<string, FilprideGeneralLedgerBook> generalLedgerBooksByReference)
+        {
+            if (gl.Reference.StartsWith("CVN") || gl.Reference.StartsWith("INV"))
+            {
+                return generalLedgerBooksByReference[gl.Reference]
+                    .Where(x =>
+                        x.AccountNo == _apNonTradeAccount ||
+                        x.AccountNo == _advancesToSupplierAccount ||
+                        x.AccountNo == _advancesToEmployeeAccount)
+                    .Select(x => x.SubAccountName)
+                    .FirstOrDefault();
+            }
+
+            return FindSubAccountName(generalLedgerBooksByReference, gl.Reference, _apTradeAccount);
+        }
+
+        private static string? FindSubAccountName(
+            ILookup<string, FilprideGeneralLedgerBook> generalLedgerBooksByReference,
+            string reference,
+            string accountNo)
+        {
+            return generalLedgerBooksByReference[reference]
+                .Where(x => x.AccountNo == accountNo)
+                .Select(x => x.SubAccountName)
+                .FirstOrDefault();
+        }
+
+        private static string? ResolveSalesSubAccountName(
+            FilprideGeneralLedgerBook gl,
+            ILookup<string, FilprideGeneralLedgerBook> generalLedgerBooksByReference,
+            IReadOnlyDictionary<string, DeliveryReceiptSubAccountNames> deliveryReceipts)
+        {
+            if (!gl.Reference.StartsWith("DR"))
+            {
+                return FindSubAccountName(generalLedgerBooksByReference, gl.Reference, _arTradeAccount);
+            }
+
+            if (!deliveryReceipts.TryGetValue(gl.Reference, out var dr))
+            {
+                return null;
+            }
+
+            if (_supplierEntries.Contains(gl.AccountNo))
+            {
+                return dr.SupplierName;
+            }
+
+            if (_haulerEntries.Contains(gl.AccountNo))
+            {
+                return dr.HaulerName;
+            }
+
+            return _commissionEntries.Contains(gl.AccountNo)
+                ? dr.CommissioneeName
+                : dr.CustomerName;
+        }
     }
 }
