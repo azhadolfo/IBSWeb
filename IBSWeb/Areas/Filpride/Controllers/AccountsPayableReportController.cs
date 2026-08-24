@@ -4805,11 +4805,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         }
                                     }
 
-                                    unliftedLastMonth += po.Date < periodStart
-                                        ? Math.Max(0m, currentPoQuantity - rrQtyBeforeSelectedPeriod)
-                                        : 0m;
+                                    if (!po.IsClosed)
+                                    {
+                                        unliftedLastMonth += po.Date < periodStart
+                                            ? Math.Max(0m, currentPoQuantity - rrQtyBeforeSelectedPeriod)
+                                            : 0m;
+                                    }
+
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += Math.Max(0m, currentPoQuantity - rrQtyThroughMonthEnd);
+                                    if (!po.IsClosed)
+                                    {
+                                        unliftedThisMonth += Math.Max(0m, currentPoQuantity - rrQtyThroughMonthEnd);
+                                    }
                                 }
 
                                 if (allPoTotal != 0m)
@@ -5126,16 +5133,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .Sum(rr => rr.QuantityReceived)
                                 : 0m;
 
-                            unliftedLastMonth = po.Date < periodStart
-                                ? Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod)
-                                : 0m;
+                            if (!po.IsClosed)
+                            {
+                                unliftedLastMonth = po.Date < periodStart
+                                    ? Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod)
+                                    : 0m;
+                            }
 
                             var liftedThisMonth = po.ReceivingReports!
                                 .Where(rr => rr.Date >= periodStart && rr.Date <= periodEnd)
                                 .ToList();
 
                             liftedThisMonthRrQty = liftedThisMonth.Sum(x => x.QuantityReceived);
-                            unliftedThisMonth = Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod - liftedThisMonthRrQty);
+                            if (!po.IsClosed)
+                            {
+                                unliftedThisMonth = Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod - liftedThisMonthRrQty);
+                            }
                             grossAmount += liftedThisMonth.Sum(x => x.Amount);
 
                             totalEwt = isTaxable
