@@ -469,6 +469,7 @@ namespace IBS.Services
             try
             {
                 await _dbContext.FilprideMonthlyNibits
+                    .IgnoreQueryFilters()
                      .Where(n =>
                         n.IsValid &&
                         n.Company == company &&
@@ -478,6 +479,7 @@ namespace IBS.Services
                          e.SetProperty(d => d.IsValid, false), cancellationToken);
 
                 await _dbContext.FilprideGlSubAccountBalances
+                    .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
                         s.Company == company &&
@@ -486,6 +488,7 @@ namespace IBS.Services
                         e.SetProperty(d => d.IsValid, false), cancellationToken);
 
                 await _dbContext.FilprideGlPeriodBalances
+                    .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
                         s.Company == company &&
