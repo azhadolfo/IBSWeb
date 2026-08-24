@@ -1,8 +1,9 @@
-﻿﻿using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Api
 {
@@ -57,34 +58,54 @@ namespace IBSWeb.Api
 
                 var totalDebit = roundedDetails.Sum(d => d.Debit);
                 var totalCredit = roundedDetails.Sum(d => d.Credit);
-                if (totalDebit != totalCredit)
+                if (totalDebit != totalCredit || totalDebit == 0)
                 {
-                    return Results.BadRequest(new { error = $"Debit ({totalDebit}) and Credit ({totalCredit}) must be equal." });
+                    return Results.BadRequest(new { error = "Debit and Credit totals must be equal and greater than zero." });
+                }
+
+                if (dto.Type is not (nameof(DocumentType.Documented) or nameof(DocumentType.Undocumented)))
+                {
+                    return Results.BadRequest(new { error = $"Type must be '{nameof(DocumentType.Documented)}' or '{nameof(DocumentType.Undocumented)}'." });
                 }
 
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 try
                 {
-                    var jvNo = await uow.FilprideJournalVoucher.GenerateCodeAsync(dto.Company, dto.Type);
+                    string jvNo;
+                    FilprideJournalVoucherHeader header;
 
-                    var header = new FilprideJournalVoucherHeader
+                    // Retry on the JV-no unique constraint when concurrent requests race to grab the same number.
+                    for (var attempt = 1; ; attempt++)
                     {
-                        Type = dto.Type,
-                        JournalVoucherHeaderNo = jvNo,
-                        Date = dto.Date,
-                        References = dto.References,
-                        Particulars = dto.Particulars,
-                        CRNo = dto.CRNo,
-                        JVReason = dto.JVReason,
-                        CreatedBy = dto.CreatedBy,
-                        Company = dto.Company,
-                        JvType = dto.JvType,
-                        Status = nameof(JvStatus.ForApproval)
-                    };
+                        jvNo = await uow.FilprideJournalVoucher.GenerateCodeAsync(dto.Company, dto.Type);
 
-                    db.Add(header);
-                    await db.SaveChangesAsync();
+                        header = new FilprideJournalVoucherHeader
+                        {
+                            Type = dto.Type,
+                            JournalVoucherHeaderNo = jvNo,
+                            Date = dto.Date,
+                            References = dto.References,
+                            Particulars = dto.Particulars,
+                            CRNo = dto.CRNo,
+                            JVReason = dto.JVReason,
+                            CreatedBy = dto.CreatedBy,
+                            Company = dto.Company,
+                            JvType = dto.JvType,
+                            Status = nameof(JvStatus.ForApproval)
+                        };
+
+                        try
+                        {
+                            db.Add(header);
+                            await db.SaveChangesAsync();
+                            break;
+                        }
+                        catch (DbUpdateException ex) when (attempt < 3 && IsUniqueViolation(ex))
+                        {
+                            db.ChangeTracker.Clear();
+                        }
+                    }
 
                     var details = new List<FilprideJournalVoucherDetail>();
                     for (var i = 0; i < dto.Details.Count; i++)
@@ -141,6 +162,9 @@ namespace IBSWeb.Api
             })
             .AllowAnonymous(); // no ASP.NET user principal; access is gated by the X-API-Key filter above
         }
+
+        private static bool IsUniqueViolation(DbUpdateException ex) =>
+            ex.InnerException is Npgsql.PostgresException { SqlState: "23505" };
     }
 
     public class CreateJournalVoucherDto
