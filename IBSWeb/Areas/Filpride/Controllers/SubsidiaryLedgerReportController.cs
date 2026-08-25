@@ -1211,6 +1211,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(g =>
                         g.Date >= model.MonthDate && g.Date <= asOfSelectedMonth &&
                         g.AccountNo == selectedAccount.AccountNumber &&
+                        g.SubAccountId.HasValue && g.SubAccountType.HasValue &&
                         g.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
