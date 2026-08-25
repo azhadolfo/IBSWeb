@@ -654,6 +654,17 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/select.dataTables.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
+    $(document).ajaxError(function (_, xhr) {
+        if (xhr.status !== 401) {
+            return;
+        }
+
+        const loginUrl = xhr.getResponseHeader('X-Login-Url');
+        if (loginUrl) {
+            window.location.assign(loginUrl);
+        }
+    });
+
     $(document).ready(function () {
         // Check if the user is logged in
         if ($('#hfUsername').length && $('#hfUsername').val() !== "") {

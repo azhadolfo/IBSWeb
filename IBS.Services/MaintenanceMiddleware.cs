@@ -32,6 +32,13 @@ namespace IBS.Services
                 var returnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
                 var loginUrl = QueryHelpers.AddQueryString("/Identity/Account/Login", "ReturnUrl", returnUrl);
 
+                if (string.Equals(context.Request.Headers.XRequestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Headers.Append("X-Login-Url", loginUrl);
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+
                 context.Response.Redirect(loginUrl);
                 return;
             }

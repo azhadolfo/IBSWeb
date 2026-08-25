@@ -132,49 +132,31 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     return Page();
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                if (user == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    await LoadPageData(returnUrl);
+                    return Page();
+                }
+
+                var result = await _signInManager.CheckPasswordSignInAsync(user, Input.Password, lockoutOnFailure: false);
 
                 if (result.Succeeded)
                 {
                     // User is guaranteed to exist and be active at this point
                     user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
 
-                    // Remove existing dynamic claims
-                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+                    var existingCompanyClaims = (await _signInManager.UserManager.GetClaimsAsync(user))
+                        .Where(claim => claim.Type == "Company")
+                        .ToList();
 
-                    if (existingClaims.Any())
+                    if (existingCompanyClaims.Count != 0)
                     {
-                        await _signInManager.UserManager.RemoveClaimsAsync(user, existingClaims);
+                        await _signInManager.UserManager.RemoveClaimsAsync(user, existingCompanyClaims);
                     }
 
-                    // Add fresh dynamic claims based on user input
-                    var newClaims = new List<Claim>
-                    {
-                        new Claim("Company", "Filpride")
-                    };
-
-                    await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
-
-                    // Fetch updated claims and roles
-                    var updatedClaims = await _signInManager.UserManager.GetClaimsAsync(user);
-                    var roles = await _signInManager.UserManager.GetRolesAsync(user);
-
-                    var identity = new ClaimsIdentity("Identity.Application");
-                    identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
-                    identity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
-                    identity.AddClaim(new Claim(ClaimTypes.GivenName, user.Name));
-                    identity.AddClaims(updatedClaims);
-
-                    // Add role claims
-                    foreach (var role in roles)
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
-                    }
-
-                    var principal = new ClaimsPrincipal(identity);
-
-                    await HttpContext.SignOutAsync("Identity.Application");
-                    await HttpContext.SignInAsync("Identity.Application", principal);
+                    await _signInManager.UserManager.AddClaimAsync(user, new Claim("Company", "Filpride"));
+                    await _signInManager.SignInAsync(user, Input.RememberMe);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
