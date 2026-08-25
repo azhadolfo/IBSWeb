@@ -9,6 +9,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? ChartOfAccounts { get; set; }
 
-        public string? AccountNo { get; set; }
+        public string AccountNo { get; set; } = null!;
     }
 }

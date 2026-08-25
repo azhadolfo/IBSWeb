@@ -1172,7 +1172,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Please input date range";
+                TempData["warning"] = "Please complete the form all inputs are required";
                 return RedirectToAction(nameof(SubsidiaryLedgerReport));
             }
 
@@ -1195,27 +1195,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var selectedAccountNo = model.AccountNo?
+                var selectedAccountNo = model.AccountNo
                     .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                     .FirstOrDefault();
 
                 var selectedAccount = await _unitOfWork.FilprideChartOfAccount
                     .GetAsyncIgnoreQueryFilters(coa => selectedAccountNo != null && coa.AccountNumber == selectedAccountNo, cancellationToken);
 
-                var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
+                if (selectedAccount == null)
+                {
+                    TempData["warning"] = "Selected Account is Null";
+                    return RedirectToAction(nameof(SubsidiaryLedgerReport));
+                }
+                var subsidiaryLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
                     .Where(g =>
                         g.Date >= model.MonthDate && g.Date <= asOfSelectedMonth &&
-                        (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
+                        g.AccountNo == selectedAccount.AccountNumber &&
                         g.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
-                if (generalLedgerByAccountNo.Count == 0)
+                if (subsidiaryLedgerByAccountNo.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(SubsidiaryLedgerReport));
                 }
 
-                var accountNumbers = generalLedgerByAccountNo
+                var accountNumbers = subsidiaryLedgerByAccountNo
                     .Select(g => g.AccountNo)
                     .Where(a => !string.IsNullOrEmpty(a))
                     .Distinct()
@@ -1228,8 +1233,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
                     .ToDictionary(a => a.AccountNumber!, a => a);
 
-                var previousPeriodEndDate = asOfSelectedMonth.AddMonths(-1);
-                var glPeriodBalances = await _dbContext.FilprideGlSubAccountBalances
+                var previousPeriodEndDate = model.MonthDate.AddDays(-1);
+                var glSubAccountBalances = await _dbContext.FilprideGlSubAccountBalances
                     .IgnoreQueryFilters()
                     .Include(g => g.Account)
                     .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
@@ -1237,17 +1242,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                  pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
-                var beginningBalanceDictionary = glPeriodBalances
+                var beginningBalanceDictionary = glSubAccountBalances
                     .GroupBy(x => new
                     {
                         x.AccountId,
-                        x.SubAccountId
+                        x.SubAccountId,
+                        x.SubAccountType,
+                        x.SubAccountName,
                     })
                     .ToDictionary(
-                        g => g.Key.AccountId + "_" + g.Key.SubAccountId,
+                        g => g.Key.SubAccountId + "_" + g.Key.SubAccountType,
                         g => g.Select(pb => pb.EndingBalance).ToList()
                     );
-                var subAccountNames = await ResolveSubAccountNamesAsync(generalLedgerByAccountNo, cancellationToken);
+                var subAccountNames = await ResolveSubAccountNamesAsync(subsidiaryLedgerByAccountNo, cancellationToken);
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SubsidiaryLedger");
@@ -1264,8 +1271,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A5"].Value = "Date and Time Generated:";
 
                 worksheet.Cells["B2"].Value = "As of " + model.MonthDate.ToString("MMM yyyy");
-                worksheet.Cells["B3"].Value = $"{selectedAccount?.AccountNumber}";
-                worksheet.Cells["B4"].Value = $"{selectedAccount?.AccountName}";
+                worksheet.Cells["B3"].Value = $"{selectedAccount.AccountNumber}";
+                worksheet.Cells["B4"].Value = $"{selectedAccount.AccountName}";
                 worksheet.Cells["B5"].Value = $"{DateTimeHelper.GetCurrentPhilippineTime()}";
 
                 worksheet.Cells["A7"].Value = "Date";
@@ -1300,21 +1307,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var accountBalances = new Dictionary<int, decimal>();
 
-                foreach (var grouped in generalLedgerByAccountNo
+                foreach (var grouped in subsidiaryLedgerByAccountNo
                     .Where(g => !string.IsNullOrEmpty(g.AccountNo))
-                    .OrderBy(g => g.AccountNo)
+                    .OrderBy(g => g.SubAccountName)
                     .GroupBy(g => new
                     {
-                        g.AccountNo,
+                        g.AccountId,
                         g.SubAccountId,
-                        g.AccountId
+                        g.SubAccountType,
+                        g.SubAccountName,
+                        g.AccountNo
                     }))
                 {
                     var subAccountId = grouped.Key.SubAccountId ?? 0;
                     var accountNo = grouped.Key.AccountNo;
-                    var accountId = grouped.Key.AccountId;
+                    var subAccountType = grouped.Key.SubAccountType;
 
-                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(accountId + "_" + subAccountId)?.Sum() ?? 0m;
+                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(subAccountId + "_" + subAccountType)?.Sum() ?? 0m;
 
                     // Initialize running balance for this account
                     accountBalances[subAccountId] = accountBeginningBalance;
@@ -1439,7 +1448,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report excel file", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate subsidiary ledger report excel file", "Subsidiary Ledger Report", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -1447,12 +1456,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerByAccountNo_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SubsidiaryLedger_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to generate general ledger by account number report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                _logger.LogError(ex, "Failed to generate subsidiary ledger report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(SubsidiaryLedgerReport));
             }
