@@ -509,6 +509,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            if (viewModel.MultipleSIId == null || viewModel.SIMultipleAmount == null ||
+                viewModel.MultipleSIId.Length == 0 ||
+                viewModel.MultipleSIId.Length != viewModel.SIMultipleAmount.Length ||
+                viewModel.SIMultipleAmount.Any(amount => amount <= 0) ||
+                viewModel.SIMultipleAmount.Sum() != total)
+            {
+                ModelState.AddModelError(nameof(viewModel.SIMultipleAmount),
+                    "The total payment amount must equal the total invoice allocation.");
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(viewModel);
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
@@ -792,6 +804,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (total == 0)
             {
                 TempData["error"] = "Please input at least one type form of payment";
+                return View(viewModel);
+            }
+
+            if (viewModel.MultipleSIId == null || viewModel.SIMultipleAmount == null ||
+                viewModel.MultipleSIId.Length == 0 ||
+                viewModel.MultipleSIId.Length != viewModel.SIMultipleAmount.Length ||
+                viewModel.SIMultipleAmount.Any(amount => amount <= 0) ||
+                viewModel.SIMultipleAmount.Sum() != total)
+            {
+                ModelState.AddModelError(nameof(viewModel.SIMultipleAmount),
+                    "The total payment amount must equal the total invoice allocation.");
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(viewModel);
             }
 
