@@ -248,8 +248,9 @@
             });
 
             // Display the total debit value
+            $(".credit").val(formatNumberToFour(totalDebit));
             $(".totalDebit").text(formatNumberToFour(totalDebit));
-            $(".totalCredit").text(formatNumberToFour(totalCredit));
+            $(".totalCredit").text(formatNumberToFour(totalDebit));
             $("#debit").val("0.0000");
             $("#credit").val("0.0000");
 
@@ -385,7 +386,7 @@
                         <input type='text' name='Details[0].AccountTitle' value='${debitAccountTitle}' style='border:none' class='w-100' readonly />
                     </td>
                     <td>
-                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' />
                     </td>
                     <td>
                         <input name='Details[0].Credit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
@@ -404,7 +405,7 @@
                         <input name='Details[1].Debit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
                     </td>
                     <td>
-                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money credit editable-amount' readonly />
                     </td>
                 </tr>
             `);

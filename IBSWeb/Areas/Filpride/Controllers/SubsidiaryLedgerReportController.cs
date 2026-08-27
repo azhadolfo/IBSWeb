@@ -1187,8 +1187,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
             try
             {
-                var asOfSelectedMonth = model.MonthDate.AddMonths(1).AddDays(-1);
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
                 var companyClaims = await GetCompanyClaimAsync();
+
+                if (dateFrom > dateTo)
+                {
+                    throw new ArgumentException("Date From must not be greater than Date To!");
+                }
 
                 if (companyClaims == null)
                 {
@@ -1209,7 +1215,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var subsidiaryLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
                     .Where(g =>
-                        g.Date >= model.MonthDate && g.Date <= asOfSelectedMonth &&
+                        g.Date >= dateFrom && g.Date <= dateTo &&
                         g.AccountNo == selectedAccount.AccountNumber &&
                         g.SubAccountId.HasValue && g.SubAccountType.HasValue &&
                         g.Company == companyClaims)
@@ -1234,7 +1240,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
                     .ToDictionary(a => a.AccountNumber!, a => a);
 
-                var previousPeriodEndDate = model.MonthDate.AddDays(-1);
+                var previousPeriodEndDate = new DateOnly(
+                    dateFrom.Year,
+                    dateFrom.Month,
+                    1
+                ).AddDays(-1);
                 var glSubAccountBalances = await _dbContext.FilprideGlSubAccountBalances
                     .IgnoreQueryFilters()
                     .Include(g => g.Account)
@@ -1252,7 +1262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.SubAccountName,
                     })
                     .ToDictionary(
-                        g => g.Key.SubAccountId + "_" + g.Key.SubAccountType,
+                        g => g.Key.AccountId + "_" + g.Key.SubAccountType + "_" + g.Key.SubAccountId + "_" + g.Key.SubAccountName,
                         g => g.Select(pb => pb.EndingBalance).ToList()
                     );
                 var subAccountNames = await ResolveSubAccountNamesAsync(subsidiaryLedgerByAccountNo, cancellationToken);
@@ -1271,7 +1281,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A4"].Value = "Account Name:";
                 worksheet.Cells["A5"].Value = "Date and Time Generated:";
 
-                worksheet.Cells["B2"].Value = "As of " + model.MonthDate.ToString("MMM yyyy");
+                worksheet.Cells["B2"].Value = $"{dateFrom:yyyy-MM-dd} - {dateTo:yyyy-MM-dd}";
                 worksheet.Cells["B3"].Value = $"{selectedAccount.AccountNumber}";
                 worksheet.Cells["B4"].Value = $"{selectedAccount.AccountName}";
                 worksheet.Cells["B5"].Value = $"{DateTimeHelper.GetCurrentPhilippineTime()}";
@@ -1320,11 +1330,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         g.AccountNo
                     }))
                 {
-                    var subAccountId = grouped.Key.SubAccountId ?? 0;
-                    var accountNo = grouped.Key.AccountNo;
+                    var accountId = grouped.Key.AccountId;
                     var subAccountType = grouped.Key.SubAccountType;
+                    var subAccountId = grouped.Key.SubAccountId ?? 0;
+                    var subAccountName = grouped.Key.SubAccountName;
+                    var accountNo = grouped.Key.AccountNo;
 
-                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(subAccountId + "_" + subAccountType)?.Sum() ?? 0m;
+                    var accountBeginningBalance = beginningBalanceDictionary
+                        .GetValueOrDefault(accountId + "_" + subAccountType + "_" + subAccountId + "_" + subAccountName)?
+                        .Sum() ?? 0m;
 
                     // Initialize running balance for this account
                     accountBalances[subAccountId] = accountBeginningBalance;
@@ -1397,7 +1411,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     // Subtotal for this account
-                    worksheet.Cells[row, 7].Value = "Total " + account?.AccountName;
+                    worksheet.Cells[row, 6].Value = "Sub Total:";
+                    worksheet.Cells[row, 7].Value = grouped.Key.SubAccountName;
                     worksheet.Cells[row, 8].Value = groupDebit;
                     worksheet.Cells[row, 9].Value = groupCredit;
                     worksheet.Cells[row, 10].Value = groupMtd;
@@ -1424,14 +1439,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Grand total
-                using (var range = worksheet.Cells[row, 7, row, 11])
+                using (var range = worksheet.Cells[row, 6, row, 11])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                 }
 
-                worksheet.Cells[row, 7].Value = "Total";
+                worksheet.Cells[row, 6].Value = "Grand Total:";
+                worksheet.Cells[row, 7].Value = selectedAccount.AccountNumber + " " + selectedAccount.AccountName;
                 worksheet.Cells[row, 7].Style.Font.Bold = true;
                 worksheet.Cells[row, 8].Value = totalDebit;
                 worksheet.Cells[row, 9].Value = totalCredit;
