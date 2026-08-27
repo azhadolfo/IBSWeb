@@ -5,7 +5,11 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class SubsidiaryLedgerReportViewModel
     {
-        public DateOnly MonthDate { get; set; }
+        [Display(Name = "Date From")]
+        public DateOnly DateFrom { get; set; }
+
+        [Display(Name = "Date To")]
+        public DateOnly DateTo { get; set; }
 
         public List<SelectListItem>? ChartOfAccounts { get; set; }
 

@@ -249,8 +249,9 @@
             });
 
             // Display the total debit value
+            $(".credit").val(formatNumberToFour(totalDebit));
             $(".totalDebit").text(formatNumberToFour(totalDebit));
-            $(".totalCredit").text(formatNumberToFour(totalCredit));
+            $(".totalCredit").text(formatNumberToFour(totalDebit));
             $("#debit").val("0.0000");
             $("#credit").val("0.0000");
 
@@ -358,13 +359,13 @@
             $("select[name='SelectedExpenseAccount']").empty().append("<option value=''></option>").trigger("change.select2");
         }
 
-        function calculateAmortizationEntries() {
+        function calculateAmortizationEntries(isTrigger = false) {
             let accountingEntriesBody = $("#accountingEntriesBody");
-            var selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
-            var selectedCreditOption = $("select[name='SelectedPrepaidAccount'] option:selected");
-            var numberOfMonths = parseInt($("#NumberOfMonths").val());
-            var debitAmount = parseFloat(selectedDebitOption.data("debit"));
-            var monnthlyAmountHint = $("#monthlyAmountHint").text("");
+            let selectedDebitOption = $("select[name='SelectedExpenseAccount'] option:selected");
+            let selectedCreditOption = $("select[name='SelectedPrepaidAccount'] option:selected");
+            let numberOfMonths = parseInt($("#NumberOfMonths").val());
+            let debitAmount = parseFloat(selectedDebitOption.data("debit"));
+            let monnthlyAmountHint = $("#monthlyAmountHint").text("");
 
             if (!selectedDebitOption.val() || !selectedCreditOption.val() || !numberOfMonths || numberOfMonths <= 0 || !debitAmount) {
                 accountingEntriesBody.empty();
@@ -372,16 +373,16 @@
                 return;
             }
 
-            var monthlyAmount = debitAmount / numberOfMonths;
+            let monthlyAmount = @Model.JvId !== 0 && isTrigger === false ? @Model.Details.Select(x => x.Debit).Sum() : debitAmount / numberOfMonths;
 
             monnthlyAmountHint.text(`Monthly amortization: ${formatNumber(monthlyAmount)} over ${numberOfMonths} month(s)`);
 
             // Static AP Non-Trade Payable debit account
-            var debitAccountNo = selectedDebitOption.val();
-            var debitAccountTitle = selectedDebitOption.text();
+            let debitAccountNo = selectedDebitOption.val();
+            let debitAccountTitle = selectedDebitOption.text();
 
-            var creditAccountNo = selectedCreditOption.val();
-            var creditAccountTitle = selectedCreditOption.text();
+            let creditAccountNo = selectedCreditOption.val();
+            let creditAccountTitle = selectedCreditOption.text();
 
             accountingEntriesBody.empty();
 
@@ -393,7 +394,7 @@
                         <input type='text' name='Details[0].AccountTitle' value='${debitAccountTitle}' style='border:none' class='w-100' readonly />
                     </td>
                     <td>
-                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                        <input name='Details[0].Debit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' />
                     </td>
                     <td>
                         <input name='Details[0].Credit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
@@ -412,7 +413,7 @@
                         <input name='Details[1].Debit' value='${formatNumberToFour(0)}' style='border:none' class='w-100 money editable-amount' readonly />
                     </td>
                     <td>
-                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money editable-amount' readonly />
+                        <input name='Details[1].Credit' value='${formatNumberToFour(monthlyAmount)}' style='border:none' class='w-100 money credit editable-amount' readonly />
                     </td>
                 </tr>
             `);
@@ -431,15 +432,15 @@
         });
 
         $("select[name='SelectedExpenseAccount']").on("change", function () {
-            calculateAmortizationEntries();
+            calculateAmortizationEntries(true);
         });
 
         $("select[name='SelectedPrepaidAccount']").on("change", function () {
-            calculateAmortizationEntries();
+            calculateAmortizationEntries(true);
         });
 
         $(document).on("change", "#NumberOfMonths", function () {
-            calculateAmortizationEntries();
+            calculateAmortizationEntries(true);
         });
 
 

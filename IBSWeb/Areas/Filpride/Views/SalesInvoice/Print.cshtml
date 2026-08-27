@@ -21,6 +21,9 @@
     var netDiscount = Model.Amount - Model.Discount;
     var netOfVatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeNetOfVat(netDiscount) : netDiscount;
     var vatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount) : 0;
+
+    // NOTE: EWT and WVAT calculations is revised from the hardcoded 1% rate to dynamic percentages from the Customer Master File then store the rates in invoice.
+    // NOTE: All invoices dated July 3–August 26 that is already printed and submitted to customers will retain the 1% rate to keep the system records aligned with the printed copies.
     var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwtPercent) : 0;
     var withHoldingVatAmount = hasWvat ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwVatPercent) : 0;
 

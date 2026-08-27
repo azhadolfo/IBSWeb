@@ -15,49 +15,31 @@
     <div class="card-body p-4">
         <form id="dynamicForm" method="post" target="_blank">
             <div class="row">
-                <!-- As Of Month -->
-                <div class="mb-4 row align-items-center">
-                    <label for="MonthDate" class="col-sm-4 col-form-label text-end fw-semibold">
-                        As Of (Month and Year)
-                    </label>
-
-                    <div class="col-sm-6">
-                        <input type="month"
-                               asp-for="MonthDate"
-                               class="form-control"
-                               value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")"
-                               required />
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="DateFrom" class="control-label"></label>
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateFrom" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateTo" class="control-label"></label>
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
 
-                <!-- Account List -->
-                <div class="mb-4 row align-items-center">
-                    <label asp-for="AccountNo" class="col-sm-4 col-form-label text-end fw-semibold">
-                        Account List
-                    </label>
-
-                    <div class="col-sm-6">
-                        <select asp-for="AccountNo"
-                                asp-items="@Model.ChartOfAccounts"
-                                class="form-select js-select2"
-                                style="width: 100%;"
-                                required >
-                            <option value="">Select account</option>
-                        </select>
-
-                        <span asp-validation-for="AccountNo" class="text-danger"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="AccountNo" class="control-label">Account List</label>
+                    <select asp-for="AccountNo"
+                            asp-items="@Model.ChartOfAccounts"
+                            class="form-control js-select2"
+                            style="width: 100%;"
+                            required >
+                        <option value="">Select account</option>
+                    </select>
+                    <span asp-validation-for="AccountNo" class="text-danger"></span>
                 </div>
-
-                <!-- Generate Button -->
                 <div class="row pt-2">
-                    <div class="offset-sm-4 col-sm-6">
-                        <button type="button"
-                                class="btn btn-primary w-100"
-                                onclick="submitForm('GenerateSubsidiaryLedgerExcelFile')">
-                            <i class="bi bi-file-earmark-excel me-1"></i>
-                            Generate as Excel File
-                        </button>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateSubsidiaryLedgerExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>
                 </div>
             </div>
