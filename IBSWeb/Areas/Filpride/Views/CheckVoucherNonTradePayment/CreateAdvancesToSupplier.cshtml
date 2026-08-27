@@ -181,18 +181,22 @@
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {
-                        if (data && data.taxType === "@SD.TaxType_WithTax") {
+                        const appliesEwt = data &&
+                            data.taxType === "@SD.TaxType_WithTax" &&
+                            data.category?.toLowerCase() !== "non-trade";
+
+                        if (appliesEwt) {
                             $("#Ewt").css("display", "table-row");
                         } else {
                             $("#Ewt").hide();
                         }
                         if (data) {
-                            const value = (data.withholdingTax || "").trim();
+                            const value = appliesEwt ? (data.withholdingTax || "").trim() : "";
 
                             const parts = value.split(" ");
                             const accountNumber = parts[0];
                             const accountTitle = parts.slice(1).join(" ");
-                            taxPercent = data.taxPercent;
+                            taxPercent = appliesEwt ? data.taxPercent : 0;
                             vatType = data.vatType;
 
 
@@ -221,6 +225,11 @@
                 $("#Payee").val("");
                 $("#PayeeAddress").val("");
                 $("#PayeeTin").val("");
+                $("#WithholdingTaxAccountNumber").val("");
+                $("#WithholdingTaxTitle").val("");
+                $("#Ewt").hide();
+                taxPercent = 0;
+                updateAccountingEntries();
             }
         }
 

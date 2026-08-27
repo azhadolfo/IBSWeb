@@ -161,8 +161,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 app.UseStaticFiles();
 app.UseRouting();
-app.UseMiddleware<MaintenanceMiddleware>();
 app.UseAuthentication();
+app.UseMiddleware<MaintenanceMiddleware>();
 app.UseAuthorization();
 
 app.MapRazorPages();

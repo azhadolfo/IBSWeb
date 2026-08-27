@@ -1,3 +1,8 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using System.Text;
 using CsvHelper;
 using Humanizer;
 using IBS.DataAccess.Data;
@@ -7,6 +12,7 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -18,13 +24,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using System.Text;
-using IBS.DTOs;
-using IBS.Models.Filpride.MasterFile;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -510,6 +509,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            if (viewModel.MultipleSIId == null || viewModel.SIMultipleAmount == null ||
+                viewModel.MultipleSIId.Length == 0 ||
+                viewModel.MultipleSIId.Length != viewModel.SIMultipleAmount.Length ||
+                viewModel.SIMultipleAmount.Any(amount => amount <= 0) ||
+                viewModel.SIMultipleAmount.Sum() != total)
+            {
+                ModelState.AddModelError(nameof(viewModel.SIMultipleAmount),
+                    "The total payment amount must equal the total invoice allocation.");
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(viewModel);
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
@@ -793,6 +804,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (total == 0)
             {
                 TempData["error"] = "Please input at least one type form of payment";
+                return View(viewModel);
+            }
+
+            if (viewModel.MultipleSIId == null || viewModel.SIMultipleAmount == null ||
+                viewModel.MultipleSIId.Length == 0 ||
+                viewModel.MultipleSIId.Length != viewModel.SIMultipleAmount.Length ||
+                viewModel.SIMultipleAmount.Any(amount => amount <= 0) ||
+                viewModel.SIMultipleAmount.Sum() != total)
+            {
+                ModelState.AddModelError(nameof(viewModel.SIMultipleAmount),
+                    "The total payment amount must equal the total invoice allocation.");
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(viewModel);
             }
 
@@ -2752,7 +2775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, model.DepositedDate.Value);
                     var daysDelayed = model.DepositedDate.Value.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                    if (daysDelayed <= 0 || dr.CommissionAmount <= 0 || dr.IsCostOfMoneyApplied)
+                    if (daysDelayed <= 0 || dr.CommissionAmount <= 0)
                     {
                         continue;
                     }
@@ -4819,7 +4842,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var getHolidays = await DateTimeHelper.GetNonWorkingDays(salesInvoice.DueDate, model.DepositedDate.Value);
                         var daysDelayed = model.DepositedDate.Value.DayNumber - salesInvoice.DueDate.DayNumber - getHolidays.Count;
 
-                        if (daysDelayed <= 0 || dr.CommissionAmount <= 0 || dr.IsCostOfMoneyApplied)
+                        if (daysDelayed <= 0 || dr.CommissionAmount <= 0)
                         {
                             continue;
                         }

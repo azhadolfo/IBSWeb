@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ namespace IBS.Services
                 await ProcessAmortization(today);
                 await SendNotificationToManagementAccounting(previousMonthDate);
                 await SendNotificationToCNC(previousMonthDate);
+                await ReverseTheJvEntries();
 
                 await transaction.CommitAsync();
             }
@@ -212,6 +214,60 @@ namespace IBS.Services
             var message = $"Please ensure the transaction fee is created before the system closes the books for {previousMonth:MMM yyyy}.";
 
             await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+        }
+
+        private async Task ReverseTheJvEntries()
+        {
+            var currentDateTime = DateTimeHelper.GetCurrentPhilippineTime();
+                var currentDate = DateOnly.FromDateTime(currentDateTime);
+
+                var journalVouchers = await _dbContext.FilprideJournalVoucherHeaders
+                                          .Include(x => x.Details)
+                                          .Where(x => x.AutoReverseNextMonth)
+                                          .ToListAsync()
+                                      ?? throw new InvalidOperationException("Journal voucher auto reverse next month not found.");
+
+                var accountTitlesDto = await _unitOfWork.FilprideJournalVoucher.GetListOfAccountTitleDto();
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+
+                foreach (var journalVoucherHeaders in journalVouchers)
+                {
+                    foreach (var detail in journalVoucherHeaders.Details!)
+                    {
+                        var account = accountTitlesDto.Find(c => c.AccountNumber == detail.AccountNo)
+                                      ?? throw new ArgumentException($"Account title '{detail.AccountNo}' not found.");
+
+                        ledgers.Add(
+                            new FilprideGeneralLedgerBook
+                            {
+                                Date = currentDate,
+                                Reference = journalVoucherHeaders.JournalVoucherHeaderNo!,
+                                Description = $"Reversal of {journalVoucherHeaders.Particulars}",
+                                AccountId = account.AccountId,
+                                AccountNo = account.AccountNumber,
+                                AccountTitle = account.AccountName,
+                                Debit = detail.Credit,
+                                Credit = detail.Debit,
+                                Company = journalVoucherHeaders.Company,
+                                CreatedBy = journalVoucherHeaders.CreatedBy!,
+                                CreatedDate = currentDateTime,
+                                SubAccountType = detail.SubAccountType,
+                                SubAccountId = detail.SubAccountId,
+                                SubAccountName = detail.SubAccountName,
+                                ModuleType = nameof(ModuleType.Journal)
+                            }
+                        );
+                    }
+
+                    if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
+                    {
+                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                    }
+
+                    journalVoucherHeaders.AutoReverseNextMonth = false;
+                }
+                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers);
+                await _dbContext.SaveChangesAsync();
         }
     }
 }

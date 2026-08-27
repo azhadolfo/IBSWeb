@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821053846_RemoveTheFlagForCostMoney")]
+    partial class RemoveTheFlagForCostMoney
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -850,10 +853,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("approved_date");
-
-                    b.Property<bool>("AutoReverseNextMonth")
-                        .HasColumnType("boolean")
-                        .HasColumnName("auto_reverse_next_month");
 
                     b.Property<string>("CRNo")
                         .HasMaxLength(100)

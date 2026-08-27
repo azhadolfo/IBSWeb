@@ -3,6 +3,7 @@
     var now = DateTimeHelper.GetCurrentPhilippineTime();
     var currentYear = now.Year;
     var currentMonth = now.Month;
+    var rejournalTypeOptions = ViewBag.ReJournalTypeOptions as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
 }
 
 <div class="container-fluid mt-4">
@@ -13,19 +14,28 @@
     <div class="card shadow border-0">
         <div class="card-body p-4">
             <p class="text-muted mb-2">
-                Rebuild posted general ledger entries in one run using this order:
+                Rebuild posted general ledger entries for a selected transaction type, or run all types in this order:
                 <strong>Purchase</strong>, <strong>Sales</strong>, <strong>Service</strong>, <strong>Collection</strong>, <strong>Provisional Receipt</strong>, <strong>Debit Memo</strong>, <strong>Credit Memo</strong>, <strong>Payment</strong>, and <strong>JV</strong>.
             </p>
 
             <div class="alert alert-warning mb-3" role="alert">
                 <strong>Effect of this action:</strong> Existing posted general ledger entries for the selected month and year will be deleted and rebuilt.
-                Purchase, Sales, Service, Collection, Provisional Receipt, Debit Memo, Credit Memo, Payment, and JV entries will be regenerated in sequence. This is intended for accounting correction and
-                rejournal purposes only. Inventory and other operational records are not recreated by this batch action.
+                When <strong>All</strong> is selected, Purchase, Sales, Service, Collection, Provisional Receipt, Debit Memo, Credit Memo, Payment, and JV entries will be regenerated in sequence. This is intended for accounting correction and
+                rejournal purposes only. Purchase and Sales also remove and rebuild matching inventory records. Other operational records are not recreated by this batch action.
             </div>
 
             <form id="rejournalAllForm" asp-action="ReJournalAll" method="post">
                 @Html.AntiForgeryToken()
                 <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label for="transactionType" class="form-label fw-bold">Transaction Type</label>
+                        <select id="transactionType" name="transactionType" class="form-select" required>
+                            @foreach (var option in rejournalTypeOptions)
+                            {
+                                <option value="@option.Value">@option.Text</option>
+                            }
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label for="rejournalMonth" class="form-label fw-bold">Month</label>
                         <input id="rejournalMonth" name="month" type="number" class="form-control" min="1" max="12" value="@currentMonth" required />
@@ -62,11 +72,14 @@
 
                 const month = document.getElementById("rejournalMonth")?.value;
                 const year = document.getElementById("rejournalYear")?.value;
+                const transactionType = document.getElementById("transactionType")?.value || "All";
+                const transactionLabel = document.getElementById("transactionType")?.selectedOptions?.[0]?.text || transactionType;
+                const sequenceText = "Purchase -> Sales -> Service -> Collection -> Provisional Receipt -> Debit Memo -> Credit Memo -> Payment -> JV";
 
                 const confirmed = confirm(
-                    `This will delete and rebuild posted general ledger entries for ${month}/${year} in this order:\n` +
-                    `Purchase -> Sales -> Service -> Collection -> Provisional Receipt -> Debit Memo -> Credit Memo -> Payment -> JV.\n\n` +
-                    `Inventory and other operational records will not be recreated by this batch action.\n\n` +
+                    `This will delete and rebuild posted general ledger entries for ${transactionLabel} for ${month}/${year}.` +
+                    `${transactionType === "All" ? `\nIt will run in this order:\n${sequenceText}.\n` : "\n"}\n` +
+                    `Purchase and Sales also remove and rebuild matching inventory records. Other operational records will not be recreated by this batch action.\n\n` +
                     `Do you want to continue?`
                 );
 
@@ -96,7 +109,7 @@
 
                     result.className = "alert alert-success mt-3";
                     result.innerHTML =
-                        `<strong>Batch rejournal completed.</strong><br>` +
+                        `<strong>Batch rejournal completed for ${transactionLabel}.</strong><br>` +
                         `Purchase: ${data.purchaseCount ?? 0}<br>` +
                         `Sales: ${data.salesCount ?? 0}<br>` +
                         `Service: ${data.serviceCount ?? 0}<br>` +

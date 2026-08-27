@@ -3078,8 +3078,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         : purchaseOrders.Count > 0
                             ? dr.Details
                                 .Where(detail => detail.PurchaseOrder != null)
-                                .Sum(detail => detail.Quantity * detail.PurchaseOrder!.FinalPrice)
-                            : dr.PurchaseOrder!.FinalPrice * volume; // purchase total
+                                .Sum(detail => RoundToFour(detail.Quantity * detail.PurchaseOrder!.FinalPrice))
+                            : RoundToFour(dr.PurchaseOrder!.FinalPrice * volume); // purchase total
                     var costPerLiter = DivideOrZero(costAmount, volume); // purchase per liter
                     var netPurchases = relatedReceivingReports.Count > 0
                         ? relatedReceivingReports.Sum(rr => rr.PurchaseOrder?.VatType == SD.VatType_Vatable && rr.Amount != 0m
@@ -3090,7 +3090,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .Where(detail => detail.PurchaseOrder != null)
                                 .Sum(detail =>
                                 {
-                                    var detailCostAmount = detail.Quantity * detail.PurchaseOrder!.FinalPrice;
+                                    var detailCostAmount = RoundToFour(detail.Quantity * detail.PurchaseOrder!.FinalPrice);
                                     return detail.PurchaseOrder.VatType == SD.VatType_Vatable
                                         ? NetOfVatOrZero(detailCostAmount)
                                         : detailCostAmount;
@@ -4805,11 +4805,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         }
                                     }
 
-                                    unliftedLastMonth += po.Date < periodStart
-                                        ? Math.Max(0m, currentPoQuantity - rrQtyBeforeSelectedPeriod)
-                                        : 0m;
+                                    if (!po.IsClosed)
+                                    {
+                                        unliftedLastMonth += po.Date < periodStart
+                                            ? Math.Max(0m, currentPoQuantity - rrQtyBeforeSelectedPeriod)
+                                            : 0m;
+                                    }
+
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += Math.Max(0m, currentPoQuantity - rrQtyThroughMonthEnd);
+                                    if (!po.IsClosed)
+                                    {
+                                        unliftedThisMonth += Math.Max(0m, currentPoQuantity - rrQtyThroughMonthEnd);
+                                    }
                                 }
 
                                 if (allPoTotal != 0m)
@@ -5126,16 +5133,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .Sum(rr => rr.QuantityReceived)
                                 : 0m;
 
-                            unliftedLastMonth = po.Date < periodStart
-                                ? Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod)
-                                : 0m;
+                            if (!po.IsClosed)
+                            {
+                                unliftedLastMonth = po.Date < periodStart
+                                    ? Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod)
+                                    : 0m;
+                            }
 
                             var liftedThisMonth = po.ReceivingReports!
                                 .Where(rr => rr.Date >= periodStart && rr.Date <= periodEnd)
                                 .ToList();
 
                             liftedThisMonthRrQty = liftedThisMonth.Sum(x => x.QuantityReceived);
-                            unliftedThisMonth = Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod - liftedThisMonthRrQty);
+                            if (!po.IsClosed)
+                            {
+                                unliftedThisMonth = Math.Max(0m, poTotal - rrQtyBeforeSelectedPeriod - liftedThisMonthRrQty);
+                            }
                             grossAmount += liftedThisMonth.Sum(x => x.Amount);
 
                             totalEwt = isTaxable
@@ -5553,21 +5566,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
 
-                var sumOfFreightAmountWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
-                    .Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
+                var receivingReportsWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0).ToList();
+                var sumOfFreightAmountWithFreight = receivingReportsWithFreight
+                    .Sum(rr => RoundToFour(rr.DeliveryReceipt!.FreightAmount));
 
-                var sumOfQuantityWithFreight = receivingReports.Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                var sumOfQuantityWithFreight = receivingReportsWithFreight
                     .Sum(rr => rr.QuantityReceived);
 
                 var sumOfQuantity = receivingReports.Sum(rr => rr.QuantityReceived);
                 var sumOfAmount = receivingReports.Sum(rr => rr.Amount);
                 var averageCostPerLiter = DivideOrZero(sumOfAmount, sumOfQuantity);
 
-                var sumOfFreightAmount = receivingReports.Sum(rr => rr.DeliveryReceipt!.Freight * rr.QuantityReceived);
+                var sumOfFreightAmount = sumOfFreightAmountWithFreight;
                 var averageFreightPerLiterWithFreight = DivideOrZero(sumOfFreightAmountWithFreight, sumOfQuantityWithFreight);
                 var averageFreightPerLiter = DivideOrZero(sumOfFreightAmount, sumOfQuantity);
 
-                var sumOfAmountBasedOnSoa = (receivingReports.Sum(rr => rr.CostBasedOnSoa * rr.QuantityReceived));
+                var sumOfAmountBasedOnSoa = receivingReports.Sum(rr => RoundToFour(rr.CostBasedOnSoa * rr.QuantityReceived));
                 var averageCostBasedOnSoa = DivideOrZero(sumOfAmountBasedOnSoa, sumOfQuantity);
 
                 worksheet.Cells[28, 3].Value = "Volume Lifted: ";
@@ -5675,7 +5689,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[39, col].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     col++;
 
-                    totalFreightAmount += rrByHauler.Sum(rr => rr.DeliveryReceipt!.FreightAmount); // get the total of all freight
+                    totalFreightAmount += rrByHauler
+                        .Where(rr => rr.DeliveryReceipt!.Freight > 0)
+                        .Sum(rr => RoundToFour(rr.DeliveryReceipt!.FreightAmount));
                 }
 
                 worksheet.Cells[39, col].Value = totalFreightAmount; // total of freight
@@ -5807,7 +5823,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var rr in receivingReports)
                 {
                     var costPerLiter = DivideOrZero(rr.Amount, rr.QuantityReceived);
-                    var amountBasedOnSoa = (rr.CostBasedOnSoa * rr.QuantityReceived);
+                    var amountBasedOnSoa = RoundToFour(rr.CostBasedOnSoa * rr.QuantityReceived);
 
                     worksheet.Cells[row, 3].Value = rr.Date;
                     worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;

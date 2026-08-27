@@ -1,24 +1,25 @@
+using System.Drawing;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Enums;
+using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using QuestPDF.Helpers;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
-using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
-using IBS.Models;
-using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Models.Enums;
-using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.Integrated;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using Color = System.Drawing.Color;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -377,7 +378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells[4, i + 1].Value = headers[i];
                     worksheet.Cells[4, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[4, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
+                    worksheet.Cells[4, i + 1].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#9966ff"));
                     worksheet.Cells[4, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     worksheet.Cells[4, i + 1].Style.Font.Bold = true;
                 }
@@ -1375,8 +1376,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip?.OldCosNo;
                     worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
                     worksheet.Cells[currentRow, 20].Value = rr?.ReceivingReportNos;
-                    worksheet.Cells[currentRow, 21].Value = rr?.QuantityReceived != 0
-                        ? rr?.Amount / rr?.QuantityReceived
+                    worksheet.Cells[currentRow, 21].Value = rr != null
+                        ? DivideOrZero(rr.Amount, rr.QuantityReceived)
                         : 0m;
                     worksheet.Cells[currentRow, 22].Value = rr?.SupplierInvoiceNumbers;
                     worksheet.Cells[currentRow, 23].Value = rr?.WithdrawalCertificates;

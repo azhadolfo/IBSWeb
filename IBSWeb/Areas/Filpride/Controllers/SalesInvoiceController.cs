@@ -1,3 +1,5 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -13,8 +15,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -228,9 +228,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ProductId = viewModel.ProductId,
                     OtherRefNo = viewModel.OtherRefNo,
                     Quantity = viewModel.Quantity,
-                    UnitPrice = viewModel.UnitPrice,
-                    Amount = viewModel.Quantity * viewModel.UnitPrice,
-                    Balance = viewModel.Quantity * viewModel.UnitPrice,
+                    UnitPrice = DecimalRoundingHelper.RoundToFour(viewModel.UnitPrice),
+                    Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, viewModel.UnitPrice),
+                    Balance = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, viewModel.UnitPrice),
                     Remarks = viewModel.Remarks,
                     TransactionDate = viewModel.TransactionDate,
                     Discount = viewModel.Discount,
@@ -446,11 +446,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.OtherRefNo = viewModel.OtherRefNo;
                 existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
                 existingRecord.Quantity = viewModel.Quantity;
-                existingRecord.UnitPrice = viewModel.UnitPrice;
+                existingRecord.UnitPrice = DecimalRoundingHelper.RoundToFour(viewModel.UnitPrice);
                 existingRecord.Remarks = viewModel.Remarks;
                 existingRecord.Discount = viewModel.Discount;
-                existingRecord.Amount = viewModel.Quantity * viewModel.UnitPrice;
-                existingRecord.Balance = viewModel.Quantity * viewModel.UnitPrice;
+                existingRecord.Amount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, existingRecord.UnitPrice);
+                existingRecord.Balance = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity, existingRecord.UnitPrice);
                 existingRecord.ProductId = viewModel.ProductId;
                 existingRecord.ReceivingReportId = viewModel.ReceivingReportId;
                 existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;

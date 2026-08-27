@@ -1,7 +1,10 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
+using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
@@ -14,9 +17,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using IBS.Models.Filpride;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -359,7 +359,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.ServiceInvoiceId = null;
                     model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
                     model.Type = existingSalesInvoice.Type;
-                    model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                    model.DebitAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(model.Quantity ?? 0m, model.AdjustedPrice ?? 0m);
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -669,7 +669,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Amount = viewModel.Amount,
                 Remarks = viewModel.Remarks,
                 Description = viewModel.Description,
-                DebitAmount = (decimal)(viewModel.Quantity! * viewModel.AdjustedPrice!)
+                DebitAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(viewModel.Quantity ?? 0m, viewModel.AdjustedPrice ?? 0m)
             };
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace IBS.Services
 {
@@ -26,6 +27,22 @@ namespace IBS.Services
                 return;
             }
 
+            if (context.User.Identity?.IsAuthenticated != true)
+            {
+                var returnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
+                var loginUrl = QueryHelpers.AddQueryString("/Identity/Account/Login", "ReturnUrl", returnUrl);
+
+                if (string.Equals(context.Request.Headers.XRequestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Headers.Append("X-Login-Url", loginUrl);
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+
+                context.Response.Redirect(loginUrl);
+                return;
+            }
+
             using (var scope = serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -35,7 +52,8 @@ namespace IBS.Services
                     .Select(s => s.Value == "true")
                     .FirstOrDefaultAsync();
 
-                if (isMaintenanceMode && !context.Request.Path.StartsWithSegments("/User/Home/Maintenance"))
+                if (isMaintenanceMode && !context.User.IsInRole("Admin") &&
+                    !context.Request.Path.StartsWithSegments("/User/Home/Maintenance"))
                 {
                     context.Response.Redirect("/User/Home/Maintenance");
                     return;

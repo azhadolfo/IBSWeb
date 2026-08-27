@@ -583,7 +583,7 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
     function validateAndSubmit (event){
         let checkTotal = parseFloat($("#checkTotal").text().replace(/,/g, "")) || 0;
 
-        if (checkTotal !== totalBalance){
+        if (Math.round(checkTotal * 100) !== Math.round(totalBalance * 100)){
             event.preventDefault();
             Swal.fire({
                 title: "Error",

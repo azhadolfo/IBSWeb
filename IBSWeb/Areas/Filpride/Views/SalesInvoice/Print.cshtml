@@ -19,10 +19,10 @@
     var productName = Model.CustomerOrderSlip?.ProductName ?? Model.Product!.ProductName;
 
     var netDiscount = Model.Amount - Model.Discount;
-    var netOfVatAmount = customerVatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
-    var vatAmount = customerVatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
-    var withHoldingTaxAmount = hasEwt ? netOfVatAmount * Model.CwtPercent : 0.0000m;
-    var withHoldingVatAmount = hasWvat ? netOfVatAmount * Model.CwVatPercent : 0.0000m;
+    var netOfVatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeNetOfVat(netDiscount) : netDiscount;
+    var vatAmount = customerVatType == SD.VatType_Vatable ? DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount) : 0;
+    var withHoldingTaxAmount = hasEwt ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwtPercent) : 0;
+    var withHoldingVatAmount = hasWvat ? DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, Model.CwVatPercent) : 0;
 
     var selectedCompany = string.Empty;
 

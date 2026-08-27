@@ -24,6 +24,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string Reason { get; set; } = string.Empty;
 
         public List<JvCreateAccrualDetailViewModel> Details { get; set; } = [];
+
+        public bool AutoReverseNextMonth { get; set; }
     }
 
     public class JvCreateAccrualDetailViewModel

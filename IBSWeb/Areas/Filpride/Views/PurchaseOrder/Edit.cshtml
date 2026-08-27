@@ -115,8 +115,8 @@
         $(document).ready(function () {
             function updateTotal() {
                 var quantity = parseNumber($(".quantity").val());
-                var price = parseNumber($(".price").val());
-                var total = quantity * price;
+                var price = roundToFour(parseNumber($(".price").val()));
+                var total = roundToFour(quantity * price);
                 $(".total").val(formatNumber(total));
             }
 

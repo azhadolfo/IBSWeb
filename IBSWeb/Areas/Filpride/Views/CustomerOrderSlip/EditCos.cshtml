@@ -455,10 +455,10 @@
     <script>
         function calculateAmountAndVat() {
             var quantity = parseNumber($('input[name="Quantity"]').val());
-            var deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
+            var deliveredPrice = roundToFour(parseNumber($('input[name="DeliveredPrice"]').val()));
 
-            var totalAmount = (quantity * deliveredPrice);
-            var vat = (totalAmount / 1.12) * 0.12;
+            var totalAmount = roundToFour(quantity * deliveredPrice);
+            var vat = roundToFour((totalAmount / 1.12) * 0.12);
 
             $('input[name="Vat"]').val(formatNumber(vat));
             $('input[name="TotalAmount"]').val(formatNumber(totalAmount));

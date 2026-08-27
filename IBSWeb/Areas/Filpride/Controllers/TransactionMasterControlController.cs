@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -45,6 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult BatchReJournal()
         {
+            ViewBag.ReJournalTypeOptions = GetReJournalTypeOptions();
             return View();
         }
 
@@ -120,11 +122,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReJournalAll(int? month, int? year, CancellationToken cancellationToken)
+        public async Task<IActionResult> ReJournalAll(int? month, int? year, string? transactionType, CancellationToken cancellationToken)
         {
             if (!month.HasValue || !year.HasValue)
             {
                 return BadRequest(new { success = false, error = "Month and year are required." });
+            }
+
+            transactionType = string.IsNullOrWhiteSpace(transactionType)
+                ? TransactionMasterControlService.ReJournalTypeAll
+                : transactionType.Trim();
+
+            if (!TransactionMasterControlService.ReJournalTypes.Contains(transactionType, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { success = false, error = "Invalid rejournal type selected." });
             }
 
             var company = await GetCompanyClaimAsync();
@@ -140,13 +151,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     month.Value,
                     year.Value,
                     company,
-                    GetUserFullName(),
+                    "SYSTEM GENERATED",
+                    transactionType,
                     cancellationToken);
 
                 return Json(new
                 {
                     month,
                     year,
+                    transactionType,
                     purchaseCount = result.PurchaseCount,
                     salesCount = result.SalesCount,
                     serviceCount = result.ServiceCount,
@@ -163,6 +176,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 logger.LogError(ex, "Error running batch rejournal for {Month}/{Year}.", month, year);
                 return Json(new { success = false, error = ex.Message });
             }
+        }
+
+        private static List<SelectListItem> GetReJournalTypeOptions()
+        {
+            return
+            [
+                new() { Value = TransactionMasterControlService.ReJournalTypeAll, Text = "All" },
+                new() { Value = TransactionMasterControlService.ReJournalTypePurchase, Text = "Purchase" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeSales, Text = "Sales" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeService, Text = "Service" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeCollection, Text = "Collection" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeProvisionalReceipt, Text = "Provisional Receipt" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeDebitMemo, Text = "Debit Memo" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeCreditMemo, Text = "Credit Memo" },
+                new() { Value = TransactionMasterControlService.ReJournalTypePayment, Text = "Payment" },
+                new() { Value = TransactionMasterControlService.ReJournalTypeJv, Text = "JV" }
+            ];
         }
     }
 }

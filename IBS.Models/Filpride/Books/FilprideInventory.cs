@@ -42,6 +42,13 @@ namespace IBS.Models.Filpride.Books
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Total { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal NetOfVatAmount { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? VatType { get; set; }
+
         /// <summary>
         /// To compute inventory balance
         ///

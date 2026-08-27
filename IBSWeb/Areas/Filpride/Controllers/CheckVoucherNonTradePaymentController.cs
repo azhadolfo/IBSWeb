@@ -69,6 +69,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        private async Task<List<SelectListItem>> GetSupplierAdvanceSupplierListAsync(string company, CancellationToken cancellationToken)
+        {
+            var suppliers = await _dbContext.FilprideSuppliers
+                .Where(s => s.IsActive && s.Category != "Employee")
+                .OrderBy(s => s.SupplierCode)
+                .ThenBy(s => s.SupplierName)
+                .Select(s => new
+                {
+                    s.SupplierId,
+                    s.SupplierCode,
+                    s.SupplierName,
+                    s.Category
+                })
+                .ToListAsync(cancellationToken);
+
+            return suppliers
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = $"{s.SupplierCode} {s.SupplierName} ({s.Category})"
+                })
+                .ToList();
+        }
+
         private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
@@ -2170,7 +2194,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
 
             viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -2194,7 +2218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information provided was invalid.";
-                viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 return View(viewModel);
@@ -2221,7 +2245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (supplier.Category == "Employee")
                 {
                     TempData["warning"] = "Employee suppliers cannot be processed as supplier advances.";
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
                     viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                     viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                     return View(viewModel);
@@ -2289,7 +2313,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var netOfVat = supplier.VatType == SD.VatType_Vatable
                     ? _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(viewModel.Total)
                     : viewModel.Total;
-                var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVat, supplier.WithholdingTaxPercent ?? 0);
+                var shouldApplyEwt = !string.Equals(supplier.Category, "Non-Trade", StringComparison.OrdinalIgnoreCase);
+                var ewtAmount = shouldApplyEwt
+                    ? _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVat, supplier.WithholdingTaxPercent ?? 0)
+                    : 0m;
                 var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
                 var ewtTitle = ewtAmount > 0
                     ? accountTitlesDto.Find(c =>
@@ -2373,7 +2400,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["Error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
 
-                viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
 
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -2415,9 +2442,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var supplier =
-                    await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims,
-                        cancellationToken);
+                var supplier = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
 
                 var bankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -2464,7 +2489,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
@@ -2500,7 +2525,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (supplier.Category == "Employee")
                 {
                     TempData["warning"] = "Employee suppliers cannot be processed as supplier advances.";
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
                     viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                     viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                     return View(viewModel);
@@ -2562,7 +2587,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var netOfVat = supplier.VatType == SD.VatType_Vatable
                     ? _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(viewModel.Total)
                     : viewModel.Total;
-                var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVat, supplier.WithholdingTaxPercent ?? 0);
+                var shouldApplyEwt = !string.Equals(supplier.Category, "Non-Trade", StringComparison.OrdinalIgnoreCase);
+                var ewtAmount = shouldApplyEwt
+                    ? _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVat, supplier.WithholdingTaxPercent ?? 0)
+                    : 0m;
                 var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
                 var ewtTitle = ewtAmount > 0
                     ? accountTitlesDto.Find(c =>
@@ -2634,7 +2662,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to edit advances to supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await GetSupplierAdvanceSupplierListAsync(companyClaims, cancellationToken);
 
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 

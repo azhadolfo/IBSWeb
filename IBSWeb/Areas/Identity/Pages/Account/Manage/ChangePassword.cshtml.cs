@@ -71,6 +71,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
             /// </summary>
             [DataType(DataType.Password)]
             [Display(Name = "Confirm new password")]
+            [Required(ErrorMessage = "Please confirm your new password.")]
             [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
         }
@@ -103,6 +104,17 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (!await _userManager.HasPasswordAsync(user))
+            {
+                return RedirectToPage("./SetPassword");
+            }
+
+            if (string.Equals(Input.OldPassword, Input.NewPassword, StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(nameof(Input.NewPassword), "Your new password must be different from your current password.");
+                return Page();
             }
 
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
