@@ -198,7 +198,7 @@
                                                id="credit_@entry.AccountNo"
                                                value="@entry.Credit.ToString("N4")"
                                                style="border:none"
-                                               class="w-100 money credit editable-amount"
+                                               class="w-100 money @(entry.AccountNo == "201020300" ? "credit editable-amount" : "")"
                                                readonly />
                                     </td>
                                     <td>

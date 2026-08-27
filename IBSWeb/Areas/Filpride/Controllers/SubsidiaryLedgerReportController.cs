@@ -1240,7 +1240,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
                     .ToDictionary(a => a.AccountNumber!, a => a);
 
-                var previousPeriodEndDate = dateFrom.AddDays(-1);
+                var previousPeriodEndDate = new DateOnly(
+                    dateFrom.Year,
+                    dateFrom.Month,
+                    1
+                ).AddDays(-1);
                 var glSubAccountBalances = await _dbContext.FilprideGlSubAccountBalances
                     .IgnoreQueryFilters()
                     .Include(g => g.Account)
@@ -1258,7 +1262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.SubAccountName,
                     })
                     .ToDictionary(
-                        g => g.Key.SubAccountId + "_" + g.Key.SubAccountType,
+                        g => g.Key.AccountId + "_" + g.Key.SubAccountType + "_" + g.Key.SubAccountId + "_" + g.Key.SubAccountName,
                         g => g.Select(pb => pb.EndingBalance).ToList()
                     );
                 var subAccountNames = await ResolveSubAccountNamesAsync(subsidiaryLedgerByAccountNo, cancellationToken);
@@ -1326,11 +1330,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         g.AccountNo
                     }))
                 {
-                    var subAccountId = grouped.Key.SubAccountId ?? 0;
-                    var accountNo = grouped.Key.AccountNo;
+                    var accountId = grouped.Key.AccountId;
                     var subAccountType = grouped.Key.SubAccountType;
+                    var subAccountId = grouped.Key.SubAccountId ?? 0;
+                    var subAccountName = grouped.Key.SubAccountName;
+                    var accountNo = grouped.Key.AccountNo;
 
-                    var accountBeginningBalance = beginningBalanceDictionary.GetValueOrDefault(subAccountId + "_" + subAccountType)?.Sum() ?? 0m;
+                    var accountBeginningBalance = beginningBalanceDictionary
+                        .GetValueOrDefault(accountId + "_" + subAccountType + "_" + subAccountId + "_" + subAccountName)?
+                        .Sum() ?? 0m;
 
                     // Initialize running balance for this account
                     accountBalances[subAccountId] = accountBeginningBalance;

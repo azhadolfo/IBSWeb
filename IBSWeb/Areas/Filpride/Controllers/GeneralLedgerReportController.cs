@@ -738,7 +738,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(a => !string.IsNullOrEmpty(a.AccountNumber))
                     .ToDictionary(a => a.AccountNumber!, a => a);
 
-                var previousPeriodEndDate = dateFrom.AddDays(-1);
+                var previousPeriodEndDate = new DateOnly(
+                    dateFrom.Year,
+                    dateFrom.Month,
+                    1
+                ).AddDays(-1);
                 var glPeriodBalances = await _dbContext.FilprideGlPeriodBalances
                     .IgnoreQueryFilters()
                     .Include(g => g.Account)
