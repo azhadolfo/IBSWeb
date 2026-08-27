@@ -821,6 +821,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return Json(new { success = false, message = "Record not found." });
                 }
+                if (existingRecord.Price == price)
+                {
+                    return Json(new { success = false, message = "Unable to update the cost/price when using the same price." });
+                }
 
                 existingRecord.UnTriggeredQuantity -= volume;
 
