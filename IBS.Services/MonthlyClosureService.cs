@@ -172,8 +172,7 @@ namespace IBS.Services
                 var hasAlreadyNibit = await _dbContext.FilprideMonthlyNibits
                     .AnyAsync(x =>
                         x.Month == periodMonth.Month &&
-                        x.Year == periodMonth.Year &&
-                        x.Company == company,
+                        x.Year == periodMonth.Year,
                         cancellationToken);
 
                 if (hasAlreadyNibit)
@@ -240,7 +239,6 @@ namespace IBS.Services
                 {
                     Month = periodMonth.Month,
                     Year = periodMonth.Year,
-                    Company = company,
                     NetIncome = nibit,
                     PriorPeriodAdjustment = generalLedgers
                         .Where(g => g.AccountTitle.Contains("Prior Period"))
@@ -250,7 +248,7 @@ namespace IBS.Services
                 var beginning = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(m => m.Year)
                     .ThenByDescending(m => m.Month)
-                    .FirstOrDefaultAsync(m => m.Company == company, cancellationToken);
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 if (beginning != null)
                 {
@@ -472,7 +470,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                      .Where(n =>
                         n.IsValid &&
-                        n.Company == company &&
                          (n.Year > monthDate.Year ||
                          (n.Year == monthDate.Year && n.Month >= monthDate.Month)))
                      .ExecuteUpdateAsync(e =>

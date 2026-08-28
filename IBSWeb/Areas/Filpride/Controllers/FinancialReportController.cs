@@ -114,8 +114,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
@@ -357,8 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
@@ -1538,8 +1536,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
@@ -1815,8 +1812,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
@@ -2104,8 +2100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
@@ -2272,8 +2267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month &&
-                                              m.Company == companyClaims, cancellationToken);
+                                              m.Month == monthDate.Month, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {

@@ -3145,12 +3145,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18, 4)")
                         .HasColumnName("beginning_balance");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("company");
-
                     b.Property<decimal>("EndingBalance")
                         .HasColumnType("numeric(18, 4)")
                         .HasColumnName("ending_balance");
@@ -3177,9 +3171,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_filpride_monthly_nibits");
-
-                    b.HasIndex("Company")
-                        .HasDatabaseName("ix_filpride_monthly_nibits_company");
 
                     b.HasIndex("Month")
                         .HasDatabaseName("ix_filpride_monthly_nibits_month");

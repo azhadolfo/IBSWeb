@@ -336,7 +336,6 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilprideMonthlyNibit>(n =>
             {
                 n.HasQueryFilter(x => x.IsValid);
-                n.HasIndex(n => n.Company);
                 n.HasIndex(n => n.Month);
                 n.HasIndex(n => n.Year);
             });
