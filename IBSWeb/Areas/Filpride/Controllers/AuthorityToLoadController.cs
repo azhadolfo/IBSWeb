@@ -95,8 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var atlList = _unitOfWork.FilprideAuthorityToLoad
-                    .GetAllQuery(x => x.Company == companyClaims);
+                var atlList = _unitOfWork.FilprideAuthorityToLoad.GetAllQuery();
 
                 var totalRecords = await atlList.CountAsync(cancellationToken);
 
@@ -258,7 +257,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierId = viewModel.SupplierIds.First(),
-                    Company = companyClaims
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
@@ -389,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load", atl.Company);
+            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load", (await GetCompanyClaimAsync())!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
             #endregion --Audit Trail Recording

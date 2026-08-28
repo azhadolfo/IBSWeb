@@ -3260,12 +3260,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("authority_to_load_no");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -3340,15 +3334,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("AuthorityToLoadId")
                         .HasName("pk_filpride_authority_to_loads");
 
+                    b.HasIndex("AuthorityToLoadNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_authority_to_loads_authority_to_load_no");
+
                     b.HasIndex("CustomerOrderSlipId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_customer_order_slip_id");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_supplier_id");
-
-                    b.HasIndex("AuthorityToLoadNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_authority_to_loads_authority_to_load_no_company");
 
                     b.ToTable("filpride_authority_to_loads", (string)null);
                 });

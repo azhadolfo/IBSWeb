@@ -330,12 +330,7 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(b => b.SupplierId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasIndex(b => new
-                {
-                    b.AuthorityToLoadNo,
-                    b.Company
-                })
-                .IsUnique();
+                b.HasIndex(b => b.AuthorityToLoadNo).IsUnique();
             });
 
             builder.Entity<FilprideMonthlyNibit>(n =>

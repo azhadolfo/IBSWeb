@@ -22,7 +22,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FilprideAuthorityToLoads
                 .AsNoTracking()
                 .OrderByDescending(x => x.AuthorityToLoadNo)
-                .FirstOrDefaultAsync(x => x.Company == company, cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken);
 
             var yearToday = DateTimeHelper.GetCurrentPhilippineTime().Year;
 

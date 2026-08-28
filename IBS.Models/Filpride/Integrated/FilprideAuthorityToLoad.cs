@@ -51,9 +51,6 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = null!;
-
         [StringLength(100)]
         public string? HaulerName { get; set; }
 
