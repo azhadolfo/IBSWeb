@@ -1218,7 +1218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         g.Date >= dateFrom && g.Date <= dateTo &&
                         g.AccountNo == selectedAccount.AccountNumber &&
                         g.SubAccountId.HasValue && g.SubAccountType.HasValue &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (subsidiaryLedgerByAccountNo.Count == 0)

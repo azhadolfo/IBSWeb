@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var serviceInvoices = _unitOfWork.FilprideServiceInvoice
-                    .GetAllQuery(x => x.Company == companyClaims);
+                    .GetAllQuery(x => true);
 
                 var totalRecords = await serviceInvoices.CountAsync(cancellationToken);
 
@@ -256,7 +256,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     Total = viewModel.Total,
                     Balance = viewModel.Total,
-                    Company = companyClaims,
                     Period = viewModel.Period,
                     Instructions = viewModel.Instructions,
                     DueDate = viewModel.DueDate,
@@ -288,7 +287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -360,13 +359,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.ServiceName == "TRANSACTION FEE")
                 {
-                    await ReverseTheDrEntries(model.DeliveryReceipt!, model.Company,
+                    await ReverseTheDrEntries(model.DeliveryReceipt!, string.Empty,
                         cancellationToken);
                 }
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -423,7 +422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -487,14 +486,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     dr.HasAlreadyInvoiced = false;
                     dr.Status = nameof(DRStatus.ForInvoicing);
 
-                    await RevertTheReversalOfDrEntries(dr, dr.Company, cancellationToken);
+                    await RevertTheReversalOfDrEntries(dr, string.Empty, cancellationToken);
                 }
 
                 await _unitOfWork.GeneralLedger.ReverseEntries(model.ServiceInvoiceNo, cancellationToken);
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -562,8 +561,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(existingModel.Company, cancellationToken);
-            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(existingModel.Company, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(string.Empty, cancellationToken);
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(string.Empty, cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -613,7 +612,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", existingModel.Company);
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -682,7 +681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", sv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -694,7 +693,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", sv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -835,7 +834,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await _dbContext.FilprideGeneralLedgerBooks
                 .Where(x => (x.Reference == dr.DeliveryReceiptNo || relatedRrNos.Contains(x.Reference))
-                            && x.Company == company && x.Description.Contains("Reversal of entries due to recording of transaction fee"))
+                            && x.Description.Contains("Reversal of entries due to recording of transaction fee"))
                 .ExecuteDeleteAsync(cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -847,7 +846,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var originalEntries = await _dbContext.FilprideGeneralLedgerBooks
                 .Where(x => (x.Reference == dr.DeliveryReceiptNo || relatedRrNos.Contains(x.Reference))
-                            && x.Company == company)
+)
                 .ToListAsync(cancellationToken);
 
             var reversalEntries = new List<FilprideGeneralLedgerBook>();
@@ -870,7 +869,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     IsPosted = true,
-                    Company = originalEntry.Company,
                     AccountId = originalEntry.AccountId,
                     SubAccountType = originalEntry.SubAccountType,
                     SubAccountId = originalEntry.SubAccountId,
@@ -898,7 +896,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
+                    .GetAllAsync(sv => sv.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 // Apply month range filter if provided
                 if (!string.IsNullOrEmpty(dateFrom))
@@ -1033,7 +1031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
                     .GetAllAsync(x =>
-                            x.Company == companyClaims &&
+                            
                             x.Status == nameof(Status.Posted) &&
                             x.Period.Month == month &&
                             x.Period.Year == year,
@@ -1050,7 +1048,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var existingGlEntries = await _dbContext.FilprideGeneralLedgerBooks
-                    .Where(x => x.Company == companyClaims && serviceInvoiceNos.Contains(x.Reference))
+                    .Where(x => serviceInvoiceNos.Contains(x.Reference))
                     .ToListAsync(cancellationToken);
 
                 if (existingGlEntries.Count != 0)
@@ -1061,7 +1059,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var service in serviceInvoices.Where(x => x.ServiceName == "TRANSACTION FEE"))
                 {
-                    await RevertTheReversalOfDrEntries(service.DeliveryReceipt!, service.Company, cancellationToken);
+                    await RevertTheReversalOfDrEntries(service.DeliveryReceipt!, string.Empty, cancellationToken);
                 }
 
                 foreach (var service in serviceInvoices
@@ -1071,7 +1069,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (service.ServiceName == "TRANSACTION FEE")
                     {
-                        await ReverseTheDrEntries(service.DeliveryReceipt!, service.Company,
+                        await ReverseTheDrEntries(service.DeliveryReceipt!, string.Empty,
                             cancellationToken);
                     }
                 }
@@ -1116,12 +1114,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                  .GetAsync(x => x.DeliveryReceiptId == serviceInvoice.DeliveryReceiptId, cancellationToken)
                              ?? throw new NullReferenceException("DR not found!");
 
-                    await RevertTheReversalOfDrEntries(dr, serviceInvoice.Company, cancellationToken);
+                    await RevertTheReversalOfDrEntries(dr, string.Empty, cancellationToken);
                 }
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted service invoice# {serviceInvoice.ServiceInvoiceNo}", "Service Invoice", serviceInvoice.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted service invoice# {serviceInvoice.ServiceInvoiceNo}", "Service Invoice", string.Empty);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

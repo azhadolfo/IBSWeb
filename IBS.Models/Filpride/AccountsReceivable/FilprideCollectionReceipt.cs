@@ -186,9 +186,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "numeric[]")]
         public decimal[]? SIMultipleAmount { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         public bool IsPrinted { get; set; }
 
         public DateOnly[]? MultipleTransactionDate { get; set; }

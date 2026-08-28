@@ -35,7 +35,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.SalesInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                         !x.SalesInvoiceNo!.Contains("SIBEG") &&
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Documented), cancellationToken);
 
             if (lastSi == null)
@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.SalesInvoiceNo)
                 .FirstOrDefaultAsync(x =>
                         !x.SalesInvoiceNo!.Contains("SIBEG") &&
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented), cancellationToken);
 
             if (lastSi == null)

@@ -515,7 +515,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             // Query your database to get hauler details for the COS
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(c => c.CustomerOrderSlipId == cosId && c.Company == companyClaims);
+                .GetAsync(c => c.CustomerOrderSlipId == cosId);
 
             if (existingCos == null)
             {

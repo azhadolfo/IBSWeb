@@ -216,7 +216,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.AddAsync(model, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);

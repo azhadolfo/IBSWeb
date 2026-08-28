@@ -22,7 +22,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task AddPurchaseToInventoryAsync(FilprideReceivingReport receivingReport, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
-                .Where(i => i.Company == receivingReport.Company &&
+                .Where(i => 
                             i.ProductId == receivingReport.PurchaseOrder!.Product!.ProductId &&
                             i.POId == receivingReport.POId)
                 .ToListAsync(cancellationToken);
@@ -74,7 +74,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 InventoryBalance = inventoryBalance,
                 TotalBalance = totalBalance,
                 AverageCost = averageCost,
-                Company = receivingReport.Company
             };
 
             await RecalculateTransactionsAsync(inventory, subsequentTransactions, cancellationToken);
@@ -153,7 +152,7 @@ namespace IBS.DataAccess.Repository.Filpride
             CancellationToken cancellationToken)
         {
             var sortedInventory = await _db.FilprideInventories
-                .Where(i => i.Company == deliveryReceipt.Company &&
+                .Where(i => 
                             i.ProductId == productId &&
                             i.POId == purchaseOrderId)
                 .ToListAsync(cancellationToken);
@@ -222,7 +221,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 InventoryBalance = inventoryBalance,
                 TotalBalance = totalBalance,
                 AverageCost = averageCost,
-                Company = deliveryReceipt.Company
             };
 
             await RecalculateTransactionsAsync(inventory, subsequentTransactions, cancellationToken);
@@ -238,8 +236,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task VoidInventory(FilprideInventory model, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
-            .Where(i => i.Company == model.Company
-                        && i.ProductId == model.ProductId
+            .Where(i => i.ProductId == model.ProductId
                         && i.POId == model.POId)
             .ToListAsync(cancellationToken);
 

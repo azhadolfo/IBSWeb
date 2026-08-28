@@ -478,7 +478,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(g =>
                         g.Date >= model.DateFrom && g.Date <= model.DateTo &&
                         (selectedAccountNo == null || g.AccountNo == selectedAccountNo) &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgerByAccountNo.Any())
@@ -716,7 +716,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(g =>
                         g.Date >= dateFrom && g.Date <= dateTo &&
                         (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (generalLedgerByAccountNo.Count == 0)

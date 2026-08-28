@@ -37,7 +37,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = gl.AccountTitle,
                 Debit = gl.Credit,   // Swap
                 Credit = gl.Debit,   // Swap
-                Company = gl.Company,
                 CreatedBy = gl.CreatedBy,
                 CreatedDate = reversingDate,
                 IsPosted = gl.IsPosted,

@@ -538,8 +538,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var nonTradeInvoiceReport =
                     await _dbContext.FilprideCheckVoucherDetails
                         .AsNoTracking()
-                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
-                                      && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
+                        .Where(cvd => true
+                                      && cvd.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing)
                                       && cvd.CheckVoucherHeader.Date >= dateFrom &&
                                       cvd.CheckVoucherHeader.Date <= dateTo
                                       && (statusFilter == "ValidOnly"
@@ -562,7 +562,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.PostedBy != null &&
                         x.Reference != null &&
                         nonTradeNos.Contains(x.Reference) &&
-                        x.Company == companyClaims)
+                        true)
                     .Select(x => new
                     {
                         x.Reference,
@@ -782,7 +782,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradeHeaderReport = await _dbContext.FilprideCheckVoucherHeaders
                         .AsNoTracking()
                         .Where(cvh =>
-                            cvh.Company == companyClaims &&
+                            
                             cvh.CvType != nameof(CVType.Invoicing) &&
                             cvh.Date >= dateFrom &&
                             cvh.Date <= dateTo
@@ -3545,7 +3545,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var receivingReports = await _dbContext.FilprideReceivingReports
                     .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
-                    .Where(rr => rr.Company == companyClaims && rr.Date <= model.DateTo)
+                    .Where(rr => true&& rr.Date <= model.DateTo)
                     .OrderBy(rr => rr.Date.Year)
                     .ThenBy(rr => rr.Date.Month)
                     .ThenBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
@@ -4704,7 +4704,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         po.SupplierId,
                         po.SupplierName,
-                        po.Company,
+                        string.Empty,
                         po.Terms
                     })
                     .OrderBy(po => po.Key.SupplierName)
@@ -4723,7 +4723,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row += 2;
                     worksheet.Cells[row, 2].Value = sameSupplierGroup.Key.SupplierName;
                     worksheet.Cells[row, 2].Style.Font.Bold = true;
-                    worksheet.Cells[row, 3].Value = sameSupplierGroup.Key.Company;
+                    worksheet.Cells[row, 3].Value = string.Empty;
                     var groupByProduct = sameSupplierGroup
                         .GroupBy(po => new
                         {

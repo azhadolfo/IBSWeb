@@ -513,13 +513,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (dateRangeType == "AsOf")
                     {
-                        filter = i => i.Company == companyClaims
+                        filter = i => true
                                       && i.DeliveredDate <= viewModel.DateFrom
                                       && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
                     }
                     else
                     {
-                        filter = i => i.Company == companyClaims
+                        filter = i => true
                                       && i.DeliveredDate >= viewModel.DateFrom
                                       && i.DeliveredDate <= viewModel.DateTo
                                       && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
@@ -527,7 +527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    filter = i => i.Company == companyClaims
+                    filter = i => true
                                   && i.Date >= viewModel.DateFrom
                                   && i.Date <= viewModel.DateTo
                                   && (i.DeliveredDate == null || i.DeliveredDate > viewModel.DateTo)
@@ -1153,20 +1153,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (statusFilter == "InvalidOnly")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Voided));
                         }
                         else if (statusFilter == "All")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing)
                                             || i.Status == nameof(DRStatus.Voided));
                         }
                         else // ValidOnly
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
                         }
@@ -1175,14 +1175,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (statusFilter == "InvalidOnly")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Voided) || i.Status == nameof(DRStatus.Canceled));
                         }
                         else if (statusFilter == "All")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing)
@@ -1190,7 +1190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         else // ValidOnly
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
@@ -1199,7 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    filter = i => i.Company == companyClaims
+                    filter = i => true
                         && i.DeliveredDate == null
                         && i.Status == nameof(DRStatus.PendingDelivery);
                 }
@@ -3381,7 +3381,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                     .GetAllAsync(si => si.PostedBy != null
                                        && si.AmountPaid == 0
-                                       && !si.IsPaid && si.Company == companyClaims, cancellationToken);
+                                       && !si.IsPaid, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3663,7 +3663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                     .GetAllAsync(si => si.PostedBy != null
                                        && si.AmountPaid == 0 && !si.IsPaid
-                                       && si.Company == companyClaims, cancellationToken);
+, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {

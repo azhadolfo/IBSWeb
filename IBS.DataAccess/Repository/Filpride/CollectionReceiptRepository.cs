@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.CollectionReceiptNo!.Length)
                 .ThenByDescending(x => x.CollectionReceiptNo)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == company &&
+                    
                     x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
@@ -65,7 +65,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.CollectionReceiptNo!.Length)
                 .ThenByDescending(x => x.CollectionReceiptNo)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
@@ -85,7 +85,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var result = await _db
                 .FilprideOffsettings
-                .Where(o => o.Company == company && o.Source == source && o.Reference == reference)
+                .Where(o => o.Source == source && o.Reference == reference)
                 .ToListAsync(cancellationToken);
 
             return result;
@@ -126,7 +126,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cashInBankTitle.AccountName,
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -147,7 +146,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwt.AccountName,
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -168,7 +166,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwv.AccountName,
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -189,7 +186,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeTitle.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
@@ -213,7 +209,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -234,7 +229,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -295,7 +289,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                     Credit = 0,
-                    Company = collectionReceipt.Company,
                     CreatedBy = collectionReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.BankAccount,
@@ -318,7 +311,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = 0,
                     Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
-                    Company = collectionReceipt.Company,
                     CreatedBy = collectionReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Collection)
@@ -612,7 +604,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var originalEntries = await _db.FilprideGeneralLedgerBooks
                 .Where(x => x.Reference == crNo
-                            && x.Company == company)
+)
                 .ToListAsync(cancellationToken);
 
             var reversalEntries = new List<FilprideGeneralLedgerBook>();
@@ -631,7 +623,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     IsPosted = true,
-                    Company = originalEntry.Company,
                     AccountId = originalEntry.AccountId,
                     SubAccountType = originalEntry.SubAccountType,
                     SubAccountId = originalEntry.SubAccountId,
@@ -704,7 +695,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cashInBankTitle.AccountName,
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.BankAccount,
@@ -730,7 +720,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwt.AccountName,
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -751,7 +740,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwv.AccountName,
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -772,7 +760,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeTitle.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
@@ -796,7 +783,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -817,7 +803,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
@@ -833,7 +818,7 @@ namespace IBS.DataAccess.Repository.Filpride
             string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default)
         {
             var hasExistingCostOfMoneyEntry = await _db.FilprideGeneralLedgerBooks.AnyAsync(entry =>
-                entry.Company == deliveryReceipt.Company &&
+                
                 entry.Reference == deliveryReceipt.DeliveryReceiptNo &&
                 entry.Description.StartsWith("Cost of money from late deposit"), cancellationToken);
 
@@ -876,7 +861,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = apCommissionPayableTitle.AccountName,
                     Debit = netOfEwt,
                     Credit = 0,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = currentUser,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Supplier,
@@ -898,7 +882,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = ewtTitle.AccountName,
                     Debit = ewtAmount,
                     Credit = 0,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = currentUser,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -915,7 +898,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = commissionTitle.AccountName,
                 Debit = 0,
                 Credit = costOfMoney,
-                Company = deliveryReceipt.Company,
                 CreatedBy = currentUser,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 ModuleType = nameof(ModuleType.Sales)
@@ -959,7 +941,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cashInBankTitle.AccountName,
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         SubAccountType = SubAccountType.BankAccount,
@@ -985,7 +966,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwt.AccountName,
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         ModuleType = nameof(ModuleType.Collection)
@@ -1006,7 +986,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cwv.AccountName,
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         ModuleType = nameof(ModuleType.Collection)
@@ -1027,7 +1006,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeTitle.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         SubAccountType = SubAccountType.Customer,
@@ -1051,7 +1029,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         ModuleType = nameof(ModuleType.Collection)
@@ -1072,7 +1049,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
-                        Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GenerateRandomTransactionDateTime(DateOnly.FromDateTime(collectionReceipt.CreatedDate)),
                         ModuleType = nameof(ModuleType.Collection)
@@ -1133,7 +1109,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
                     Credit = 0,
-                    Company = collectionReceipt.Company,
                     CreatedBy = collectionReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.BankAccount,
@@ -1156,7 +1131,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = 0,
                     Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagersCheckAmount,
-                    Company = collectionReceipt.Company,
                     CreatedBy = collectionReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Collection)

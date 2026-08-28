@@ -102,7 +102,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -344,7 +344,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -617,7 +617,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
@@ -818,7 +818,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
@@ -1009,7 +1009,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= model.DateFrom &&
                         gl.Date <= model.DateTo &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var priorLedgers = await _dbContext.FilprideGeneralLedgerBooks
@@ -1020,7 +1020,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < model.DateFrom &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -1523,7 +1523,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(gl => gl.Account)
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -1799,7 +1799,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(gl => gl.Account) // Level 4
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
-                        gl.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 var chartOfAccounts = await _dbContext.FilprideChartOfAccounts

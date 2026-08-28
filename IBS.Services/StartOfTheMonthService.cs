@@ -107,13 +107,13 @@ namespace IBS.Services
                 var newJournalVouchers = new List<FilprideJournalVoucherHeader>();
 
                 var groupedAmortizations = amortizationSetting
-                    .GroupBy(a => new { a.JvHeader.Company, a.JvHeader.Type })
+                    .GroupBy(a => a.JvHeader.Type)
                     .ToList();
 
                 foreach (var group in groupedAmortizations)
                 {
                     var baseCode = await _unitOfWork.FilprideJournalVoucher
-                        .GenerateCodeAsync(group.Key.Company, group.Key.Type);
+                        .GenerateCodeAsync(group.Key);
 
                     var offset = 0;
                     foreach (var amortization in group)
@@ -139,7 +139,6 @@ namespace IBS.Services
                             CRNo = sourceJv.CRNo,
                             JVReason = sourceJv.JVReason,
                             CreatedBy = "SYSTEM GENERATED",
-                            Company = sourceJv.Company,
                             JvType = nameof(JvType.Amortization),
                             Status = nameof(JvStatus.Pending),
                             Details = sourceJv.Details.Select(detail => new FilprideJournalVoucherDetail
@@ -248,7 +247,6 @@ namespace IBS.Services
                                 AccountTitle = account.AccountName,
                                 Debit = detail.Credit,
                                 Credit = detail.Debit,
-                                Company = journalVoucherHeaders.Company,
                                 CreatedBy = journalVoucherHeaders.CreatedBy!,
                                 CreatedDate = currentDateTime,
                                 SubAccountType = detail.SubAccountType,

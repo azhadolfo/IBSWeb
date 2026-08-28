@@ -67,9 +67,6 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool IsPrinted { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         [StringLength(50)]
         public string ManualDrNo
         {

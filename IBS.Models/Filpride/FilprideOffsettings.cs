@@ -32,6 +32,5 @@ namespace IBS.Models.Filpride
         public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
 
-        public string Company { get; set; } = string.Empty;
     }
 }

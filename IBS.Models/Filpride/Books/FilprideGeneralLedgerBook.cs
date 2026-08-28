@@ -47,9 +47,6 @@ namespace IBS.Models.Filpride.Books
         public bool IsPosted { get; set; } = true;
 
         [Column(TypeName = "varchar(50)")]
-        public string Company { get; set; } = null!;
-
-        [Column(TypeName = "varchar(50)")]
         public string ModuleType { get; set; } = string.Empty;
 
         #region Chart Of Account Properties

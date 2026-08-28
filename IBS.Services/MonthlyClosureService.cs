@@ -46,7 +46,7 @@ namespace IBS.Services
                 }
 
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
-                    .AnyAsync(x => x.Company == company &&
+                    .AnyAsync(x => 
                                    x.Date.Month == monthDate.Month &&
                                    x.Date.Year == monthDate.Year &&
                                    x.VoidedBy == null &&
@@ -83,7 +83,7 @@ namespace IBS.Services
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv =>
-                        cv.Company == company &&
+                        
                         cv.Date.Month == periodMonth.Month &&
                         cv.Date.Year == periodMonth.Year &&
                         cv.CvType != nameof(CVType.Invoicing) &&
@@ -120,7 +120,6 @@ namespace IBS.Services
                             AccountTitle = account.AccountName,
                             Debit = detail.Credit,
                             Credit = detail.Debit,
-                            Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountId = detail.SubAccountId,
@@ -139,7 +138,6 @@ namespace IBS.Services
                             AccountTitle = account.AccountName,
                             Debit = detail.Debit,
                             Credit = detail.Credit,
-                            Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountId = detail.SubAccountId,
@@ -186,8 +184,7 @@ namespace IBS.Services
                     .ThenInclude(filprideChartOfAccount => filprideChartOfAccount.ParentAccount) // Level 4
                     .Where(gl =>
                         gl.Date.Month == periodMonth.Month &&
-                        gl.Date.Year == periodMonth.Year &&
-                        gl.Company == company)
+                        gl.Date.Year == periodMonth.Year)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
@@ -289,7 +286,7 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Include(x => x.Account)
                     .Where(x =>
-                        x.Company == company &&
+                        
                         x.Date.Month == periodMonth.Month &&
                         x.Date.Year == periodMonth.Year)
                     .ToListAsync(cancellationToken);

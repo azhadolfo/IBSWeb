@@ -37,8 +37,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                     x.Category == "Trade" &&
-                    x.Type == nameof(DocumentType.Documented) &&
-                    x.Company == company,
+                    x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -62,8 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.Category == "Trade" &&
-                        x.Type == nameof(DocumentType.Undocumented) &&
-                        x.Company == company,
+                        x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -173,8 +171,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Invoicing) &&
-                        x.Type == nameof(DocumentType.Documented) &&
-                        x.Company == company,
+                        x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -198,8 +195,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Invoicing) &&
-                        x.Type == nameof(DocumentType.Undocumented) &&
-                        x.Company == company,
+                        x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -233,8 +229,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Payment) &&
-                        x.Type == nameof(DocumentType.Documented) &&
-                        x.Company == company,
+                        x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -258,8 +253,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenByDescending(x => x.CheckVoucherHeaderNo)
                 .FirstOrDefaultAsync(x =>
                         x.CvType == nameof(CVType.Payment) &&
-                        x.Type == nameof(DocumentType.Undocumented) &&
-                        x.Company == company,
+                        x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
             if (lastCv == null)
@@ -297,7 +291,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = account.AccountName,
                             Debit = detail.Debit,
                             Credit = detail.Credit,
-                            Company = header.Company,
                             CreatedBy = header.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountType = detail.SubAccountType,

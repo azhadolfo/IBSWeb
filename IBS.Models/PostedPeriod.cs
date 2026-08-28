@@ -9,9 +9,6 @@ namespace IBS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [StringLength(50)]
-        public string Company { get; set; } = null!;
-
         public int Month { get; set; }
 
         public int Year { get; set; }
