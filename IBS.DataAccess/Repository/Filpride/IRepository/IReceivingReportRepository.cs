@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IReceivingReportRepository : IRepository<FilprideReceivingReport>
     {
-        Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string type, CancellationToken cancellationToken = default);
 
         Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
 

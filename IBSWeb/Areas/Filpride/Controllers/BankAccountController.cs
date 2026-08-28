@@ -108,8 +108,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                model.Company = companyClaims;
-
                 model.CreatedBy = GetUserFullName();
 
                 await _unitOfWork.FilprideBankAccount.AddAsync(model, cancellationToken);
@@ -117,7 +115,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail Recordings --
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recordings --
@@ -226,7 +224,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region -- Audit Trail Recordings --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", existingModel.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recordings --
@@ -235,9 +233,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.AccountName = model.AccountName;
                 existingModel.Bank = model.Bank;
                 existingModel.Branch = model.Branch;
-                existingModel.IsFilpride = model.IsFilpride;
-                existingModel.IsBienes = model.IsBienes;
-
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Bank edited successfully.";

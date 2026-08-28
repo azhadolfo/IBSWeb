@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(getUserFullName,
-                    $"Create new Terms #{model.TermsCode}", "Terms", companyClaims);
+                    $"Create new Terms #{model.TermsCode}", "Terms");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -217,7 +217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new (getUserFullName,
-                    $"Edited Terms #{model.TermsCode}", "Terms", companyClaims);
+                    $"Edited Terms #{model.TermsCode}", "Terms");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -265,7 +265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new (getUserFullName,
-                    $"Deleted Terms #{code}", "Terms", companyClaims);
+                    $"Deleted Terms #{code}", "Terms");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --

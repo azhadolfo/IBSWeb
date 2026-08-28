@@ -23,17 +23,17 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string documentType, CancellationToken cancellationToken = default)
         {
             return documentType switch
             {
-                nameof(DocumentType.Documented) => await GenerateDocumentedCodeAsync(companyClaims, cancellationToken),
-                nameof(DocumentType.Undocumented) => await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken),
+                nameof(DocumentType.Documented) => await GenerateDocumentedCodeAsync(cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateUnDocumentedCodeAsync(cancellationToken),
                 _ => throw new ArgumentException("Invalid type")
             };
         }
 
-        private async Task<string> GenerateDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateDocumentedCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.DeliveryReceiptNo.Length)
                 .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == companyClaims &&
+                    
                     x.Type == nameof(DocumentType.Documented) &&
                     !x.DeliveryReceiptNo.Contains("BEG"),
                     cancellationToken);
@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
-        private async Task<string> GenerateUnDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateUnDocumentedCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.DeliveryReceiptNo.Length)
                 .ThenByDescending(x => x.DeliveryReceiptNo)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == companyClaims &&
+                        
                         x.Type == nameof(DocumentType.Undocumented) &&
                         !x.DeliveryReceiptNo.Contains("BEG"),
                     cancellationToken);
@@ -222,7 +222,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt");
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -233,12 +233,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                 .OrderBy(dr => dr.DeliveryReceiptId)
-                .Where(dr => dr.DeliveredDate != null &&
-                             dr.Company == companyClaims)
+                .Where(dr => dr.DeliveredDate != null)
                 .Select(dr => new SelectListItem
                 {
                     Value = dr.DeliveryReceiptId.ToString(),
@@ -247,7 +246,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(string companyClaims, int cosId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(int cosId, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
@@ -255,8 +254,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         dr.CustomerOrderSlipId == cosId &&
                         dr.DeliveredDate != null &&
                         !dr.HasAlreadyInvoiced &&
-                        dr.Status == nameof(DRStatus.ForInvoicing) &&
-                        dr.Company == companyClaims)
+                        dr.Status == nameof(DRStatus.ForInvoicing))
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
@@ -406,7 +404,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = arTradeCwt.AccountName,
                             Debit = arTradeCwtAmount,
                             Credit = 0,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
@@ -425,7 +422,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = arTradeCwv.AccountName,
                             Debit = arTradeCwvAmount,
                             Credit = 0,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
@@ -442,7 +438,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = customerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
                         Debit = netOfEwtAmount,
                         Credit = 0,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
@@ -461,7 +456,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = salesTitle.AccountName,
                         Debit = 0,
                         Credit = netOfVatAmount,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -477,7 +471,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = vatOutputTitle.AccountName,
                         Debit = 0,
                         Credit = vatAmount,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -485,7 +478,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     var inventoryTransactions = await _db.FilprideInventories
                         .Where(i => i.Reference == deliveryReceipt.DeliveryReceiptNo
-                                    && i.Company == deliveryReceipt.Company
                                     && i.ProductId == detail.ProductId
                                     && i.POId == detail.PurchaseOrderId)
                         .ToListAsync(cancellationToken);
@@ -514,7 +506,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = cogsTitle.AccountName,
                         Debit = cogsNetOfVat,
                         Credit = 0,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -530,7 +521,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = inventoryTitle.AccountName,
                         Debit = 0,
                         Credit = cogsNetOfVat,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -555,7 +545,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = freightTitle.AccountName,
                             Debit = freightNetOfVat,
                             Credit = 0,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
@@ -573,7 +562,6 @@ namespace IBS.DataAccess.Repository.Filpride
                                 AccountTitle = vatInputTitle.AccountName,
                                 Debit = freightVatAmount,
                                 Credit = 0,
-                                Company = deliveryReceipt.Company,
                                 CreatedBy = deliveryReceipt.PostedBy!,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.Sales)
@@ -600,7 +588,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = freightTitle.AccountName,
                             Debit = eccNetOfVat,
                             Credit = 0,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
@@ -618,7 +605,6 @@ namespace IBS.DataAccess.Repository.Filpride
                                 AccountTitle = vatInputTitle.AccountName,
                                 Debit = eccVatAmount,
                                 Credit = 0,
-                                Company = deliveryReceipt.Company,
                                 CreatedBy = deliveryReceipt.PostedBy!,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.Sales)
@@ -653,7 +639,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = apHaulingPayableTitle.AccountName,
                             Debit = 0,
                             Credit = lineHaulingNetOfEwt,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountType = SubAccountType.Supplier,
@@ -674,7 +659,6 @@ namespace IBS.DataAccess.Repository.Filpride
                                 AccountTitle = haulingEwtTitle.AccountName,
                                 Debit = 0,
                                 Credit = lineHaulingEwtAmount,
-                                Company = deliveryReceipt.Company,
                                 CreatedBy = deliveryReceipt.PostedBy!,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.Sales)
@@ -706,7 +690,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = commissionTitle.AccountName,
                             Debit = commissionGrossAmount,
                             Credit = 0,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             ModuleType = nameof(ModuleType.Sales)
@@ -722,7 +705,6 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = apCommissionPayableTitle.AccountName,
                             Debit = 0,
                             Credit = commissionNetOfEwt,
-                            Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy!,
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountType = SubAccountType.Supplier,
@@ -743,7 +725,6 @@ namespace IBS.DataAccess.Repository.Filpride
                                 AccountTitle = commissionEwtTitle.AccountName,
                                 Debit = 0,
                                 Credit = commissionEwtAmount,
-                                Company = deliveryReceipt.Company,
                                 CreatedBy = deliveryReceipt.PostedBy!,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 ModuleType = nameof(ModuleType.Sales)
@@ -890,7 +871,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = inventoryTitle.AccountName,
                         Debit = productCostNetOfVatAmount,
                         Credit = 0,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -905,7 +885,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = vatInputTitle.AccountName,
                         Debit = productCostVatAmount,
                         Credit = 0,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -920,7 +899,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = apTradeTitle.AccountName,
                         Debit = 0,
                         Credit = productCostNetOfEwt,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Supplier,
@@ -938,7 +916,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = ewtOnePercent.AccountName,
                         Debit = 0,
                         Credit = productCostEwtAmount,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -957,7 +934,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = inventoryTitle.AccountName,
                         Debit = 0,
                         Credit = productCostNetOfVatAmount,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -972,7 +948,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = vatInputTitle.AccountName,
                         Debit = 0,
                         Credit = productCostVatAmount,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -987,7 +962,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = apTradeTitle.AccountName,
                         Debit = productCostNetOfEwt,
                         Credit = 0,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Supplier,
@@ -1005,7 +979,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = ewtOnePercent.AccountName,
                         Debit = productCostEwtAmount,
                         Credit = 0,
-                        Company = dr.Company,
                         CreatedBy = "SYSTEM GENERATED",
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     });
@@ -1138,7 +1111,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = isIncremental ? arTradeCwtAmount : 0,
                         Credit = !isIncremental ? arTradeCwtAmount : 0,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = userName,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -1157,7 +1129,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = isIncremental ? arTradeCwvAmount : 0,
                         Credit = !isIncremental ? arTradeCwvAmount : 0,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = userName,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -1174,7 +1145,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
                     Debit = isIncremental ? netOfEwtAmount : 0,
                     Credit = !isIncremental ? netOfEwtAmount : 0,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Customer,
@@ -1197,7 +1167,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = salesTitle.AccountName,
                     Debit = !isIncremental ? netOfVatAmount : 0,
                     Credit = isIncremental ? netOfVatAmount : 0,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -1213,7 +1182,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = vatOutputTitle.AccountName,
                     Debit = !isIncremental ? vatAmount : 0,
                     Credit = isIncremental ? vatAmount : 0,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -1306,7 +1274,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = commissionTitle.AccountName,
                     Debit = isIncremental ? commissionGrossAmount : 0m,
                     Credit = !isIncremental ? commissionGrossAmount : 0m,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -1322,7 +1289,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = apCommissionPayableTitle.AccountName,
                     Debit = !isIncremental ? commissionNetOfEwt : 0m,
                     Credit = isIncremental ? commissionNetOfEwt : 0m,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Supplier,
@@ -1343,7 +1309,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = ewtTitle.AccountName,
                         Debit = !isIncremental ? commissionEwtAmount : 0m,
                         Credit = isIncremental ? commissionEwtAmount : 0m,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = userName,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -1440,7 +1405,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = freightTitle.AccountName,
                     Debit = isIncremental ? freightNetOfVat : 0m,
                     Credit = !isIncremental ? freightNetOfVat : 0m,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -1460,7 +1424,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = isIncremental ? freightVatAmount : 0m,
                     Credit = !isIncremental ? freightVatAmount : 0m,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -1476,7 +1439,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = apHaulingPayableTitle.AccountName,
                     Debit = !isIncremental ? freightNetOfEwt : 0m,
                     Credit = isIncremental ? freightNetOfEwt : 0m,
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Supplier,
@@ -1497,7 +1459,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = ewtTitle.AccountName,
                         Debit = !isIncremental ? freightEwtAmount : 0m,
                         Credit = isIncremental ? freightEwtAmount : 0m,
-                        Company = deliveryReceipt.Company,
                         CreatedBy = userName,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)

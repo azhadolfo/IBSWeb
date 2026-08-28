@@ -7,9 +7,9 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ISupplierRepository : IRepository<FilprideSupplier>
     {
-        Task<bool> IsTinNoExistAsync(string tin, string branch, string category, string company, CancellationToken cancellationToken = default);
+        Task<bool> IsTinNoExistAsync(string tin, string branch, string category, CancellationToken cancellationToken = default);
 
-        Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default);
+        Task<bool> IsSupplierExistAsync(string supplierName, string category, CancellationToken cancellationToken = default);
 
         Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
 

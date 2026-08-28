@@ -132,7 +132,6 @@
                                     @foreach (var period in Model.PostedPeriods)
                                     {
                                         <tr>
-                                            <td>@period.Company</td>
                                             <td><span class="badge bg-info">@period.Module</span></td>
                                             <td>@(new DateTime(2000, period.Month, 1).ToString("MMMM"))</td>
                                             <td>@period.Year</td>

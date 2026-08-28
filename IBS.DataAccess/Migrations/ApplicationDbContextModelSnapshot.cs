@@ -589,12 +589,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(13)")
                         .HasColumnName("check_voucher_header_no");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("created_by");
@@ -764,12 +758,12 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("BankId")
                         .HasDatabaseName("ix_filpride_check_voucher_headers_bank_id");
 
+                    b.HasIndex("CheckVoucherHeaderNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_check_voucher_headers_check_voucher_header_no");
+
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_check_voucher_headers_supplier_id");
-
-                    b.HasIndex("CheckVoucherHeaderNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_check_voucher_headers_check_voucher_header_no_comp");
 
                     b.ToTable("filpride_check_voucher_headers", (string)null);
                 });
@@ -876,12 +870,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("created_by");
@@ -971,9 +959,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CVId")
                         .HasDatabaseName("ix_filpride_journal_voucher_headers_cv_id");
 
-                    b.HasIndex("JournalVoucherHeaderNo", "Company")
+                    b.HasIndex("JournalVoucherHeaderNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_journal_voucher_headers_journal_voucher_header_no_");
+                        .HasDatabaseName("ix_filpride_journal_voucher_headers_journal_voucher_header_no");
 
                     b.ToTable("filpride_journal_voucher_headers", (string)null);
                 });
@@ -1033,12 +1021,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -1234,12 +1216,12 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_purchase_orders_product_id");
 
+                    b.HasIndex("PurchaseOrderNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_purchase_orders_purchase_order_no");
+
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_purchase_orders_supplier_id");
-
-                    b.HasIndex("PurchaseOrderNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_purchase_orders_purchase_order_no_company");
 
                     b.ToTable("filpride_purchase_orders", (string)null);
                 });
@@ -1281,12 +1263,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<decimal>("CostBasedOnSoa")
                         .HasColumnType("numeric(18,4)")
@@ -1442,9 +1418,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("POId")
                         .HasDatabaseName("ix_filpride_receiving_reports_po_id");
 
-                    b.HasIndex("ReceivingReportNo", "Company")
+                    b.HasIndex("ReceivingReportNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_receiving_reports_receiving_report_no_company");
+                        .HasDatabaseName("ix_filpride_receiving_reports_receiving_report_no");
 
                     b.ToTable("filpride_receiving_reports", (string)null);
                 });
@@ -1524,12 +1500,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(13)
                         .HasColumnType("character varying(13)")
                         .HasColumnName("collection_receipt_no");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -1700,6 +1670,10 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("BankId")
                         .HasDatabaseName("ix_filpride_collection_receipts_bank_id");
 
+                    b.HasIndex("CollectionReceiptNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_collection_receipts_collection_receipt_no");
+
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_collection_receipts_customer_id");
 
@@ -1708,10 +1682,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_collection_receipts_service_invoice_id");
-
-                    b.HasIndex("CollectionReceiptNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_collection_receipts_collection_receipt_no_company");
 
                     b.ToTable("filpride_collection_receipts", (string)null);
                 });
@@ -1800,12 +1770,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -1911,15 +1875,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CreditMemoId")
                         .HasName("pk_filpride_credit_memos");
 
+                    b.HasIndex("CreditMemoNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_credit_memos_credit_memo_no");
+
                     b.HasIndex("SalesInvoiceId")
                         .HasDatabaseName("ix_filpride_credit_memos_sales_invoice_id");
 
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_credit_memos_service_invoice_id");
-
-                    b.HasIndex("CreditMemoNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_credit_memos_credit_memo_no_company");
 
                     b.ToTable("filpride_credit_memos", (string)null);
                 });
@@ -1960,12 +1924,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -2072,15 +2030,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("DebitMemoId")
                         .HasName("pk_filpride_debit_memos");
 
+                    b.HasIndex("DebitMemoNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_debit_memos_debit_memo_no");
+
                     b.HasIndex("SalesInvoiceId")
                         .HasDatabaseName("ix_filpride_debit_memos_sales_invoice_id");
 
                     b.HasIndex("ServiceInvoiceId")
                         .HasDatabaseName("ix_filpride_debit_memos_service_invoice_id");
-
-                    b.HasIndex("DebitMemoNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_debit_memos_debit_memo_no_company");
 
                     b.ToTable("filpride_debit_memos", (string)null);
                 });
@@ -2155,12 +2113,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateOnly?>("ClearedDate")
                         .HasColumnType("date")
                         .HasColumnName("cleared_date");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -2280,12 +2232,12 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("BankId")
                         .HasDatabaseName("ix_filpride_provisional_receipts_bank_id");
 
+                    b.HasIndex("SeriesNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_provisional_receipts_series_number");
+
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_provisional_receipts_supplier_id");
-
-                    b.HasIndex("SeriesNumber", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_provisional_receipts_series_number_company");
 
                     b.ToTable("filpride_provisional_receipts", (string)null);
                 });
@@ -2322,12 +2274,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -2504,9 +2450,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_filpride_sales_invoices_purchase_order_id");
 
-                    b.HasIndex("SalesInvoiceNo", "Company")
+                    b.HasIndex("SalesInvoiceNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_sales_invoices_sales_invoice_no_company");
+                        .HasDatabaseName("ix_filpride_sales_invoices_sales_invoice_no");
 
                     b.ToTable("filpride_sales_invoices", (string)null);
                 });
@@ -2539,12 +2485,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -2711,9 +2651,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ServiceId")
                         .HasDatabaseName("ix_filpride_service_invoices_service_id");
 
-                    b.HasIndex("ServiceInvoiceNo", "Company")
+                    b.HasIndex("ServiceInvoiceNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_service_invoices_service_invoice_no_company");
+                        .HasDatabaseName("ix_filpride_service_invoices_service_invoice_no");
 
                     b.ToTable("filpride_service_invoices", (string)null);
                 });
@@ -2729,11 +2669,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("activity");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp without time zone")
@@ -2782,11 +2717,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)")
                         .HasColumnName("account_title");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -2861,11 +2791,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AverageCost")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("average_cost");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
 
                     b.Property<decimal>("Cost")
                         .HasColumnType("numeric(18,4)")
@@ -3006,11 +2931,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("closed_at");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("company");
-
                     b.Property<decimal>("CreditTotal")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit_total");
@@ -3070,11 +2990,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("BeginningBalance")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("beginning_balance");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("company");
 
                     b.Property<decimal>("CreditTotal")
                         .HasColumnType("numeric(18,4)")
@@ -3145,12 +3060,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18, 4)")
                         .HasColumnName("beginning_balance");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("company");
-
                     b.Property<decimal>("EndingBalance")
                         .HasColumnType("numeric(18, 4)")
                         .HasColumnName("ending_balance");
@@ -3177,9 +3086,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_filpride_monthly_nibits");
-
-                    b.HasIndex("Company")
-                        .HasDatabaseName("ix_filpride_monthly_nibits_company");
 
                     b.HasIndex("Month")
                         .HasDatabaseName("ix_filpride_monthly_nibits_month");
@@ -3212,11 +3118,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -3259,12 +3160,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("authority_to_load_no");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -3340,15 +3235,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("AuthorityToLoadId")
                         .HasName("pk_filpride_authority_to_loads");
 
+                    b.HasIndex("AuthorityToLoadNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_authority_to_loads_authority_to_load_no");
+
                     b.HasIndex("CustomerOrderSlipId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_customer_order_slip_id");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_supplier_id");
-
-                    b.HasIndex("AuthorityToLoadNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_authority_to_loads_authority_to_load_no_company");
 
                     b.ToTable("filpride_authority_to_loads", (string)null);
                 });
@@ -3539,12 +3434,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("commissionee_vat_type");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
@@ -3808,6 +3697,10 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_id");
 
+                    b.HasIndex("CustomerOrderSlipNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no");
+
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_filpride_customer_order_slips_date");
 
@@ -3825,10 +3718,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_customer_order_slips_supplier_id");
-
-                    b.HasIndex("CustomerOrderSlipNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no_company");
 
                     b.ToTable("filpride_customer_order_slips", (string)null);
                 });
@@ -3878,12 +3767,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CommissioneeId")
                         .HasColumnType("integer")
                         .HasColumnName("commissionee_id");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
@@ -4077,15 +3960,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_filpride_delivery_receipts_date");
 
+                    b.HasIndex("DeliveryReceiptNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
+
                     b.HasIndex("HaulerId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_hauler_id");
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_purchase_order_id");
-
-                    b.HasIndex("DeliveryReceiptNo", "Company")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no_company");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
                 });
@@ -4387,12 +4270,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("branch");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -4401,14 +4278,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_date");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.HasKey("BankAccountId")
                         .HasName("pk_filpride_bank_accounts");
@@ -4532,12 +4401,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("commissionee_id");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -4618,14 +4481,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.Property<bool>("RequiresPriceAdjustment")
                         .HasColumnType("boolean")
@@ -4730,12 +4585,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PickUpPointId"));
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -4752,23 +4601,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("depot");
 
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
-
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
 
                     b.HasKey("PickUpPointId")
                         .HasName("pk_filpride_pick_up_points");
-
-                    b.HasIndex("Company")
-                        .HasDatabaseName("ix_filpride_pick_up_points_company");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_pick_up_points_supplier_id");
@@ -4784,12 +4622,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("service_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceId"));
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
@@ -4809,14 +4641,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("current_and_previous_title");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -4869,12 +4693,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("category");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -4906,14 +4724,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.Property<string>("ProofOfExemptionFileName")
                         .HasMaxLength(200)
@@ -5326,12 +5136,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("company");
 
                     b.Property<bool>("IsPosted")
                         .HasColumnType("boolean")

@@ -133,7 +133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return await _dbContext.FilprideCheckVoucherHeaders
                 .Where(cv =>
                     references.Contains(cv.CheckVoucherHeaderNo!) &&
-                    cv.Company == company &&
+                    
                     (!supplierId.HasValue || cv.SupplierId == supplierId) &&
                     cv.IsAdvances &&
                     cv.Status == nameof(CheckVoucherPaymentStatus.Posted))
@@ -355,7 +355,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = _unitOfWork.FilprideCheckVoucher
-                    .GetAllQuery(cv => cv.Company == companyClaims && cv.Category == "Trade");
+                    .GetAllQuery(cv => cv.Category == "Trade");
 
                 var totalRecords = await checkVoucherHeaders.CountAsync(cancellationToken);
 
@@ -457,7 +457,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
             viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
                     .GetAllAsync(
-                        po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId &&
+                        po => po.SupplierId == viewModel.SupplierId &&
                               po.PostedBy != null, cancellationToken))
                 .Select(po => new SelectListItem
                 {
@@ -485,7 +485,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            cv.Company == companyClaims &&
+                            
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -503,7 +503,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .ToList();
 
                         viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
+                                .GetAllAsync(po => po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
                             .Select(po => new SelectListItem
                             {
                                 Value = po.PurchaseOrderNo!.ToString(),
@@ -624,7 +624,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckAmount = cashInBank,
                     Total = cashInBank,
                     CreatedBy = GetUserFullName(),
-                    Company = companyClaims,
                     CvType = nameof(CVType.Supplier),
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
@@ -870,7 +869,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
+                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -900,7 +899,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(po => po.SupplierId == supplierId
                              && po.PostedBy != null
                              && po.QuantityReceived > 0
-                             && po.Company == companyClaims
                              && po.ReceivingReports != null
                              && po.ReceivingReports.Any(x => !x.IsPaid))
                 .ToListAsync();
@@ -922,7 +920,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid
+                .Where(rr => !rr.IsPaid
                     && poNumber.Contains(rr.PONo)
                     && rr.PostedBy != null);
 
@@ -1118,7 +1116,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(x => x.ReceivingReports)
                     .Where(po => po.PostedBy != null
                                  && po.QuantityReceived > 0
-                                 && po.Company == companyClaims
                                  && po.ReceivingReports != null
                                  && po.ReceivingReports.Any(x => !x.IsPaid))
                     .OrderBy(s => s.PurchaseOrderNo)
@@ -1155,7 +1152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                    .GetAllAsync(p => !p.IsSubPo && p.Company == companyClaims, cancellationToken))
+                    .GetAllAsync(p => !p.IsSubPo, cancellationToken))
                 .OrderBy(s => s.PurchaseOrderNo)
                 .Select(s => new SelectListItem
                 {
@@ -1543,7 +1540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1600,7 +1597,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 var rrList = await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(x => listOfRrIds.Contains(x.ReceivingReportId) && x.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(x => listOfRrIds.Contains(x.ReceivingReportId), cancellationToken);
 
                 var siArray = rrList
                     .Where(r => !string.IsNullOrWhiteSpace(r.SupplierInvoiceNumber))
@@ -1630,7 +1627,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview check voucher# {header.CheckVoucherHeaderNo}", "Check Voucher", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview check voucher# {header.CheckVoucherHeaderNo}", "Check Voucher");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -1653,7 +1650,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1665,7 +1662,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1775,7 +1772,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region Add amount paid for the advances if applicable
 
                 var appliedAdvanceAmount = GetAppliedAdvanceAmount(modelDetails);
-                await ApplyAdvanceAmountToReferencesAsync(modelHeader.Reference, modelHeader.Company, appliedAdvanceAmount, cancellationToken);
+                await ApplyAdvanceAmountToReferencesAsync(modelHeader.Reference, string.Empty, appliedAdvanceAmount, cancellationToken);
 
                 #endregion Add amount paid for the advances if applicable
 
@@ -1783,7 +1780,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", modelHeader.Company);
+                FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1864,7 +1861,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1945,13 +1942,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Revert the amount paid of advances
 
                 var appliedAdvanceAmount = await GetAppliedAdvanceAmountAsync(model.CheckVoucherHeaderId, cancellationToken);
-                await RevertAdvanceAmountFromReferencesAsync(model.Reference, model.Company, appliedAdvanceAmount, cancellationToken);
+                await RevertAdvanceAmountFromReferencesAsync(model.Reference, string.Empty, appliedAdvanceAmount, cancellationToken);
 
                 #endregion -- Revert the amount paid of advances
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2036,13 +2033,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Revert the amount paid of advances
 
                 var appliedAdvanceAmount = await GetAppliedAdvanceAmountAsync(cvHeader.CheckVoucherHeaderId, cancellationToken);
-                await RevertAdvanceAmountFromReferencesAsync(cvHeader.Reference, cvHeader.Company, appliedAdvanceAmount, cancellationToken);
+                await RevertAdvanceAmountFromReferencesAsync(cvHeader.Reference, string.Empty, appliedAdvanceAmount, cancellationToken);
 
                 #endregion -- Revert the amount paid of advances
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2614,7 +2611,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            cv.Company == companyClaims &&
+                            
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -2632,7 +2629,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(
                         dr => dr.DeliveryReceiptId == viewModel.DRs.Select(d => d.Id).FirstOrDefault() &&
-                              dr.Company == companyClaims, cancellationToken);
+                              true, cancellationToken);
 
                 if (getDeliveryReceipt == null)
                 {
@@ -2686,7 +2683,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckAmount = cashInBank,
                     Total = cashInBank,
                     CreatedBy = GetUserFullName(),
-                    Company = companyClaims,
                     Type = viewModel.Type,
                     CvType = nameof(CVType.Commission),
                     SupplierName = supplier.SupplierName,
@@ -2892,7 +2888,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
+                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2970,7 +2966,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            cv.Company == companyClaims &&
+                            
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -2987,7 +2983,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DRs.Select(d => d.Id).FirstOrDefault()
-                                    && dr.Company == companyClaims, cancellationToken);
+, cancellationToken);
 
                 if (getDeliveryReceipt == null)
                 {
@@ -3040,7 +3036,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckDate = viewModel.CheckDate,
                     CheckAmount = cashInBank,
                     CvType = nameof(CVType.Hauler),
-                    Company = companyClaims,
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierName = supplier.SupplierName,
@@ -3248,7 +3243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
+                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -3275,7 +3270,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => companyClaims != null
-                             && dr.Company == companyClaims
                              && commissioneeId == dr.CommissioneeId
                              && !dr.IsCommissionPaid
                              && dr.PostedBy != null);
@@ -3358,7 +3352,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
-                .Where(dr => dr.Company == companyClaims
+                .Where(dr => true
                              && dr.HaulerId == haulerId
                              && !dr.IsFreightPaid
                              && dr.PostedBy != null);
@@ -3848,7 +3842,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher");
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -4283,7 +4277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -4316,7 +4310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             foreach (var poNumber in poNumbers)
             {
                 var po = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(p => p.PurchaseOrderNo == poNumber && p.Company == companyClaims, cancellationToken);
+                    .GetAsync(p => p.PurchaseOrderNo == poNumber, cancellationToken);
 
                 if (po == null || (po.Terms != SD.Terms_Cod && po.Terms != SD.Terms_Prepaid))
                 {
@@ -4359,7 +4353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cv.CheckVoucherHeader.Total > cv.CheckVoucherHeader.AmountPaid &&
                     cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
                     cv.AccountNo == _advancesToSupplierAccountNo &&
-                    cv.CheckVoucherHeader.Company == companyClaims)
+                    true)
                 .OrderBy(cv => cv.CheckVoucherHeader!.Date)
                 .ThenBy(cv => cv.CheckVoucherHeader!.CheckVoucherHeaderNo)
                 .ToListAsync(cancellationToken);
@@ -4415,7 +4409,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented) && cv.CvType != nameof(CVType.Payment), cancellationToken);
+                    .GetAllAsync(cv => cv.Type == nameof(DocumentType.Documented) && cv.CvType != nameof(CVType.Payment), cancellationToken);
 
                 // Apply date range filter if provided
                 if (dateFrom.HasValue)
@@ -4536,7 +4530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvs = await _dbContext.FilprideCheckVoucherHeaders
                     .Include(x => x.Details)
                     .Where(x =>
-                        x.Company == companyClaims &&
+                        
                         x.PostedBy != null &&
                         x.Date.Month == month &&
                         x.Date.Year == year)
@@ -4553,7 +4547,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var existingGlEntries = await _dbContext.FilprideGeneralLedgerBooks
-                    .Where(x => x.Company == companyClaims && cvReferences.Contains(x.Reference))
+                    .Where(x => cvReferences.Contains(x.Reference))
                     .ToListAsync(cancellationToken);
 
                 if (existingGlEntries.Count != 0)

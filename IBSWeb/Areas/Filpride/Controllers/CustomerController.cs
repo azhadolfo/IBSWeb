@@ -103,7 +103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.PaymentTerms = await _unitOfWork.FilprideTerms
                 .GetFilprideTermsListAsyncByCode(cancellationToken);
 
-            var isTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
+            var isTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, cancellationToken);
 
             if (isTinExist)
             {
@@ -115,7 +115,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                model.Company = companyClaims;
                 model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
                 model.CreatedBy = GetUserFullName();
                 await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
@@ -124,7 +123,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                    $"Created new Customer #{model.CustomerCode}", "Customer", model.Company);
+                    $"Created new Customer #{model.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -190,7 +189,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (model.EditedBy,
-                    $"Edited Customer #{model.CustomerCode}", "Customer", model.Company );
+                    $"Edited Customer #{model.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -319,7 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var user = GetUserFullName();
                 FilprideAuditTrail auditTrailBook = new(
                     user!, $"Activated Customer #{customer.CustomerCode}",
-                    "Customer", customer.Company);
+                    "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -390,7 +389,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Deactivated Customer #{customer.CustomerCode}", "Customer", customer.Company);
+                    $"Deactivated Customer #{customer.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --

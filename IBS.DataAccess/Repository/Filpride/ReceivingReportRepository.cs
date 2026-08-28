@@ -21,17 +21,17 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string type, CancellationToken cancellationToken = default)
         {
             return type switch
             {
-                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(company, cancellationToken),
-                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(company, cancellationToken),
+                nameof(DocumentType.Documented) => await GenerateCodeForDocumented(cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateCodeForUnDocumented(cancellationToken),
                 _ => throw new ArgumentException("Invalid type")
             };
         }
 
-        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(CancellationToken cancellationToken = default)
         {
             var lastRr = await _db
                 .FilprideReceivingReports
@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.ReceivingReportNo!.Length)
                 .ThenByDescending(x => x.ReceivingReportNo)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == company &&
+                    
                     x.Type == nameof(DocumentType.Documented) &&
                     !x.ReceivingReportNo!.Contains("RRBEG"),
                     cancellationToken);
@@ -56,7 +56,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
-        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForUnDocumented(CancellationToken cancellationToken = default)
         {
             var lastRr = await _db
                 .FilprideReceivingReports
@@ -64,7 +64,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.ReceivingReportNo!.Length)
                 .ThenByDescending(x => x.ReceivingReportNo)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented) &&
                         !x.ReceivingReportNo!.Contains("RRBEG"),
                     cancellationToken);
@@ -212,7 +212,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     TruckOrVessels = customerOrderSlip.PickUpPoint!.Depot,
                     AuthorityToLoadNo = distinctAtlNos.Count == 1 ? distinctAtlNos[0] : deliveryReceipt.AuthorityToLoadNo,
                     Remarks = "PENDING",
-                    Company = deliveryReceipt.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     PostedBy = userName,
@@ -232,7 +231,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     : 0m;
 
                 model.ReceivedDate = model.Date;
-                model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type!, cancellationToken);
+                model.ReceivingReportNo = await GenerateCodeAsync(model.Type!, cancellationToken);
                 model.DueDate = await ComputeDueDateAsync(purchaseOrder.Terms, model.Date, cancellationToken);
                 model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
 
@@ -265,13 +264,11 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
                     $"Created new receiving report# {model.ReceivingReportNo}",
-                    "Receiving Report",
-                    model.Company);
+                    "Receiving Report");
 
                 FilprideAuditTrail auditTrailPost = new(model.PostedBy,
                     $"Posted receiving report# {model.ReceivingReportNo}",
-                    "Receiving Report",
-                    model.Company);
+                    "Receiving Report");
 
                 await _db.AddAsync(auditTrailCreate, cancellationToken);
                 await _db.AddAsync(auditTrailPost, cancellationToken);
@@ -364,7 +361,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 Credit = 0,
                 CreatedBy = model.PostedBy!,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
                 ModuleType = nameof(ModuleType.Purchase)
             });
 
@@ -382,7 +378,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = 0,
                     CreatedBy = model.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
                 });
             }
@@ -399,7 +394,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 Credit = netOfEwtAmount,
                 CreatedBy = model.PostedBy!,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
                 SubAccountType = SubAccountType.Supplier,
                 SubAccountId = model.PurchaseOrder.SupplierId,
                 SubAccountName = model.PurchaseOrder.SupplierName,
@@ -420,7 +414,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = ewtAmount,
                     CreatedBy = model.PostedBy!,
                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
                 });
             }
@@ -443,7 +436,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var existingInventory = await _db.FilprideInventories
                 .Include(i => i.Product)
-                .FirstOrDefaultAsync(i => i.Reference == model!.ReceivingReportNo && i.Company == model.Company, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Reference == model!.ReceivingReportNo, cancellationToken);
 
             if (model == null || existingInventory == null)
             {
@@ -495,7 +488,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report");
             await _db.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -635,7 +628,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 Credit = !isIncremental ? netOfVatAmount : 0,
                 CreatedBy = userName,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
                 ModuleType = nameof(ModuleType.Purchase)
             });
 
@@ -653,7 +645,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = !isIncremental ? vatAmount : 0,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
                 });
             }
@@ -670,7 +661,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 Credit = isIncremental ? netOfEwtAmount : 0,
                 CreatedBy = userName,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company,
                 SubAccountType = SubAccountType.Supplier,
                 SubAccountId = model.PurchaseOrder.SupplierId,
                 SubAccountName = model.PurchaseOrder.SupplierName,
@@ -691,7 +681,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = isIncremental ? ewtAmount : 0,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company,
                     ModuleType = nameof(ModuleType.Purchase)
                 });
             }
@@ -715,7 +704,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cogsTitle.AccountName,
                     Debit = isIncremental ? netOfVatAmount : 0,
                     Credit = !isIncremental ? netOfVatAmount : 0,
-                    Company = model.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -731,7 +719,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = inventoryTitle.AccountName,
                     Debit = !isIncremental ? netOfVatAmount : 0,
                     Credit = isIncremental ? netOfVatAmount : 0,
-                    Company = model.Company,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)

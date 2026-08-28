@@ -85,9 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrail = new(
                     extractedBy,
                     $"Generate {masterFileType} master file excel",
-                    $"{masterFileType}",
-                    companyClaims
-                );
+                    $"{masterFileType}");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -117,7 +115,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             // Fetch customers
             var customers = (await _unitOfWork.FilprideCustomer
-                .GetAllAsync(c => c.Company == company, cancellationToken))
+                .GetAllAsync(cancellationToken: cancellationToken))
                 .OrderBy(x => x.CustomerCode);
 
             if (!customers.Any())
@@ -240,7 +238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    CancellationToken cancellationToken)
         {
             var suppliers = (await _unitOfWork.FilprideSupplier
-                    .GetAllAsync(s => s.Company == company, cancellationToken))
+                    .GetAllAsync(cancellationToken: cancellationToken))
                 .OrderBy(x => x.SupplierCode);
 
             if (!suppliers.Any())
@@ -291,7 +289,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CancellationToken cancellationToken)
         {
             var bankAccounts = (await _unitOfWork.FilprideBankAccount.GetAllAsync(
-                filter: b => b.Company == company,
                 cancellationToken: cancellationToken))
                 .OrderBy(x => x.AccountNo);
 

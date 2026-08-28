@@ -44,7 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return query;
         }
 
-        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(string companyClaims, int supplierId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(int supplierId, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
                 .OrderBy(p => p.Depot)

@@ -30,10 +30,10 @@ namespace IBS.DataAccess.Repository.Filpride
 
         }
 
-        public async Task<bool> IsServicesExist(string serviceName, string company, CancellationToken cancellationToken = default)
+        public async Task<bool> IsServicesExist(string serviceName, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideServices
-                .AnyAsync(c => c.Company == company && c.Name == serviceName, cancellationToken);
+                .AnyAsync(c => c.Name == serviceName, cancellationToken);
         }
     }
 }

@@ -216,7 +216,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.AddAsync(model, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -416,7 +416,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.Status = nameof(PlacementStatus.Posted);
                 existingRecord.IsPosted = true;
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Placement posted successfully.";
@@ -474,7 +474,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.InterestStatus = viewModel.InterestStatus;
                 existingRecord.TerminationRemarks = viewModel.TerminationRemarks;
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -522,7 +522,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.InterestStatus = null;
                 existingRecord.TerminationRemarks = null;
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Reactivate placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Reactivate placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -572,7 +572,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -632,7 +632,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -698,7 +698,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 var newControlNumber = await _unitOfWork.BienesPlacement.SwappingAsync(existingRecord, companyId, user!, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(user!, $"Swapped placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Swapped placement# {existingRecord.ControlNumber}", "Placement");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);

@@ -119,8 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Generate {category.ToLower()} comparative adjustment report quest pdf",
-                    "Comparative Report",
-                    companyClaims);
+                    "Comparative Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 var pdfBytes = document.GeneratePdf();

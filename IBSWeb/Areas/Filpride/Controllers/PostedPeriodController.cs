@@ -113,7 +113,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var postedPeriod = new PostedPeriod
                     {
-                        Company = request.Company ?? "Filpride", // Default company
                         Module = module,
                         Month = request.Month,
                         Year = request.Year,
@@ -132,15 +131,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Posted the following modules: {modulesPosted} for {request.Month}/{request.Year}",
-                    "Posted Period",
-                    request.Company!
-                );
+                    "Posted Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{request.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{string.Empty}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully posted {postedPeriods.Count} module(s) for period {request.Month}/{request.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -172,15 +169,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Posted the following modules: {postedPeriod.Module} for {postedPeriod.Month}/{postedPeriod.Year}",
-                    "Posted Period",
-                    postedPeriod.Company
-                );
+                    "Posted Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 _dbContext.PostedPeriods.Remove(postedPeriod);
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{postedPeriod.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{string.Empty}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully unposted {postedPeriod.Module} for period {postedPeriod.Month}/{postedPeriod.Year}.";
                 return RedirectToAction(nameof(Index));

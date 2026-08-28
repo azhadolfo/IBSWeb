@@ -37,7 +37,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.SeriesNumber.Length)
                 .ThenByDescending(x => x.SeriesNumber)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == company &&
+                    
                     x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.SeriesNumber.Length)
                 .ThenByDescending(x => x.SeriesNumber)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
@@ -99,7 +99,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = provisionalReceipt.CashAmount + provisionalReceipt.CheckAmount + provisionalReceipt.ManagersCheckAmount,
                     Credit = 0,
-                    Company = provisionalReceipt.Company,
                     CreatedBy = provisionalReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.BankAccount,
@@ -122,7 +121,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = cashInBankTitle.AccountName,
                     Debit = 0,
                     Credit = provisionalReceipt.CashAmount + provisionalReceipt.CheckAmount + provisionalReceipt.ManagersCheckAmount,
-                    Company = provisionalReceipt.Company,
                     CreatedBy = provisionalReceipt.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Collection)
@@ -137,7 +135,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var originalEntries = await _db.FilprideGeneralLedgerBooks
                 .Where(x => x.Reference == prNo
-                            && x.Company == company)
+)
                 .ToListAsync(cancellationToken);
 
             var reversalEntries = new List<FilprideGeneralLedgerBook>();
@@ -157,7 +155,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = userName,
                     CreatedDate = dateToday,
                     IsPosted = true,
-                    Company = originalEntry.Company,
                     AccountId = originalEntry.AccountId,
                     SubAccountType = originalEntry.SubAccountType,
                     SubAccountId = originalEntry.SubAccountId,

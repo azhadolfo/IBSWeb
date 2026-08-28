@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.PurchaseOrderNo!.Length)
                 .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == company &&
+                    
                     x.Type == nameof(DocumentType.Documented) &&
                     !x.PurchaseOrderNo!.Contains("POBEG"),
                     cancellationToken);
@@ -64,7 +64,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.PurchaseOrderNo!.Length)
                 .ThenByDescending(x => x.PurchaseOrderNo)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented) &&
                         !x.PurchaseOrderNo!.Contains("POBEG"),
                     cancellationToken);
@@ -127,7 +127,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
+                .Where(p => !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo,
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
+                .Where(p => !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Select(po => new SelectListItem
                 {
@@ -178,7 +178,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<string> GenerateCodeForSubPoAsync(string purchaseOrderNo, string company, CancellationToken cancellationToken = default)
         {
             var latestSubPoCode = await _db.FilpridePurchaseOrders
-                .Where(po => po.IsSubPo && po.Company == company && po.SubPoSeries!.Contains(purchaseOrderNo))
+                .Where(po => po.IsSubPo && po.SubPoSeries!.Contains(purchaseOrderNo))
                 .OrderByDescending(po => po.SubPoSeries)
                 .Select(po => po.SubPoSeries)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -227,7 +227,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Create lookup dictionaries for better performance
             var inventoryLookup = inventories
-                .ToLookup(inv => new { inv.Reference, inv.Company });
+                .ToLookup(inv => inv.Reference);
 
             var unitOfWork = new UnitOfWork(_db);
             var normalizedTriggeredPrice = DecimalRoundingHelper.RoundToFour(model.TriggeredPrice);
@@ -256,7 +256,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 remainingVolume -= effectiveVolume;
 
                 // Update inventory
-                var inventory = inventoryLookup[new { Reference = receivingReport.ReceivingReportNo, receivingReport.Company }]
+                var inventory = inventoryLookup[receivingReport.ReceivingReportNo]
                     .FirstOrDefault();
 
                 if (inventory != null)

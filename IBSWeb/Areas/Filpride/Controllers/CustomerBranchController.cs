@@ -86,7 +86,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
+                    $"Created Customer Branch #{model.Id}", "Customer Branch");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -148,7 +148,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
+                    $"Edited Customer Branch #{model.Id}", "Customer Branch");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

@@ -158,7 +158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var query = _unitOfWork.ProvisionalReceipt
-                    .GetAllQuery(pr => pr.Company == companyClaims);
+                    .GetAllQuery(pr => true);
 
                 var totalRecords = await query.CountAsync(cancellationToken);
 
@@ -319,7 +319,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = userFullName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     Status = nameof(CollectionReceiptStatus.Pending),
-                    Company = companyClaims
                 };
 
                 MapFormToEntity(viewModel, model);
@@ -328,7 +327,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideProvisionalReceipts.AddAsync(model, cancellationToken);
 
                 var auditTrail = new FilprideAuditTrail(userFullName,
-                    $"Create new provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                    $"Create new provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -364,7 +363,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -402,7 +401,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == viewModel.Id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == viewModel.Id, cancellationToken);
 
             if (model == null)
             {
@@ -427,7 +426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
-                    $"Edited provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                    $"Edited provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -457,7 +456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -478,7 +477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -495,7 +494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var printedBy = GetUserFullName();
                     var auditTrail = new FilprideAuditTrail(printedBy,
-                        $"Printed original copy of provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                        $"Printed original copy of provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
                 }
@@ -525,7 +524,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -547,7 +546,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(CollectionReceiptStatus.Posted);
 
                 var auditTrail = new FilprideAuditTrail(model.PostedBy,
-                    $"Posted provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                    $"Posted provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -577,7 +576,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -597,7 +596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.GeneralLedger.ReverseEntries(model.SeriesNumber, cancellationToken);
 
                 var auditTrail = new FilprideAuditTrail(model.VoidedBy,
-                    $"Voided provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                    $"Voided provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -626,7 +625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -643,7 +642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(CollectionReceiptStatus.Canceled);
 
                 var auditTrail = new FilprideAuditTrail(model.CanceledBy,
-                    $"Canceled provisional receipt# {model.SeriesNumber}", "Provisional Receipt", companyClaims);
+                    $"Canceled provisional receipt# {model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -674,7 +673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var bank = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == bankId, cancellationToken);
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (bank == null || model == null)
             {
@@ -693,7 +692,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(CollectionReceiptStatus.Deposited);
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
-                    $"Record deposit date of provisional receipt#{model.SeriesNumber}", "Provisional Receipt", model.Company);
+                    $"Record deposit date of provisional receipt#{model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -723,7 +722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -739,7 +738,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(CollectionReceiptStatus.Returned);
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
-                    $"Return checks of provisional receipt#{model.SeriesNumber}", "Provisional Receipt", model.Company);
+                    $"Return checks of provisional receipt#{model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -769,7 +768,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -785,7 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.Status = nameof(CollectionReceiptStatus.Redeposited);
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
-                    $"Redeposit provisional receipt#{model.SeriesNumber}", "Provisional Receipt", model.Company);
+                    $"Redeposit provisional receipt#{model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -815,7 +814,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var model = await _unitOfWork.ProvisionalReceipt
-                .GetAsync(pr => pr.Id == id && pr.Company == companyClaims, cancellationToken);
+                .GetAsync(pr => pr.Id == id, cancellationToken);
 
             if (model == null)
             {
@@ -836,7 +835,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.ProvisionalReceipt.DepositAsync(model, cancellationToken);
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
-                    $"Apply clearing date for provisional receipt#{model.SeriesNumber}", "Provisional Receipt", model.Company);
+                    $"Apply clearing date for provisional receipt#{model.SeriesNumber}", "Provisional Receipt");
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrail, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -877,7 +876,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted provisional receipt# {provisionalReceipt.SeriesNumber}", "Provisional Receipt", provisionalReceipt.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted provisional receipt# {provisionalReceipt.SeriesNumber}", "Provisional Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

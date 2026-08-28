@@ -152,14 +152,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category,
-                    companyClaims, cancellationToken))
+                    cancellationToken))
             {
                 ModelState.AddModelError("SupplierName", "Supplier already exist.");
                 return View(model);
             }
 
             if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch!,
-                    model.Category, companyClaims, cancellationToken))
+                    model.Category, cancellationToken))
             {
                 ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                 return View(model);
@@ -183,15 +183,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.SupplierCode = await _unitOfWork.FilprideSupplier.GenerateCodeAsync(cancellationToken);
                 model.CreatedBy = GetUserFullName();
-                model.Company = companyClaims;
                 await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{companyClaims}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                    $"Create new Supplier #{model.SupplierCode}", "Supplier", model.Company);
+                    $"Create new Supplier #{model.SupplierCode}", "Supplier");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -317,12 +316,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.EditedBy = GetUserFullName();
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{model.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{(await GetCompanyClaimAsync())}", cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Supplier #{model.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
+                    $"Edited Supplier #{model.SupplierCode}", "Supplier");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -383,12 +382,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{(await GetCompanyClaimAsync())}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Activated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())!);
+                    $"Activated Supplier #{supplier.SupplierCode}", "Supplier");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -450,12 +449,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 supplier.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{supplier.Company}", cancellationToken);
+                await _cacheService.RemoveAsync($"coa:{(await GetCompanyClaimAsync())}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Deactivated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
+                    $"Deactivated Supplier #{supplier.SupplierCode}", "Supplier");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

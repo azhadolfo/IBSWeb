@@ -426,7 +426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Subsidiary Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Fuel report excel file", "Subsidiary Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -789,7 +789,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Subsidiary Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Commissionee report excel file", "Subsidiary Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -1122,7 +1122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Subsidiary Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate Trade Hauler/Freight report excel file", "Subsidiary Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -1218,7 +1218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         g.Date >= dateFrom && g.Date <= dateTo &&
                         g.AccountNo == selectedAccount.AccountNumber &&
                         g.SubAccountId.HasValue && g.SubAccountType.HasValue &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (subsidiaryLedgerByAccountNo.Count == 0)
@@ -1250,7 +1250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(g => g.Account)
                     .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
                                  pb.IsValid &&
-                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
+                                 pb.PeriodEndDate == previousPeriodEndDate)
                     .ToListAsync(cancellationToken);
 
                 var beginningBalanceDictionary = glSubAccountBalances
@@ -1465,7 +1465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate subsidiary ledger report excel file", "Subsidiary Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate subsidiary ledger report excel file", "Subsidiary Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --

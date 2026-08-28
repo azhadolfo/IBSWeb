@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo);
 
                 if (cosSummary.Count == 0)
                 {
@@ -312,7 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos unserved volume report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos unserved volume report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -351,7 +351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo);
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
@@ -435,7 +435,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos unserved volume report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos unserved volume report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -513,13 +513,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (dateRangeType == "AsOf")
                     {
-                        filter = i => i.Company == companyClaims
+                        filter = i => true
                                       && i.DeliveredDate <= viewModel.DateFrom
                                       && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
                     }
                     else
                     {
-                        filter = i => i.Company == companyClaims
+                        filter = i => true
                                       && i.DeliveredDate >= viewModel.DateFrom
                                       && i.DeliveredDate <= viewModel.DateTo
                                       && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
@@ -527,7 +527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    filter = i => i.Company == companyClaims
+                    filter = i => true
                                   && i.Date >= viewModel.DateFrom
                                   && i.Date <= viewModel.DateTo
                                   && (i.DeliveredDate == null || i.DeliveredDate > viewModel.DateTo)
@@ -1096,7 +1096,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate dispatch report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate dispatch report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -1153,20 +1153,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (statusFilter == "InvalidOnly")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Voided));
                         }
                         else if (statusFilter == "All")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing)
                                             || i.Status == nameof(DRStatus.Voided));
                         }
                         else // ValidOnly
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate <= viewModel.DateFrom
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
                         }
@@ -1175,14 +1175,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (statusFilter == "InvalidOnly")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Voided) || i.Status == nameof(DRStatus.Canceled));
                         }
                         else if (statusFilter == "All")
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing)
@@ -1190,7 +1190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         else // ValidOnly
                         {
-                            filter = i => i.Company == companyClaims
+                            filter = i => true
                                         && i.DeliveredDate >= viewModel.DateFrom
                                         && i.DeliveredDate <= viewModel.DateTo
                                         && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
@@ -1199,7 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    filter = i => i.Company == companyClaims
+                    filter = i => true
                         && i.DeliveredDate == null
                         && i.Status == nameof(DRStatus.PendingDelivery);
                 }
@@ -1668,7 +1668,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate dispatch report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate dispatch report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -1729,7 +1729,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, statusFilter, cancellationToken);
+                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, model.Commissionee, statusFilter, cancellationToken);
 
                 if (!sales.Any())
                 {
@@ -2087,7 +2087,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -2135,7 +2135,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         new { dateFrom = model.DateFrom, dateTo = model.DateTo, statusFilter = model.StatusFilter });
                 }
 
-                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, statusFilter, cancellationToken);
+                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, model.Commissionee, statusFilter, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {
@@ -2633,7 +2633,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -2681,7 +2681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var collectionReceiptReport = await _unitOfWork.FilprideReport
-                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, cancellationToken: cancellationToken);
 
                 if (!collectionReceiptReport.Any())
                 {
@@ -2892,7 +2892,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate posted collection report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate posted collection report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -2935,7 +2935,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                     var collectionReceiptReport = await _unitOfWork.FilprideReport
-                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                     var multipleSalesInvoiceIds = collectionReceiptReport
                         .Where(cr => cr.MultipleSIId is { Length: > 0 })
@@ -3331,7 +3331,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail --
 
-                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate posted collection report excel file", "Accounts Receivable Report", companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate posted collection report excel file", "Accounts Receivable Report");
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion
@@ -3381,7 +3381,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                     .GetAllAsync(si => si.PostedBy != null
                                        && si.AmountPaid == 0
-                                       && !si.IsPaid && si.Company == companyClaims, cancellationToken);
+                                       && !si.IsPaid, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3623,7 +3623,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate aging report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate aging report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -3663,7 +3663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                     .GetAllAsync(si => si.PostedBy != null
                                        && si.AmountPaid == 0 && !si.IsPaid
-                                       && si.Company == companyClaims, cancellationToken);
+, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3882,7 +3882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate aging report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate aging report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -3942,7 +3942,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, statusFilter, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, model.Customers, statusFilter, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4225,7 +4225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate ar per customer report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate ar per customer report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -4268,7 +4268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, statusFilter, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, model.Customers, statusFilter, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4626,7 +4626,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate ar per customer report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate ar per customer report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -4677,7 +4677,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var serviceInvoice = await _unitOfWork.FilprideReport
-                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (!serviceInvoice.Any())
                 {
@@ -4832,7 +4832,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate service invoice report quest pdf", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate service invoice report quest pdf", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -4873,7 +4873,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (serviceReport.Count == 0)
                 {
@@ -5017,7 +5017,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate service invoice report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate service invoice report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -5065,7 +5065,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var normalizedStatusFilter = NormalizeStatusFilter(statusFilter);
 
                 var salesReport = await _unitOfWork.FilprideReport
-                    .GetSalesInvoiceReport(dateFrom, dateTo, companyClaims, normalizedStatusFilter, cancellationToken);
+                    .GetSalesInvoiceReport(dateFrom, dateTo, normalizedStatusFilter, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {
@@ -5256,7 +5256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales invoice report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate sales invoice report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion
@@ -5304,7 +5304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // fetch sales report
                 var salesReport = await _unitOfWork.FilprideReport
-                    .GetSalesReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetSalesReport(model.DateFrom, model.DateTo, cancellationToken: cancellationToken);
 
                 // check if there is no record
                 if (salesReport.Count == 0)
@@ -5977,7 +5977,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (cosSummaryReport.Count == 0)
                 {
@@ -6079,7 +6079,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos summary report excel file", "Accounts Receivable Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate cos summary report excel file", "Accounts Receivable Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion

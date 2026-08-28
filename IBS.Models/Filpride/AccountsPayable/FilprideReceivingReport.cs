@@ -89,9 +89,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal CanceledQuantity { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         public bool IsPrinted { get; set; }
 
         [Column(TypeName = "date")]

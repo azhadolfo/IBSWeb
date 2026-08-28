@@ -113,17 +113,10 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? ValidityDate { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         [Required]
         [Display(Name = "Zip Code")]
         [StringLength(10)]
         public string? ZipCode { get; set; }
-
-        public bool IsFilpride { get; set; }
-
-        public bool IsBienes { get; set; }
 
         [Display(Name = "Requires Price Adjustment")]
         public bool RequiresPriceAdjustment { get; set; }

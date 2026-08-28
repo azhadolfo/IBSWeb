@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", companyClaim! );
+                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -170,7 +170,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", companyClaim! );
+                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -213,7 +213,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var action = existingAccount.IsHidden ? "Hidden" : "Unhidden";
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"{action} Account #{existingAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())!);
+                    $"{action} Account #{existingAccount.AccountNumber}", "Chart of Accounts");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);

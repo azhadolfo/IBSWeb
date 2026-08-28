@@ -77,9 +77,6 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         public ClusterArea? ClusterCode { get; set; }
 
         #region For Retail
@@ -110,10 +107,6 @@ namespace IBS.Models.Filpride.MasterFile
         public decimal? RetentionRate { get; set; }
 
         public bool HasMultipleTerms { get; set; }
-
-        public bool IsFilpride { get; set; }
-
-        public bool IsBienes { get; set; }
 
         [StringLength(13)]
         public string Type { get; set; } = string.Empty;

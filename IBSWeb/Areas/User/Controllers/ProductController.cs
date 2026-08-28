@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 FilprideAuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Created Product {model.ProductCode}",
-                    "Product", (await GetCompanyClaimAsync())! );
+                    "Product");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -220,7 +220,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 FilprideAuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Edited Product {existing.ProductCode} => {model.ProductCode}",
-                    "Product", (await GetCompanyClaimAsync())! );
+                    "Product");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -285,7 +285,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 FilprideAuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Activated Product #{product.ProductCode}",
-                    "Product", (await GetCompanyClaimAsync())! );
+                    "Product");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -350,7 +350,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 FilprideAuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Deactivated Product #{product.ProductCode}",
-                    "Product", (await GetCompanyClaimAsync())! );
+                    "Product");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

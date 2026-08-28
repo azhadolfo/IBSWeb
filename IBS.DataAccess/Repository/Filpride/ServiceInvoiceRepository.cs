@@ -37,7 +37,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.ServiceInvoiceNo!.Length)
                 .ThenByDescending(x => x.ServiceInvoiceNo)
                 .FirstOrDefaultAsync(x =>
-                    x.Company == company &&
+                    
                     x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.ServiceInvoiceNo!.Length)
                 .ThenByDescending(x => x.ServiceInvoiceNo)
                 .FirstOrDefaultAsync(x =>
-                        x.Company == company &&
+                        
                         x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
@@ -173,7 +173,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = arTradeTitle.AccountName,
                     Debit = model.Total - (withHoldingTaxAmount + withHoldingVatAmount),
                     Credit = 0,
-                    Company = model.Company,
                     CreatedBy = model.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Customer,
@@ -195,7 +194,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = withHoldingTaxAmount,
                         Credit = 0,
-                        Company = model.Company,
                         CreatedBy = model.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -215,7 +213,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = withHoldingVatAmount,
                         Credit = 0,
-                        Company = model.Company,
                         CreatedBy = model.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)
@@ -234,7 +231,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = servicesTitle.AccountName,
                     Debit = 0,
                     Credit = netOfVatAmount,
-                    Company = model.Company,
                     CreatedBy = model.PostedBy!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.Sales)
@@ -254,7 +250,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = vatOutputTitle.AccountName,
                         Debit = 0,
                         Credit = vatAmount,
-                        Company = model.Company,
                         CreatedBy = model.PostedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Sales)

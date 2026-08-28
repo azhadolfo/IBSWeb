@@ -95,8 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var atlList = _unitOfWork.FilprideAuthorityToLoad
-                    .GetAllQuery(x => x.Company == companyClaims);
+                var atlList = _unitOfWork.FilprideAuthorityToLoad.GetAllQuery();
 
                 var totalRecords = await atlList.CountAsync(cancellationToken);
 
@@ -186,7 +185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             BookATLViewModel viewModel = new()
             {
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                 Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                 CurrentUser = _userManager.GetUserName(User)
             };
@@ -209,7 +208,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -218,7 +217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (supplierAtlValidationMessage != null)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = supplierAtlValidationMessage;
                 return View(viewModel);
             }
@@ -226,7 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!viewModel.SelectedCosDetails.Any())
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "Please select at least one COS.";
                 return View(viewModel);
             }
@@ -258,7 +257,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CreatedBy = GetUserFullName(),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierId = viewModel.SupplierIds.First(),
-                    Company = companyClaims
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
@@ -319,7 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = $"ATL# {model.AuthorityToLoadNo} booked successfully.";
@@ -360,7 +358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load", companyClaims!);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -389,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load", atl.Company);
+            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -517,7 +515,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             // Query your database to get hauler details for the COS
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(c => c.CustomerOrderSlipId == cosId && c.Company == companyClaims);
+                .GetAsync(c => c.CustomerOrderSlipId == cosId);
 
             if (existingCos == null)
             {
@@ -561,7 +559,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingAtl.ValidUntil = newValidUntil;
 
-                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -649,7 +647,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierAtlReferences = supplierAtlReferences,
                 SelectedCosDetails = selectedCosDetails,
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                 CurrentUser = _userManager.GetUserName(User)
             };
 
@@ -671,7 +669,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -680,7 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (supplierAtlValidationMessage != null)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = supplierAtlValidationMessage;
                 return View(viewModel);
             }
@@ -688,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!viewModel.SelectedCosDetails.Any())
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "Please select at least one COS.";
                 return View(viewModel);
             }
@@ -805,7 +803,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Edited atl# {atl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Edited atl# {atl.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = $"ATL# {atl.AuthorityToLoadNo} updated successfully.";

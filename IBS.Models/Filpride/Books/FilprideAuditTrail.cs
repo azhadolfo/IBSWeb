@@ -20,13 +20,11 @@ namespace IBS.Models.Filpride.Books
         [Display(Name = "Document Type")]
         public string DocumentType { get; set; } = null!;
 
-        public string Company { get; set; } = null!;
-
         public FilprideAuditTrail()
         {
         }
 
-        public FilprideAuditTrail(string username, string activity, string documentType, string company)
+        public FilprideAuditTrail(string username, string activity, string documentType)
         {
             Username = username;
             Date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
@@ -34,7 +32,7 @@ namespace IBS.Models.Filpride.Books
             MachineName = Environment.MachineName;
             Activity = activity;
             DocumentType = documentType;
-            Company = company;
         }
+
     }
 }

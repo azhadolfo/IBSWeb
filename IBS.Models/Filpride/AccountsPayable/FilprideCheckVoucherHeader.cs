@@ -133,9 +133,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsPaid { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         public bool IsPrinted { get; set; }
 
         [StringLength(50)]

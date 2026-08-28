@@ -125,7 +125,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var filterTypeClaim = await GetCurrentFilterType();
 
                 var receivingReports = _unitOfWork.FilprideReceivingReport
-                    .GetAllQuery(x => x.Company == companyClaims);
+                    .GetAllQuery(x => true);
 
                 var totalRecords = await receivingReports.CountAsync(cancellationToken);
 
@@ -291,7 +291,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var model = new FilprideReceivingReport
                 {
-                    ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken),
+                    ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(existingPo.Type!, cancellationToken),
                     Date = viewModel.Date,
                     DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(existingPo.Terms, viewModel.Date, cancellationToken),
                     POId = existingPo.PurchaseOrderId,
@@ -308,7 +308,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
                     Remarks = viewModel.Remarks,
                     CreatedBy = GetUserFullName(),
-                    Company = companyClaims,
                     ReceivedDate = viewModel.ReceivedDate,
                     SupplierDrNo = viewModel.SupplierDrNo,
                     WithdrawalCertificate = viewModel.WithdrawalCertificate,
@@ -318,7 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -494,7 +493,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited receiving report# {existingModel.ReceivingReportNo}", "Receiving Report", existingModel.Company);
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited receiving report# {existingModel.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -531,7 +530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -572,7 +571,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -656,7 +655,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -687,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var receivingReports = await _unitOfWork
                 .FilprideReceivingReport
-                .GetAllAsync(x => x.Company == po.Company
+                .GetAllAsync(x => true
                                    && x.PONo == po.PurchaseOrderNo, cancellationToken);
 
             var rrList = receivingReports
@@ -696,26 +695,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     rr.ReceivingReportNo,
                     rr.QuantityReceived,
                     rr.QuantityDelivered,
-                    rr.Company,
+                    string.Empty,
                     rr.PONo,
                     rr.Status
                 })
                 .ToList();
 
             var rrPostedOnly = rrList
-                .Where(rr => rr.Company == po.Company
+                .Where(rr => true
                                    && rr.PONo == po.PurchaseOrderNo
                                    && rr.Status == nameof(Status.Posted))
                 .ToList();
 
             var rrNotPosted = rrList
-                .Where(rr => rr.Company == po.Company
+                .Where(rr => true
                                                     && rr.PONo == po.PurchaseOrderNo
                                                     && rr.Status == nameof(Status.Pending))
                 .ToList();
 
             var rrCanceled = rrList
-                .Where(rr => rr.Company == po.Company
+                .Where(rr => true
                              && rr.PONo == po.PurchaseOrderNo
                              && (rr.Status == nameof(Status.Canceled)
                                  || rr.Status == nameof(Status.Voided)))
@@ -747,7 +746,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -759,7 +758,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed re-printed copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -781,7 +780,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var receivingReports = await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
+                    .GetAllAsync(rr => rr.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 // Apply date range filter if provided
                 if (dateFrom.HasValue)
@@ -1097,7 +1096,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var receivingReports = await _unitOfWork.FilprideReceivingReport
                     .GetAllAsync(x =>
-                        x.Company == companyClaims &&
+                        
                         x.Status == nameof(Status.Posted) &&
                         x.Date.Month == month &&
                         x.Date.Year == year,
@@ -1114,7 +1113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var existingGlEntries = await _dbContext.FilprideGeneralLedgerBooks
-                    .Where(x => x.Company == companyClaims && rrReferences.Contains(x.Reference))
+                    .Where(x => rrReferences.Contains(x.Reference))
                     .ToListAsync(cancellationToken);
 
                 if (existingGlEntries.Count != 0)

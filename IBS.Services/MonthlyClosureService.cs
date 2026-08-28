@@ -46,7 +46,7 @@ namespace IBS.Services
                 }
 
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
-                    .AnyAsync(x => x.Company == company &&
+                    .AnyAsync(x => 
                                    x.Date.Month == monthDate.Month &&
                                    x.Date.Year == monthDate.Year &&
                                    x.VoidedBy == null &&
@@ -83,7 +83,7 @@ namespace IBS.Services
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv =>
-                        cv.Company == company &&
+                        
                         cv.Date.Month == periodMonth.Month &&
                         cv.Date.Year == periodMonth.Year &&
                         cv.CvType != nameof(CVType.Invoicing) &&
@@ -120,7 +120,6 @@ namespace IBS.Services
                             AccountTitle = account.AccountName,
                             Debit = detail.Credit,
                             Credit = detail.Debit,
-                            Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountId = detail.SubAccountId,
@@ -139,7 +138,6 @@ namespace IBS.Services
                             AccountTitle = account.AccountName,
                             Debit = detail.Debit,
                             Credit = detail.Credit,
-                            Company = cv.Company,
                             CreatedBy = "SYSTEM GENERATED",
                             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             SubAccountId = detail.SubAccountId,
@@ -172,8 +170,7 @@ namespace IBS.Services
                 var hasAlreadyNibit = await _dbContext.FilprideMonthlyNibits
                     .AnyAsync(x =>
                         x.Month == periodMonth.Month &&
-                        x.Year == periodMonth.Year &&
-                        x.Company == company,
+                        x.Year == periodMonth.Year,
                         cancellationToken);
 
                 if (hasAlreadyNibit)
@@ -187,8 +184,7 @@ namespace IBS.Services
                     .ThenInclude(filprideChartOfAccount => filprideChartOfAccount.ParentAccount) // Level 4
                     .Where(gl =>
                         gl.Date.Month == periodMonth.Month &&
-                        gl.Date.Year == periodMonth.Year &&
-                        gl.Company == company)
+                        gl.Date.Year == periodMonth.Year)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
@@ -240,7 +236,6 @@ namespace IBS.Services
                 {
                     Month = periodMonth.Month,
                     Year = periodMonth.Year,
-                    Company = company,
                     NetIncome = nibit,
                     PriorPeriodAdjustment = generalLedgers
                         .Where(g => g.AccountTitle.Contains("Prior Period"))
@@ -250,7 +245,7 @@ namespace IBS.Services
                 var beginning = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(m => m.Year)
                     .ThenByDescending(m => m.Month)
-                    .FirstOrDefaultAsync(m => m.Company == company, cancellationToken);
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 if (beginning != null)
                 {
@@ -291,7 +286,7 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Include(x => x.Account)
                     .Where(x =>
-                        x.Company == company &&
+                        
                         x.Date.Month == periodMonth.Month &&
                         x.Date.Year == periodMonth.Year)
                     .ToListAsync(cancellationToken);
@@ -375,8 +370,7 @@ namespace IBS.Services
                         CreditTotal = totalCredit,
                         EndingBalance = endingBalance,
                         IsClosed = true,
-                        ClosedAt = closedAt,
-                        Company = company
+                        ClosedAt = closedAt
                     });
                 }
 
@@ -431,8 +425,7 @@ namespace IBS.Services
                             DebitTotal = subAccount.TotalDebit,
                             CreditTotal = subAccount.TotalCredit,
                             EndingBalance = endingBalance,
-                            IsClosed = true,
-                            Company = company
+                            IsClosed = true
                         });
                     }
                 }
@@ -472,7 +465,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                      .Where(n =>
                         n.IsValid &&
-                        n.Company == company &&
                          (n.Year > monthDate.Year ||
                          (n.Year == monthDate.Year && n.Month >= monthDate.Month)))
                      .ExecuteUpdateAsync(e =>
@@ -482,7 +474,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
-                        s.Company == company &&
                         s.PeriodStartDate >= monthDate)
                     .ExecuteUpdateAsync(e =>
                         e.SetProperty(d => d.IsValid, false), cancellationToken);
@@ -491,7 +482,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
-                        s.Company == company &&
                         s.PeriodStartDate >= monthDate)
                     .ExecuteUpdateAsync(e =>
                         e.SetProperty(d => d.IsValid, false), cancellationToken);

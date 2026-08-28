@@ -176,12 +176,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideCustomerOrderSlip>(cos =>
             {
-                cos.HasIndex(cos => new
-                {
-                    cos.CustomerOrderSlipNo,
-                    cos.Company
-                })
-                .IsUnique();
+                cos.HasIndex(cos => cos.CustomerOrderSlipNo).IsUnique();
 
                 cos.HasIndex(cos => cos.Date);
 
@@ -203,12 +198,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideDeliveryReceipt>(dr =>
             {
-                dr.HasIndex(dr => new
-                {
-                    dr.DeliveryReceiptNo,
-                    dr.Company
-                })
-                .IsUnique();
+                dr.HasIndex(dr => dr.DeliveryReceiptNo).IsUnique();
 
                 dr.HasIndex(dr => dr.Date);
 
@@ -330,18 +320,12 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(b => b.SupplierId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasIndex(b => new
-                {
-                    b.AuthorityToLoadNo,
-                    b.Company
-                })
-                .IsUnique();
+                b.HasIndex(b => b.AuthorityToLoadNo).IsUnique();
             });
 
             builder.Entity<FilprideMonthlyNibit>(n =>
             {
                 n.HasQueryFilter(x => x.IsValid);
-                n.HasIndex(n => n.Company);
                 n.HasIndex(n => n.Month);
                 n.HasIndex(n => n.Year);
             });
@@ -365,8 +349,6 @@ namespace IBS.DataAccess.Data
             // FilpridePickUpPoint
             builder.Entity<FilpridePickUpPoint>(p =>
             {
-                p.HasIndex(p => p.Company);
-
                 p.HasOne(p => p.Supplier)
                     .WithMany()
                     .HasForeignKey(p => p.SupplierId)
@@ -416,12 +398,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(si => si.PurchaseOrderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                si.HasIndex(si => new
-                {
-                    si.SalesInvoiceNo,
-                    si.Company
-                })
-                .IsUnique();
+                si.HasIndex(si => si.SalesInvoiceNo).IsUnique();
             });
 
             #endregion -- Sales Invoice --
@@ -445,12 +422,7 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(sv => sv.DeliveryReceiptId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                sv.HasIndex(sv => new
-                {
-                    sv.ServiceInvoiceNo,
-                    sv.Company
-                })
-                .IsUnique();
+                sv.HasIndex(sv => sv.ServiceInvoiceNo).IsUnique();
             });
 
             #endregion -- Service Invoice --
@@ -479,12 +451,7 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(cr => cr.BankId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                cr.HasIndex(cr => new
-                {
-                    cr.CollectionReceiptNo,
-                    cr.Company
-                })
-                .IsUnique();
+                cr.HasIndex(cr => cr.CollectionReceiptNo).IsUnique();
             });
 
             builder.Entity<FilprideCollectionReceiptDetail>(crd =>
@@ -511,11 +478,7 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(p => p.BankId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                pr.HasIndex(d => new
-                {
-                    d.SeriesNumber,
-                    d.Company
-                }).IsUnique();
+                pr.HasIndex(d => d.SeriesNumber).IsUnique();
             });
 
             #endregion -- Collection Receipt --
@@ -534,12 +497,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(dm => dm.ServiceInvoiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                dm.HasIndex(dm => new
-                {
-                    dm.DebitMemoNo,
-                    dm.Company
-                })
-                .IsUnique();
+                dm.HasIndex(dm => dm.DebitMemoNo).IsUnique();
             });
 
             #endregion -- Debit Memo --
@@ -558,12 +516,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(cm => cm.ServiceInvoiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                cm.HasIndex(cm => new
-                {
-                    cm.CreditMemoNo,
-                    cm.Company
-                })
-                .IsUnique();
+                cm.HasIndex(cm => cm.CreditMemoNo).IsUnique();
             });
 
             #endregion -- Credit Memo --
@@ -596,12 +549,7 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(po => po.PickUpPointId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                po.HasIndex(po => new
-                {
-                    po.PurchaseOrderNo,
-                    po.Company
-                })
-                .IsUnique();
+                po.HasIndex(po => po.PurchaseOrderNo).IsUnique();
             });
 
             #endregion -- Purchase Order --
@@ -620,12 +568,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(rr => rr.DeliveryReceiptId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                rr.HasIndex(rr => new
-                {
-                    rr.ReceivingReportNo,
-                    rr.Company
-                })
-                .IsUnique();
+                rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
             });
 
             #endregion -- Receving Report --
@@ -644,12 +587,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(cv => cv.BankId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                cv.HasIndex(cv => new
-                {
-                    cv.CheckVoucherHeaderNo,
-                    cv.Company
-                })
-                .IsUnique();
+                cv.HasIndex(cv => cv.CheckVoucherHeaderNo).IsUnique();
             });
 
             #endregion -- Check Voucher --
@@ -687,12 +625,7 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(jv => jv.CVId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                jv.HasIndex(jv => new
-                {
-                    jv.JournalVoucherHeaderNo,
-                    jv.Company
-                })
-                .IsUnique();
+                jv.HasIndex(jv => jv.JournalVoucherHeaderNo).IsUnique();
             });
 
             #endregion -- Check Voucher --

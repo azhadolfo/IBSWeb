@@ -20,14 +20,14 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
                 .AsNoTracking()
                 .OrderByDescending(x => x.CustomerOrderSlipNo.Length)
                 .ThenByDescending(x => x.CustomerOrderSlipNo)
-                .FirstOrDefaultAsync(x => x.Company == companyClaims, cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (lastCos == null)
             {
@@ -158,7 +158,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -169,12 +169,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
                 .Where(cos =>
-                    cos.Company == companyClaims &&
+                    
                     (!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.ForDR))
                 .Select(cos => new SelectListItem
                 {

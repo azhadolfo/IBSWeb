@@ -145,7 +145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var filterTypeClaim = await GetCurrentFilterType();
 
                 var creditMemos = _unitOfWork.FilprideCreditMemo
-                    .GetAllQuery(x => x.Company == companyClaims);
+                    .GetAllQuery(x => true);
 
                 if (!string.IsNullOrEmpty(filterTypeClaim))
                 {
@@ -222,7 +222,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
+                    .GetAllAsync(si => si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.SalesInvoiceNo)
                 .Select(si => new SelectListItem
                 {
@@ -232,7 +232,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
 
             viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
+                    .GetAllAsync(sv => sv.PostedBy != null, cancellationToken))
                 .OrderBy(sv => sv.ServiceInvoiceNo)
                 .Select(sv => new SelectListItem
                 {
@@ -349,8 +349,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion -- check for unposted DM or CM
 
                 model.CreatedBy = GetUserFullName();
-                model.Company = companyClaims;
-
                 if (model.Source == "Sales Invoice")
                 {
                     model.ServiceInvoiceId = null;
@@ -371,7 +369,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new credit memo# {model.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -542,7 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(existingCm.EditedBy!, $"Edited credit memo# {existingCm.CreditMemoNo}", "Credit Memo", existingCm.Company);
+                FilprideAuditTrail auditTrailBook = new(existingCm.EditedBy!, $"Edited credit memo# {existingCm.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -588,7 +586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview credit memo# {creditMemo.CreditMemoNo}", "Credit Memo", companyClaims);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview credit memo# {creditMemo.CreditMemoNo}", "Credit Memo");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -686,7 +684,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -733,7 +731,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -783,7 +781,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", cm.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -796,7 +794,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 var printedBy = GetUserFullName();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed re-printed copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", cm.Company);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed re-printed copy of credit memo# {cm.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -818,7 +816,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var creditMemos = await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(cm => true, cancellationToken);
 
                 // Apply date range filter if provided
                 if (dateFrom.HasValue)
@@ -1223,7 +1221,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted credit memo# {creditMemo.CreditMemoNo}", "Credit Memo", creditMemo.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted credit memo# {creditMemo.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1308,7 +1306,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved credit memo# {model.CreditMemoNo}", "Credit Memo");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1391,7 +1389,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arTradeReceivableTitle.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
@@ -1413,7 +1410,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(withHoldingTaxAmount),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1432,7 +1428,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(withHoldingVatAmount),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1449,7 +1444,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountTitle = salesTitle.AccountName,
                     Debit = Math.Abs(netOfVatAmount),
                     Credit = 0,
-                    Company = model.Company,
                     CreatedBy = model.PostedBy,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.CreditMemo)
@@ -1467,7 +1461,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = vatOutputTitle.AccountName,
                         Debit = Math.Abs(vatAmount),
                         Credit = 0,
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1545,7 +1538,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arNonTradeTitle.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
@@ -1567,7 +1559,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(withHoldingTaxAmount),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1586,7 +1577,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = 0,
                         Credit = Math.Abs(withHoldingVatAmount),
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1603,7 +1593,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountTitle = serviceTitle.AccountName,
                     Debit = DecimalRoundingHelper.RoundToFour(netAmount),
                     Credit = 0,
-                    Company = model.Company,
                     CreatedBy = model.PostedBy,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModuleType = nameof(ModuleType.CreditMemo)
@@ -1621,7 +1610,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AccountTitle = vatOutputTitle.AccountName,
                         Debit = Math.Abs(vatAmount),
                         Credit = 0,
-                        Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.CreditMemo)
@@ -1636,7 +1624,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
             }
 
-            FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+            FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
         }
     }

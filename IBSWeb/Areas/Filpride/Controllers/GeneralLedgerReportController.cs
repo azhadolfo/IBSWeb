@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalLedgerBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (!generalLedgerBooks.Any())
                 {
@@ -260,7 +260,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report quest pdf", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report quest pdf", "General Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -303,7 +303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (generalBooks.Count == 0)
                 {
@@ -411,7 +411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report excel file", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by transaction report excel file", "General Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -478,7 +478,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(g =>
                         g.Date >= model.DateFrom && g.Date <= model.DateTo &&
                         (selectedAccountNo == null || g.AccountNo == selectedAccountNo) &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (!generalLedgerByAccountNo.Any())
@@ -670,7 +670,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report quest pdf", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report quest pdf", "General Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -716,7 +716,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(g =>
                         g.Date >= dateFrom && g.Date <= dateTo &&
                         (selectedAccount == null || g.AccountNo == selectedAccount.AccountNumber) &&
-                        g.Company == companyClaims)
+                        true)
                     .ToListAsync(cancellationToken);
 
                 if (generalLedgerByAccountNo.Count == 0)
@@ -748,7 +748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(g => g.Account)
                     .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
                                  pb.IsValid &&
-                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
+                                 pb.PeriodEndDate == previousPeriodEndDate)
                     .ToListAsync(cancellationToken);
 
                 var beginningBalanceDictionary = glPeriodBalances
@@ -939,7 +939,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report excel file", "General Ledger Report", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), "Generate general ledger by account number report excel file", "General Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail --
@@ -980,7 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo);
                 if (generalBooks.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -1092,7 +1092,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update price", StringComparison.CurrentCultureIgnoreCase))
@@ -1199,8 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     "Generate general ledger journal voucher - updating selling price report excel file",
-                    "General Ledger JV Report",
-                    companyClaims);
+                    "General Ledger JV Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail
@@ -1259,7 +1258,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update cost", StringComparison.CurrentCultureIgnoreCase))
@@ -1366,8 +1365,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     "Generate general ledger journal voucher - updating unit cost report excel file",
-                    "General Ledger JV Report",
-                    companyClaims);
+                    "General Ledger JV Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail
@@ -1426,7 +1424,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb =>
@@ -1535,8 +1533,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     "Generate general ledger journal voucher - updating commission report excel file",
-                    "General Ledger JV Report",
-                    companyClaims);
+                    "General Ledger JV Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail
@@ -1595,7 +1592,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update freight", StringComparison.CurrentCultureIgnoreCase))
@@ -1702,8 +1699,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     "Generate general ledger journal voucher - updating freight report excel file",
-                    "General Ledger JV Report",
-                    companyClaims);
+                    "General Ledger JV Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail
@@ -1787,8 +1783,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.IsValid &&
                         s.PeriodEndDate >= dateFrom &&
                         s.PeriodStartDate <= dateTo &&
-                        (selectedAccountNo == null || s.Account.AccountNumber == selectedAccountNo) &&
-                        s.Company == companyClaims)
+                        (selectedAccountNo == null || s.Account.AccountNumber == selectedAccountNo))
                     .OrderBy(s => s.Account.AccountNumber)
                     .ThenBy(s => s.SubAccountName)
                     .ThenBy(s => s.PeriodStartDate)
@@ -1970,8 +1965,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrail = new(
                     GetUserFullName(),
                     "Generate subsidiary ledger report excel file",
-                    "Subsidiary Ledger Report",
-                    companyClaims);
+                    "Subsidiary Ledger Report");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);

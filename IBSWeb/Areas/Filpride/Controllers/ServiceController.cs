@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, cancellationToken))
                 {
                     ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
@@ -150,7 +150,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
                 services.UnearnedNo = unearned!.AccountNumber;
                 services.UnearnedTitle = unearned.AccountName;
-                services.Company = companyClaims;
                 services.CreatedBy = GetUserFullName();
                 services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
                 await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);
@@ -158,7 +157,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Create Service #{services.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
+                    $"Create Service #{services.ServiceNo}", "Service");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -276,14 +275,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 existingModel.Name = services.Name;
                 existingModel.Percent = services.Percent;
-                existingModel.IsFilpride = services.IsFilpride;
-                existingModel.IsBienes = services.IsBienes;
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Service #{existingModel.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
+                    $"Edited Service #{existingModel.ServiceNo}", "Service");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
