@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ICustomerRepository : IRepository<FilprideCustomer>
     {
-        Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default);
+        Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default);
 
         Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default);
 

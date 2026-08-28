@@ -106,7 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private async Task<string?> GetSupplierEmployeeNumberAsync(string companyClaims, int supplierId, CancellationToken cancellationToken)
         {
             return await _dbContext.FilprideSuppliers
-                .Where(s => s.Company == companyClaims && s.SupplierId == supplierId && s.Category == "Employee")
+                .Where(s => s.SupplierId == supplierId && s.Category == "Employee")
                 .Select(s => s.EmployeeNumber)
                 .FirstOrDefaultAsync(cancellationToken);
         }

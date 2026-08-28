@@ -113,9 +113,6 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? ValidityDate { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         [Required]
         [Display(Name = "Zip Code")]
         [StringLength(10)]

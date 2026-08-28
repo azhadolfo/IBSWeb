@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, cancellationToken))
                 {
                     ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
@@ -150,7 +150,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
                 services.UnearnedNo = unearned!.AccountNumber;
                 services.UnearnedTitle = unearned.AccountName;
-                services.Company = companyClaims;
                 services.CreatedBy = GetUserFullName();
                 services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
                 await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);

@@ -23,9 +23,6 @@ namespace IBS.Models.Filpride.MasterFile
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
-        [StringLength(50)]
-        public string Company { get; set; } = null!;
-
         [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }
 

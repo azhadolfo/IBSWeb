@@ -11,7 +11,6 @@ using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
-using System.Linq.Expressions;
 using IProductRepository = IBS.DataAccess.Repository.MasterFile.IRepository.IProductRepository;
 using ProductRepository = IBS.DataAccess.Repository.MasterFile.ProductRepository;
 
@@ -214,17 +213,11 @@ namespace IBS.DataAccess.Repository
 
         #region--Filpride
 
-        private Expression<Func<T, bool>> GetCompanyFilter<T>(string companyName) where T : class
-        {
-            return entity => EF.Property<string>(entity, "Company") == companyName;
-        }
-
         public async Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerName)
                 .Where(c => c.IsActive)
-                .Where(GetCompanyFilter<FilprideCustomer>(company))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -238,7 +231,6 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive)
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -251,7 +243,6 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .Where(s => s.IsActive && s.Category == "Employee")
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .OrderBy(s => s.EmployeeNumber)
                 .ThenBy(s => s.SupplierName)
                 .Select(s => new SelectListItem
@@ -269,7 +260,6 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive && s.Category == "Trade")
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -283,7 +273,6 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierName)
                 .Where(s => s.IsActive && s.Category == "Non-Trade" || s.Category == "Employee")
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -297,7 +286,6 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive && s.Category == "Commissionee")
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -310,8 +298,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Hauler")
-                .Where(GetCompanyFilter<FilprideSupplier>(company))
+                .Where(s => s.IsActive && s.Category == "Hauler")
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -323,7 +310,6 @@ namespace IBS.DataAccess.Repository
         public async Task<List<SelectListItem>> GetFilprideBankAccountListById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
-                .Where(GetCompanyFilter<FilprideBankAccount>(company))
                 .OrderBy(b => b.AccountNo)
                 .Select(ba => new SelectListItem
                 {
@@ -336,7 +322,6 @@ namespace IBS.DataAccess.Repository
         public async Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string companyClaims, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
-                .Where(GetCompanyFilter<FilpridePickUpPoint>(companyClaims))
                 .GroupBy(p => p.Depot)
                 .OrderBy(g => g.Key)
                 .Select(g => new SelectListItem
@@ -351,7 +336,6 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideServices
                 .OrderBy(s => s.Name)
-                .Where(GetCompanyFilter<FilprideService>(companyClaims))
                 .Select(s => new SelectListItem
                 {
                     Value = s.ServiceId.ToString(),

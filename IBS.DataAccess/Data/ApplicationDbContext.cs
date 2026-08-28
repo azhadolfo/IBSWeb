@@ -365,8 +365,6 @@ namespace IBS.DataAccess.Data
             // FilpridePickUpPoint
             builder.Entity<FilpridePickUpPoint>(p =>
             {
-                p.HasIndex(p => p.Company);
-
                 p.HasOne(p => p.Supplier)
                     .WithMany()
                     .HasForeignKey(p => p.SupplierId)

@@ -1807,7 +1807,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion
 
                 var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == viewModel.SupplierId && s.Company == companyClaims && s.Category == "Employee",
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId && s.Category == "Employee",
                         cancellationToken);
 
                 if (supplier == null)
@@ -2032,7 +2032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == viewModel.SupplierId && s.Company == companyClaims && s.Category == "Employee",
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId && s.Category == "Employee",
                         cancellationToken);
 
                 if (supplier == null)
@@ -2166,7 +2166,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var supplier = await _unitOfWork.FilprideSupplier
-                .GetAsync(s => s.SupplierId == supplierId && s.Company == companyClaims && s.Category == "Employee",
+                .GetAsync(s => s.SupplierId == supplierId && s.Category == "Employee",
                     cancellationToken);
 
             if (supplier == null)

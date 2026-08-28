@@ -77,9 +77,6 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
-        [StringLength(20)]
-        public string Company { get; set; } = string.Empty;
-
         public ClusterArea? ClusterCode { get; set; }
 
         #region For Retail

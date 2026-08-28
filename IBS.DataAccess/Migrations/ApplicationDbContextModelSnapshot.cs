@@ -4387,12 +4387,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("branch");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -4523,12 +4517,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CommissioneeId")
                         .HasColumnType("integer")
                         .HasColumnName("commissionee_id");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
@@ -4714,12 +4702,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PickUpPointId"));
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -4743,9 +4725,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("PickUpPointId")
                         .HasName("pk_filpride_pick_up_points");
 
-                    b.HasIndex("Company")
-                        .HasDatabaseName("ix_filpride_pick_up_points_company");
-
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_pick_up_points_supplier_id");
 
@@ -4760,12 +4739,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("service_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceId"));
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
@@ -4836,12 +4809,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("category");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)

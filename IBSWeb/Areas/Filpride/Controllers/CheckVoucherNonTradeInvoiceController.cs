@@ -1688,7 +1688,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             IEnumerable<FilprideSupplier> employees = await _unitOfWork.FilprideSupplier
-                .GetAllAsync(s => s.Company == companyClaims && s.IsActive && s.Category == "Employee");
+                .GetAllAsync(s => s.IsActive && s.Category == "Employee");
 
             return Json(employees.OrderBy(e => e.EmployeeNumber).ThenBy(e => e.SupplierName).Select(e => new
             {
@@ -1709,7 +1709,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideSupplier? employee = await _unitOfWork.FilprideSupplier
-                .GetAsync(e => e.SupplierId == employeeId && e.Company == companyClaims && e.Category == "Employee");
+                .GetAsync(e => e.SupplierId == employeeId && e.Category == "Employee");
 
             if (employee == null)
             {

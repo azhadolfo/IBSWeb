@@ -72,8 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var model = new FilpridePickUpPoint
             {
-                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                Company = companyClaims
+                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(model);
@@ -248,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", model.Company);
+                    $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", (await GetCompanyClaimAsync())!);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording --
