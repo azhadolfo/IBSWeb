@@ -748,7 +748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(g => g.Account)
                     .Where(pb => accountNumbers.Contains(pb.Account.AccountNumber!) &&
                                  pb.IsValid &&
-                                 pb.PeriodEndDate == previousPeriodEndDate && pb.Company == companyClaims)
+                                 pb.PeriodEndDate == previousPeriodEndDate)
                     .ToListAsync(cancellationToken);
 
                 var beginningBalanceDictionary = glPeriodBalances
@@ -1787,8 +1787,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.IsValid &&
                         s.PeriodEndDate >= dateFrom &&
                         s.PeriodStartDate <= dateTo &&
-                        (selectedAccountNo == null || s.Account.AccountNumber == selectedAccountNo) &&
-                        s.Company == companyClaims)
+                        (selectedAccountNo == null || s.Account.AccountNumber == selectedAccountNo))
                     .OrderBy(s => s.Account.AccountNumber)
                     .ThenBy(s => s.SubAccountName)
                     .ThenBy(s => s.PeriodStartDate)

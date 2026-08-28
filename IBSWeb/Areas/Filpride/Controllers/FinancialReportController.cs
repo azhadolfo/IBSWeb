@@ -1234,8 +1234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         !pb.Account.HasChildren &&
                         pb.IsValid &&
                         pb.PeriodStartDate >= dateFrom &&
-                        pb.PeriodEndDate <= dateTo &&
-                        pb.Company == companyClaims)
+                        pb.PeriodEndDate <= dateTo)
                     .ToListAsync(cancellationToken);
 
                 var glPeriodBalances = periodBalances

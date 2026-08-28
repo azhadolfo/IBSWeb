@@ -373,8 +373,7 @@ namespace IBS.Services
                         CreditTotal = totalCredit,
                         EndingBalance = endingBalance,
                         IsClosed = true,
-                        ClosedAt = closedAt,
-                        Company = company
+                        ClosedAt = closedAt
                     });
                 }
 
@@ -429,8 +428,7 @@ namespace IBS.Services
                             DebitTotal = subAccount.TotalDebit,
                             CreditTotal = subAccount.TotalCredit,
                             EndingBalance = endingBalance,
-                            IsClosed = true,
-                            Company = company
+                            IsClosed = true
                         });
                     }
                 }
@@ -479,7 +477,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
-                        s.Company == company &&
                         s.PeriodStartDate >= monthDate)
                     .ExecuteUpdateAsync(e =>
                         e.SetProperty(d => d.IsValid, false), cancellationToken);
@@ -488,7 +485,6 @@ namespace IBS.Services
                     .IgnoreQueryFilters()
                     .Where(s =>
                         s.IsValid &&
-                        s.Company == company &&
                         s.PeriodStartDate >= monthDate)
                     .ExecuteUpdateAsync(e =>
                         e.SetProperty(d => d.IsValid, false), cancellationToken);

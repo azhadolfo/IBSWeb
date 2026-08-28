@@ -3006,11 +3006,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("closed_at");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("company");
-
                     b.Property<decimal>("CreditTotal")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit_total");
@@ -3070,11 +3065,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("BeginningBalance")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("beginning_balance");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("company");
 
                     b.Property<decimal>("CreditTotal")
                         .HasColumnType("numeric(18,4)")
