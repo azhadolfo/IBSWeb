@@ -263,7 +263,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(
                 viewModel.SupplierId, cancellationToken);
             viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
                 .GetFilprideTermsListAsyncByCode(cancellationToken);
@@ -372,7 +372,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ProductId = purchaseOrder.ProductId,
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                 PickUpPointId = purchaseOrder.PickUpPointId,
-                PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+                PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(
                         purchaseOrder.SupplierId, cancellationToken),
                 Terms = purchaseOrder.Terms,
                 Quantity = purchaseOrder.Quantity,
@@ -404,7 +404,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(
                 viewModel.SupplierId, cancellationToken);
             viewModel.PaymentTerms = await _unitOfWork.FilprideTerms
                 .GetFilprideTermsListAsyncByCode(cancellationToken);
@@ -962,7 +962,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, supplierId, cancellationToken);
+            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
 
             return Json(pickUpPoints);
         }

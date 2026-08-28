@@ -333,7 +333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideCustomerOrderSlip model = new()
                 {
-                    CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
+                    CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(cancellationToken),
                     Date = viewModel.Date,
                     CustomerId = viewModel.CustomerId,
                     CustomerAddress = viewModel.CustomerAddress!,
@@ -1422,7 +1422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     COSVolume = existingRecord.Quantity,
                     Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                 };
 
                 return View(viewModel);
@@ -1451,7 +1451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CurrentUser = _userManager.GetUserName(User);
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -1572,7 +1572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliveryOption = existingRecord.DeliveryOption!,
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId!,
-                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                    PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks,
 
                 };
@@ -1621,7 +1621,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CurrentUser = _userManager.GetUserName(User);
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
 
             if (!ModelState.IsValid)
             {

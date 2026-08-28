@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalLedgerBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (!generalLedgerBooks.Any())
                 {
@@ -303,7 +303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (generalBooks.Count == 0)
                 {
@@ -980,7 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo);
                 if (generalBooks.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -1092,7 +1092,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update price", StringComparison.CurrentCultureIgnoreCase))
@@ -1259,7 +1259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update cost", StringComparison.CurrentCultureIgnoreCase))
@@ -1426,7 +1426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb =>
@@ -1595,7 +1595,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var generalBooks = await _unitOfWork.FilprideReport
-                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, cancellationToken);
 
                 var filteredData = generalBooks
                     .Where(gb => gb.Description.Contains("update freight", StringComparison.CurrentCultureIgnoreCase))

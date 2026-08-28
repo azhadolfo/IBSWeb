@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastCos = await _db
                 .FilprideCustomerOrderSlips
@@ -169,7 +169,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)

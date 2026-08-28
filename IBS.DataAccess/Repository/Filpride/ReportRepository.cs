@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<List<FilprideGeneralLedgerBook>> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideGeneralLedgerBook>> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -40,7 +40,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return generalLedgerBooks;
         }
 
-        public List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo, string company)
+        public List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo)
         {
             if (dateFrom > dateTo)
             {
@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return inventoryBooks;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -83,7 +83,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReport;
         }
 
-        public async Task<List<FilprideAuditTrail>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideAuditTrail>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo)
         {
             if (dateFrom > dateTo)
             {
@@ -99,7 +99,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return auditTrailBooks;
         }
 
-        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnservedVolume(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnservedVolume(DateOnly dateFrom, DateOnly dateTo)
         {
             if (dateFrom > dateTo)
             {
@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync();
         }
 
-        public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? commissioneeIds = null, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, List<int>? commissioneeIds = null, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -182,7 +182,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return result;
         }
 
-        public async Task<List<FilprideSalesInvoice>> GetSalesInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly",
+        public async Task<List<FilprideSalesInvoice>> GetSalesInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly",
             CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
@@ -220,7 +220,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return salesInvoices;
         }
 
-        public async Task<List<FilprideServiceInvoice>> GetServiceInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideServiceInvoice>> GetServiceInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -252,7 +252,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return serviceInvoices;
         }
 
-        public async Task<List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -284,7 +284,7 @@ namespace IBS.DataAccess.Repository.Filpride
         }
 
 
-        public async Task<List<FilprideCheckVoucherHeader>> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideCheckVoucherHeader>> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -308,7 +308,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom,
             DateOnly dateTo,
-            string company,
             List<int>? customerIds = null,
             List<int>? commissioneeIds = null,
             string dateSelectionType = "RRDate",
@@ -379,7 +378,6 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(
             DateOnly dateFrom,
             DateOnly dateTo,
-            string company,
             List<int>? customers = null,
             List<int>? commissionee = null,
             CancellationToken cancellationToken = default)
@@ -434,7 +432,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToList();
         }
 
-        public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -471,7 +469,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return collectionReceipts;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetTradePayableReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetTradePayableReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -489,7 +487,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports;
         }
 
-        public async Task<List<FilprideDeliveryReceipt>> GetHaulerPayableReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideDeliveryReceipt>> GetHaulerPayableReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -508,7 +506,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return deliveryReceipts;
         }
 
-        public async Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, CancellationToken cancellationToken = default)
         {
             var periodStart = new DateOnly(monthYear.Year, monthYear.Month, 1);
             var periodEnd = periodStart.AddMonths(1).AddDays(-1);
@@ -545,7 +543,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return purchaseOrders;
         }
 
-        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, List<int>? customerIds = null, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -580,7 +578,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
 
         public async Task<List<FilprideJournalVoucherDetail>> GetJournalVoucherReport(DateOnly dateFrom,
-            DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+            DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -613,7 +611,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return journalVoucherDetails;
         }
 
-        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string company, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideCustomerOrderSlip>> GetCustomerOrderSlipReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {

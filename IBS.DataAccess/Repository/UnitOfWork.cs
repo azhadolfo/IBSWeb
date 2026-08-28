@@ -319,7 +319,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
                 .GroupBy(p => p.Depot)
@@ -332,7 +332,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetFilprideServiceListById(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideServiceListById(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideServices
                 .OrderBy(s => s.Name)

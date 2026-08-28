@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo);
 
                 if (cosSummary.Count == 0)
                 {
@@ -351,7 +351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo);
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
@@ -1729,7 +1729,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, statusFilter, cancellationToken);
+                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, model.Commissionee, statusFilter, cancellationToken);
 
                 if (!sales.Any())
                 {
@@ -2135,7 +2135,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         new { dateFrom = model.DateFrom, dateTo = model.DateTo, statusFilter = model.StatusFilter });
                 }
 
-                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, statusFilter, cancellationToken);
+                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, model.Commissionee, statusFilter, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {
@@ -2681,7 +2681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var collectionReceiptReport = await _unitOfWork.FilprideReport
-                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, cancellationToken: cancellationToken);
 
                 if (!collectionReceiptReport.Any())
                 {
@@ -2935,7 +2935,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                     var collectionReceiptReport = await _unitOfWork.FilprideReport
-                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                     var multipleSalesInvoiceIds = collectionReceiptReport
                         .Where(cr => cr.MultipleSIId is { Length: > 0 })
@@ -3942,7 +3942,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, statusFilter, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, model.Customers, statusFilter, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4268,7 +4268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, statusFilter, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, model.Customers, statusFilter, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4677,7 +4677,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var serviceInvoice = await _unitOfWork.FilprideReport
-                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (!serviceInvoice.Any())
                 {
@@ -4873,7 +4873,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (serviceReport.Count == 0)
                 {
@@ -5065,7 +5065,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var normalizedStatusFilter = NormalizeStatusFilter(statusFilter);
 
                 var salesReport = await _unitOfWork.FilprideReport
-                    .GetSalesInvoiceReport(dateFrom, dateTo, companyClaims, normalizedStatusFilter, cancellationToken);
+                    .GetSalesInvoiceReport(dateFrom, dateTo, normalizedStatusFilter, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {
@@ -5304,7 +5304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // fetch sales report
                 var salesReport = await _unitOfWork.FilprideReport
-                    .GetSalesReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetSalesReport(model.DateFrom, model.DateTo, cancellationToken: cancellationToken);
 
                 // check if there is no record
                 if (salesReport.Count == 0)
@@ -5977,7 +5977,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
-                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                var cosSummaryReport = await _unitOfWork.FilprideReport.GetCustomerOrderSlipReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (cosSummaryReport.Count == 0)
                 {

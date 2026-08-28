@@ -59,9 +59,9 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetFilprideBankAccountListById(string company, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetFilprideServiceListById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideServiceListById(CancellationToken cancellationToken = default);
 
         #endregion
 

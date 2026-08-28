@@ -193,7 +193,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new ServiceInvoiceViewModel
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
-                Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken)
+                Services = await _unitOfWork.GetFilprideServiceListById(cancellationToken)
             };
 
             return View(viewModel);
@@ -212,7 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -537,7 +537,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CustomerId = existingModel.CustomerId,
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 ServiceId = existingModel.ServiceId,
-                Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken),
+                Services = await _unitOfWork.GetFilprideServiceListById(cancellationToken),
                 DueDate = existingModel.DueDate,
                 Instructions = existingModel.Instructions,
                 Period = existingModel.Period,
@@ -562,7 +562,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(string.Empty, cancellationToken);
-            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(string.Empty, cancellationToken);
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(cancellationToken);
 
             if (!ModelState.IsValid)
             {

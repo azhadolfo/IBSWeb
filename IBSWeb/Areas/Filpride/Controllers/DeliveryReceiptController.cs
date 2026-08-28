@@ -121,7 +121,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CancellationToken cancellationToken)
         {
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
+            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken);
         }
@@ -614,7 +614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideDeliveryReceipt model = new()
                 {
-                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(viewModel.Type, cancellationToken),
                     Type = viewModel.Type,
                     Date = viewModel.Date,
                     CustomerId = viewModel.CustomerId,
@@ -717,7 +717,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerAddress = existingRecord.CustomerAddress,
                     CustomerTin = existingRecord.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken),
+                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
                     PurchaseOrderId = existingRecord.PurchaseOrderId ?? 0,
                     PurchaseOrders = purchaseOrders,
                     Product = existingRecord.CustomerOrderSlip!.Product!.ProductName,

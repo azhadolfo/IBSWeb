@@ -200,7 +200,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (checkVoucherHeader.Count == 0)
                 {
@@ -377,7 +377,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var clearedDisbursementReport =
                     await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo,
-                        companyClaims, cancellationToken);
+                        cancellationToken);
 
                 if (clearedDisbursementReport.Count == 0)
                 {
@@ -1057,7 +1057,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
                 var purchaseOrder = await _unitOfWork.FilprideReport
-                    .GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                    .GetPurchaseOrderReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (purchaseOrder.Count == 0)
                 {
@@ -1230,7 +1230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                 var purchaseOrderReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                    .GetPurchaseOrderReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (purchaseOrderReport.Count == 0)
                 {
@@ -1380,7 +1380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, dateSelectionType: model.DateSelectionType, cancellationToken: cancellationToken);
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, dateSelectionType: model.DateSelectionType, cancellationToken: cancellationToken);
 
                 if (purchaseReport.Count == 0)
                 {
@@ -1776,7 +1776,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var purchaseReport = await _unitOfWork.FilprideReport
                     .GetPurchaseReport(model.DateFrom,
                         model.DateTo,
-                        companyClaims,
                         dateSelectionType: model.DateSelectionType,
                         statusFilter: statusFilter,
                         cancellationToken: cancellationToken);
@@ -2379,7 +2378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var grossMarginReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee, cancellationToken: cancellationToken);
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, model.Customers, model.Commissionee, cancellationToken: cancellationToken);
 
                 if (!grossMarginReport.Any())
                 {
@@ -2894,7 +2893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
                 var grossMarginReport = await _unitOfWork.FilprideReport
-                    .GetGrossMarginReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee, cancellationToken: cancellationToken);
+                    .GetGrossMarginReport(model.DateFrom, model.DateTo, model.Customers, model.Commissionee, cancellationToken: cancellationToken);
 
                 if (grossMarginReport.Count == 0)
                 {
@@ -3966,7 +3965,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var allRr = await _unitOfWork.FilprideReport
-                    .GetTradePayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
+                    .GetTradePayableReport(viewModel.DateFrom, viewModel.DateTo, cancellationToken);
 
                 var rrAndAmountPaidForSelectedPeriodFromCv = allRr
                     .Where(rr => idsOfRrsOfSelectedPeriodFromCv.Select(rrSet => rrSet.ReceivingReportId).ToList().Contains(rr.ReceivingReportId) &&
@@ -4638,7 +4637,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var periodEnd = periodStart.AddMonths(1).AddDays(-1);
 
                 // fetch for this month and back
-                var apReport = await _unitOfWork.FilprideReport.GetApReport(monthYear, companyClaims, cancellationToken);
+                var apReport = await _unitOfWork.FilprideReport.GetApReport(monthYear, cancellationToken);
 
                 if (apReport.Count == 0)
                 {
@@ -7638,7 +7637,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
 
                 var allDr = await _unitOfWork.FilprideReport
-                    .GetHaulerPayableReport(viewModel.DateFrom, viewModel.DateTo, companyClaims, cancellationToken);
+                    .GetHaulerPayableReport(viewModel.DateFrom, viewModel.DateTo, cancellationToken);
 
                 var drAndAmountPaidForSelectedPeriodFromCv = allDr
                     .Where(dr => idsOfDrsOfSelectedPeriodFromCv.Select(drSet => drSet.DeliveryReceiptId).ToList().Contains(dr.DeliveryReceiptId) &&
@@ -8327,7 +8326,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Fetch journal voucher report data
                 var journalVoucherReport = await _unitOfWork.FilprideReport
-                    .GetJournalVoucherReport(model.DateFrom, model.DateTo, companyClaims, statusFilter, cancellationToken);
+                    .GetJournalVoucherReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
 
                 if (journalVoucherReport.Count == 0)
                 {

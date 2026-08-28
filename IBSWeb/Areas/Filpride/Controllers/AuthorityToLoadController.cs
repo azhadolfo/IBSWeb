@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             BookATLViewModel viewModel = new()
             {
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                 Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                 CurrentUser = _userManager.GetUserName(User)
             };
@@ -208,7 +208,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -217,7 +217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (supplierAtlValidationMessage != null)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = supplierAtlValidationMessage;
                 return View(viewModel);
             }
@@ -225,7 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!viewModel.SelectedCosDetails.Any())
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "Please select at least one COS.";
                 return View(viewModel);
             }
@@ -647,7 +647,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierAtlReferences = supplierAtlReferences,
                 SelectedCosDetails = selectedCosDetails,
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken),
                 CurrentUser = _userManager.GetUserName(User)
             };
 
@@ -669,7 +669,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -678,7 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (supplierAtlValidationMessage != null)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = supplierAtlValidationMessage;
                 return View(viewModel);
             }
@@ -686,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!viewModel.SelectedCosDetails.Any())
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(cancellationToken);
                 TempData["warning"] = "Please select at least one COS.";
                 return View(viewModel);
             }

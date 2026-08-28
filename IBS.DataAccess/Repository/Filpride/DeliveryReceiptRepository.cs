@@ -23,17 +23,17 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string documentType, CancellationToken cancellationToken = default)
         {
             return documentType switch
             {
-                nameof(DocumentType.Documented) => await GenerateDocumentedCodeAsync(companyClaims, cancellationToken),
-                nameof(DocumentType.Undocumented) => await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken),
+                nameof(DocumentType.Documented) => await GenerateDocumentedCodeAsync(cancellationToken),
+                nameof(DocumentType.Undocumented) => await GenerateUnDocumentedCodeAsync(cancellationToken),
                 _ => throw new ArgumentException("Invalid type")
             };
         }
 
-        private async Task<string> GenerateDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateDocumentedCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
-        private async Task<string> GenerateUnDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateUnDocumentedCodeAsync(CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
@@ -233,7 +233,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                 .OrderBy(dr => dr.DeliveryReceiptId)
@@ -246,7 +246,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(string companyClaims, int cosId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(int cosId, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)

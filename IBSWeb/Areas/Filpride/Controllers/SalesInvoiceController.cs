@@ -327,7 +327,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cos.Terms,
                 cos.CustomerAddress,
                 cos.CustomerTin,
-                DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(companyClaims, cos.CustomerOrderSlipId, cancellationToken)
+                DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
             });
         }
 

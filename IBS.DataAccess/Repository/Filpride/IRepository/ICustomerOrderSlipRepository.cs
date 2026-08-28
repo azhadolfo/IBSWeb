@@ -7,11 +7,11 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ICustomerOrderSlipRepository : IRepository<FilprideCustomerOrderSlip>
     {
-        Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
 
         Task UpdateAsync(CustomerOrderSlipViewModel viewModel, bool thereIsNewFile, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetCosListNotDeliveredAsync(string companyClaims, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCosListNotDeliveredAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCosListPerCustomerAsync(int customerId, CancellationToken cancellationToken = default);
 
