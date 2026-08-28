@@ -19,7 +19,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" enctype="multipart/form-data">
+        <form id="create-accrual-form" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="row">
                 <div class="col-12 col-md-4">
@@ -475,10 +475,14 @@
             if ($('#AutoReverseNextMonth').is(':checked')) {
                 confirmAutoReverse();
             } else {
-                $('form').submit();
+                submitAccrualForm();
             }
 
             return false;
+        }
+
+        function submitAccrualForm() {
+            document.getElementById('create-accrual-form').requestSubmit();
         }
 
         function confirmAutoReverse() {
@@ -495,7 +499,7 @@
                 if (result.isConfirmed) {
                     // Yes
                     $('#AutoReverseNextMonth').val('true');
-                    $('form').submit();
+                    submitAccrualForm();
                 }
                 else if (result.isDenied) {
                     // No
