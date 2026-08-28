@@ -94,8 +94,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
             existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
-            existingSupplier.IsFilpride = model.IsFilpride;
-            existingSupplier.IsBienes = model.IsBienes;
             existingSupplier.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
             existingSupplier.TradeName = model.TradeName;
             existingSupplier.WithholdingTaxTitle = model.WithholdingTaxTitle;

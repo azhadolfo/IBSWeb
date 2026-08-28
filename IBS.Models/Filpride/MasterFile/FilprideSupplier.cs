@@ -121,10 +121,6 @@ namespace IBS.Models.Filpride.MasterFile
         [StringLength(10)]
         public string? ZipCode { get; set; }
 
-        public bool IsFilpride { get; set; }
-
-        public bool IsBienes { get; set; }
-
         [Display(Name = "Requires Price Adjustment")]
         public bool RequiresPriceAdjustment { get; set; }
 

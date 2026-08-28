@@ -214,21 +214,9 @@ namespace IBS.DataAccess.Repository
 
         #region--Filpride
 
-        // Make the function generic
         private Expression<Func<T, bool>> GetCompanyFilter<T>(string companyName) where T : class
         {
-            // Use reflection or property pattern matching to dynamically access properties
-            var param = Expression.Parameter(typeof(T), "x");
-
-            // Build the appropriate expression based on the company name
-            Expression propertyAccess = companyName switch
-            {
-                nameof(Filpride) => Expression.Property(param, "IsFilpride"),
-                nameof(Bienes) => Expression.Property(param, "IsBienes"),
-                _ => Expression.Constant(false)
-            };
-
-            return Expression.Lambda<Func<T, bool>>(propertyAccess, param);
+            return entity => EF.Property<string>(entity, "Company") == companyName;
         }
 
         public async Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default)

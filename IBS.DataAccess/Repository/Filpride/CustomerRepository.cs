@@ -77,8 +77,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
             existingCustomer.ZipCode = model.ZipCode;
             existingCustomer.RetentionRate = model.RetentionRate;
-            existingCustomer.IsFilpride = model.IsFilpride;
-            existingCustomer.IsBienes = model.IsBienes;
             existingCustomer.VatType = model.VatType;
             existingCustomer.Type = model.Type;
             existingCustomer.RequiresPriceAdjustment = model.RequiresPriceAdjustment;

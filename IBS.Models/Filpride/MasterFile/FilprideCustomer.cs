@@ -111,10 +111,6 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool HasMultipleTerms { get; set; }
 
-        public bool IsFilpride { get; set; }
-
-        public bool IsBienes { get; set; }
-
         [StringLength(13)]
         public string Type { get; set; } = string.Empty;
 

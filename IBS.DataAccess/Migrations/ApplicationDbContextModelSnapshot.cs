@@ -4402,14 +4402,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
-
                     b.HasKey("BankAccountId")
                         .HasName("pk_filpride_bank_accounts");
 
@@ -4619,14 +4611,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
-
                     b.Property<bool>("RequiresPriceAdjustment")
                         .HasColumnType("boolean")
                         .HasColumnName("requires_price_adjustment");
@@ -4752,14 +4736,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("depot");
 
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
-
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
@@ -4809,14 +4785,6 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("current_and_previous_title");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -4906,14 +4874,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<bool>("IsBienes")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_bienes");
-
-                    b.Property<bool>("IsFilpride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_filpride");
 
                     b.Property<string>("ProofOfExemptionFileName")
                         .HasMaxLength(200)

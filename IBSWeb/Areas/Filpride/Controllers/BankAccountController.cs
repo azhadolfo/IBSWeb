@@ -235,9 +235,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.AccountName = model.AccountName;
                 existingModel.Bank = model.Bank;
                 existingModel.Branch = model.Branch;
-                existingModel.IsFilpride = model.IsFilpride;
-                existingModel.IsBienes = model.IsBienes;
-
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Bank edited successfully.";
