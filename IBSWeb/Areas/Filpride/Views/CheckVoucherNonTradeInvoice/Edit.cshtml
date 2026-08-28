@@ -22,7 +22,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" enctype="multipart/form-data">
+        <form id="edit-check-voucher-form" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="row">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -634,10 +634,10 @@
 
         $(document).ready(function() {
             // Remove any existing submit handlers
-            $('form').off('submit');
+            $('#edit-check-voucher-form').off('submit');
 
             // Add our submit handler
-            $('form').on('submit', function(e) {
+            $('#edit-check-voucher-form').on('submit', function(e) {
                 e.preventDefault();
                 if (validateTotals()) {
                     this.submit();

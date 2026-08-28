@@ -21,7 +21,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
+        <form id="edit-delivery-receipt-form" method="post" class="row">
             @Html.AntiForgeryToken()
             <div class="border-2">
                 <div asp-validation-summary="ModelOnly"></div>
@@ -576,7 +576,7 @@
                 rebuildDetailItems();
             });
 
-            $('form').on('submit', function (e) {
+            $('#edit-delivery-receipt-form').on('submit', function (e) {
                 rebuildDetailItems();
                 if (detailItems.length === 0) {
                     e.preventDefault();
