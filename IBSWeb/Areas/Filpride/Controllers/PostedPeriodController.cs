@@ -131,9 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Posted the following modules: {modulesPosted} for {request.Month}/{request.Year}",
-                    "Posted Period",
-                    string.Empty!
-                );
+                    "Posted Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
@@ -171,9 +169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Posted the following modules: {postedPeriod.Module} for {postedPeriod.Month}/{postedPeriod.Year}",
-                    "Posted Period",
-                    string.Empty
-                );
+                    "Posted Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 

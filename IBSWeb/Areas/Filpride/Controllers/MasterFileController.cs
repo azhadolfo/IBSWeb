@@ -85,9 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrail = new(
                     extractedBy,
                     $"Generate {masterFileType} master file excel",
-                    $"{masterFileType}",
-                    companyClaims
-                );
+                    $"{masterFileType}");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 

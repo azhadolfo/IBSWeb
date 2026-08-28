@@ -317,7 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = $"ATL# {model.AuthorityToLoadNo} booked successfully.";
@@ -358,7 +358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load", companyClaims!);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -387,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load", (await GetCompanyClaimAsync())!);
+            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -559,7 +559,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingAtl.ValidUntil = newValidUntil;
 
-                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -803,7 +803,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Edited atl# {atl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Edited atl# {atl.AuthorityToLoadNo}", "Authority To Load");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = $"ATL# {atl.AuthorityToLoadNo} updated successfully.";

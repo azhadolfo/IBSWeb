@@ -115,7 +115,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Audit Trail Recordings --
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recordings --
@@ -224,7 +224,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region -- Audit Trail Recordings --
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", (await GetCompanyClaimAsync())!);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recordings --

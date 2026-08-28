@@ -638,7 +638,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var atlIds = await ApplyDeliveryReceiptDetailsAsync(model, normalizedDetails, reserveQuantities: true, cancellationToken);
                 await UpdateAuthorityToLoadsAsync(atlIds, hauler?.SupplierName, viewModel.Freight, viewModel.Driver, viewModel.PlateNo, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -860,7 +860,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var atlIds = await ApplyDeliveryReceiptDetailsAsync(existingRecord, normalizedDetails, reserveQuantities: true, cancellationToken);
                 await UpdateAuthorityToLoadsAsync(atlIds, hauler?.SupplierName, existingRecord.Freight, existingRecord.Driver, existingRecord.PlateNo, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -903,7 +903,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -937,7 +937,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed original copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed original copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -946,7 +946,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed re-printed copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1018,7 +1018,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingRecord.Status = nameof(DRStatus.PendingDelivery);
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -1243,7 +1243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -1300,7 +1300,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.CanceledBy!,
-                    $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                    $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1367,7 +1367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1459,7 +1459,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Generated excel file for delivery receipt# {deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Generated excel file for delivery receipt# {deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook);
 
             #endregion --Audit Trail Recording
@@ -1522,7 +1522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", string.Empty);
+                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1665,8 +1665,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update hauler/freight for delivery receipt# {existingRecord.DeliveryReceiptNo}, hauler from ({oldHaulerName}) => ({existingRecord.HaulerName}), freight from ({oldFreight}) => ({existingRecord.Freight:N4})",
-                    "Delivery Receipt",
-                    string.Empty);
+                    "Delivery Receipt");
 
                 TempData["success"] =
                     $"Hauler/Freight for {existingRecord.DeliveryReceiptNo} has been updated, hauler from ({oldHaulerName}) => ({existingRecord.HaulerName}), freight from ({oldFreight}) => ({existingRecord.Freight:N4})";

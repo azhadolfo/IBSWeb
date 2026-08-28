@@ -34,8 +34,5 @@ namespace IBS.Models.Filpride.Books
             DocumentType = documentType;
         }
 
-        public FilprideAuditTrail(string username, string activity, string documentType, string _) : this(username, activity, documentType)
-        {
-        }
     }
 }

@@ -416,7 +416,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await ApplyStorageChanges(filesToUpload, [] );
@@ -786,7 +786,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                 await ApplyStorageChanges(filesToUpload, filesToDelete);
                 await transaction.CommitAsync(cancellationToken);
@@ -893,7 +893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview customer order slip# {customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip", companyClaims!);
+                    FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Preview customer order slip# {customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip");
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -907,7 +907,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Preview customer order slip# {customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip", companyClaims!);
+                FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Preview customer order slip# {customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -940,7 +940,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of customer order slip# {cos.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+            FilprideAuditTrail auditTrail = new(GetUserFullName(), $"Printed copy of customer order slip# {cos.CustomerOrderSlipNo}", "Customer Order Slip");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
 
             #endregion --Audit Trail Recording
@@ -1127,13 +1127,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy!,
                             $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
-                            "Purchase Order",
-                            string.Empty);
+                            "Purchase Order");
 
                         FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy!,
                             $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
-                            "Purchase Order",
-                            string.Empty);
+                            "Purchase Order");
 
                         await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailCreate, cancellationToken);
                         await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailPost, cancellationToken);
@@ -1146,7 +1144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
                 }
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -1201,7 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.Terms = terms ?? existingRecord.Terms;
                 existingRecord.FinanceInstruction = instructions;
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -1253,7 +1251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FinanceInstruction = instructions;
                 }
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Customer order slip approved by marketing successfully.";
@@ -1296,7 +1294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.Terms = terms ?? existingRecord.Terms;
                 existingRecord.FinanceInstruction = instructions;
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Customer order slip approved by cnc successfully.";
@@ -1335,7 +1333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(CosStatus.Disapproved);
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy!, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy!, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -1512,7 +1510,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Appointed supplier successfully.";
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -1700,7 +1698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Reappointed supplier successfully.";
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -1803,7 +1801,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingRecord.Status = nameof(CosStatus.Closed);
 
-                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Closed customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", string.Empty);
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Closed customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Customer order slip closed successfully.";
@@ -1891,8 +1889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update actual price for customer order slip# {existingRecord.CustomerOrderSlipNo}, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).",
-                    "Customer Order Slip",
-                    string.Empty);
+                    "Customer Order Slip");
 
                 TempData["success"] = $"The price for {existingRecord.CustomerOrderSlipNo} has been updated, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).";
 
@@ -2032,8 +2029,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update commission details for customer order slip# {existingRecord.CustomerOrderSlipNo}, from ({oldCommissioneeName}) => ({existingRecord.CommissioneeName}), rate from ({oldCommissionRate}) => ({existingRecord.CommissionRate:N4})",
-                    "Customer Order Slip",
-                    string.Empty);
+                    "Customer Order Slip");
 
                 TempData["success"] = $"Commission details for {existingRecord.CustomerOrderSlipNo} has been updated, commissionee from ({oldCommissioneeName}) => ({existingRecord.CommissioneeName}), rate from ({oldCommissionRate}) => ({existingRecord.CommissionRate:N4})";
 

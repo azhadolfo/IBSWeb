@@ -196,7 +196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? $"Update DCP date of CV# {cv.CheckVoucherHeaderNo}"
                 : $"Update DCP date of CV# {cv.CheckVoucherHeaderNo} and {connectedInvoices.Count} connected invoice(s)";
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Disbursement", string.Empty);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Disbursement");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             await _unitOfWork.SaveAsync(cancellationToken);
@@ -253,7 +253,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? $"Update DCR date of CV# {cv.CheckVoucherHeaderNo}"
                 : $"Update DCR date of CV# {cv.CheckVoucherHeaderNo} and {connectedInvoices.Count} connected invoice(s)";
 
-            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Disbursement", string.Empty);
+            FilprideAuditTrail auditTrailBook = new(GetUserFullName(), auditMessage, "Disbursement");
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             await _unitOfWork.SaveAsync(cancellationToken);

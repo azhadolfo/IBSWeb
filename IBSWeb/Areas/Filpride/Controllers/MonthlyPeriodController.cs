@@ -75,9 +75,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Close the book for the month of {monthDate:MMM yyyy}",
-                    "Monthly Period",
-                    companyClaim
-                );
+                    "Monthly Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
@@ -113,9 +111,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
                     $"Open the book for the month of {monthDate:MMM yyyy}",
-                    "Monthly Period",
-                    companyClaim
-                );
+                    "Monthly Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 

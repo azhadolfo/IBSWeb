@@ -123,7 +123,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                    $"Created new Customer #{model.CustomerCode}", "Customer", companyClaims);
+                    $"Created new Customer #{model.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
@@ -189,7 +189,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (model.EditedBy,
-                    $"Edited Customer #{model.CustomerCode}", "Customer", (await GetCompanyClaimAsync())!);
+                    $"Edited Customer #{model.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -318,7 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var user = GetUserFullName();
                 FilprideAuditTrail auditTrailBook = new(
                     user!, $"Activated Customer #{customer.CustomerCode}",
-                    "Customer", (await GetCompanyClaimAsync())!);
+                    "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -389,7 +389,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Deactivated Customer #{customer.CustomerCode}", "Customer", (await GetCompanyClaimAsync())!);
+                    $"Deactivated Customer #{customer.CustomerCode}", "Customer");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
