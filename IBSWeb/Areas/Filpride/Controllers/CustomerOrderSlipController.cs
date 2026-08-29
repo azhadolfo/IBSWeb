@@ -1292,6 +1292,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                if (existingRecord.Status != nameof(CosStatus.ForApprovalOfCNC))
+                {
+                    TempData["warning"] = "This customer order slip is not pending cnc approval.";
+                    return RedirectToAction(nameof(Preview), new { id });
+                }
+
                 existingRecord.CncApprovedBy = GetUserFullName();
                 existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(CosStatus.Created);

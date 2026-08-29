@@ -266,6 +266,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                if (model.Status != nameof(CollectionReceiptStatus.Posted))
+                {
+                    TempData["warning"] = "This collection receipt is not pending add deposit info.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 model.DepositedDate = depositDate;
                 model.BankId = bank.BankAccountId;
                 model.BankAccountName = bank.AccountName;
@@ -705,7 +711,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 MultipleSIId = existingModel.MultipleSIId!,
                 SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si =>
-                                
+
                                 (
                                     (si.Balance > 0 || invoicesPaid.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
@@ -1149,7 +1155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 invoices = (await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si =>
-                                
+
                                 (
                                     (si.Balance > 0 || invoiceNo.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == customerNo &&
@@ -1197,7 +1203,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 invoices = (await _unitOfWork.FilprideServiceInvoice
                         .GetAllAsync(si =>
-                                
+
                                 (
                                     (si.Balance > 0 || invoiceNo.Contains(si.ServiceInvoiceNo!)) &&
                                     si.CustomerId == customerNo &&
@@ -1438,7 +1444,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SalesInvoiceId = existingModel.SalesInvoiceId ?? 0,
                 SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si =>
-                                
+
                                 (
                                     (si.Balance > 0 || invoiceNo.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
@@ -1702,7 +1708,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ServiceInvoiceId = existingModel.ServiceInvoiceId ?? 0,
                 ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
                         .GetAllAsync(si =>
-                                
+
                                 (
                                     (si.Balance > 0 || invoiceNo.Contains(si.ServiceInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
@@ -2624,6 +2630,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                if (model.Status is not (
+                    nameof(CollectionReceiptStatus.Deposited) or
+                    nameof(CollectionReceiptStatus.Redeposited) or
+                    nameof(CollectionReceiptStatus.Returned)))
+                {
+                    TempData["warning"] = "This collection receipt is not in a valid status.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 model.DepositedDate = null;
                 model.Status = nameof(CollectionReceiptStatus.Returned);
 
@@ -2685,6 +2700,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                if (model.Status is not nameof(CollectionReceiptStatus.Returned))
+                {
+                    TempData["warning"] = "This collection receipt is not in a valid status.";
+                    return RedirectToAction(nameof(Index));
+                }
                 model.DepositedDate = redepositDate;
                 model.Status = nameof(CollectionReceiptStatus.Redeposited);
                 model.BankId = bank.BankAccountId;
@@ -2741,6 +2761,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                if (model.Status is not (nameof(CollectionReceiptStatus.Deposited) or
+                    nameof(CollectionReceiptStatus.Redeposited)))
+                {
+                    TempData["warning"] = "This collection receipt is not pending apply clearing date.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 model.ClearedDate = clearingDate;
                 model.Status = nameof(CollectionReceiptStatus.Cleared);
 

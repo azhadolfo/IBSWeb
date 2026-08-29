@@ -1545,7 +1545,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(cvd => cvd.SubAccountId == supplierId &&
                                 cvd.CheckVoucherHeader!.PostedBy != null &&
                                 cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
-                                
+
                                 cvd.Amount > cvd.AmountPaid)  // Only show if this supplier's portion is unpaid
                     .Select(cvd => new
                     {
@@ -2707,6 +2707,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                if (existingHeaderModel.Status != nameof(CheckVoucherPaymentStatus.Unliquidated))
+                {
+                    TempData["error"] = "This record is not pending for liquidation.";
+                    return RedirectToAction(nameof(Print), new { id });
+                }
+
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Liquidated);
                 existingHeaderModel.LiquidationDate = liquidateDate;
 
