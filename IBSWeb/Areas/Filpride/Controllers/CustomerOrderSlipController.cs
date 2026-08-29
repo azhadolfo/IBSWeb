@@ -367,15 +367,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
                 };
 
+                model.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
+
                 ///TODO Temporary solution for 14 days expiration of GASSO FUEL TRADING customer
-                model.ExpirationDate = !model.CustomerName.Contains("GASSO FUEL TRADING", StringComparison.CurrentCultureIgnoreCase)
-                    ? DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7))
-                    : DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(14));
+                if(model.CustomerName.Contains("GASSO FUEL TRADING", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    model.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(14));
+                }
 
                 ///TODO Temporary solution for removal of expiration of NPC customer
-                model.ExpirationDate = !model.CustomerName.Contains("NPC", StringComparison.CurrentCultureIgnoreCase)
-                    ? DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7))
-                    : null;
+                if(model.CustomerName.Contains("NPC", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    model.ExpirationDate = null;
+                }
 
 
                 // Upload files if there is existing
