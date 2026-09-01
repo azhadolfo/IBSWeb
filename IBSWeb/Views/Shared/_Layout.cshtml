@@ -673,6 +673,7 @@
                 $.ajax({
                     url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
                     type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     success: function (count) {
                         $('#notificationCount').text(count);
                     },
