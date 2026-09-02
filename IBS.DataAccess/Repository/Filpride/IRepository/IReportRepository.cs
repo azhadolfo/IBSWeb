@@ -30,7 +30,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         public Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, List<int>? customerIds = null, List<int>? commissioneeIds = null, string dateSelectionType = "RRDate", string statusFilter = "ValidOnly", CancellationToken cancellationToken = default);
 
         public Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport( DateOnly dateFrom, DateOnly dateTo, List<int>? customers = null, List<int>? commissionee = null, CancellationToken cancellationToken = default);
-        public Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default);
+        public Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string dateSelectionType = "CollectionDate", string statusFilter = "ValidOnly", CancellationToken cancellationToken = default);
 
         public Task<List<FilprideReceivingReport>> GetTradePayableReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default);
 
