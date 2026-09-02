@@ -1612,10 +1612,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBankAccounts()
         {
-            string? companyClaims = await GetCompanyClaimAsync();
             // Replace this with your actual repository/service call
             IEnumerable<FilprideBankAccount> bankAccounts = await _unitOfWork.FilprideBankAccount
-                .GetAllAsync(b => companyClaims == nameof(Filpride));
+                .GetAllAsync(b => b.IsActive);
 
             return Json(bankAccounts.Select(b => new
             {

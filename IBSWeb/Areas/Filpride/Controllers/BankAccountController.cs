@@ -247,6 +247,135 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Activate(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == id, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            return View(bank);
+        }
+
+        [HttpPost, ActionName("Activate")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == id, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                bank.IsActive = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(
+                    GetUserFullName()!, $"Activated Bank #{bank.AccountNo}",
+                    "Bank Account");
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Bank has been activated";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to activate bank account master file. Activated by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Activate), new { id = id });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Deactivate(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == id, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            return View(bank);
+        }
+
+        [HttpPost, ActionName("Deactivate")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == id, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                bank.IsActive = false;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName()!,
+                    $"Deactivated Bank #{bank.AccountNo}", "Bank Account");
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Bank has been deactivated";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deactivate bank account master file. Deactivated by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> GetBankAccountList(CancellationToken cancellationToken)
         {

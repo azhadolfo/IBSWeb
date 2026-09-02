@@ -23,6 +23,8 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Account Name")]
         public string AccountName { get; set; } = null!;
 
+        public bool IsActive { get; set; } = true;
+
         [Display(Name = "Created By")]
         [StringLength(100)]
         public string? CreatedBy { get; set; } = "";

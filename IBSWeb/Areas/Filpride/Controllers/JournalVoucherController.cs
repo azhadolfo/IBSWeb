@@ -2968,6 +2968,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 nameof(SubAccountType.BankAccount) =>
                     await _dbContext.FilprideBankAccounts
+                        .Where(x => x.IsActive)
                         .Select(x => new SelectListItem
                         {
                             Value = x.BankAccountId.ToString(),

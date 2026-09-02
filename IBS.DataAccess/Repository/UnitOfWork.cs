@@ -311,6 +311,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideBankAccounts
                 .OrderBy(b => b.AccountNo)
+                .Where(ba => ba.IsActive)
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),

@@ -161,6 +161,11 @@ namespace IBS.DataAccess.Data
                 p.HasIndex(p => p.ProductName).IsUnique();
             });
 
+            // BankAccount
+            builder.Entity<FilprideBankAccount>()
+                .Property(x => x.IsActive)
+                .HasDefaultValue(true);
+
             #endregion
 
             #region--Chart Of Account
