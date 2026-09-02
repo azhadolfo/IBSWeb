@@ -267,6 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost, ActionName("Activate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
@@ -331,6 +332,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost, ActionName("Deactivate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
