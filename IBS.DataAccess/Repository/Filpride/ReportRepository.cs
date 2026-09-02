@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var deliveryReceiptsQuery = _db.FilprideDeliveryReceipts
-                .Where(dr => 
+                .Where(dr =>
                              dr.DeliveredDate >= dateFrom &&
                              dr.DeliveredDate <= dateTo
                              && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value)));
@@ -228,7 +228,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var query = _db.FilprideServiceInvoices
-                .Where(dr => 
+                .Where(dr =>
                              dr.Period >= dateFrom &&
                              dr.Period <= dateTo);
 
@@ -432,21 +432,23 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToList();
         }
 
-        public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string dateSelectionType = "CollectionDate", string statusFilter = "ValidOnly", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
                 throw new ArgumentException("Date From must not be greater than Date To!");
             }
 
-            var query = _db.FilprideCollectionReceipts
-                .AsNoTracking()
-                .Where(cr => cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo);
+            var query = _db.FilprideCollectionReceipts.AsNoTracking();
+
+            query = dateSelectionType == "CheckDate"
+                ? query.Where(cr => cr.CheckDate.HasValue && cr.CheckDate.Value >= dateFrom && cr.CheckDate.Value <= dateTo)
+                : query.Where(cr => cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo);
 
             // Apply status filter
             if (statusFilter == "ValidOnly")
             {
-                query = query.Where(cr => cr.PostedBy != null);
+                query = query.Where(cr => cr.VoidedBy == null && cr.CanceledBy == null);
             }
             else if (statusFilter == "InvalidOnly")
             {
@@ -619,7 +621,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var query = _db.FilprideCustomerOrderSlips
-                .Where(dr => 
+                .Where(dr =>
                              dr.Date >= dateFrom &&
                              dr.Date <= dateTo);
 

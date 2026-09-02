@@ -56,6 +56,13 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion
 
+        #region Accounts Receivable Report
+
+        [Display(Name = "Date Filter Based On")]
+        public string CollectionDateSelectionType { get; set; } = "CollectionDate";
+
+        #endregion
+
         #endregion
     }
 }
