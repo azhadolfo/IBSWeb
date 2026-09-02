@@ -2681,7 +2681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var collectionReceiptReport = await _unitOfWork.FilprideReport
-                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, cancellationToken: cancellationToken);
+                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, model.CollectionDateSelectionType, cancellationToken: cancellationToken);
 
                 if (!collectionReceiptReport.Any())
                 {
@@ -2935,7 +2935,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var statusFilter = NormalizeStatusFilter(model.StatusFilter);
 
                     var collectionReceiptReport = await _unitOfWork.FilprideReport
-                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, statusFilter, cancellationToken);
+                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, model.CollectionDateSelectionType, statusFilter, cancellationToken);
 
                     var multipleSalesInvoiceIds = collectionReceiptReport
                         .Where(cr => cr.MultipleSIId is { Length: > 0 })
