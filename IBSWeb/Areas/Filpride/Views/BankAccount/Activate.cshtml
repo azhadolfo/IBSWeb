@@ -1,0 +1,56 @@
+@model FilprideBankAccount
+
+@{
+    ViewData["Title"] = "Bank Account - Activate";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@ViewData["Title"]
+                </h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <input asp-for="BankAccountId" hidden />
+            <div class="border p-3">
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Bank" class="form-control border-0 shadow" placeholder="" disabled />
+                    <label asp-for="Bank" class="ms-2"></label>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Branch" class="form-control border-0 shadow" placeholder="" disabled />
+                    <label asp-for="Branch" class="ms-2"></label>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="AccountNo" class="form-control border-0 shadow" placeholder="" disabled />
+                    <label asp-for="AccountNo" class="ms-2"></label>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="AccountName" class="form-control border-0 shadow" placeholder="" disabled />
+                    <label asp-for="AccountName" class="ms-2"></label>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-success form-control">Activate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="BankAccount" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

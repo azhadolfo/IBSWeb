@@ -512,7 +512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .ToList();
 
                         viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
-                                .GetAllAsync(b => companyClaims == nameof(Filpride), cancellationToken))
+                                .GetAllAsync(b => b.IsActive, cancellationToken))
                             .Select(ba => new SelectListItem
                             {
                                 Value = ba.BankAccountId.ToString(),
