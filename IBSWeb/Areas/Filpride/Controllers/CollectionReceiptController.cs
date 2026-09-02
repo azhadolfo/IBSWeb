@@ -266,7 +266,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.Status != nameof(CollectionReceiptStatus.Posted))
+                if (model.Status != nameof(CollectionReceiptStatus.Posted) &&
+                    (model.SalesInvoiceId != null ||
+                     model.MultipleSIId != null))
                 {
                     TempData["warning"] = "This collection receipt is not pending add deposit info.";
                     return RedirectToAction(nameof(Index));
@@ -2630,10 +2632,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.Status is not (
-                    nameof(CollectionReceiptStatus.Deposited) or
-                    nameof(CollectionReceiptStatus.Redeposited) or
-                    nameof(CollectionReceiptStatus.Returned)))
+                if (model.Status is not (nameof(CollectionReceiptStatus.Deposited) or
+                    nameof(CollectionReceiptStatus.Redeposited)) &&
+                    (model.SalesInvoiceId != null ||
+                     model.MultipleSIId != null))
                 {
                     TempData["warning"] = "This collection receipt is not in a valid status.";
                     return RedirectToAction(nameof(Index));
@@ -2700,7 +2702,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.Status is not nameof(CollectionReceiptStatus.Returned))
+                if (model.Status != nameof(CollectionReceiptStatus.Returned) &&
+                    (model.SalesInvoiceId != null ||
+                     model.MultipleSIId != null))
                 {
                     TempData["warning"] = "This collection receipt is not in a valid status.";
                     return RedirectToAction(nameof(Index));
@@ -2762,7 +2766,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 if (model.Status is not (nameof(CollectionReceiptStatus.Deposited) or
-                    nameof(CollectionReceiptStatus.Redeposited)))
+                    nameof(CollectionReceiptStatus.Redeposited)) &&
+                    (model.SalesInvoiceId != null ||
+                     model.MultipleSIId != null))
                 {
                     TempData["warning"] = "This collection receipt is not pending apply clearing date.";
                     return RedirectToAction(nameof(Index));
