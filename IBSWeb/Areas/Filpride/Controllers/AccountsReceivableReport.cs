@@ -3001,7 +3001,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells["W7"].Value = "VOIDED DATE";
                     }
 
-                    string headerEndColumn = showVoidCancelColumns ? "W7" : "U7";
+                    worksheet.Cells[showVoidCancelColumns ? "X7" : "V7"].Value = "STATUS";
+
+                    string headerEndColumn = showVoidCancelColumns ? "X7" : "V7";
                     var headerCells = worksheet.Cells[$"A7:{headerEndColumn}"];
                     headerCells.Style.Font.Size = 11;
                     headerCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -3031,11 +3033,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             return;
                         }
 
-                        worksheet.Cells[targetRow, 21].Value = collectionReceipt.VoidedBy;
-                        worksheet.Cells[targetRow, 22].Value = collectionReceipt.VoidedDate;
+                        worksheet.Cells[targetRow, 22].Value = collectionReceipt.VoidedBy;
+                        worksheet.Cells[targetRow, 23].Value = collectionReceipt.VoidedDate;
                         if (collectionReceipt.VoidedDate.HasValue)
                         {
-                            worksheet.Cells[targetRow, 22].Style.Numberformat.Format = dateTextFormat;
+                            worksheet.Cells[targetRow, 23].Style.Numberformat.Format = dateTextFormat;
                         }
                     }
 
@@ -3114,6 +3116,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 19].Value = currentAmount != 0 ? currentAmount : null;
                         worksheet.Cells[row, 20].Value = advanceAmount != 0 ? advanceAmount : null;
                         worksheet.Cells[row, 21].Value = totalCollectionAmount != 0 ? totalCollectionAmount : null;
+                        worksheet.Cells[row, showVoidCancelColumns ? 24 : 22].Value = collectionReceipt.Status;
 
                         worksheet.Cells[row, 4].Style.Numberformat.Format = dateTextFormat;
 
@@ -3245,7 +3248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    int lastColumn = showVoidCancelColumns ? 23 : 21;
+                    int lastColumn = showVoidCancelColumns ? 24 : 22;
 
                     if (row == 8)
                     {

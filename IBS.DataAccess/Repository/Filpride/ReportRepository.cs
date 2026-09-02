@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var deliveryReceiptsQuery = _db.FilprideDeliveryReceipts
-                .Where(dr => 
+                .Where(dr =>
                              dr.DeliveredDate >= dateFrom &&
                              dr.DeliveredDate <= dateTo
                              && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value)));
@@ -228,7 +228,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var query = _db.FilprideServiceInvoices
-                .Where(dr => 
+                .Where(dr =>
                              dr.Period >= dateFrom &&
                              dr.Period <= dateTo);
 
@@ -448,7 +448,7 @@ namespace IBS.DataAccess.Repository.Filpride
             // Apply status filter
             if (statusFilter == "ValidOnly")
             {
-                query = query.Where(cr => cr.PostedBy != null);
+                query = query.Where(cr => cr.VoidedBy == null && cr.CanceledBy == null);
             }
             else if (statusFilter == "InvalidOnly")
             {
@@ -621,7 +621,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var query = _db.FilprideCustomerOrderSlips
-                .Where(dr => 
+                .Where(dr =>
                              dr.Date >= dateFrom &&
                              dr.Date <= dateTo);
 
