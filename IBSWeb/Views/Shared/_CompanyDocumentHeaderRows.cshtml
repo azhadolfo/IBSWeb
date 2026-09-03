@@ -1,0 +1,32 @@
+@using IBS.Utility
+@using Microsoft.Extensions.Options
+@inject IOptions<BrandingOptions> BrandingOptions
+
+@{
+    var branding = BrandingOptions.Value;
+    var logoWidth = $"{branding.DocumentLogoWidth}px";
+}
+
+<tr>
+    <td class="text-end" style="padding: 0 !important;">
+        @if (!string.IsNullOrWhiteSpace(branding.DocumentLogoPath))
+        {
+            <img src="@Url.Content(branding.DocumentLogoPath)" width="@logoWidth" alt="@branding.CompanyShortName logo" />
+        }
+    </td>
+</tr>
+<tr style="margin: 0 !important;">
+    <td class="text-center" style="padding: 0 !important;">
+        <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;@branding.LegalName.ToUpperInvariant()&nbsp;</b></u></h2>
+        <p style="margin: 0; padding: 0; line-height: 1;">
+            @foreach (var addressLine in branding.AddressLines.Where(line => !string.IsNullOrWhiteSpace(line)))
+            {
+                @addressLine<br />
+            }
+            @if (!string.IsNullOrWhiteSpace(branding.Tin))
+            {
+                @($"{branding.TinLabel}: {branding.Tin}")
+            }
+        </p>
+    </td>
+</tr>

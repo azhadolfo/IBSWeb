@@ -5,18 +5,10 @@
 @using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
 @model IBS.Models.Filpride.AccountsReceivable.FilprideProvisionalReceipt
-@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Provisional Receipt - Preview";
-
-    var selectedCompany = string.Empty;
-
-    if (SignInManager.IsSignedIn(User))
-    {
-        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
-    }
 
     var amountReceived = Model.CashAmount + Model.CheckAmount + Model.ManagersCheckAmount;
     var employeeName = Model.Supplier.SupplierName.ToUpper();
@@ -47,24 +39,7 @@
 <br />
 <table class="w-100">
     <tbody>
-    <tr>
-        <td class="text-end">
-            @if (selectedCompany == "Filpride")
-            {
-                <img src="~/img/Filpride.jpg" width="130px" />
-            }
-        </td>
-    </tr>
-    <tr>
-        <td class="text-center">
-            <h2 style="margin:0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-            <p style="margin:0; line-height:1;">
-                57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-                Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-                VAT Reg. TIN: 000-216-589-00000
-            </p>
-        </td>
-    </tr>
+    <partial name="_CompanyDocumentHeaderRows" />
     </tbody>
 </table>
 

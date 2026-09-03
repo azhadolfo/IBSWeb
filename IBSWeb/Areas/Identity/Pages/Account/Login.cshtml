@@ -1,67 +1,85 @@
-﻿@page
+@page
+@using IBS.Utility
+@using Microsoft.Extensions.Options
 @model LoginModel
+@inject IOptions<BrandingOptions> BrandingOptions
 
 @{
+    var branding = BrandingOptions.Value;
     ViewData["Title"] = "Log in";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4">Welcome Back</h2>
-                    <p class="text-muted text-center mb-4">Sign in to the <b>FILPRIDE</b> portal using your assigned username and password.</p>
-                    <form id="account" method="post" autocomplete="off">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Username" class="form-control" id="username" placeholder="Username" />
-                            <label for="username">Username</label>
-                            <span asp-validation-for="Input.Username" class="text-danger small"></span>
+<div class="container py-4 login-page">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-9 col-xl-8">
+            <div class="card shadow-lg border-0 overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-md-5 login-brand-panel d-flex align-items-center justify-content-center p-4">
+                        <div class="text-center">
+                            @if (!string.IsNullOrWhiteSpace(branding.LoginLogoPath))
+                            {
+                                <img src="@Url.Content(branding.LoginLogoPath)" class="login-brand-logo mb-4" alt="@branding.CompanyShortName logo" width="@branding.LoginLogoWidth" />
+                            }
+                            <div class="login-company-name">@branding.CompanyShortName</div>
+                            <div class="login-application-name">@branding.ApplicationName</div>
                         </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="card-body p-4 p-md-5">
+                            <h2 class="text-center mb-2">Welcome Back</h2>
+                            <p class="text-muted text-center mb-4">Sign in to the <b>@branding.CompanyName</b> portal using your assigned username and password.</p>
+                            <form id="account" method="post" autocomplete="off">
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Password" class="form-control" placeholder="Password" type="password" />
-                            <label for="Input_Password">Password</label>
-                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
-                        </div>
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Username" class="form-control" id="username" placeholder="Username" />
+                                    <label for="username">Username</label>
+                                    <span asp-validation-for="Input.Username" class="text-danger small"></span>
+                                </div>
 
-                        <div class="form-check mb-3">
-                            <input asp-for="Input.RememberMe" class="form-check-input" />
-                            <label asp-for="Input.RememberMe" class="form-check-label"></label>
-                        </div>
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Password" class="form-control" placeholder="Password" type="password" />
+                                    <label for="Input_Password">Password</label>
+                                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                                </div>
 
-                        <div class="d-grid mt-4">
-                            <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Log in</button>
-                        </div>
+                                <div class="form-check mb-3">
+                                    <input asp-for="Input.RememberMe" class="form-check-input" />
+                                    <label asp-for="Input.RememberMe" class="form-check-label"></label>
+                                </div>
 
-                        @* Optional sign up link
-                        <div class="text-center mt-3">
-                            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Create an account</a>
-                        </div>
-                        *@
-                    </form>
+                                <div class="d-grid mt-4">
+                                    <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Log in</button>
+                                </div>
 
-                    @if (Model.CompanyPortalLinks.Count != 0)
-                    {
-                        <div class="border-top mt-4 pt-4">
-                            <p class="text-muted small text-center mb-1">Looking for a different company?</p>
-                            <p class="text-muted small text-center mb-3">Choose a company below to go to its login page.</p>
-                            <div class="d-grid gap-2">
-                                @foreach (var companyPortal in Model.CompanyPortalLinks)
-                                {
-                                    <a class="btn btn-outline-secondary d-flex align-items-center justify-content-between"
-                                       href="@companyPortal.Url"
-                                       target="_blank"
-                                       rel="noopener noreferrer">
-                                        <span>Open @companyPortal.Name portal</span>
-                                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                                    </a>
-                                }
-                            </div>
+                                @* Optional sign up link
+                                <div class="text-center mt-3">
+                                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Create an account</a>
+                                </div>
+                                *@
+                            </form>
+
+                            @if (Model.CompanyPortalLinks.Count != 0)
+                            {
+                                <div class="border-top mt-4 pt-4">
+                                    <p class="text-muted small text-center mb-1">Looking for a different company?</p>
+                                    <p class="text-muted small text-center mb-3">Choose a company below to go to its login page.</p>
+                                    <div class="d-grid gap-2">
+                                        @foreach (var companyPortal in Model.CompanyPortalLinks)
+                                        {
+                                            <a class="btn btn-outline-secondary d-flex align-items-center justify-content-between"
+                                               href="@companyPortal.Url"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
+                                                <span>Open @companyPortal.Name portal</span>
+                                                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
-                    }
+                    </div>
                 </div>
             </div>
         </div>

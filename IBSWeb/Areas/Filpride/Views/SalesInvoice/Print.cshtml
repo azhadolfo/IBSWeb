@@ -1,11 +1,15 @@
 ﻿@using IBS.Models
 @using IBS.Models.Enums
+@using IBS.Utility
 @using IBS.Utility.Constants
+@using Microsoft.Extensions.Options
 @using Microsoft.AspNetCore.Identity
 @model FilprideSalesInvoice
 @inject SignInManager<ApplicationUser> SignInManager
+@inject IOptions<BrandingOptions> BrandingOptions
 
 @{
+    var branding = BrandingOptions.Value;
     ViewData["Title"] = "Sales Invoice - Preview";
 
     var customerType = Model.CustomerOrderSlip?.CustomerType ?? Model.Customer!.CustomerType;
@@ -49,19 +53,7 @@
 <br class="br-top" />
 <table class="w-100">
     <tbody>
-        <tr>
-            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
-        </tr>
-        <tr style="margin: 0 !important;">
-            <td class="text-center" style="padding: 0 !important;">
-                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-                <p style="margin: 0; padding: 0; line-height: 1;">
-                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-                    VAT Reg. TIN: 000-216-589-00000
-                </p>
-            </td>
-        </tr>
+        <partial name="_CompanyDocumentHeaderRows" />
         <tr>
             <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.SalesInvoiceNo)</b></h6></td>
         </tr>
@@ -300,7 +292,7 @@
     <tbody>
         <tr style="line-height: 1;">
             <td class="align-text-top">RECEIVED the above items in good order and condition. The Undersigned agrees to pay the total amount of this invoice in accordance to the terms appearing to the terms above.</td>
-            <td class="align-text-top">CONDITION OF SALE - Interest at the rate of 38% per annum will be charge on all overdue accounts and in the event of judicial proceedings to enforce collection, the purchaser will pay a reasonable compensation not less than 25% of the amount due of the attorney's fees and expense of collection in addition to the costs of suit. Any action arising out of the transaction covered by sales invoice shall be brought in the appropriate courts of Pasig City and/or Metro Manila. Goods remain in the property of FILPRIDE RESOURCES INC. until paid in full.</td>
+            <td class="align-text-top">CONDITION OF SALE - Interest at the rate of 38% per annum will be charge on all overdue accounts and in the event of judicial proceedings to enforce collection, the purchaser will pay a reasonable compensation not less than 25% of the amount due of the attorney's fees and expense of collection in addition to the costs of suit. Any action arising out of the transaction covered by sales invoice shall be brought in the appropriate courts of Pasig City and/or Metro Manila. Goods remain in the property of @branding.LegalName.ToUpperInvariant() until paid in full.</td>
         </tr>
     </tbody>
 </table>

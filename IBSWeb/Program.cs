@@ -76,6 +76,10 @@ if (builder.Environment.IsDevelopment())
 
 // Repositories + DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddOptions<BrandingOptions>()
+    .Bind(builder.Configuration.GetSection(BrandingOptions.SectionName))
+    .Validate(BrandingOptions.IsValid, "Branding configuration is incomplete.")
+    .ValidateOnStart();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
