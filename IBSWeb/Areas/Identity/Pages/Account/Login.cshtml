@@ -20,17 +20,19 @@
                 {
                     <img src="@loginLogoUrl" class="login-brand-logo" alt="@branding.CompanyShortName logo" width="@branding.LoginLogoWidth" />
                 }
-                <div>
-                    <div class="login-application-name">@branding.ApplicationName</div>
-                </div>
+                <div class="login-application-name">@branding.ApplicationName</div>
             </div>
             <div class="login-company-legal">@branding.LegalName</div>
         </section>
 
         <section class="login-form-panel">
             <div class="login-form-header">
-                <h1>Sign in</h1>
-                <p>Use your assigned username and password.</p>
+                <div class="login-company-context">
+                    <i class="bi bi-building-check" aria-hidden="true"></i>
+                    <span>You are signing in to <strong>@branding.CompanyShortName</strong></span>
+                </div>
+                <h1>Welcome back</h1>
+                <p>Sign in to the @branding.ApplicationName.</p>
             </div>
 
             <form id="account" method="post" autocomplete="off" class="login-form">
@@ -49,19 +51,29 @@
                     <label asp-for="Input.Password"></label>
                     <div class="login-input-group">
                         <i class="bi bi-lock" aria-hidden="true"></i>
-                        <input asp-for="Input.Password" class="form-control" placeholder="Password" type="password" />
+                        <input asp-for="Input.Password" class="form-control" id="password" placeholder="Password" type="password" />
+                        <button type="button"
+                                class="login-password-toggle"
+                                id="password-toggle"
+                                aria-label="Show password"
+                                aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
                     </div>
                     <span asp-validation-for="Input.Password" class="text-danger small"></span>
                 </div>
 
-                <div class="form-check login-remember">
-                    <input asp-for="Input.RememberMe" class="form-check-input" />
-                    <label asp-for="Input.RememberMe" class="form-check-label"></label>
+                <div class="login-options">
+                    <div class="form-check login-remember">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">Keep me signed in</label>
+                    </div>
+                    <a asp-page="./ForgotPassword" class="login-forgot-password">Forgot password?</a>
                 </div>
 
                 <button id="login-submit" type="submit" class="btn btn-primary login-submit">
                     <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                    <span>Log in</span>
+                    <span>Sign in to @branding.CompanyShortName</span>
                 </button>
 
                 @* Optional sign up link
@@ -75,7 +87,8 @@
             {
                 <div class="login-portals">
                     <div class="login-portals-header">
-                        <span>Other company portals</span>
+                        <strong>Not signing in to @branding.CompanyShortName?</strong>
+                        <span>Choose another company portal</span>
                     </div>
                     <div class="login-portal-list">
                         @foreach (var companyPortal in Model.CompanyPortalLinks)
@@ -97,4 +110,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const password = document.getElementById("password");
+            const toggle = document.getElementById("password-toggle");
+
+            toggle?.addEventListener("click", () => {
+                const showPassword = password.type === "password";
+                password.type = showPassword ? "text" : "password";
+                toggle.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+                toggle.setAttribute("aria-pressed", showPassword.toString());
+                toggle.querySelector("i")?.classList.toggle("bi-eye", !showPassword);
+                toggle.querySelector("i")?.classList.toggle("bi-eye-slash", showPassword);
+            });
+        })();
+    </script>
 }
