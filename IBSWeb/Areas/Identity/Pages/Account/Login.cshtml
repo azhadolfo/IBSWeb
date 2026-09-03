@@ -68,19 +68,12 @@
                         <input asp-for="Input.RememberMe" class="form-check-input" />
                         <label asp-for="Input.RememberMe" class="form-check-label">Keep me signed in</label>
                     </div>
-                    <a asp-page="./ForgotPassword" class="login-forgot-password">Forgot password?</a>
                 </div>
 
                 <button id="login-submit" type="submit" class="btn btn-primary login-submit">
                     <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                     <span>Sign in to @branding.CompanyShortName</span>
                 </button>
-
-                @* Optional sign up link
-                <div class="text-center mt-3">
-                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Create an account</a>
-                </div>
-                *@
             </form>
 
             @if (Model.CompanyPortalLinks.Count != 0)
