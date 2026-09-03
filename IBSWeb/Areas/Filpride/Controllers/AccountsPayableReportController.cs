@@ -9,12 +9,14 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
@@ -62,17 +64,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _documentLogoPath;
+
+        private readonly BrandingOptions _brandingOptions;
 
         private readonly ILogger<GeneralLedgerReportController> _logger;
 
-        public AccountsPayableReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
+        public AccountsPayableReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger, IOptions<BrandingOptions> brandingOptions)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _brandingOptions = brandingOptions.Value;
+            _documentLogoPath = Path.Combine(webHostEnvironment.WebRootPath, _brandingOptions.DocumentLogoPath.TrimStart('/', '\\'));
         }
 
         private string GetUserFullName()
@@ -222,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -1079,7 +1084,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -1402,7 +1407,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -2400,7 +2405,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -3571,7 +3576,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -4656,7 +4661,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[1, 2].Value = "Summary of Purchases";
                 worksheet.Cells[1, 2].Style.Font.Bold = true;
                 worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.ToString("MMMM")} {monthYear.Year}";
-                worksheet.Cells[3, 2].Value = "Filpride Resources, Inc.";
+                worksheet.Cells[3, 2].Value = _brandingOptions.LegalName;
                 worksheet.Cells[4, 2].Value = $"Date and Time Generated: {DateTimeHelper.GetCurrentPhilippineTime()}";
                 worksheet.Cells[1, 2, 3, 2].Style.Font.Size = 14;
 
@@ -4937,7 +4942,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row += 2;
                 worksheet.Cells[row, 2].Value = "ALL SUPPLIERS";
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
-                worksheet.Cells[row, 3].Value = "FILPRIDE";
+                worksheet.Cells[row, 3].Value = _brandingOptions.CompanyShortName;
 
                 decimal finalPo = grandTotalsByProduct.Values.Sum(metric => metric.OriginalPo);
                 decimal finalUnliftedLastMonth = grandTotalsByProduct.Values.Sum(metric => metric.UnliftedLastMonth);
@@ -5428,7 +5433,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.Style.Font.Name = "Calibri";
 
                 // inserting filpride image
-                var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                var imgFilprideLogoPath = _documentLogoPath;
                 var pic = await worksheet.Drawings.AddPictureAsync("Landscape", new FileInfo(imgFilprideLogoPath));
                 pic.SetSize(120, 50);
                 pic.SetPosition(2, 0, 2, 0);
@@ -5437,7 +5442,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[3, 3, 3, 9])
                 {
                     range.Merge = true;
-                    range.Value = "FILPRIDE RESOURCES, INC.";
+                    range.Value = _brandingOptions.LegalName;
                     range.Style.Font.Size = 14;
                     range.Style.Font.Bold = true;
                     range.Style.Font.UnderLine = true;
@@ -5758,7 +5763,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet = package.Workbook.Worksheets.Add("ANNEX A-2");
 
-                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 3].Value = _brandingOptions.LegalName;
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
                 worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Liquidation Vs Supplier's Billing";
@@ -5902,7 +5907,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet = package.Workbook.Worksheets.Add("ANNEX A-3");
 
-                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 3].Value = _brandingOptions.LegalName;
                 worksheet.Cells[3, 16].Value = "ANNEX A-3";
                 worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "PO Summary";
@@ -6027,7 +6032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet = package.Workbook.Worksheets.Add("ANNEX A-4");
 
-                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 3].Value = _brandingOptions.LegalName;
                 worksheet.Cells[3, 16].Value = "ANNEX A-4";
                 worksheet.Cells[3, 16].Style.Font.Color.SetColor(Color.Red);
                 worksheet.Cells[4, 3].Value = "Withdrawal Certificate (WC) Distribution Summary";
@@ -6439,7 +6444,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // values
                 worksheet.Cells[3, 2].Value = "Company Name:";
-                worksheet.Cells[3, 3].Value = "Filpride Resources, Inc.";
+                worksheet.Cells[3, 3].Value = _brandingOptions.LegalName;
                 worksheet.Cells[4, 2].Value = "Department:";
                 worksheet.Cells[4, 3].Value = "Operations-TNS";
                 worksheet.Cells[5, 2].Value = "Subject:";

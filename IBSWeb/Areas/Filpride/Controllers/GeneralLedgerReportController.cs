@@ -5,12 +5,14 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
@@ -32,7 +34,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _documentLogoPath;
+
+        private readonly BrandingOptions _brandingOptions;
 
         private readonly ILogger<GeneralLedgerReportController> _logger;
 
@@ -69,13 +73,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             "201030240"
         ];
 
-        public GeneralLedgerReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
+        public GeneralLedgerReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger, IOptions<BrandingOptions> brandingOptions)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _brandingOptions = brandingOptions.Value;
+            _documentLogoPath = Path.Combine(webHostEnvironment.WebRootPath, _brandingOptions.DocumentLogoPath.TrimStart('/', '\\'));
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -148,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -505,7 +510,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(50).Row(row =>
                         {
@@ -997,9 +1002,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var fileContent = new StringBuilder();
 
-                fileContent.AppendLine($"TAXPAYER'S NAME: Filpride Resources Inc.");
-                fileContent.AppendLine($"TIN: 000-216-589-00000");
-                fileContent.AppendLine($"ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines");
+                fileContent.AppendLine($"TAXPAYER'S NAME: {_brandingOptions.LegalName}");
+                fileContent.AppendLine($"TIN: {_brandingOptions.Tin}");
+                fileContent.AppendLine($"ADDRESS: {string.Join(" ", _brandingOptions.AddressLines)}");
                 fileContent.AppendLine();
                 fileContent.AppendLine($"Accounting System: Accounting Administration System");
                 fileContent.AppendLine($"Acknowledgement Certificate Control No.:");

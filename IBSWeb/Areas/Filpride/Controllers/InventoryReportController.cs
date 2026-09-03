@@ -5,12 +5,14 @@ using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
@@ -29,17 +31,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _documentLogoPath;
 
         private readonly ILogger<InventoryReportController> _logger;
 
-        public InventoryReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<InventoryReportController> logger)
+        public InventoryReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<InventoryReportController> logger, IOptions<BrandingOptions> brandingOptions)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _documentLogoPath = Path.Combine(webHostEnvironment.WebRootPath, brandingOptions.Value.DocumentLogoPath.TrimStart('/', '\\'));
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -147,7 +149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                        var imgFilprideLogoPath = _documentLogoPath;
 
                         page.Header().Height(76).Row(row =>
                         {

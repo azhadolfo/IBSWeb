@@ -6,11 +6,13 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using QuestPDF.Helpers;
@@ -26,7 +28,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _documentLogoPath;
+
+        private readonly BrandingOptions _brandingOptions;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -35,13 +39,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public FinancialReportController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment webHostEnvironment, IUnitOfWork unitOfWork,
-            ILogger<FinancialReportController> logger)
+            ILogger<FinancialReportController> logger,
+            IOptions<BrandingOptions> brandingOptions)
         {
             _dbContext = dbContext;
             _userManager = userManager;
-            _webHostEnvironment = webHostEnvironment;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _brandingOptions = brandingOptions.Value;
+            _documentLogoPath = Path.Combine(webHostEnvironment.WebRootPath, _brandingOptions.DocumentLogoPath.TrimStart('/', '\\'));
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -142,11 +148,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                            var imgFilprideLogoPath = _documentLogoPath;
 
                             page.Header().Height(140).Column(column =>
                             {
-                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+                                column.Item().Text(_brandingOptions.LegalName).FontSize(16).SemiBold().AlignCenter();
 
                                 column.Item().AlignCenter().Row(row =>
                                 {
@@ -381,14 +387,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
-                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Value = _brandingOptions.LegalName;
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
+                var imagePath = _documentLogoPath;
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -640,11 +646,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                            var imgFilprideLogoPath = _documentLogoPath;
 
                             page.Header().Height(140).Column(column =>
                             {
-                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+                                column.Item().Text(_brandingOptions.LegalName).FontSize(16).SemiBold().AlignCenter();
 
                                 column.Item().AlignCenter().Row(row =>
                                 {
@@ -839,12 +845,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
-                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Value = _brandingOptions.LegalName;
                     range.Style.Font.Bold = true;
                 }
                 row++;
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
+                var imagePath = _documentLogoPath;
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -1048,11 +1054,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                            var imgFilprideLogoPath = _documentLogoPath;
 
                             page.Header().Height(140).Column(column =>
                             {
-                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+                                column.Item().Text(_brandingOptions.LegalName).FontSize(16).SemiBold().AlignCenter();
 
                                 column.Item().AlignCenter().Row(row =>
                                 {
@@ -1305,10 +1311,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
                 // Set the column headers
-                worksheet.Cells["B1"].Value = "FILPRIDE RESOURCES INC.";
+                worksheet.Cells["B1"].Value = _brandingOptions.LegalName;
                 worksheet.Cells["B1"].Style.HorizontalAlignment = alignmentCenter;
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
+                var imagePath = _documentLogoPath;
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -1566,11 +1572,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                            var imgFilprideLogoPath = _documentLogoPath;
 
                             page.Header().Height(140).Column(column =>
                             {
-                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+                                column.Item().Text(_brandingOptions.LegalName).FontSize(16).SemiBold().AlignCenter();
 
                                 column.Item().AlignCenter().Row(row =>
                                 {
@@ -1839,14 +1845,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
-                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Value = _brandingOptions.LegalName;
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
+                var imagePath = _documentLogoPath;
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -2121,11 +2127,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Header
 
-                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+                            var imgFilprideLogoPath = _documentLogoPath;
 
                             page.Header().Height(140).Column(column =>
                             {
-                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+                                column.Item().Text(_brandingOptions.LegalName).FontSize(16).SemiBold().AlignCenter();
 
                                 column.Item().AlignCenter().Row(row =>
                                 {
@@ -2285,14 +2291,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
-                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Value = _brandingOptions.LegalName;
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
+                var imagePath = _documentLogoPath;
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)

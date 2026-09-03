@@ -5,10 +5,12 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
+using IBS.Utility;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -23,7 +25,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _documentLogoPath;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -32,13 +34,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public ComparativeReportController(ILogger<ComparativeReportController> logger,
             ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
             IWebHostEnvironment webHostEnvironment,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IOptions<BrandingOptions> brandingOptions)
         {
             _logger = logger;
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
-            _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
+            _documentLogoPath = Path.Combine(webHostEnvironment.WebRootPath, brandingOptions.Value.DocumentLogoPath.TrimStart('/', '\\'));
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -153,7 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             DateOnly monthDate,
             bool isCombinedReport)
         {
-            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+            var imgFilprideLogoPath = _documentLogoPath;
 
             return Document.Create(container =>
             {
