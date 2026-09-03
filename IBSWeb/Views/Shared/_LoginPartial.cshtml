@@ -3,13 +3,11 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    var company = string.Empty;
-    var stationCode = string.Empty;
+    var username = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
-        company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        stationCode = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
+        username = UserManager.GetUserName(User);
     }
 }
 
@@ -18,7 +16,7 @@
     {
         <li class="nav-item dropdown">
             <a id="manage" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Manage your account">
-                @(string.IsNullOrEmpty(company) ? "Account" : company.ToUpper()) @stationCode?.ToUpper()
+                @(string.IsNullOrEmpty(username) ? "Account" : username)
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">Change password</a></li>
