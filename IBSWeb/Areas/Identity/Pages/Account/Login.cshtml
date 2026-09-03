@@ -1,73 +1,121 @@
-﻿@page
+@page
+@using IBS.Utility
+@using Microsoft.Extensions.Options
 @model LoginModel
+@inject IOptions<BrandingOptions> BrandingOptions
 
 @{
+    var branding = BrandingOptions.Value;
+    var loginLogoUrl = !string.IsNullOrWhiteSpace(branding.LoginLogoPath)
+        ? Url.Content(branding.LoginLogoPath)
+        : string.Empty;
     ViewData["Title"] = "Log in";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4">Welcome Back</h2>
-                    <p class="text-muted text-center mb-4">Sign in to the <b>FILPRIDE</b> portal using your assigned username and password.</p>
-                    <form id="account" method="post" autocomplete="off">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Username" class="form-control" id="username" placeholder="Username" />
-                            <label for="username">Username</label>
-                            <span asp-validation-for="Input.Username" class="text-danger small"></span>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Password" class="form-control" placeholder="Password" type="password" />
-                            <label for="Input_Password">Password</label>
-                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
-                        </div>
-
-                        <div class="form-check mb-3">
-                            <input asp-for="Input.RememberMe" class="form-check-input" />
-                            <label asp-for="Input.RememberMe" class="form-check-label"></label>
-                        </div>
-
-                        <div class="d-grid mt-4">
-                            <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Log in</button>
-                        </div>
-
-                        @* Optional sign up link
-                        <div class="text-center mt-3">
-                            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Create an account</a>
-                        </div>
-                        *@
-                    </form>
-
-                    @if (Model.CompanyPortalLinks.Count != 0)
-                    {
-                        <div class="border-top mt-4 pt-4">
-                            <p class="text-muted small text-center mb-1">Looking for a different company?</p>
-                            <p class="text-muted small text-center mb-3">Choose a company below to go to its login page.</p>
-                            <div class="d-grid gap-2">
-                                @foreach (var companyPortal in Model.CompanyPortalLinks)
-                                {
-                                    <a class="btn btn-outline-secondary d-flex align-items-center justify-content-between"
-                                       href="@companyPortal.Url"
-                                       target="_blank"
-                                       rel="noopener noreferrer">
-                                        <span>Open @companyPortal.Name portal</span>
-                                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
+<div class="container login-page">
+    <div class="login-shell">
+        <section class="login-brand-panel" aria-label="@branding.CompanyName" style="--login-logo-url: url('@loginLogoUrl');">
+            <div class="login-brand-content">
+                @if (!string.IsNullOrWhiteSpace(loginLogoUrl))
+                {
+                    <img src="@loginLogoUrl" class="login-brand-logo" alt="@branding.CompanyShortName logo" width="@branding.LoginLogoWidth" />
+                }
+                <div class="login-application-name">@branding.ApplicationName</div>
             </div>
-        </div>
+            <div class="login-company-legal">@branding.LegalName</div>
+        </section>
+
+        <section class="login-form-panel">
+            <div class="login-form-header">
+                <div class="login-company-context">
+                    <i class="bi bi-building-check" aria-hidden="true"></i>
+                    <span>You are signing in to <strong>@branding.CompanyShortName</strong></span>
+                </div>
+                <h1>Welcome back</h1>
+                <p>Sign in to the @branding.ApplicationName.</p>
+            </div>
+
+            <form id="account" method="post" autocomplete="off" class="login-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                <div class="login-field">
+                    <label asp-for="Input.Username"></label>
+                    <div class="login-input-group">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        <input asp-for="Input.Username" class="form-control" id="username" placeholder="Username" />
+                    </div>
+                    <span asp-validation-for="Input.Username" class="text-danger small"></span>
+                </div>
+
+                <div class="login-field">
+                    <label asp-for="Input.Password"></label>
+                    <div class="login-input-group">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <input asp-for="Input.Password" class="form-control" id="password" placeholder="Password" type="password" />
+                        <button type="button"
+                                class="login-password-toggle"
+                                id="password-toggle"
+                                aria-label="Show password"
+                                aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+
+                <div class="login-options">
+                    <div class="form-check login-remember">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">Keep me signed in</label>
+                    </div>
+                </div>
+
+                <button id="login-submit" type="submit" class="btn btn-primary login-submit">
+                    <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                    <span>Sign in to @branding.CompanyShortName</span>
+                </button>
+            </form>
+
+            @if (Model.CompanyPortalLinks.Count != 0)
+            {
+                <div class="login-portals">
+                    <div class="login-portals-header">
+                        <strong>Not signing in to @branding.CompanyShortName?</strong>
+                        <span>Choose another company portal</span>
+                    </div>
+                    <div class="login-portal-list">
+                        @foreach (var companyPortal in Model.CompanyPortalLinks)
+                        {
+                            <a class="login-portal-link"
+                               href="@companyPortal.Url"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <span>@companyPortal.Name</span>
+                                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const password = document.getElementById("password");
+            const toggle = document.getElementById("password-toggle");
+
+            toggle?.addEventListener("click", () => {
+                const showPassword = password.type === "password";
+                password.type = showPassword ? "text" : "password";
+                toggle.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+                toggle.setAttribute("aria-pressed", showPassword.toString());
+                toggle.querySelector("i")?.classList.toggle("bi-eye", !showPassword);
+                toggle.querySelector("i")?.classList.toggle("bi-eye-slash", showPassword);
+            });
+        })();
+    </script>
 }

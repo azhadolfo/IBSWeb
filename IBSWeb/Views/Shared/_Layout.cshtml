@@ -1,11 +1,15 @@
 
 @using IBS.Models.Enums
 @using IBS.Utility.Constants
+@using Microsoft.Extensions.Options
 @using Microsoft.AspNetCore.Identity
+@inject IOptions<BrandingOptions> BrandingOptions
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 @{
+    var branding = BrandingOptions.Value;
+    var isLoginPage = Context.Request.Path.Value?.StartsWith("/Identity/Account/Login", StringComparison.OrdinalIgnoreCase) == true;
     var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
@@ -33,9 +37,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Filpride</title>
-    <link id="favicon-light" href="/svg/ibs-icon-black.svg" rel="shortcut icon" type="image/svg+xml" />
-    <link id="favicon-dark" href="/svg/ibs-icon-white.svg" rel="shortcut icon" type="image/svg+xml" />
+    <title>@ViewData["Title"] - @branding.CompanyShortName</title>
+    <link id="favicon-light" href="@Url.Content(branding.FaviconLightPath)" rel="shortcut icon" type="image/svg+xml" />
+    <link id="favicon-dark" href="@Url.Content(branding.FaviconDarkPath)" rel="shortcut icon" type="image/svg+xml" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="~/IBSWeb.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -45,6 +49,14 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.1.0/css/buttons.dataTables.min.css"> <!-- DataTables Buttons CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/select/3.1.3/css/select.dataTables.css" /><!--Data table pug-in-->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root {
+            --brand-primary: @branding.PrimaryColor;
+            --brand-primary-hover: @branding.PrimaryHoverColor;
+            --brand-secondary: @branding.SecondaryColor;
+            --brand-accent: @branding.AccentColor;
+        }
+    </style>
 
     @if (SignInManager.IsSignedIn(User))
     {
@@ -52,12 +64,15 @@
         <script src="~/js/quick-access-sidebar.js" asp-append-version="true" defer></script>
     }
 </head>
-<body data-selected-company="@selectedCompany">
+<body class="@(isLoginPage ? "login-layout" : string.Empty)" data-selected-company="@selectedCompany">
+    @if (!isLoginPage)
+    {
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/svg/ibs-logo-white.svg" class="ms-4" alt="IBSWeb" width="45" height="45"/>
+                    <img src="@Url.Content(branding.NavbarLogoPath)" class="ms-4" alt="@branding.CompanyShortName logo" width="@branding.NavbarLogoWidth" height="@branding.NavbarLogoHeight"/>
+                    <span class="navbar-brand-name ms-2">@branding.CompanyShortName</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -545,7 +560,7 @@
                             @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
                             {
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Filpride Master File</a>
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">@branding.CompanyShortName Master File</a>
                                     <ul class="dropdown-menu">
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Customer" asp-action="Index">Customer</a>
@@ -627,7 +642,8 @@
             </div>
         </nav>
     </header>
-    <div class="container" style="padding-top: 4.5rem">
+    }
+    <div class="container" style="padding-top: @(isLoginPage ? "0" : "4.5rem")">
         <partial name="_Notification" />
         <main role="main">
             <input type="hidden" id="hfUsername" value="@userName" />
@@ -637,7 +653,7 @@
 
     <footer b-q5eydxz0xc class="border-top footer bg-primary text-light">
         <div class="container text-center">
-            &copy; @copyrightYears - Filpride <i class="bi bi-r-circle"></i> &middot; @($"v{appVersion}")
+            &copy; @copyrightYears - @branding.CompanyName <i class="bi bi-r-circle"></i> &middot; @($"v{appVersion}")
         </div>
     </footer>
 

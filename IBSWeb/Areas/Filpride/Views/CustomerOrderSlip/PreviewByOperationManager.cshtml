@@ -1,20 +1,11 @@
 ﻿@using IBS.Models
 @using IBS.Models.Enums
 @using IBS.Utility.Constants
-@using Microsoft.AspNetCore.Identity
 @model CustomerOrderSlipForApprovalViewModel
-@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     ViewData["Title"] = "Customer Order Slip - Ops Manager Approval";
-    
-    var selectedCompany = string.Empty;
 
-    if (SignInManager.IsSignedIn(User))
-    {
-        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-    }
-    
     var decimalFormat = Model.CustomerOrderSlip!.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -36,21 +27,7 @@
 
     <table class="w-100">
         <tbody>
-        <tr>
-            <td class="text-end" style="padding: 0 !important;">
-                <img src="~/img/Filpride.jpg" width="130px"/>
-            </td>
-        </tr>
-        <tr style="margin: 0 !important;">
-            <td class="text-center" style="padding: 0 !important;">
-                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-                <p style="margin: 0; padding: 0; line-height: 1;">
-                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-                    VAT Reg. TIN: 000-216-589-00000
-                </p>
-            </td>
-        </tr>
+        <partial name="_CompanyDocumentHeaderRows" />
         </tbody>
     </table>
 

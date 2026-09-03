@@ -59,7 +59,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>()
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.SlidingExpiration = true;
     options.LoginPath = $"/Identity/Account/Login";
     options.LogoutPath = $"/Identity/Account/Logout";
@@ -76,6 +76,10 @@ if (builder.Environment.IsDevelopment())
 
 // Repositories + DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddOptions<BrandingOptions>()
+    .Bind(builder.Configuration.GetSection(BrandingOptions.SectionName))
+    .Validate(BrandingOptions.IsValid, "Branding configuration is incomplete.")
+    .ValidateOnStart();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
