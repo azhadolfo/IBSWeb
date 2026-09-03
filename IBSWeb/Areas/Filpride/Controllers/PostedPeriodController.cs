@@ -150,42 +150,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        // POST: Unpost a period (if needed)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UnpostPeriod(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> UnpostPeriods(List<int> selectedPeriodIds, CancellationToken cancellationToken)
         {
+            var periodIds = selectedPeriodIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (periodIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Select at least one posted period to unpost.";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
-                var postedPeriod = await _dbContext.PostedPeriods
-                    .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                var postedPeriods = await _dbContext.PostedPeriods
+                    .Where(period => periodIds.Contains(period.Id))
+                    .ToListAsync(cancellationToken);
 
-                if (postedPeriod == null)
+                if (postedPeriods.Count != periodIds.Count)
                 {
-                    TempData["ErrorMessage"] = "Posted period not found.";
+                    TempData["ErrorMessage"] = "One or more selected posted periods no longer exist. Refresh the page and try again.";
                     return RedirectToAction(nameof(Index));
                 }
 
+                var modules = string.Join(", ", postedPeriods
+                    .OrderBy(period => period.Year)
+                    .ThenBy(period => period.Month)
+                    .ThenBy(period => period.Module)
+                    .Select(period => $"{period.Module} for {period.Month}/{period.Year}"));
+
                 FilprideAuditTrail auditTrailBook = new(
                     GetUserFullName(),
-                    $"Posted the following modules: {postedPeriod.Module} for {postedPeriod.Month}/{postedPeriod.Year}",
+                    $"Unposted the following modules: {modules}",
                     "Posted Period");
 
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                _dbContext.PostedPeriods.Remove(postedPeriod);
+                _dbContext.PostedPeriods.RemoveRange(postedPeriods);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await _cacheService.RemoveAsync($"coa:{string.Empty}", cancellationToken);
 
-                TempData["SuccessMessage"] = $"Successfully unposted {postedPeriod.Module} for period {postedPeriod.Month}/{postedPeriod.Year}.";
-                return RedirectToAction(nameof(Index));
+                TempData["SuccessMessage"] = $"Successfully unposted {postedPeriods.Count} period(s).";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Error unposting period: {ex.Message}";
-                _logger.LogError(ex, ex.Message);
-                return RedirectToAction(nameof(Index));
+                TempData["ErrorMessage"] = $"Error unposting periods: {ex.Message}";
+                _logger.LogError(ex, "Failed to unpost selected periods.");
             }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
