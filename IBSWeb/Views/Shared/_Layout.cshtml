@@ -9,6 +9,7 @@
 
 @{
     var branding = BrandingOptions.Value;
+    var isLoginPage = Context.Request.Path.Value?.StartsWith("/Identity/Account/Login", StringComparison.OrdinalIgnoreCase) == true;
     var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
@@ -63,7 +64,9 @@
         <script src="~/js/quick-access-sidebar.js" asp-append-version="true" defer></script>
     }
 </head>
-<body data-selected-company="@selectedCompany">
+<body class="@(isLoginPage ? "login-layout" : string.Empty)" data-selected-company="@selectedCompany">
+    @if (!isLoginPage)
+    {
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container-fluid px-4">
@@ -639,7 +642,8 @@
             </div>
         </nav>
     </header>
-    <div class="container" style="padding-top: 4.5rem">
+    }
+    <div class="container" style="padding-top: @(isLoginPage ? "0" : "4.5rem")">
         <partial name="_Notification" />
         <main role="main">
             <input type="hidden" id="hfUsername" value="@userName" />

@@ -669,6 +669,10 @@ table {
     padding-bottom: 2rem;
 }
 
+.login-layout .login-page {
+    min-height: calc(100vh - 5rem);
+}
+
 .login-shell {
     width: min(100%, 980px);
     display: grid;
