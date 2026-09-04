@@ -2294,6 +2294,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["V1"].Value = "OriginalDocumentId";
                 worksheet3.Cells["W1"].Value = "PostedBy";
                 worksheet3.Cells["X1"].Value = "PostedDate";
+                worksheet3.Cells["Y1"].Value = "EditedBy";
+                worksheet3.Cells["Z1"].Value = "EditedDate";
+                worksheet3.Cells["AA1"].Value = "CanceledBy";
+                worksheet3.Cells["AB1"].Value = "CanceledDate";
+                worksheet3.Cells["AC1"].Value = "VoidedBy";
+                worksheet3.Cells["AD1"].Value = "VoidedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -2322,6 +2328,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet4.Cells["S1"].Value = "OriginalDocumentId";
                 worksheet4.Cells["T1"].Value = "PostedBy";
                 worksheet4.Cells["U1"].Value = "PostedDate";
+                worksheet4.Cells["V1"].Value = "EditedBy";
+                worksheet4.Cells["W1"].Value = "EditedDate";
+                worksheet4.Cells["X1"].Value = "CanceledBy";
+                worksheet4.Cells["Y1"].Value = "CanceledDate";
+                worksheet4.Cells["Z1"].Value = "VoidedBy";
+                worksheet4.Cells["AA1"].Value = "VoidedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -2363,6 +2375,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["AF1"].Value = "OriginalDocumentId";
                 worksheet.Cells["AG1"].Value = "PostedBy";
                 worksheet.Cells["AH1"].Value = "PostedDate";
+                worksheet.Cells["AI1"].Value = "EditedBy";
+                worksheet.Cells["AJ1"].Value = "EditedDate";
+                worksheet.Cells["AK1"].Value = "CanceledBy";
+                worksheet.Cells["AL1"].Value = "CanceledDate";
+                worksheet.Cells["AM1"].Value = "VoidedBy";
+                worksheet.Cells["AN1"].Value = "VoidedDate";
 
                 #endregion -- Collection Receipt Table Header --
 
@@ -2424,6 +2442,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 32].Value = item.CollectionReceiptId;
                     worksheet.Cells[row, 33].Value = item.PostedBy;
                     worksheet.Cells[row, 34].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 35].Value = item.EditedBy;
+                    worksheet.Cells[row, 36].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 37].Value = item.CanceledBy;
+                    worksheet.Cells[row, 38].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 39].Value = item.VoidedBy;
+                    worksheet.Cells[row, 40].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -2471,6 +2495,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
                     worksheet3.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
                     worksheet3.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 25].Value = item.SalesInvoice.EditedBy;
+                    worksheet3.Cells[siRow, 26].Value = item.SalesInvoice.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 27].Value = item.SalesInvoice.CanceledBy;
+                    worksheet3.Cells[siRow, 28].Value = item.SalesInvoice.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 29].Value = item.SalesInvoice.VoidedBy;
+                    worksheet3.Cells[siRow, 30].Value = item.SalesInvoice.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -2515,6 +2545,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
                     worksheet4.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
                     worksheet4.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[svRow, 22].Value = item.ServiceInvoice.EditedBy;
+                    worksheet4.Cells[svRow, 23].Value = item.ServiceInvoice.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[svRow, 24].Value = item.ServiceInvoice.CanceledBy;
+                    worksheet4.Cells[svRow, 25].Value = item.ServiceInvoice.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[svRow, 26].Value = item.ServiceInvoice.VoidedBy;
+                    worksheet4.Cells[svRow, 27].Value = item.ServiceInvoice.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -2558,6 +2594,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoiceId;
                     worksheet3.Cells[siRow, 23].Value = item.PostedBy;
                     worksheet3.Cells[siRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 25].Value = item.EditedBy;
+                    worksheet3.Cells[siRow, 26].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 27].Value = item.CanceledBy;
+                    worksheet3.Cells[siRow, 28].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 29].Value = item.VoidedBy;
+                    worksheet3.Cells[siRow, 30].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
