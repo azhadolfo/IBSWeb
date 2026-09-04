@@ -649,6 +649,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["S1"].Value = "WithholdingTaxPercent";
             worksheet.Cells["T1"].Value = "WithholdingTaxTitle";
             worksheet.Cells["U1"].Value = "OriginalSupplierId";
+            worksheet.Cells["V1"].Value = "EditedBy";
+            worksheet.Cells["W1"].Value = "EditedDate";
 
             int row = 2;
 
@@ -675,6 +677,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 19].Value = item.WithholdingTaxPercent;
                 worksheet.Cells[row, 20].Value = item.WithholdingTaxTitle;
                 worksheet.Cells[row, 21].Value = item.SupplierId;
+                worksheet.Cells[row, 22].Value = item.EditedBy;
+                worksheet.Cells[row, 23].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                 row++;
             }

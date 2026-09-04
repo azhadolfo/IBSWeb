@@ -974,6 +974,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet2.Cells["V1"].Value = "OriginalDocumentId";
                 worksheet2.Cells["W1"].Value = "PostedBy";
                 worksheet2.Cells["X1"].Value = "PostedDate";
+                worksheet2.Cells["Y1"].Value = "EditedBy";
+                worksheet2.Cells["Z1"].Value = "EditedDate";
+                worksheet2.Cells["AA1"].Value = "CanceledBy";
+                worksheet2.Cells["AB1"].Value = "CanceledDate";
+                worksheet2.Cells["AC1"].Value = "VoidedBy";
+                worksheet2.Cells["AD1"].Value = "VoidedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -1002,6 +1008,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["S1"].Value = "OriginalDocumentId";
                 worksheet3.Cells["T1"].Value = "PostedBy";
                 worksheet3.Cells["U1"].Value = "PostedDate";
+                worksheet3.Cells["V1"].Value = "EditedBy";
+                worksheet3.Cells["W1"].Value = "EditedDate";
+                worksheet3.Cells["X1"].Value = "CanceledBy";
+                worksheet3.Cells["Y1"].Value = "CanceledDate";
+                worksheet3.Cells["Z1"].Value = "VoidedBy";
+                worksheet3.Cells["AA1"].Value = "VoidedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -1030,6 +1042,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["S1"].Value = "OriginalDocumentId";
                 worksheet.Cells["T1"].Value = "PostedBy";
                 worksheet.Cells["U1"].Value = "PostedDate";
+                worksheet.Cells["V1"].Value = "EditedBy";
+                worksheet.Cells["W1"].Value = "EditedDate";
+                worksheet.Cells["X1"].Value = "CanceledBy";
+                worksheet.Cells["Y1"].Value = "CanceledDate";
+                worksheet.Cells["Z1"].Value = "VoidedBy";
+                worksheet.Cells["AA1"].Value = "VoidedDate";
 
                 #endregion -- Credit Memo Table Header --
 
@@ -1060,6 +1078,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 19].Value = item.CreditMemoId;
                     worksheet.Cells[row, 20].Value = item.PostedBy;
                     worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 22].Value = item.EditedBy;
+                    worksheet.Cells[row, 23].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 24].Value = item.CanceledBy;
+                    worksheet.Cells[row, 25].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 26].Value = item.VoidedBy;
+                    worksheet.Cells[row, 27].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1107,6 +1131,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
                     worksheet2.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
                     worksheet2.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet2.Cells[siRow, 25].Value = item.SalesInvoice.EditedBy;
+                    worksheet2.Cells[siRow, 26].Value = item.SalesInvoice.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet2.Cells[siRow, 27].Value = item.SalesInvoice.CanceledBy;
+                    worksheet2.Cells[siRow, 28].Value = item.SalesInvoice.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet2.Cells[siRow, 29].Value = item.SalesInvoice.VoidedBy;
+                    worksheet2.Cells[siRow, 30].Value = item.SalesInvoice.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1151,6 +1181,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
                     worksheet3.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
                     worksheet3.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[svRow, 22].Value = item.ServiceInvoice.EditedBy;
+                    worksheet3.Cells[svRow, 23].Value = item.ServiceInvoice.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[svRow, 24].Value = item.ServiceInvoice.CanceledBy;
+                    worksheet3.Cells[svRow, 25].Value = item.ServiceInvoice.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[svRow, 26].Value = item.ServiceInvoice.VoidedBy;
+                    worksheet3.Cells[svRow, 27].Value = item.ServiceInvoice.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
