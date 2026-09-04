@@ -57,6 +57,12 @@ body.mnav-enabled {
     padding-top: var(--mnav-height) !important;
 }
 
+@media print {
+    body.mnav-enabled {
+        padding-top: 0 !important;
+    }
+}
+
 /* ── Brand ── */
 .mnav-brand {
     font-family: var(--mnav-font-display);
@@ -507,7 +513,7 @@ body.mnav-enabled {
 .mnav-nav-area {
     display: none;
 }
-@media (min-width: 900px) {
+@media (min-width: 1540px) {
     .mnav-nav-area {
         display: flex;
         align-items: center;
@@ -528,7 +534,7 @@ body.mnav-enabled {
     color: var(--mnav-on-primary);
     cursor: pointer;
 }
-@media (min-width: 900px) { .mnav-hamburger { display: none; } }
+@media (min-width: 1540px) { .mnav-hamburger { display: none; } }
 
 /* ── Mobile drawer (Accordion Tree) ── */
 .mnav-drawer {
@@ -627,7 +633,7 @@ body.mnav-drawer-open .mnav-drawer {
     color: var(--mnav-on-primary-70);
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1539px) {
     .mnav-nav-area {
         display: none;
     }

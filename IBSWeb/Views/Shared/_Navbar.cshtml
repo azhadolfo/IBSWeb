@@ -19,7 +19,9 @@
     }
 
     var userDepartment = ViewBag.GetUserDepartment as string ?? string.Empty;
-    var userName = UserManager.GetUserName(User);
+    var userFullName = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value
+                       ?? (await UserManager.GetUserAsync(User))?.Name
+                       ?? UserManager.GetUserName(User);
 }
 
 <!-- Overlay for outside click closing -->
@@ -734,14 +736,14 @@
             <div class="mnav-user-dropdown">
                 <button class="mnav-user-trigger" id="mnav-user-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="User menu">
                     <span class="material-symbols-outlined mnav-avatar-icon">account_circle</span>
-                    <span class="mnav-user-name">@(userName ?? "User")</span>
+                    <span class="mnav-user-name">@(userFullName ?? "User")</span>
                     <span class="material-symbols-outlined mnav-chevron">expand_more</span>
                 </button>
                 <div class="mnav-dropdown-menu" id="mnav-dropdown-menu">
                     <div class="mnav-dropdown-header">
                         <span class="material-symbols-outlined" style="font-size:32px;">account_circle</span>
                         <div>
-                            <div class="mnav-dropdown-name">@(userName ?? "User")</div>
+                            <div class="mnav-dropdown-name">@(userFullName ?? "User")</div>
                             @if (!string.IsNullOrEmpty(selectedCompany))
                             {
                                 <div class="mnav-dropdown-role">@selectedCompany.ToUpper()</div>

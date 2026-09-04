@@ -66,7 +66,7 @@
             });
 
             // Set width to 1 column
-            if (window.innerWidth >= 900) {
+            if (window.innerWidth >= 1540) {
                 deck.style.width = '270px';
             } else {
                 deck.style.width = '100%';
@@ -130,7 +130,7 @@
                 targetCol.classList.add('active-tree');
 
                 // Update deck width smoothly based on number of visible columns
-                if (window.innerWidth >= 900) {
+                if (window.innerWidth >= 1540) {
                     var visibleCols = Array.from(deck.querySelectorAll('.mnav-col')).filter(function (col) {
                         return col.style.display === 'flex' || window.getComputedStyle(col).display === 'flex';
                     });
