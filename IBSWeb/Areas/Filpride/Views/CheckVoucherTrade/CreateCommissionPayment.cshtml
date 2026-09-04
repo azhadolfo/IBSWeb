@@ -618,7 +618,7 @@
                 $.ajax({
                     url: '@Url.Action("CheckNoIsExist", "CheckVoucherTrade", new { area = "Filpride" })',
                     type: "GET",
-                    data: { checkNo: checkNo },
+                    data: { checkNo: checkNo, bankId: $('select[name="BankId"]').val() },
                     success: function(exists) {
                         const submitButton = $('button[type="submit"]');
 
