@@ -2669,25 +2669,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public IActionResult CheckNoIsExist(string checkNo, int? cvId)
+        public async Task<IActionResult> CheckNoIsExist(
+            string checkNo,
+            int? bankId,
+            int? cvId,
+            CancellationToken cancellationToken)
         {
-            if (cvId.HasValue)
+            if (string.IsNullOrWhiteSpace(checkNo) || !bankId.HasValue)
             {
-                var existingCheckNo = _unitOfWork.FilprideCheckVoucher
-                    .GetAsync(cv => cv.CheckVoucherHeaderId == cvId)
-                    .Result?
-                    .CheckNo;
-
-                if (checkNo == existingCheckNo)
-                {
-                    return Json(false);
-                }
+                return Json(false);
             }
 
-            var exists = _unitOfWork.FilprideCheckVoucher
-                .GetAllAsync(cv => cv.CanceledBy == null && cv.VoidedBy == null)
-                .Result
-                .Any(cv => cv.CheckNo == checkNo);
+            var exists = (await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cv =>
+                        cv.CanceledBy == null &&
+                        cv.VoidedBy == null &&
+                        cv.CheckNo == checkNo &&
+                        cv.BankId == bankId &&
+                        (!cvId.HasValue || cv.CheckVoucherHeaderId != cvId.Value), cancellationToken))
+                .Any();
 
             return Json(exists);
         }
