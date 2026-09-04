@@ -18,9 +18,10 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
     }
 
-    var userDepartment = ViewBag.GetUserDepartment as string ?? string.Empty;
+    var currentUser = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
+    var userDepartment = ViewBag.GetUserDepartment as string ?? currentUser?.Department ?? string.Empty;
     var userFullName = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value
-                       ?? (await UserManager.GetUserAsync(User))?.Name
+                       ?? currentUser?.Name
                        ?? UserManager.GetUserName(User);
 }
 
