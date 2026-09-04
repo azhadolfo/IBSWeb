@@ -1,0 +1,770 @@
+@* _Navbar.cshtml
+   Expanding Connected Column-Deck Navbar partial for IBSWeb.
+*@
+@using IBS.Models.Enums
+@using IBS.Utility.Constants
+@using Microsoft.Extensions.Options
+@using Microsoft.AspNetCore.Identity
+@inject IOptions<BrandingOptions> BrandingOptions
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var branding = BrandingOptions.Value;
+    var selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
+    }
+
+    var userDepartment = ViewBag.GetUserDepartment as string ?? string.Empty;
+    var userName = UserManager.GetUserName(User);
+}
+
+<!-- Overlay for outside click closing -->
+<div id="mnav-overlay"></div>
+
+<header id="modern-navbar" role="banner" aria-label="Main Navigation">
+
+    <!-- ── Hamburger (Mobile) ── -->
+    <button class="mnav-hamburger" id="mnav-hamburger" aria-label="Toggle navigation menu" aria-controls="mnav-drawer" aria-expanded="false" type="button">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <!-- ── Brand ── -->
+    <a class="mnav-brand" asp-area="" asp-controller="Home" asp-action="Index">
+        <img src="@Url.Content(branding.NavbarLogoPath)" alt="@branding.CompanyShortName logo" width="@branding.NavbarLogoWidth" height="@branding.NavbarLogoHeight" />
+        <span class="d-none d-sm-inline">@branding.CompanyShortName</span>
+    </a>
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <!-- ── Mobile Drawer Overlay ── -->
+        <div class="mnav-drawer-overlay" id="mnav-drawer-overlay"></div>
+
+        <!-- ── Mobile Drawer ── -->
+        <nav class="mnav-drawer" id="mnav-drawer" aria-label="Mobile navigation">
+            <div class="mnav-list"></div>
+        </nav>
+
+        <!-- ── Desktop Navigation ── -->
+        <nav class="mnav-nav-area" aria-label="Main menu">
+            <ul class="mnav-list" role="menubar">
+
+                <!-- Home -->
+                <li class="mnav-item" role="none">
+                    <a class="mnav-trigger" asp-area="User" asp-controller="Home" asp-action="Index" role="menuitem">
+                        <span class="material-symbols-outlined">home</span>
+                        <span>Home</span>
+                    </a>
+                </li>
+
+                @* ══════════════════════════════════════════════════════
+                   FILPRIDE MODULE
+                   ══════════════════════════════════════════════════════ *@
+                @if (selectedCompany == "Filpride")
+                {
+                    <!-- A. Receivable (Expanding Column Deck) -->
+                    <li class="mnav-item" data-nav-deck role="none">
+                        <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span>A. Receivable</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-column-deck" role="menu">
+                            <!-- Col 1: Main Receivable Items -->
+                            <div class="mnav-col" data-col-level="1" data-col-id="rec-root">
+                                <div class="mnav-col-header">Receivable Items</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">description</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Customer Order Slip</div>
+                                            <div class="mnav-col-item-sub">Create &amp; manage COS</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">local_shipping</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Delivery Receipt</div>
+                                            <div class="mnav-col-item-sub">Track product delivery</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">receipt_long</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Sales Invoice</div>
+                                            <div class="mnav-col-item-sub">Product sales billing</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">design_services</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Service Invoice</div>
+                                            <div class="mnav-col-item-sub">Service billing</div>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <div class="mnav-divider"></div>
+
+                                <!-- Trigger for Sub-Column: Collection Receipt -->
+                                <button class="mnav-col-item" type="button" data-expand="rec-col-receipts" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Collection Receipt</div>
+                                            <div class="mnav-col-item-sub">Service &amp; sales collections</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="ProvisionalReceipt" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">pending_actions</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Provisional Receipt</div>
+                                            <div class="mnav-col-item-sub">Temporary vouchers</div>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <div class="mnav-divider"></div>
+
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">add_circle_outline</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Debit Memo</div>
+                                            <div class="mnav-col-item-sub">AR debit adjustments</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">remove_circle_outline</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Credit Memo</div>
+                                            <div class="mnav-col-item-sub">AR credit adjustments</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Col 2: Collection Receipt Options (Expands to Right) -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rec-col-receipts" data-parent-col="rec-root" style="display:none;">
+                                <div class="mnav-col-header">Collection Receipts</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">receipt</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">For Service</div>
+                                            <div class="mnav-col-item-sub">Collections for service invoices</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">paid</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">For Sales</div>
+                                            <div class="mnav-col-item-sub">Collections for sales invoices</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- A. Payable (Expanding Column Deck) -->
+                    <li class="mnav-item" data-nav-deck role="none">
+                        <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span>A. Payable</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-column-deck" role="menu">
+                            <!-- Col 1: Main Payable Items (Level 1) -->
+                            <div class="mnav-col" data-col-level="1" data-col-id="pay-root">
+                                <div class="mnav-col-header">Payable Items</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">fact_check</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Authority To Load</div>
+                                            <div class="mnav-col-item-sub">ATL records</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">shopping_cart</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Purchase Order</div>
+                                            <div class="mnav-col-item-sub">Vendor purchase orders</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">inventory</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Receiving Report</div>
+                                            <div class="mnav-col-item-sub">Goods receipt notes</div>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <div class="mnav-divider"></div>
+
+                                <!-- Trigger for Sub-Column: Check Voucher -->
+                                <button class="mnav-col-item" type="button" data-expand="pay-cv-types" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">request_quote</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Check Voucher</div>
+                                            <div class="mnav-col-item-sub">Trade &amp; Non-Trade vouchers</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+
+                                <div class="mnav-divider"></div>
+
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">menu_book</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Journal Voucher</div>
+                                            <div class="mnav-col-item-sub">General journal entries</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Col 2: Check Voucher Types (Level 2) -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="pay-cv-types" data-parent-col="pay-root" style="display:none;">
+                                <div class="mnav-col-header">Check Voucher</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">storefront</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Trade</div>
+                                            <div class="mnav-col-item-sub">Trade purchases &amp; AP</div>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <!-- Trigger for Sub-Column: Non-Trade -->
+                                <button class="mnav-col-item" type="button" data-expand="pay-cv-nontrade-types" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">account_balance_wallet</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Non-Trade</div>
+                                            <div class="mnav-col-item-sub">Invoices &amp; Payments</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                            </div>
+
+                            <!-- Col 3: Non-Trade Options (Level 3) -->
+                            <div class="mnav-col" data-col-level="3" data-col-id="pay-cv-nontrade-types" data-parent-col="pay-cv-types" style="display:none;">
+                                <div class="mnav-col-header">Non-Trade</div>
+
+                                <!-- Trigger for Sub-Column: Invoice -->
+                                <button class="mnav-col-item" type="button" data-expand="pay-cv-invoices" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">receipt</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Invoice</div>
+                                            <div class="mnav-col-item-sub">Payroll &amp; Non-Payroll</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">paid</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Payment</div>
+                                            <div class="mnav-col-item-sub">Disbursement vouchers</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Col 4: Non-Trade Invoices (Level 4) -->
+                            <div class="mnav-col" data-col-level="4" data-col-id="pay-cv-invoices" data-parent-col="pay-cv-nontrade-types" style="display:none;">
+                                <div class="mnav-col-header">Invoices</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">description</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Non-Payroll</div>
+                                            <div class="mnav-col-item-sub">Operating &amp; supplier expenses</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayrollInvoice" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">badge</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Payroll</div>
+                                            <div class="mnav-col-item-sub">Wages &amp; salary invoices</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Disbursement Menu -->
+                    <li class="mnav-item" role="none">
+                        <a class="mnav-trigger" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index" role="menuitem">
+                            <span>Disbursement</span>
+                        </a>
+                    </li>
+
+                    <!-- Reports (Expanding Column Deck) -->
+                    <li class="mnav-item" data-nav-deck role="none">
+                        <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span>Report</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-column-deck" role="menu">
+                            <!-- Col 1: Report Categories -->
+                            <div class="mnav-col" data-col-level="1" data-col-id="rep-root">
+                                <div class="mnav-col-header">Report Categories</div>
+                                <button class="mnav-col-item" type="button" data-expand="rep-gl" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">account_balance</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">General Ledger</div><div class="mnav-col-item-sub">Transactions &amp; journals</div></div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="SubsidiaryLedgerReport" asp-action="SubsidiaryLedgerReport" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">menu_book</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">Subsidiary Ledger</div></div>
+                                    </div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="InventoryReport" asp-action="InventoryReport" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">warehouse</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">Inventory</div></div>
+                                    </div>
+                                </a>
+                                <button class="mnav-col-item" type="button" data-expand="rep-ap" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">receipt</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">A. Payable</div><div class="mnav-col-item-sub">Payable &amp; purchase reports</div></div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                                <button class="mnav-col-item" type="button" data-expand="rep-ar" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">monitoring</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">A. Receivable</div><div class="mnav-col-item-sub">Sales &amp; aging reports</div></div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                                <button class="mnav-col-item" type="button" data-expand="rep-fin" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">account_balance_wallet</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">Financial</div><div class="mnav-col-item-sub">Trial balance, PNL, SRE</div></div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="ComparativeReport" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">compare_arrows</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">Comparative Report</div></div>
+                                    </div>
+                                </a>
+                                <button class="mnav-col-item" type="button" data-expand="rep-master" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">download</span>
+                                        <div class="mnav-col-item-text"><div class="mnav-col-item-title">Master File</div><div class="mnav-col-item-sub">Excel file downloads</div></div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                            </div>
+
+                            <!-- Col 2: General Ledger Reports -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rep-gl" data-parent-col="rep-root" style="display:none;">
+                                <div class="mnav-col-header">General Ledger</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="GeneralLedgerBook" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">list</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">General Ledger by Transaction</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="GeneralLedgerReportByAccountNumber" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">tag</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">General Ledger By Acct#</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="SubsidiaryLedgerReport" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">book</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Subsidiary Ledger</div></div></div>
+                                </a>
+                                <button class="mnav-col-item" type="button" data-expand="rep-gl-jv" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">edit_note</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Journal Voucher</div><div class="mnav-col-item-sub">Price &amp; cost updates</div></div></div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                            </div>
+
+                            <!-- Col 3: JV Updates -->
+                            <div class="mnav-col" data-col-level="3" data-col-id="rep-gl-jv" data-parent-col="rep-gl" style="display:none;">
+                                <div class="mnav-col-header">JV Updates</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="JournalVoucherSellingPriceReport" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">price_change</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Selling Price Updates</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="JournalVoucherUnitCostReport" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">request_quote</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Unit Cost Updates</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="JournalVoucherCommissionReport" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">percent</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Commission Updates</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="GeneralLedgerReport" asp-action="JournalVoucherFreightReport" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">local_shipping</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Freight Updates</div></div></div>
+                                </a>
+                            </div>
+
+                            <!-- Col 2: A. Payable Reports -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rep-ap" data-parent-col="rep-root" style="display:none;">
+                                <div class="mnav-col-header">A. Payable Reports</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="ClearedDisbursementReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Cleared Disbursement</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="PurchaseOrderReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Purchase Order</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="PurchaseReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Purchase</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="GrossMarginReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Gross Margin</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="TradePayableReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Trade Payable</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="ApReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Ap Monitoring</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="NonTradeInvoiceReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Non-Trade Invoice</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="CvDisbursementReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Cv Disbursement</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="LiquidationReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Liquidation</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="PurchaseJournalReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Purchase Journal</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="HaulerPayableReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Hauler Payable</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsPayableReport" asp-action="JournalVoucherReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Journal Voucher</div></div></div></a>
+                            </div>
+
+                            <!-- Col 2: A. Receivable Reports -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rep-ar" data-parent-col="rep-root" style="display:none;">
+                                <div class="mnav-col-header">A. Receivable Reports</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="COSUnservedVolume" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">COS Unserved Volume</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="DispatchReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Dispatch</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="SalesReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Sales</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="OtcFuelSalesReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">OTC Fuel Sales</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="PostedCollection" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Collection</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="AgingReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Aging</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="ArPerCustomer" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">AR Per Customer</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="ServiceInvoiceReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="SalesInvoiceReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Sales Invoice</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="AccountsReceivableReport" asp-action="CosSummaryReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">COS Summary</div></div></div></a>
+                            </div>
+
+                            <!-- Col 2: Financial Reports -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rep-fin" data-parent-col="rep-root" style="display:none;">
+                                <div class="mnav-col-header">Financial Reports</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="FinancialReport" asp-action="LevelOneReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Level One</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="FinancialReport" asp-action="TrialBalanceReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Trial Balance</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="FinancialReport" asp-action="ProfitAndLossReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">PNL</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="FinancialReport" asp-action="StatementOfRetainedEarningsReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">SRE</div></div></div></a>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="FinancialReport" asp-action="BalanceSheetReport" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Balance Sheet</div></div></div></a>
+                            </div>
+
+                            <!-- Col 2: Master File Exports -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="rep-master" data-parent-col="rep-root" style="display:none;">
+                                <div class="mnav-col-header">Export Master Files</div>
+                                <a class="mnav-col-item" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Customer" })" role="menuitem"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer</div></div></div></a>
+                                <a class="mnav-col-item" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Supplier" })" role="menuitem"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Supplier</div></div></div></a>
+                                <a class="mnav-col-item" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "BankAccount" })" role="menuitem"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Bank Account</div></div></div></a>
+                                <a class="mnav-col-item" href="@Url.Action("GenerateExcel", "MasterFile", new { area = "Filpride", masterFileType = "Service" })" role="menuitem"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service</div></div></div></a>
+                            </div>
+                        </div>
+                    </li>
+
+                    @* Export to AAS (RCD Department / Admin) *@
+                    @if (userDepartment == SD.Department_RCD || User.IsInRole("Admin"))
+                    {
+                        <li class="mnav-item" data-nav-deck role="none">
+                            <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                <span>Export to AAS</span>
+                                <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                            </button>
+                            <div class="mnav-column-deck" role="menu">
+                                <div class="mnav-col" data-col-level="1" data-col-id="aas-root">
+                                    <div class="mnav-col-header">Transaction Exports</div>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Index" asp-route-view="@nameof(DynamicView.SalesInvoice)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Sales Invoice</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index" asp-route-view="@nameof(DynamicView.ServiceInvoice)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service Invoice</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" asp-route-view="@nameof(DynamicView.CollectionReceipt)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Collection Receipt</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index" asp-route-view="@nameof(DynamicView.DebitMemo)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Debit Memo</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index" asp-route-view="@nameof(DynamicView.CreditMemo)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Credit Memo</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index" asp-route-view="@nameof(DynamicView.PurchaseOrder)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Purchase Order</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" asp-route-view="@nameof(DynamicView.ReceivingReport)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Receiving Report</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" asp-route-view="@nameof(DynamicView.CheckVoucher)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Check Voucher</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" asp-route-view="@nameof(DynamicView.JournalVoucher)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Journal Voucher</div></div></div></a>
+                                    <div class="mnav-divider"></div>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Customer" asp-action="Index" asp-route-view="@nameof(DynamicView.Customer)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer Master</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="User" asp-controller="Product" asp-action="Index" asp-route-view="@nameof(DynamicView.Product)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Product Master</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Supplier" asp-action="Index" asp-route-view="@nameof(DynamicView.Supplier)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Supplier Master</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Service" asp-action="Index" asp-route-view="@nameof(DynamicView.Service)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service Master</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index" asp-route-view="@nameof(DynamicView.BankAccount)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Bank Account Master</div></div></div></a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="ChartOfAccount" asp-action="Index" asp-route-view="@nameof(DynamicView.ChartOfAccount)" role="menuitem"><div class="mnav-col-item-content"><div class="mnav-col-item-text"><div class="mnav-col-item-title">Chart Of Account</div></div></div></a>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+
+                @* ══════════════════════════════════════════════════════
+                   BIENES MODULE
+                   ══════════════════════════════════════════════════════ *@
+                @if (selectedCompany == "Bienes")
+                {
+                    <li class="mnav-item" role="none">
+                        <a class="mnav-trigger" asp-area="Bienes" asp-controller="Placement" asp-action="Index" role="menuitem">
+                            <span class="material-symbols-outlined">real_estate_agent</span>
+                            <span>Placement</span>
+                        </a>
+                    </li>
+                }
+
+                <!-- Request Forms Dropdown -->
+                <li class="mnav-item" data-nav-deck role="none">
+                    <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                        <span>Request Form</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                    </button>
+                    <div class="mnav-column-deck" role="menu">
+                        <div class="mnav-col" data-col-level="1" data-col-id="forms-root">
+                            <div class="mnav-col-header">Download Request Forms</div>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1y8vKyPZ6k3P3pKZXcC2hREajVyOb-4c8" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Bank Account</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1Xen2P4t5eUMFmmxaqdAjpfedvnYhoof8" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer Branch</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1jcsnfG3XvNmmMcdHk12NTvYPCzGjqmoF" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1Gd9r13vgT4a2yCxVOH1VgKSpE321qrr4" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Enhancement</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1yDD_04KOY7P_arfUwJKNjSSBMUu5k0qL" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Payment Terms</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1y4pyqXlbkKdQooV4mV__Vd4Vwau_iKHm" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Pickup Point</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1DCZWITJZu5lbVAr7uPJ84TAq2-8RpmGz" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Product</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1Mg6PSyhNF2w0a2TdqU67NDRwwk-oONer" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1k6ZQb4aaK8oGjhvso1AzwYYqewuajzTk" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">Supplier</div></div></div></a>
+                            <a class="mnav-col-item" href="https://drive.google.com/uc?export=download&id=1VVkX_8e1LMsZE5HDBi1gcsayMycp9L7N" role="menuitem" target="_blank" rel="noopener noreferrer"><div class="mnav-col-item-content"><i class="bi bi-download me-2"></i><div class="mnav-col-item-text"><div class="mnav-col-item-title">User Account</div></div></div></a>
+                        </div>
+                    </div>
+                </li>
+
+                @* ══════════════════════════════════════════════════════
+                   ADMIN MASTER FILES & UTILITIES (Role Gated)
+                   ══════════════════════════════════════════════════════ *@
+                @if (User.IsInRole("Admin"))
+                {
+                    <!-- Unified Master File (Expanding Column Deck) -->
+                    <li class="mnav-item" data-nav-deck role="none">
+                        <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span>Master File</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-column-deck" role="menu">
+                            <!-- Col 1: Master File Categories -->
+                            <div class="mnav-col" data-col-level="1" data-col-id="mf-root">
+                                <div class="mnav-col-header">Master File Groups</div>
+
+                                @if (selectedCompany == "Filpride")
+                                {
+                                    <button class="mnav-col-item" type="button" data-expand="mf-company-records" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                        <div class="mnav-col-item-content">
+                                            <span class="material-symbols-outlined">domain</span>
+                                            <div class="mnav-col-item-text">
+                                                <div class="mnav-col-item-title">@branding.CompanyShortName Records</div>
+                                                <div class="mnav-col-item-sub">Customer, supplier &amp; accounts</div>
+                                            </div>
+                                        </div>
+                                        <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                    </button>
+                                }
+
+                                <button class="mnav-col-item" type="button" data-expand="mf-general-records" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">settings_suggest</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">General Master Records</div>
+                                            <div class="mnav-col-item-sub">Company, product &amp; access</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined mnav-chevron">chevron_right</span>
+                                </button>
+                            </div>
+
+                            @if (selectedCompany == "Filpride")
+                            {
+                                <!-- Col 2: Filpride Master Records -->
+                                <div class="mnav-col" data-col-level="2" data-col-id="mf-company-records" data-parent-col="mf-root" style="display:none;">
+                                    <div class="mnav-col-header">@branding.CompanyShortName Records</div>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Customer" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">person</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="CustomerBranch" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">store</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Customer Branch</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Supplier" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">local_shipping</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Supplier</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">account_balance</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Bank Account</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="Service" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">design_services</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Service</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="ChartOfAccount" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">list_alt</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Chart of Accounts</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="PickupPoint" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">pin_drop</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Pickup Points</div></div></div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="PaymentTerm" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">schedule</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Payment Terms</div></div></div>
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Col 2: General Master Records -->
+                            <div class="mnav-col" data-col-level="2" data-col-id="mf-general-records" data-parent-col="mf-root" style="display:none;">
+                                <div class="mnav-col-header">General Records</div>
+                                <a class="mnav-col-item" asp-area="User" asp-controller="Company" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">domain</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Company</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="User" asp-controller="Product" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">category</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Product</div></div></div>
+                                </a>
+                                <div class="mnav-divider"></div>
+                                <a class="mnav-col-item" asp-area="Admin" asp-controller="AppRole" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">security</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Role</div></div></div>
+                                </a>
+                                <a class="mnav-col-item" asp-area="Admin" asp-controller="User" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content"><span class="material-symbols-outlined">manage_accounts</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">User</div></div></div>
+                                </a>
+                                @if (selectedCompany == "Filpride")
+                                {
+                                    <div class="mnav-divider"></div>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="DepartmentAccessConfiguration" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content"><span class="material-symbols-outlined">lock_person</span><div class="mnav-col-item-text"><div class="mnav-col-item-title">Department Access</div></div></div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </li>
+
+                    @if (selectedCompany == "Filpride")
+                    {
+                        <!-- Utility (Admin) -->
+                        <li class="mnav-item" data-nav-deck role="none">
+                            <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                                <span>Utility</span>
+                                <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                            </button>
+                            <div class="mnav-column-deck" role="menu">
+                                <div class="mnav-col" data-col-level="1" data-col-id="util-root">
+                                    <div class="mnav-col-header">Utility Operations</div>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="TransactionMasterControl" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content">
+                                            <span class="material-symbols-outlined">tune</span>
+                                            <div class="mnav-col-item-text">
+                                                <div class="mnav-col-item-title">Entries Master Control</div>
+                                                <div class="mnav-col-item-sub">Journal entries controller</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="TransactionMasterControl" asp-action="BatchReJournal" role="menuitem">
+                                        <div class="mnav-col-item-content">
+                                            <span class="material-symbols-outlined">replay</span>
+                                            <div class="mnav-col-item-text">
+                                                <div class="mnav-col-item-title">Batch ReJournal</div>
+                                                <div class="mnav-col-item-sub">Bulk re-journaling tool</div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <div class="mnav-divider"></div>
+
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="MonthlyPeriod" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content">
+                                            <span class="material-symbols-outlined">calendar_month</span>
+                                            <div class="mnav-col-item-text">
+                                                <div class="mnav-col-item-title">Monthly Period</div>
+                                                <div class="mnav-col-item-sub">Accounting closure periods</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <a class="mnav-col-item" asp-area="Filpride" asp-controller="PostedPeriod" asp-action="Index" role="menuitem">
+                                        <div class="mnav-col-item-content">
+                                            <span class="material-symbols-outlined">lock_clock</span>
+                                            <div class="mnav-col-item-text">
+                                                <div class="mnav-col-item-title">Posted Period</div>
+                                                <div class="mnav-col-item-sub">Transaction lock periods</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+
+            </ul>
+        </nav>
+
+        <!-- ── Right Controls ── -->
+        <div class="mnav-right">
+            <!-- Spotlight Search -->
+            <div class="mnav-search-wrap">
+                <span class="material-symbols-outlined mnav-search-icon" aria-hidden="true">search</span>
+                <label for="mnav-search-input" class="visually-hidden">Search</label>
+                <input class="mnav-search" id="mnav-search-input" type="search" placeholder="Press / to search..." aria-label="Search" />
+            </div>
+
+            <!-- SignalR Notification Bell -->
+            <a href="@Url.Action("Index", "Notification", new { area = "User" })" class="mnav-icon-btn position-relative" title="Notifications" aria-label="Notifications">
+                <span class="material-symbols-outlined">notifications</span>
+                <span id="notificationCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill mnav-notification-badge">0</span>
+            </a>
+
+            <!-- User Menu -->
+            <div class="mnav-user-dropdown">
+                <button class="mnav-user-trigger" id="mnav-user-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="User menu">
+                    <span class="material-symbols-outlined mnav-avatar-icon">account_circle</span>
+                    <span class="mnav-user-name">@(userName ?? "User")</span>
+                    <span class="material-symbols-outlined mnav-chevron">expand_more</span>
+                </button>
+                <div class="mnav-dropdown-menu" id="mnav-dropdown-menu">
+                    <div class="mnav-dropdown-header">
+                        <span class="material-symbols-outlined" style="font-size:32px;">account_circle</span>
+                        <div>
+                            <div class="mnav-dropdown-name">@(userName ?? "User")</div>
+                            @if (!string.IsNullOrEmpty(selectedCompany))
+                            {
+                                <div class="mnav-dropdown-role">@selectedCompany.ToUpper()</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mnav-dropdown-divider"></div>
+
+                    <a class="mnav-dropdown-item" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">
+                        <span class="material-symbols-outlined">password</span>
+                        <span>Change Password</span>
+                    </a>
+
+                    <div class="mnav-dropdown-divider"></div>
+
+                    <form id="logoutForm" class="form-inline m-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="submit" class="mnav-dropdown-item mnav-dropdown-danger">
+                            <span class="material-symbols-outlined">logout</span>
+                            <span>Sign out</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</header>
