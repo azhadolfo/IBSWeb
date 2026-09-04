@@ -146,17 +146,21 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     // User is guaranteed to exist and be active at this point
                     user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
 
-                    var existingCompanyClaims = (await _signInManager.UserManager.GetClaimsAsync(user))
-                        .Where(claim => claim.Type == "Company")
-                        .ToList();
+                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
 
-                    if (existingCompanyClaims.Count != 0)
+                    if (!existingClaims.Any(claim => claim.Type == "Company"))
                     {
-                        await _signInManager.UserManager.RemoveClaimsAsync(user, existingCompanyClaims);
+                        await _signInManager.UserManager.AddClaimAsync(user, new Claim("Company", "Filpride"));
                     }
 
-                    await _signInManager.UserManager.AddClaimAsync(user, new Claim("Company", "Filpride"));
-                    await _signInManager.SignInAsync(user, Input.RememberMe);
+                    var additionalClaims = new List<Claim>();
+
+                    if (!existingClaims.Any(claim => claim.Type == ClaimTypes.GivenName))
+                    {
+                        additionalClaims.Add(new Claim(ClaimTypes.GivenName, user.Name));
+                    }
+
+                    await _signInManager.SignInWithClaimsAsync(user, Input.RememberMe, additionalClaims);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);

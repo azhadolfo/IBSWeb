@@ -1067,6 +1067,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["R1"].Value = "OriginalDocumentId";
                 worksheet3.Cells["S1"].Value = "PostedBy";
                 worksheet3.Cells["T1"].Value = "PostedDate";
+                worksheet3.Cells["U1"].Value = "EditedBy";
+                worksheet3.Cells["V1"].Value = "EditedDate";
+                worksheet3.Cells["W1"].Value = "CanceledBy";
+                worksheet3.Cells["X1"].Value = "CanceledDate";
+                worksheet3.Cells["Y1"].Value = "VoidedBy";
+                worksheet3.Cells["Z1"].Value = "VoidedDate";
 
                 #endregion -- Purchase Order Table Header --
 
@@ -1098,6 +1104,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet4.Cells["V1"].Value = "OriginalDocumentId";
                 worksheet4.Cells["W1"].Value = "PostedBy";
                 worksheet4.Cells["X1"].Value = "PostedDate";
+                worksheet4.Cells["Y1"].Value = "EditedBy";
+                worksheet4.Cells["Z1"].Value = "EditedDate";
+                worksheet4.Cells["AA1"].Value = "CanceledBy";
+                worksheet4.Cells["AB1"].Value = "CanceledDate";
+                worksheet4.Cells["AC1"].Value = "VoidedBy";
+                worksheet4.Cells["AD1"].Value = "VoidedDate";
 
                 #endregion -- Receiving Report Table Header --
 
@@ -1138,6 +1150,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet5.Cells["AE1"].Value = "OriginalDocumentId";
                 worksheet5.Cells["AF1"].Value = "PostedBy";
                 worksheet5.Cells["AG1"].Value = "PostedDate";
+                worksheet5.Cells["AH1"].Value = "EditedBy";
+                worksheet5.Cells["AI1"].Value = "EditedDate";
+                worksheet5.Cells["AJ1"].Value = "CanceledBy";
+                worksheet5.Cells["AK1"].Value = "CanceledDate";
+                worksheet5.Cells["AL1"].Value = "VoidedBy";
+                worksheet5.Cells["AM1"].Value = "VoidedDate";
 
                 #endregion -- Check Voucher Header Table Header --
 
@@ -1195,6 +1213,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["K1"].Value = "OriginalDocumentId";
                 worksheet.Cells["L1"].Value = "PostedBy";
                 worksheet.Cells["M1"].Value = "PostedDate";
+                worksheet.Cells["N1"].Value = "EditedBy";
+                worksheet.Cells["O1"].Value = "EditedDate";
+                worksheet.Cells["P1"].Value = "CanceledBy";
+                worksheet.Cells["Q1"].Value = "CanceledDate";
+                worksheet.Cells["R1"].Value = "VoidedBy";
+                worksheet.Cells["S1"].Value = "VoidedDate";
 
                 #endregion -- Journal Voucher Header Table Header --
 
@@ -1231,6 +1255,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 11].Value = item.JournalVoucherHeaderId;
                     worksheet.Cells[row, 12].Value = item.PostedBy;
                     worksheet.Cells[row, 13].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 14].Value = item.EditedBy;
+                    worksheet.Cells[row, 15].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 16].Value = item.CanceledBy;
+                    worksheet.Cells[row, 17].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 18].Value = item.VoidedBy;
+                    worksheet.Cells[row, 19].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1292,6 +1322,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet5.Cells[cvhRow, 31].Value = item.CheckVoucherHeader.CheckVoucherHeaderId;
                     worksheet5.Cells[cvhRow, 32].Value = item.CheckVoucherHeader.PostedBy;
                     worksheet5.Cells[cvhRow, 33].Value = item.CheckVoucherHeader.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet5.Cells[cvhRow, 34].Value = item.CheckVoucherHeader.EditedBy;
+                    worksheet5.Cells[cvhRow, 35].Value = item.CheckVoucherHeader.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet5.Cells[cvhRow, 36].Value = item.CheckVoucherHeader.CanceledBy;
+                    worksheet5.Cells[cvhRow, 37].Value = item.CheckVoucherHeader.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet5.Cells[cvhRow, 38].Value = item.CheckVoucherHeader.VoidedBy;
+                    worksheet5.Cells[cvhRow, 39].Value = item.CheckVoucherHeader.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     cvhRow++;
                 }
@@ -1438,6 +1474,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[rrRow, 22].Value = item.ReceivingReportId;
                     worksheet4.Cells[rrRow, 23].Value = item.PostedBy;
                     worksheet4.Cells[rrRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[rrRow, 25].Value = item.EditedBy;
+                    worksheet4.Cells[rrRow, 26].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[rrRow, 27].Value = item.CanceledBy;
+                    worksheet4.Cells[rrRow, 28].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[rrRow, 29].Value = item.VoidedBy;
+                    worksheet4.Cells[rrRow, 30].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     rrRow++;
                 }
@@ -1482,6 +1524,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[poRow, 18].Value = item.PurchaseOrderId;
                     worksheet3.Cells[poRow, 19].Value = item.PostedBy;
                     worksheet3.Cells[poRow, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[poRow, 21].Value = item.EditedBy;
+                    worksheet3.Cells[poRow, 22].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[poRow, 23].Value = item.CanceledBy;
+                    worksheet3.Cells[poRow, 24].Value = item.CanceledDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[poRow, 25].Value = item.VoidedBy;
+                    worksheet3.Cells[poRow, 26].Value = item.VoidedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                     poRow++;
                 }

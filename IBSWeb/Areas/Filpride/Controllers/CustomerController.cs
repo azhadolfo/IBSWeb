@@ -444,6 +444,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["K1"].Value = "CreatedDate";
             worksheet.Cells["L1"].Value = "OriginalCustomerId";
             worksheet.Cells["M1"].Value = "OriginalCustomerNumber";
+            worksheet.Cells["N1"].Value = "EditedBy";
+            worksheet.Cells["O1"].Value = "EditedDate";
 
             int row = 2;
 
@@ -462,6 +464,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 11].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 12].Value = item.CustomerId;
                 worksheet.Cells[row, 13].Value = item.CustomerCode;
+                worksheet.Cells[row, 14].Value = item.EditedBy;
+                worksheet.Cells[row, 15].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                 row++;
             }

@@ -436,6 +436,8 @@ namespace IBSWeb.Areas.User.Controllers
             worksheet.Cells["D1"].Value = "CreatedBy";
             worksheet.Cells["E1"].Value = "CreatedDate";
             worksheet.Cells["F1"].Value = "OriginalProductId";
+            worksheet.Cells["G1"].Value = "EditedBy";
+            worksheet.Cells["H1"].Value = "EditedDate";
 
             int row = 2;
 
@@ -447,6 +449,8 @@ namespace IBSWeb.Areas.User.Controllers
                 worksheet.Cells[row, 4].Value = item.CreatedBy;
                 worksheet.Cells[row, 5].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                 worksheet.Cells[row, 6].Value = item.ProductId;
+                worksheet.Cells[row, 7].Value = item.EditedBy;
+                worksheet.Cells[row, 8].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff") ?? null;
 
                 row++;
             }
