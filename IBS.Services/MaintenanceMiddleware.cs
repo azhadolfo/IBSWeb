@@ -1,7 +1,9 @@
 using IBS.DataAccess.Data;
 using IBS.Utility.Constants;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.WebUtilities;
@@ -55,7 +57,18 @@ namespace IBS.Services
                 if (isMaintenanceMode && !context.User.IsInRole("Admin") &&
                     !context.Request.Path.StartsWithSegments("/User/Home/Maintenance"))
                 {
-                    context.Response.Redirect("/User/Home/Maintenance");
+                    const string maintenanceUrl = "/User/Home/Maintenance";
+
+                    await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+
+                    if (string.Equals(context.Request.Headers.XRequestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Response.Headers.Append("X-Login-Url", maintenanceUrl);
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return;
+                    }
+
+                    context.Response.Redirect(maintenanceUrl);
                     return;
                 }
             }
