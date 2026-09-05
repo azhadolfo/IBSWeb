@@ -49,7 +49,6 @@ namespace IBSWeb.Areas.User.Controllers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
                 .FirstOrDefaultAsync();
 
-            ViewBag.GetUserDepartment = findUser?.Department;
             var companyClaims = findUser != null ? await GetCompanyClaimAsync() : string.Empty;
 
             var userFullName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
