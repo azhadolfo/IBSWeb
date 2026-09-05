@@ -374,36 +374,16 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
             // get values in multiselect
             let selectedInvoices = $invoices.val() || [];
 
-            // store the new invoice IDs to a variable
-            const newInvoiceIds = selectedInvoices.filter(id => !InvoicePayments.some(item => item.invoiceId === parseInt(id)));
+            $siList.find("input[name='SIMultipleAmount']").each(function () {
+                const invoiceId = parseInt($(this).closest('tr').find("input[type='hidden']").val());
+                const payment = InvoicePayments.find(item => item.invoiceId === invoiceId);
+                if (payment) {
+                    payment.paymentAmount = parseNumber($(this).val());
+                }
+            });
 
             // remove old values from array that does not exist now in multiselect
             InvoicePayments = InvoicePayments.filter(item => selectedInvoices.includes(item.invoiceId.toString()));
-
-            // loop through newInvoiceIds and make AJAX requests to get amount and number
-            newInvoiceIds.forEach(id => {
-                let siNo = id;
-                $.ajax({
-                    url: '@Url.Action("MultipleInvoiceBalance", "CollectionReceipt", new { area = "Filpride" })',
-                    method: "GET",
-                    data: { siNo },
-                    success: function (data) {
-                        console.log("data: " + JSON.stringify(data));
-                        if (data != null){
-                            let siText = $invoices.find(`option[value='${id}']`).text();
-                            let siBalance = data.Amount;
-                            InvoicePayments.push({
-                                invoiceId: id,
-                                invoiceNumber: siText,
-                                paymentAmount: siBalance
-                            });
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching balance:', error);
-                    }
-                });
-            });
 
             $siList.empty();
             $siAmount.empty();
@@ -488,6 +468,11 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                         $(`.paymentAmount_${siNo}`).val(formatNumber(existingPayment.paymentAmount)).attr("data-max", balance);
                     }
                     else{
+                        InvoicePayments.push({
+                            invoiceId: parseInt(siNo),
+                            invoiceNumber: $invoices.find(`option[value='${siNo}']`).text(),
+                            paymentAmount: balance
+                        });
                         $(`.paymentAmount_${siNo}`).val(formatNumber(balance)).attr("data-max", balance);
                     }
 
