@@ -777,7 +777,7 @@ body.mnav-drawer-open .mnav-drawer-overlay {
     font-weight: 500;
     color: var(--mnav-on-primary);
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .mm-item .mnav-col-item-sub,

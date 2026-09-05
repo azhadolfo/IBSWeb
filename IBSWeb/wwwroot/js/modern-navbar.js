@@ -495,7 +495,7 @@
                 var sub = document.createElement('div');
                 sub.className = 'mm-sub';
                 // Flatten all columns from the deck
-                var cols = deck.querySelectorAll(':scope > .mnav-col');
+                var cols = deck.querySelectorAll(':scope > .mnav-col:not([data-parent-col])');
                 Array.from(cols).forEach(function (col) {
                     flattenColumn(col, sub, deck);
                 });
