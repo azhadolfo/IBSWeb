@@ -48,7 +48,34 @@
 
         <!-- ── Mobile Drawer ── -->
         <nav class="mnav-drawer" id="mnav-drawer" aria-label="Mobile navigation">
-            <div class="mnav-list"></div>
+            <div class="mnav-drawer-header">
+                <span class="material-symbols-outlined mnav-drawer-avatar">account_circle</span>
+                <div class="mnav-drawer-user">
+                    <div class="mnav-drawer-user-name">@(userFullName ?? "User")</div>
+                    @if (!string.IsNullOrEmpty(selectedCompany))
+                    {
+                        <div class="mnav-drawer-user-role">@selectedCompany.ToUpper()</div>
+                    }
+                </div>
+                <button type="button" class="mnav-drawer-close" id="mnav-drawer-close" aria-label="Close navigation menu">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="mnav-drawer-body">
+                <div class="mnav-list"></div>
+            </div>
+            <div class="mnav-drawer-footer">
+                <a class="mm-item" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">
+                    <span class="material-symbols-outlined">password</span>
+                    <span>Change Password</span>
+                </a>
+                <form id="mobileLogoutForm" class="m-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit" class="mm-item mm-item-danger">
+                        <span class="material-symbols-outlined">logout</span>
+                        <span>Sign out</span>
+                    </button>
+                </form>
+            </div>
         </nav>
 
         <!-- ── Desktop Navigation ── -->

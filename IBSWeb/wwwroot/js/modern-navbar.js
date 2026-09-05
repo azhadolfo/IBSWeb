@@ -403,62 +403,173 @@
 
     /* ══════════════════════════════════════════════════════
         Mobile Drawer Controller
+        Clones desktop nav, flattens column-decks into
+        a vertical accordion tree (.mm-* classes).
     ══════════════════════════════════════════════════════ */
+    function flattenColumn(col, container, deck) {
+        var children = col.querySelectorAll(':scope > .mnav-col-item, :scope > .mnav-divider');
+        Array.from(children).forEach(function (child) {
+            if (child.classList.contains('mnav-divider')) {
+                var d = document.createElement('div');
+                d.className = 'mm-divider';
+                container.appendChild(d);
+                return;
+            }
+
+            var expandId = child.getAttribute('data-expand');
+            if (expandId) {
+                var group = document.createElement('div');
+                group.className = 'mm-group';
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'mm-trigger';
+                btn.setAttribute('aria-expanded', 'false');
+                var content = child.querySelector('.mnav-col-item-content');
+                if (content) {
+                    btn.innerHTML = content.innerHTML;
+                }
+                btn.innerHTML += '<span class="material-symbols-outlined mm-chevron">expand_more</span>';
+                group.appendChild(btn);
+
+                var sub = document.createElement('div');
+                sub.className = 'mm-sub';
+                var targetCol = deck.querySelector('.mnav-col[data-col-id="' + expandId + '"]');
+                if (targetCol) {
+                    flattenColumn(targetCol, sub, deck);
+                }
+                group.appendChild(sub);
+                container.appendChild(group);
+            } else {
+                var link = child.cloneNode(true);
+                link.className = 'mm-item';
+                link.removeAttribute('role');
+                link.removeAttribute('id');
+                link.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
+                link.querySelectorAll('[role]').forEach(function (el) { el.removeAttribute('role'); });
+                container.appendChild(link);
+            }
+        });
+    }
+
     function setupMobileDrawer() {
         var hamburger   = document.getElementById('mnav-hamburger');
+        var drawerClose = document.getElementById('mnav-drawer-close');
         var drawer      = document.getElementById('mnav-drawer');
         var overlay     = document.getElementById('mnav-drawer-overlay');
         var navArea     = document.querySelector('.mnav-nav-area');
         if (!hamburger || !drawer || !overlay || !navArea) return;
 
-        // Clone desktop nav list into drawer
         var desktopList = navArea.querySelector('.mnav-list');
         var drawerList  = drawer.querySelector('.mnav-list');
-        if (desktopList && drawerList) {
-            drawerList.innerHTML = desktopList.innerHTML;
-        }
+        if (!desktopList || !drawerList) return;
 
-        // Initialize expanding decks inside mobile drawer
-        drawer.querySelectorAll('.mnav-item[data-nav-deck]').forEach(function (item) {
-            var trigger = item.querySelector(':scope > .mnav-trigger');
-            if (trigger) {
-                trigger.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    var isOpen = item.classList.contains('mnav-open');
-                    item.classList.toggle('mnav-open');
-                    trigger.setAttribute('aria-expanded', String(!isOpen));
+        // Clone desktop nav and flatten into accordion
+        drawerList.innerHTML = '';
+        Array.from(desktopList.children).forEach(function (li) {
+            var deck = li.querySelector('.mnav-column-deck');
+            var trigger = li.querySelector(':scope > .mnav-trigger');
+
+            if (deck && trigger) {
+                // Expandable group
+                var group = document.createElement('div');
+                group.className = 'mm-group';
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'mm-trigger';
+                btn.setAttribute('aria-expanded', 'false');
+                // Copy trigger content (icon + label)
+                var clone = trigger.cloneNode(true);
+                // Remove expand_more / chevron icon from clone, we add our own
+                clone.querySelectorAll('.material-symbols-outlined, i').forEach(function (icon) {
+                    var text = (icon.textContent || '').trim();
+                    if (text === 'expand_more' || text === 'chevron_right' || icon.classList.contains('mnav-chevron')) {
+                        icon.remove();
+                    }
                 });
+                btn.innerHTML = clone.innerHTML;
+                btn.innerHTML += '<span class="material-symbols-outlined mm-chevron">expand_more</span>';
+                group.appendChild(btn);
+
+                var sub = document.createElement('div');
+                sub.className = 'mm-sub';
+                // Flatten all columns from the deck
+                var cols = deck.querySelectorAll(':scope > .mnav-col');
+                Array.from(cols).forEach(function (col) {
+                    flattenColumn(col, sub, deck);
+                });
+                group.appendChild(sub);
+                drawerList.appendChild(group);
+            } else if (trigger) {
+                // Direct link
+                var link = document.createElement('a');
+                link.className = 'mm-item';
+                link.href = trigger.getAttribute('href') || '#';
+                var cloneDirect = trigger.cloneNode(true);
+                cloneDirect.removeAttribute('role');
+                cloneDirect.removeAttribute('id');
+                cloneDirect.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
+                cloneDirect.querySelectorAll('[role]').forEach(function (el) { el.removeAttribute('role'); });
+                link.innerHTML = cloneDirect.innerHTML;
+                drawerList.appendChild(link);
             }
         });
 
-        drawer.querySelectorAll('.mnav-col-item[data-expand]').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
+        // Accordion toggle via event delegation
+        drawerList.addEventListener('click', function (e) {
+            var btn = e.target.closest('.mm-trigger');
+            if (!btn) return;
+            e.preventDefault();
 
-                var targetId = btn.getAttribute('data-expand');
-                var targetCol = drawer.querySelector('.mnav-col[data-col-id="' + targetId + '"]');
-                if (!targetCol) return;
+            var group = btn.closest('.mm-group');
+            if (!group) return;
 
-                var isExpanded = btn.classList.toggle('active');
-                targetCol.classList.toggle('active-tree');
-                btn.setAttribute('aria-expanded', String(isExpanded));
+            var wasOpen = group.classList.contains('open');
+            // Close siblings at same level
+            var siblings = group.parentElement ? group.parentElement.children : [];
+            Array.from(siblings).forEach(function (sib) {
+                if (sib !== group && sib.classList.contains('mm-group')) {
+                    sib.classList.remove('open');
+                    var st = sib.querySelector(':scope > .mm-trigger');
+                    if (st) st.setAttribute('aria-expanded', 'false');
+                }
             });
+
+            group.classList.toggle('open', !wasOpen);
+            btn.setAttribute('aria-expanded', String(!wasOpen));
         });
 
-        function open()  { document.body.classList.add('mnav-drawer-open'); overlay.classList.add('active'); hamburger.setAttribute('aria-expanded', 'true'); }
-        function close() { document.body.classList.remove('mnav-drawer-open'); overlay.classList.remove('active'); hamburger.setAttribute('aria-expanded', 'false'); }
+        function open() {
+            document.body.classList.add('mnav-drawer-open');
+            overlay.classList.add('active');
+            hamburger.setAttribute('aria-expanded', 'true');
+        }
+
+        function close() {
+            document.body.classList.remove('mnav-drawer-open');
+            overlay.classList.remove('active');
+            hamburger.setAttribute('aria-expanded', 'false');
+            // Collapse all open groups
+            drawer.querySelectorAll('.mm-group.open').forEach(function (g) {
+                g.classList.remove('open');
+                var t = g.querySelector(':scope > .mm-trigger');
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+        }
 
         hamburger.addEventListener('click', function () {
             if (document.body.classList.contains('mnav-drawer-open')) { close(); } else { open(); }
         });
+        if (drawerClose) {
+            drawerClose.addEventListener('click', close);
+        }
         overlay.addEventListener('click', close);
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && document.body.classList.contains('mnav-drawer-open')) close();
         });
         drawer.addEventListener('click', function (e) {
-            if (e.target.closest('a[href]')) close();
+            if (e.target.closest('a[href], button[type="submit"]')) close();
         });
     }
 
