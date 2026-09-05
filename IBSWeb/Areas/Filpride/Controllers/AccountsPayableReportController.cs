@@ -119,6 +119,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private static decimal NetOfVatOrZero(decimal grossAmount) => DecimalRoundingHelper.ComputeNetOfVat(grossAmount);
 
+        private static decimal NetOfVatByVatType(decimal grossAmount, string? vatType) =>
+            vatType == SD.VatType_Vatable ? NetOfVatOrZero(grossAmount) : grossAmount;
+
         private static decimal VatAmountOrZero(decimal netOfVatAmount) => DecimalRoundingHelper.ComputeVatAmount(netOfVatAmount);
 
         private static decimal EwtAmountOrZero(decimal netOfVatAmount, decimal percent) => DecimalRoundingHelper.ComputeEwtAmount(netOfVatAmount, percent);
@@ -6384,14 +6387,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "GM/ltr",
                 };
 
-                var receivingReportsThisMonth = (await _unitOfWork.FilprideReceivingReport
-                        .GetAllAsync(rr =>
-                                rr.Status == "Posted" &&
-                                rr.Date.Month == viewModel.Period.Value.Month &&
-                                rr.Date.Year == viewModel.Period.Value.Year,
-                            cancellationToken))
+                var receivingReportsThisMonth = await _unitOfWork.FilprideReceivingReport
+                    .GetAllQuery(rr =>
+                        rr.Status == "Posted" &&
+                        rr.Date.Month == viewModel.Period.Value.Month &&
+                        rr.Date.Year == viewModel.Period.Value.Year)
+                    .Include(rr => rr.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.CustomerOrderSlip)
                     .OrderBy(rr => rr.Date)
-                    .ToList();
+                    .ToListAsync(cancellationToken);
 
                 if (receivingReportsThisMonth.Count == 0)
                 {
@@ -6404,13 +6408,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
                 var listOfProducts = rrsByProduct.Select(rr => rr.Key).ToList();
 
-                var receivingReportsLastMonth = (await _unitOfWork.FilprideReceivingReport
-                        .GetAllAsync(rr =>
-                                rr.Status == "Posted" &&
-                                rr.Date < basePeriod,
-                            cancellationToken))
+                var receivingReportsLastMonth = await _unitOfWork.FilprideReceivingReport
+                    .GetAllQuery(rr =>
+                        rr.Status == "Posted" &&
+                        rr.Date < basePeriod)
+                    .Include(rr => rr.DeliveryReceipt)
+                    .ThenInclude(dr => dr!.CustomerOrderSlip)
                     .OrderBy(rr => rr.Date)
-                    .ToList();
+                    .ToListAsync(cancellationToken);
 
                 var inTransitPrevToThisMonth = receivingReportsLastMonth
                     .Where(rr =>
@@ -6533,15 +6538,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var quantityServed = groupByProduct.Sum(rr => rr.QuantityReceived);
                     var salesAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                    var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                    var salesAmountVatEx = groupByProduct.Sum(rr =>
+                        NetOfVatByVatType(rr.DeliveryReceipt!.TotalAmount, rr.DeliveryReceipt.CustomerOrderSlip?.VatType));
                     var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                     var costAmount = groupByProduct.Sum(rr => rr.Amount);
-                    var costAmountVatEx = NetOfVatOrZero(costAmount);
+                    var costAmountVatEx = groupByProduct.Sum(rr =>
+                        NetOfVatByVatType(rr.Amount, rr.PurchaseOrder!.VatType));
                     var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                     var freightAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                    var freightAmountEx = NetOfVatOrZero(freightAmount);
+                    var freightAmountEx = groupByProduct.Sum(rr =>
+                        NetOfVatByVatType(rr.DeliveryReceipt!.FreightAmount, rr.DeliveryReceipt.HaulerVatType));
                     var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                    var commissionAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                    var commissionAmount = groupByProduct.Sum(rr =>
+                        NetOfVatByVatType(rr.DeliveryReceipt!.CommissionAmount,
+                            rr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType));
                     var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                     var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                     var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
@@ -6687,15 +6697,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var quantityServed = groupByProduct.Sum(rr => rr.QuantityReceived);
                         var salesAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                        var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                        var salesAmountVatEx = groupByProduct.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.TotalAmount, rr.DeliveryReceipt.CustomerOrderSlip?.VatType));
                         var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                         var costAmount = groupByProduct.Sum(rr => rr.Amount);
-                        var costAmountVatEx = NetOfVatOrZero(costAmount);
+                        var costAmountVatEx = groupByProduct.Sum(rr =>
+                            NetOfVatByVatType(rr.Amount, rr.PurchaseOrder!.VatType));
                         var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                         var freightAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                        var freightAmountEx = NetOfVatOrZero(freightAmount);
+                        var freightAmountEx = groupByProduct.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.FreightAmount, rr.DeliveryReceipt.HaulerVatType));
                         var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                        var commissionAmount = groupByProduct.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        var commissionAmount = groupByProduct.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.CommissionAmount,
+                                rr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType));
                         var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                         var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                         var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
@@ -6832,15 +6847,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var quantityServed = receivingReport.QuantityReceived;
                         var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
-                        var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                        var salesAmountVatEx = NetOfVatByVatType(salesAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.VatType);
                         var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                         var costAmount = receivingReport.Amount;
-                        var costAmountVatEx = NetOfVatOrZero(costAmount);
+                        var costAmountVatEx = NetOfVatByVatType(costAmount, receivingReport.PurchaseOrder!.VatType);
                         var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                         var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
-                        var freightAmountEx = NetOfVatOrZero(freightAmount);
+                        var freightAmountEx = NetOfVatByVatType(freightAmount,
+                            receivingReport.DeliveryReceipt.HaulerVatType);
                         var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionAmount = NetOfVatByVatType(receivingReport.DeliveryReceipt!.CommissionAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType);
                         var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                         var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                         var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
@@ -6976,15 +6994,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var quantityServed = receivingReport.QuantityReceived;
                         var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
-                        var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                        var salesAmountVatEx = NetOfVatByVatType(salesAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.VatType);
                         var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                         var costAmount = receivingReport.Amount;
-                        var costAmountVatEx = NetOfVatOrZero(costAmount);
+                        var costAmountVatEx = NetOfVatByVatType(costAmount, receivingReport.PurchaseOrder!.VatType);
                         var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                         var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
-                        var freightAmountEx = NetOfVatOrZero(freightAmount);
+                        var freightAmountEx = NetOfVatByVatType(freightAmount,
+                            receivingReport.DeliveryReceipt.HaulerVatType);
                         var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionAmount = NetOfVatByVatType(receivingReport.DeliveryReceipt!.CommissionAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType);
                         var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                         var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                         var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
@@ -7120,15 +7141,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var quantityServed = receivingReport.QuantityReceived;
                         var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
-                        var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                        var salesAmountVatEx = NetOfVatByVatType(salesAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.VatType);
                         var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                         var costAmount = receivingReport.Amount;
-                        var costAmountVatEx = NetOfVatOrZero(costAmount);
+                        var costAmountVatEx = NetOfVatByVatType(costAmount, receivingReport.PurchaseOrder!.VatType);
                         var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                         var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
-                        var freightAmountEx = NetOfVatOrZero(freightAmount);
+                        var freightAmountEx = NetOfVatByVatType(freightAmount,
+                            receivingReport.DeliveryReceipt.HaulerVatType);
                         var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                        var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                        var commissionAmount = NetOfVatByVatType(receivingReport.DeliveryReceipt!.CommissionAmount,
+                            receivingReport.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType);
                         var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                         var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                         var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
@@ -7294,21 +7318,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 var quantityServed = receivingReport.QuantityReceived;
                                 var salesAmount = receivingReport.DeliveryReceipt!.TotalAmount;
-                                var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                                var salesAmountVatEx = NetOfVatByVatType(salesAmount,
+                                    receivingReport.DeliveryReceipt.CustomerOrderSlip?.VatType);
                                 var salesPerLiterVatEx = quantityServed > 0
                                     ? DivideOrZero(salesAmountVatEx, quantityServed)
                                     : 0m;
                                 var costAmount = receivingReport.Amount;
-                                var costAmountVatEx = NetOfVatOrZero(costAmount);
+                                var costAmountVatEx = NetOfVatByVatType(costAmount, receivingReport.PurchaseOrder!.VatType);
                                 var costPerLiterVatEx = quantityServed > 0
                                     ? DivideOrZero(costAmountVatEx, quantityServed)
                                     : 0m;
                                 var freightAmount = receivingReport.DeliveryReceipt!.FreightAmount;
-                                var freightAmountEx = NetOfVatOrZero(freightAmount);
+                                var freightAmountEx = NetOfVatByVatType(freightAmount,
+                                    receivingReport.DeliveryReceipt.HaulerVatType);
                                 var freightPerLiterEx = quantityServed > 0
                                     ? DivideOrZero(freightAmountEx, quantityServed)
                                     : 0m;
-                                var commissionAmount = receivingReport.DeliveryReceipt!.CommissionAmount;
+                                var commissionAmount = NetOfVatByVatType(receivingReport.DeliveryReceipt!.CommissionAmount,
+                                    receivingReport.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType);
                                 var commissionPerLiter = quantityServed > 0
                                     ? DivideOrZero(commissionAmount, quantityServed)
                                     : 0m;
@@ -7416,15 +7443,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row += 2;
                         var quantityServed = rrSetBySegment.Sum(rr => rr.QuantityReceived);
                         var salesAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.TotalAmount);
-                        var salesAmountVatEx = NetOfVatOrZero(salesAmount);
+                        var salesAmountVatEx = rrSetBySegment.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.TotalAmount, rr.DeliveryReceipt.CustomerOrderSlip?.VatType));
                         var salesPerLiterVatEx = DivideOrZero(salesAmountVatEx, quantityServed);
                         var costAmount = rrSetBySegment.Sum(rr => rr.Amount);
-                        var costAmountVatEx = NetOfVatOrZero(costAmount);
+                        var costAmountVatEx = rrSetBySegment.Sum(rr =>
+                            NetOfVatByVatType(rr.Amount, rr.PurchaseOrder!.VatType));
                         var costPerLiterVatEx = DivideOrZero(costAmountVatEx, quantityServed);
                         var freightAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.FreightAmount);
-                        var freightAmountEx = NetOfVatOrZero(freightAmount);
+                        var freightAmountEx = rrSetBySegment.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.FreightAmount, rr.DeliveryReceipt.HaulerVatType));
                         var freightPerLiterEx = DivideOrZero(freightAmountEx, quantityServed);
-                        var commissionAmount = rrSetBySegment.Sum(rr => rr.DeliveryReceipt!.CommissionAmount);
+                        var commissionAmount = rrSetBySegment.Sum(rr =>
+                            NetOfVatByVatType(rr.DeliveryReceipt!.CommissionAmount,
+                                rr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeVatType));
                         var commissionPerLiter = DivideOrZero(commissionAmount, quantityServed);
                         var gmAmount = RoundToFour(salesAmountVatEx - costAmountVatEx - freightAmountEx - commissionAmount);
                         var gmPerLiter = DivideOrZero(gmAmount, quantityServed);
