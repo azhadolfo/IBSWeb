@@ -329,11 +329,25 @@
                         </div>
                     </li>
 
-                    <!-- Disbursement Menu -->
-                    <li class="mnav-item" role="none">
-                        <a class="mnav-trigger" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index" role="menuitem">
-                            <span>Disbursement</span>
-                        </a>
+                    <!-- Treasury (Expanding Column Deck) -->
+                    <li class="mnav-item" data-nav-deck role="none">
+                        <button class="mnav-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span>Treasury</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-column-deck" role="menu">
+                            <div class="mnav-col" data-col-level="1" data-col-id="treasury-root">
+                                <div class="mnav-col-header">Treasury</div>
+                                <a class="mnav-col-item" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index" role="menuitem">
+                                    <div class="mnav-col-item-content">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        <div class="mnav-col-item-text">
+                                            <div class="mnav-col-item-title">Disbursement</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
                     </li>
 
                     <!-- Reports (Expanding Column Deck) -->

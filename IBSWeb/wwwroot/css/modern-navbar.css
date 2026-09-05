@@ -58,9 +58,8 @@ body.mnav-enabled {
 }
 
 @media print {
-    body.mnav-enabled {
-        padding-top: 0 !important;
-    }
+    #modern-navbar { display: none !important; }
+    body.mnav-enabled { padding-top: 0 !important; }
 }
 
 /* ── Brand ── */
@@ -555,6 +554,7 @@ body.mnav-enabled {
 
 .mnav-drawer.open,
 body.mnav-drawer-open .mnav-drawer {
+    display: flex;
     transform: translateX(0);
 }
 
@@ -567,7 +567,8 @@ body.mnav-drawer-open .mnav-drawer {
     z-index: 1055;
 }
 
-.mnav-drawer-overlay.active {
+.mnav-drawer-overlay.active,
+body.mnav-drawer-open .mnav-drawer-overlay {
     display: block;
 }
 
@@ -633,19 +634,7 @@ body.mnav-drawer-open .mnav-drawer {
     color: var(--mnav-on-primary-70);
 }
 
-@media (max-width: 1539px) {
-    .mnav-nav-area {
-        display: none;
-    }
 
-    .mnav-drawer-open .mnav-drawer {
-        display: flex;
-    }
-
-    .mnav-drawer-open .mnav-drawer-overlay {
-        display: block;
-    }
-}
 
 /* ── Spotlight Search Results Dropdown ── */
 #mnav-search-results {
