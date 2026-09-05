@@ -1349,18 +1349,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var hasWvat = si.CustomerOrderSlip?.HasWVAT ?? si.Customer!.WithHoldingVat;
 
                     var netDiscount = si.Amount - si.Discount;
-                    var balanceWithDmCmAmount = si.Balance - si.Discount;
+                    var receiptAmount = crId.HasValue
+                        ? await _dbContext.FilprideCollectionReceiptDetails
+                            .Where(detail => detail.CollectionReceiptId == crId.Value &&
+                                             detail.InvoiceNo == si.SalesInvoiceNo)
+                            .SumAsync(detail => detail.Amount, cancellationToken)
+                        : 0m;
+                    var balance = si.Balance + receiptAmount;
+                    var amountPaid = si.AmountPaid - receiptAmount;
                     var netOfVatAmount = vatType == SD.VatType_Vatable
-                        ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(balanceWithDmCmAmount)
-                        : balanceWithDmCmAmount;
+                        ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(balance)
+                        : balance;
                     var withHoldingTaxAmount = hasEwt
                         ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.DeliveryReceipt?.CwtPercent ?? 0.0100m)
                         : 0;
                     var withHoldingVatAmount = hasWvat
                         ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, si.DeliveryReceipt?.CwvPercent ?? 0.0500m)
                         : 0;
-                    var balance = si.Balance;
-                    var amountPaid = si.AmountPaid;
 
                     return Json(new
                     {
@@ -2316,11 +2321,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var hasWvat = salesInvoice.CustomerOrderSlip?.HasWVAT ?? salesInvoice.Customer!.WithHoldingVat;
 
                 var amount = salesInvoice.Amount;
-                var amountPaid = salesInvoice.AmountPaid;
-                var balanceWithDmCmAmount = salesInvoice.Balance - salesInvoice.Discount;
+                var receiptAmount = collectionReceiptId.HasValue
+                    ? await _dbContext.FilprideCollectionReceiptDetails
+                        .Where(detail => detail.CollectionReceiptId == collectionReceiptId.Value &&
+                                         detail.InvoiceNo == salesInvoice.SalesInvoiceNo)
+                        .SumAsync(detail => detail.Amount, cancellationToken)
+                    : 0m;
+                var amountPaid = salesInvoice.AmountPaid - receiptAmount;
+                var balance = salesInvoice.Balance + receiptAmount;
                 var netOfVatAmount = vatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(balanceWithDmCmAmount)
-                    : balanceWithDmCmAmount;
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(balance)
+                    : balance;
                 var vatAmount = vatType == SD.VatType_Vatable
                     ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount)
                     : 0m;
@@ -2330,7 +2341,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var wvatAmount = hasWvat
                     ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, salesInvoice.DeliveryReceipt?.CwvPercent ?? 0.0500m)
                     : 0m;
-                var balance = balanceWithDmCmAmount;
 
                 return Json(new
                 {
