@@ -599,8 +599,10 @@
             if (isOpen) { close(); } else { menu.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
         });
 
+        var container = trigger.closest('.mnav-user-dropdown');
+
         document.addEventListener('click', function (e) {
-            if (!trigger.contains(e.target)) close();
+            if (container && !container.contains(e.target)) close()
         });
 
         document.addEventListener('keydown', function (e) {
