@@ -18,10 +18,8 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
     }
 
-    var currentUser = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
-    var userDepartment = ViewBag.GetUserDepartment as string ?? currentUser?.Department ?? string.Empty;
+    var userDepartment = ViewBag.GetUserDepartment as string ?? string.Empty;
     var userFullName = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value
-                       ?? currentUser?.Name
                        ?? UserManager.GetUserName(User);
 }
 
@@ -29,11 +27,6 @@
 <div id="mnav-overlay"></div>
 
 <header id="modern-navbar" role="banner" aria-label="Main Navigation">
-
-    <!-- ── Hamburger (Mobile) ── -->
-    <button class="mnav-hamburger" id="mnav-hamburger" aria-label="Toggle navigation menu" aria-controls="mnav-drawer" aria-expanded="false" type="button">
-        <span class="material-symbols-outlined">menu</span>
-    </button>
 
     <!-- ── Brand ── -->
     <a class="mnav-brand" asp-area="" asp-controller="Home" asp-action="Index">
@@ -43,6 +36,11 @@
 
     @if (SignInManager.IsSignedIn(User))
     {
+        <!-- ── Hamburger (Mobile) ── -->
+        <button class="mnav-hamburger" id="mnav-hamburger" aria-label="Toggle navigation menu" aria-controls="mnav-drawer" aria-expanded="false" type="button">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+
         <!-- ── Mobile Drawer Overlay ── -->
         <div class="mnav-drawer-overlay" id="mnav-drawer-overlay"></div>
 

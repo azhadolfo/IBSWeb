@@ -175,14 +175,14 @@ body.mnav-enabled {
     box-sizing: border-box;
     max-height: calc(100vh - var(--mnav-height) - 30px);
     overflow-y: auto;
-    animation: mnavColSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: mnav-col-slide-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mnav-col:last-child {
     border-right: none;
 }
 
-@keyframes mnavColSlideIn {
+@keyframes mnav-col-slide-in {
     from {
         opacity: 0;
         transform: translateX(-12px);
@@ -786,7 +786,7 @@ body.mnav-drawer-open .mnav-drawer-overlay {
     color: var(--mnav-on-primary-70);
     margin-top: 1px;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 /* ── Nested groups: indentation ── */

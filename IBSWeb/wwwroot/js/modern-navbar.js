@@ -242,17 +242,17 @@
         return drop;
     }
 
-    function renderSearchResults(drop, query) {
+    function renderSearchResults(drop, query, links) {
         drop.innerHTML = '';
 
         if (!query) { drop.style.display = 'none'; return; }
 
-        var q     = query.toLowerCase();
-        var links = collectAllNavLinks().filter(function (l) {
+        var q       = query.toLowerCase();
+        var matched = links.filter(function (l) {
             return l.label.toLowerCase().includes(q) || l.section.toLowerCase().includes(q) || l.url.toLowerCase().includes(q);
         });
 
-        if (links.length === 0) {
+        if (matched.length === 0) {
             drop.style.display = 'block';
             drop.innerHTML = '<div class="mnav-search-empty"><span class="material-symbols-outlined">search_off</span>No results for "<strong>' + escapeHtml(query) + '</strong>"</div>';
             return;
@@ -261,7 +261,7 @@
         drop.style.display = 'block';
 
         var grouped = {};
-        links.forEach(function (l) {
+        matched.forEach(function (l) {
             var sec = l.section || 'Navigation';
             if (!grouped[sec]) grouped[sec] = [];
             grouped[sec].push(l);
@@ -308,6 +308,7 @@
         wrap.appendChild(drop);
 
         var activeIndex = -1;
+        var navLinksCache = collectAllNavLinks();
 
         function getItems() {
             return Array.from(drop.querySelectorAll('.mnav-search-result-item'));
@@ -327,7 +328,7 @@
 
         input.addEventListener('input', function () {
             activeIndex = -1;
-            renderSearchResults(drop, input.value.trim());
+            renderSearchResults(drop, input.value.trim(), navLinksCache);
         });
 
         drop.addEventListener('mouseover', function (e) {
@@ -358,7 +359,7 @@
             if (!isOpen || !items.length) {
                 if (e.key === 'ArrowDown' && input.value.trim()) {
                     e.preventDefault();
-                    renderSearchResults(drop, input.value.trim());
+                    renderSearchResults(drop, input.value.trim(), navLinksCache);
                     updateSelection(getItems(), 0);
                 }
                 return;
