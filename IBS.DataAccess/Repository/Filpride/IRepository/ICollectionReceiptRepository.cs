@@ -31,11 +31,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task PostAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
 
-        Task DepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
-
-        Task ReturnedCheck(string crNo, string company, string userName, CancellationToken cancellationToken = default);
-
-        Task RedepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
+        Task ApplyClearingDateAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
 
         Task ApplyCostOfMoney(FilprideDeliveryReceipt deliveryReceipt, decimal costOfMoney, string currentUser, DateOnly depositedDate, CancellationToken cancellationToken = default);
 

@@ -673,7 +673,7 @@ namespace IBS.Services
 
                 if (collectionReceipt.DepositedDate != null && collectionReceipt.ClearedDate != null)
                 {
-                    await unitOfWork.FilprideCollectionReceipt.DepositAsync(collectionReceipt, cancellationToken);
+                    await unitOfWork.FilprideCollectionReceipt.ApplyClearingDateAsync(collectionReceipt, cancellationToken);
                     await ReApplyCollectionCostOfMoneyAsync(collectionReceipt, company, cancellationToken);
                 }
             }
