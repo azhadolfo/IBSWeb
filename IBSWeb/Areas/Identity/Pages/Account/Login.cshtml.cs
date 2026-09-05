@@ -153,14 +153,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                         await _signInManager.UserManager.AddClaimAsync(user, new Claim("Company", "Filpride"));
                     }
 
-                    var additionalClaims = new List<Claim>();
-
-                    if (!existingClaims.Any(claim => claim.Type == ClaimTypes.GivenName))
-                    {
-                        additionalClaims.Add(new Claim(ClaimTypes.GivenName, user.Name));
-                    }
-
-                    await _signInManager.SignInWithClaimsAsync(user, Input.RememberMe, additionalClaims);
+                    await _signInManager.SignInAsync(user, Input.RememberMe);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
