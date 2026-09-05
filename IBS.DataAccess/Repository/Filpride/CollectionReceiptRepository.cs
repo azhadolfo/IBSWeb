@@ -373,25 +373,36 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task RemoveMultipleSIPayment(int[] id, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
+            if (id.Length == 0 || id.Length != paidAmount.Length)
+            {
+                throw new ArgumentException("Invoice IDs and payment amounts must have matching non-empty lengths.");
+            }
+
             var salesInvoices = await _db
                 .FilprideSalesInvoices
                 .Where(si => id.Contains(si.SalesInvoiceId))
-                .ToListAsync(cancellationToken);
+                .ToDictionaryAsync(si => si.SalesInvoiceId, cancellationToken);
+
+            if (id.Any(invoiceId => !salesInvoices.ContainsKey(invoiceId)))
+            {
+                throw new InvalidOperationException("Sales invoice not found.");
+            }
 
             for (var i = 0; i < paidAmount.Length; i++)
             {
+                var salesInvoice = salesInvoices[id[i]];
                 var total = paidAmount[i] + offsetAmount;
-                salesInvoices[i].AmountPaid -= total;
-                salesInvoices[i].Balance += total;
+                salesInvoice.AmountPaid -= total;
+                salesInvoice.Balance += total;
 
-                if ((!salesInvoices[i].IsPaid || salesInvoices[i].PaymentStatus != "Paid") &&
-                    (!salesInvoices[i].IsPaid || salesInvoices[i].PaymentStatus != "OverPaid"))
+                if ((!salesInvoice.IsPaid || salesInvoice.PaymentStatus != "Paid") &&
+                    (!salesInvoice.IsPaid || salesInvoice.PaymentStatus != "OverPaid"))
                 {
                     continue;
                 }
 
-                salesInvoices[i].IsPaid = false;
-                salesInvoices[i].PaymentStatus = "Pending";
+                salesInvoice.IsPaid = false;
+                salesInvoice.PaymentStatus = "Pending";
             }
 
             await _db.SaveChangesAsync(cancellationToken);

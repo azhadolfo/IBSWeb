@@ -728,6 +728,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                    existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+                {
+                    TempData["warning"] = "Only pending collection receipts can be edited.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, existingModel.TransactionDate, cancellationToken))
@@ -834,6 +841,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (existingModel == null)
             {
                 return NotFound();
+            }
+
+            if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+            {
+                TempData["warning"] = "Only pending collection receipts can be edited.";
+                return RedirectToAction(nameof(Index));
             }
 
             var companyClaims = await GetCompanyClaimAsync();
@@ -1535,6 +1549,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                    existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+                {
+                    TempData["warning"] = "Only pending collection receipts can be edited.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 var companyClaims = await GetCompanyClaimAsync();
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
@@ -1626,6 +1647,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (existingModel == null)
             {
                 return NotFound();
+            }
+
+            if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+            {
+                TempData["warning"] = "Only pending collection receipts can be edited.";
+                return RedirectToAction(nameof(Index));
             }
 
             var companyClaims = await GetCompanyClaimAsync();
@@ -1804,6 +1832,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                    existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+                {
+                    TempData["warning"] = "Only pending collection receipts can be edited.";
+                    return RedirectToAction(nameof(ServiceInvoiceIndex));
+                }
+
                 var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
                 // if (await _unitOfWork.IsPeriodPostedAsync(Module.CollectionReceipt, existingModel.TransactionDate, cancellationToken))
@@ -1896,6 +1931,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (existingModel == null)
             {
                 return NotFound();
+            }
+
+            if (existingModel.Status != nameof(CollectionReceiptStatus.Pending) ||
+                existingModel.PostedBy != null || existingModel.CanceledBy != null || existingModel.VoidedBy != null)
+            {
+                TempData["warning"] = "Only pending collection receipts can be edited.";
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
             }
 
             var companyClaims = await GetCompanyClaimAsync();
@@ -2081,6 +2123,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
             }
 
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null)
+            {
+                TempData["warning"] = "Only pending collection receipts can be posted.";
+                return RedirectToAction(model.ServiceInvoiceId != null ? nameof(ServiceInvoiceIndex) : nameof(Index));
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -2123,6 +2172,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model == null)
             {
                 return NotFound();
+            }
+
+            if (model.PostedBy == null || model.CanceledBy != null || model.VoidedBy != null ||
+                model.Status is not (nameof(CollectionReceiptStatus.Posted) or
+                    nameof(CollectionReceiptStatus.Deposited) or nameof(CollectionReceiptStatus.Returned) or
+                    nameof(CollectionReceiptStatus.Redeposited) or nameof(CollectionReceiptStatus.Cleared)))
+            {
+                return Json(new { success = false, message = "Only active posted collection receipts can be voided." });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -2190,6 +2247,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model == null)
             {
                 return NotFound();
+            }
+
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null)
+            {
+                return Json(new { success = false, message = "Only pending collection receipts can be canceled." });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
