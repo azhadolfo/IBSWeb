@@ -572,6 +572,12 @@
         drawer.addEventListener('click', function (e) {
             if (e.target.closest('a[href], button[type="submit"]')) close();
         });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 1540 && document.body.classList.contains('mnav-drawer-open')) {
+                close();
+            }
+        });
     }
 
     /* ══════════════════════════════════════════════════════

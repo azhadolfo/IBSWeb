@@ -12,13 +12,15 @@
 @{
     var branding = BrandingOptions.Value;
     var selectedCompany = string.Empty;
+    var userDepartment = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
+        var currentUser = await UserManager.GetUserAsync(User);
+        userDepartment = currentUser?.Department ?? string.Empty;
     }
 
-    var userDepartment = ViewBag.GetUserDepartment as string ?? string.Empty;
     var userFullName = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value
                        ?? UserManager.GetUserName(User);
 }
