@@ -9,6 +9,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility;
 using IBS.Utility.Helpers;
+using IBSWeb.Api;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -144,6 +145,14 @@ app.MapPost("/jobs/daily-service",
     .AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy")).AllowAnonymous();
+
+var dmcmApiKey = builder.Configuration["ApiKeys:DMCM_API_KEY"];
+if (string.IsNullOrWhiteSpace(dmcmApiKey))
+{
+    throw new InvalidOperationException("ApiKeys:DMCM_API_KEY is not configured");
+}
+
+app.MapJournalVoucherEndpoints(dmcmApiKey);
 
 app.UseSerilogRequestLogging();
 
