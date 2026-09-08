@@ -50,4 +50,8 @@
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot\img\Filpride-logo.png" />
+  </ItemGroup>
+
 </Project>
