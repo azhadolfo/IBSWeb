@@ -37,7 +37,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.SeriesNumber.Length)
                 .ThenByDescending(x => x.SeriesNumber)
                 .FirstOrDefaultAsync(x =>
-                    
+
                     x.Type == nameof(DocumentType.Documented),
                     cancellationToken);
 
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(x => x.SeriesNumber.Length)
                 .ThenByDescending(x => x.SeriesNumber)
                 .FirstOrDefaultAsync(x =>
-                        
+
                         x.Type == nameof(DocumentType.Undocumented),
                     cancellationToken);
 
@@ -77,7 +77,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
 
-        public async Task DepositAsync(FilprideProvisionalReceipt provisionalReceipt, CancellationToken cancellationToken = default)
+        public async Task ApplyClearingDateAsync(FilprideProvisionalReceipt provisionalReceipt, CancellationToken cancellationToken = default)
         {
             var ledgers = new List<FilprideGeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -91,7 +91,7 @@ namespace IBS.DataAccess.Repository.Filpride
             ledgers.Add(
                 new FilprideGeneralLedgerBook
                 {
-                    Date = provisionalReceipt.TransactionDate,
+                    Date = provisionalReceipt.ClearedDate!.Value,
                     Reference = provisionalReceipt.SeriesNumber,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
@@ -113,7 +113,7 @@ namespace IBS.DataAccess.Repository.Filpride
             ledgers.Add(
                 new FilprideGeneralLedgerBook
                 {
-                    Date = provisionalReceipt.TransactionDate,
+                    Date = provisionalReceipt.ClearedDate!.Value,
                     Reference = provisionalReceipt.SeriesNumber,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
@@ -128,44 +128,6 @@ namespace IBS.DataAccess.Repository.Filpride
             );
 
             await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task ReturnedCheck(string prNo, string company, string userName, CancellationToken cancellationToken = default)
-        {
-            var originalEntries = await _db.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == prNo
-)
-                .ToListAsync(cancellationToken);
-
-            var reversalEntries = new List<FilprideGeneralLedgerBook>();
-            var dateToday = DateTimeHelper.GetCurrentPhilippineTime();
-
-            foreach (var originalEntry in originalEntries)
-            {
-                var reversalEntry = new FilprideGeneralLedgerBook
-                {
-                    Reference = originalEntry.Reference,
-                    Date = DateOnly.FromDateTime(dateToday),
-                    AccountNo = originalEntry.AccountNo,
-                    AccountTitle = originalEntry.AccountTitle,
-                    Description = "Reversal of entries due to returned checks.",
-                    Debit = originalEntry.Credit,
-                    Credit = originalEntry.Debit,
-                    CreatedBy = userName,
-                    CreatedDate = dateToday,
-                    IsPosted = true,
-                    AccountId = originalEntry.AccountId,
-                    SubAccountType = originalEntry.SubAccountType,
-                    SubAccountId = originalEntry.SubAccountId,
-                    SubAccountName = originalEntry.SubAccountName,
-                    ModuleType = originalEntry.ModuleType,
-                };
-
-                reversalEntries.Add(reversalEntry);
-            }
-
-            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(reversalEntries, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
 

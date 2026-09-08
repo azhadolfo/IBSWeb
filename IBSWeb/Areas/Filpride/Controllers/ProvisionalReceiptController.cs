@@ -238,6 +238,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         "transactionDate" => ascending
                             ? query.OrderBy(pr => pr.TransactionDate)
                             : query.OrderByDescending(pr => pr.TransactionDate),
+                        "depositedDate" => ascending
+                            ? query.OrderBy(pr => pr.DepositedDate)
+                            : query.OrderByDescending(pr => pr.DepositedDate),
+                        "clearedDate" => ascending
+                            ? query.OrderBy(pr => pr.ClearedDate)
+                            : query.OrderByDescending(pr => pr.ClearedDate),
                         "referenceNo" => ascending
                             ? query.OrderBy(pr => pr.ReferenceNo)
                             : query.OrderByDescending(pr => pr.ReferenceNo),
@@ -284,7 +290,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         pr.Status,
                         pr.PostedBy,
                         pr.VoidedBy,
-                        pr.CanceledBy
+                        pr.CanceledBy,
+                        pr.BankId
                     })
                     .ToListAsync(cancellationToken);
 
@@ -423,7 +430,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
                 await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, model.TransactionDate, cancellationToken))
             {
                 TempData["error"] = "Only pending receipts in an open period can be edited.";
@@ -456,7 +464,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
                 await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, model.TransactionDate, cancellationToken))
             {
                 TempData["error"] = "Only pending receipts in an open period can be edited.";
@@ -597,10 +606,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (model.PostedBy != null)
+            if (model.PostedBy != null || model.Status == nameof(CollectionReceiptStatus.Posted))
             {
                 TempData["info"] = "Provisional receipt has already been posted.";
                 return RedirectToAction(nameof(Print), new { id });
+            }
+
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null)
+            {
+                TempData["warning"] = "Only pending provisional receipts can be posted.";
+                return RedirectToAction(nameof(Index));
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -631,6 +647,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(Print), new { id });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
@@ -647,6 +665,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model == null)
             {
                 return NotFound();
+            }
+
+            if (model.PostedBy == null || model.CanceledBy != null || model.VoidedBy != null ||
+                model.Status is not (nameof(CollectionReceiptStatus.Posted) or
+                    nameof(CollectionReceiptStatus.Deposited) or nameof(CollectionReceiptStatus.Returned) or
+                    nameof(CollectionReceiptStatus.Redeposited) or nameof(CollectionReceiptStatus.Cleared)))
+            {
+                return Json(new { success = false, message = "Only active posted provisional receipts can be voided." });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -667,20 +693,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Provisional receipt has been voided.";
+                return Json(new { success = true, message = $"Provisional Receipt #{model.SeriesNumber} has been voided successfully." });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to void provisional receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
                     ex.Message, ex.StackTrace, GetUserFullName());
+                return Json(new { success = false, message = ex.Message });
             }
-
-            return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Policy = nameof(ProvisionalReceipt.ProvisionalReceiptCancel))]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -698,6 +724,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            if (model.Status != nameof(CollectionReceiptStatus.Pending) ||
+                model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null)
+            {
+                return Json(new { success = false, message = "Only pending provisional receipts can be canceled." });
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -713,17 +745,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Provisional receipt has been canceled.";
+                return Json(new { success = true, message = $"Provisional Receipt #{model.SeriesNumber} has been cancelled successfully." });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to cancel provisional receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
                     ex.Message, ex.StackTrace, GetUserFullName());
+                return Json(new { success = false, message = ex.Message });
             }
-
-            return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Policy = nameof(ProvisionalReceipt.ProvisionalReceiptAddDepositInfo))]
@@ -744,6 +774,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (bank == null || model == null)
             {
                 return NotFound();
+            }
+
+            if (model.Status != nameof(CollectionReceiptStatus.Posted))
+            {
+                TempData["warning"] = "This provisional receipt is not pending add deposit info.";
+                return RedirectToAction(nameof(Index));
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -795,6 +831,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            if (model.Status is not (nameof(CollectionReceiptStatus.Deposited) or
+                nameof(CollectionReceiptStatus.Redeposited)))
+            {
+                TempData["warning"] = "This provisional receipt is not in a valid status.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -824,7 +867,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [Authorize(Policy = nameof(ProvisionalReceipt.ProvisionalReceiptRedeposit))]
         [HttpGet]
-        public async Task<IActionResult> Redeposit(int id, DateOnly redepositDate, CancellationToken cancellationToken)
+        public async Task<IActionResult> Redeposit(int id, int bankId, DateOnly redepositDate, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -833,18 +876,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == bankId, cancellationToken);
             var model = await _unitOfWork.ProvisionalReceipt
                 .GetAsync(pr => pr.Id == id, cancellationToken);
 
-            if (model == null)
+            if (bank == null || model == null)
             {
                 return NotFound();
+            }
+
+            if (model.Status != nameof(CollectionReceiptStatus.Returned))
+            {
+                TempData["warning"] = "This provisional receipt is not in a valid status.";
+                return RedirectToAction(nameof(Index));
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
+                model.BankId = bank.BankAccountId;
+                model.BankAccountName = bank.AccountName;
+                model.BankAccountNo = bank.AccountNo;
                 model.DepositedDate = redepositDate;
                 model.ClearedDate = null;
                 model.Status = nameof(CollectionReceiptStatus.Redeposited);
@@ -887,6 +941,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            if (model.Status is not (nameof(CollectionReceiptStatus.Deposited) or
+                nameof(CollectionReceiptStatus.Redeposited)))
+            {
+                TempData["warning"] = "This provisional receipt is not pending apply clearing date.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -898,7 +959,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.ClearedDate = clearingDate;
                 model.Status = nameof(CollectionReceiptStatus.Cleared);
-                await _unitOfWork.ProvisionalReceipt.DepositAsync(model, cancellationToken);
+                await _unitOfWork.ProvisionalReceipt.ApplyClearingDateAsync(model, cancellationToken);
 
                 var auditTrail = new FilprideAuditTrail(GetUserFullName(),
                     $"Apply clearing date for provisional receipt#{model.SeriesNumber}", "Provisional Receipt");
@@ -930,6 +991,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                           .GetAsync(x => x.Id == id, cancellationToken)
                                                       ?? throw new NullReferenceException("Provisional receipt id not found.");
 
+                if (provisionalReceipt.PostedDate == null)
+                {
+                    throw new ArgumentException("The provisional receipt must be posted before proceeding.");
+                }
+
                 if (await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, provisionalReceipt.TransactionDate, cancellationToken))
                 {
                     TempData["error"] = $"Cannot unpost this record because the period {provisionalReceipt.TransactionDate:MMM yyyy} is already closed.";
@@ -938,7 +1004,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 provisionalReceipt.PostedBy = null;
                 provisionalReceipt.PostedDate = null;
-                provisionalReceipt.Status = nameof(Status.Pending);
+                provisionalReceipt.Status = nameof(CollectionReceiptStatus.Pending);
 
                 #region --Audit Trail Recording
 
