@@ -1,0 +1,110 @@
+@using System.Globalization
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
+            <span class="modern-label" style="color: var(--on-surface)">Reports</span>
+        </div>
+        <h1 class="modern-headline-lg">MMSI Reports</h1>
+
+        <div class="modern-grid" style="margin-top: 1.5rem;">
+            <div class="modern-col-12">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">receipt_long</span>
+                            <h2 class="modern-headline-md">Dispatch for Billing</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 1rem;">
+                            <p class="text-sm" style="color: var(--on-surface-variant);">Dispatch tickets ready for billing with tariff and BAF amounts.</p>
+                            <form method="post" action="@Url.Action("DispatchForBilling", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
+                                <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
+                                    <div>
+                                        <label class="modern-label">From</label>
+                                        <input type="date" name="dateFrom" class="modern-input w-100" required>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">To</label>
+                                        <input type="date" name="dateTo" class="modern-input w-100" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="modern-btn-primary w-100">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">download</span> Download Excel
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">summarize</span>
+                            <h2 class="modern-headline-md">Dispatch Ticket Summary</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 1rem;">
+                            <p class="text-sm" style="color: var(--on-surface-variant);">Detailed dispatch summary with billing and collection info.</p>
+                            <form method="post" action="@Url.Action("DispatchTicketSummary", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
+                                <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
+                                    <div>
+                                        <label class="modern-label">From</label>
+                                        <input type="date" name="dateFrom" class="modern-input w-100" required>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">To</label>
+                                        <input type="date" name="dateTo" class="modern-input w-100" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="modern-btn-primary w-100">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">download</span> Download Excel
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">monitoring</span>
+                            <h2 class="modern-headline-md">Sales Summary (AR Monitoring)</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 1rem;">
+                            <p class="text-sm" style="color: var(--on-surface-variant);">AR monitoring report with trip details per month.</p>
+                            <form method="post" action="@Url.Action("SalesSummary", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
+                                <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
+                                    <div>
+                                        <label class="modern-label">Month</label>
+                                        <select name="month" class="modern-input" style="width: auto !important;" required>
+                                            @for (int m = 1; m <= 12; m++)
+                                            {
+                                                <option value="@m" selected="@(m == DateTime.Now.Month ? true : null)">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">Year</label>
+                                        <select name="year" class="modern-input" style="width: auto !important;" required>
+                                            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year; y++)
+                                            {
+                                                <option value="@y" selected="@(y == DateTime.Now.Year ? true : null)">@y</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="modern-btn-primary w-100">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">download</span> Download Excel
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

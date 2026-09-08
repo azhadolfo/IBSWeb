@@ -1,0 +1,152 @@
+@{
+
+
+    ViewData["Title"] = "Export Customers";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Export Customers</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="modern-btn-primary" id="exportToExcelBtn">
+                    <span class="material-symbols-outlined">file_download</span>
+                    EXPORT TO EXCEL
+                </button>
+                <a asp-action="Index" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span> BACK
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">file_download</span>
+                    <h2 class="modern-headline-md">Filter & Export</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Date From:</label>
+                    <input type="date" id="dateFrom" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Date To:</label>
+                    <input type="date" id="dateTo" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="customerTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Customer Code</th>
+                            <th>Customer Name</th>
+                            <th>Customer Tin</th>
+                            <th>Business Style</th>
+                            <th>Customer Terms</th>
+                            <th>Customer Type</th>
+                            <th>Created Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts{
+    <script>
+        let selectedRecords = new Set();
+
+        $(document).ready(function () {
+            let dateFromValue = localStorage.getItem('exportCustomerDateFrom') || "";
+            let dateToValue = localStorage.getItem('exportCustomerDateTo') || "";
+            $('#dateFrom').val(dateFromValue);
+            $('#dateTo').val(dateToValue);
+
+            let table = $('#customerTable').DataTable(ModernTable.config({
+                order: [[1, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                serverSide: true,
+                ajax: ModernTable.ajax('@Url.Action("GetCustomerList", "Customer", new { area = "User" })', function(d) {
+                    d.dateFrom = $('#dateFrom').val() || null;
+                    d.dateTo = $('#dateTo').val() || null;
+                    return d;
+                }),
+                columns: [
+                    {
+                        data: 'customerId',
+                        orderable: false,
+                        searchable: false,
+                        render: DataTable.render.select()
+                    },
+                    { data: 'customerCode' },
+                    { data: 'customerName' },
+                    { data: 'customerTin' },
+                    { data: 'businessStyle' },
+                    { data: 'customerTerms' },
+                    { data: 'customerType' },
+                    {
+                        data: "createdDate",
+                        render: (data) => ModernTable.render.date(data)
+                    }
+                ],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                }
+            }));
+
+            table.on('select deselect', function(e, dt, type, indexes) {
+                if (type === 'row') {
+                    indexes.forEach(function(idx) {
+                        let id = table.row(idx).data().customerId;
+                        selectedRecords[e.type === 'select' ? 'add' : 'delete'](id);
+                    });
+                }
+            });
+
+            $('#dateFrom, #dateTo').on('change', function() {
+                localStorage.setItem('exportCustomerDateFrom', $('#dateFrom').val());
+                localStorage.setItem('exportCustomerDateTo', $('#dateTo').val());
+                table.ajax.reload();
+            });
+
+            $('#exportToExcelBtn').on('click', exportToExcel);
+        });
+
+        function exportToExcel() {
+            let selectedIds = Array.from(selectedRecords).join(',');
+
+            if (selectedIds) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Export", "Customer", new { area = "User" })';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedRecord';
+                input.value = selectedIds;
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = $('input[name="__RequestVerificationToken"]').val();
+
+                form.appendChild(input);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                ModernAlert.warning('No Customer selected.');
+            }
+        }
+    </script>
+}

@@ -1,0 +1,91 @@
+@{
+
+
+    ViewData["Title"] = "Customers";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Customers</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-area="User" asp-controller="Customer" asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE CUSTOMER
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">people</span>
+                    <h2 class="modern-headline-md">Customer List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>Customer Code</th>
+                            <th>Customer Name</th>
+                            <th>Payment Terms</th>
+                            <th>Vat Type</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Customer", new { area = "User" })';
+            const deactivateUrl = '@Url.Action("Deactivate", "Customer", new { area = "User" })';
+            const activateUrl = '@Url.Action("Activate", "Customer", new { area = "User" })';
+
+            $('#customersTable').DataTable(ModernTable.config({
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { targets: [4, 5], className: 'text-center' },
+                    { targets: [5], orderable: false }
+                ],
+                ajax: $.extend(ModernTable.ajax("@Url.Action("GetCustomersList", "Customer", new { area = "User" })"), {
+                    error: function() { ModernAlert.error('An error occurred while loading the data'); }
+                }),
+                columns: [
+                    { data: "customerCode" },
+                    { data: "customerName" },
+                    { data: "customerTerms" },
+                    { data: "vatType" },
+                    {
+                        data: "isActive",
+                        render: (data) => ModernTable.render.badge(data ? "Active" : "Inactive", data ? "status-open" : "status-closed")
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.customerId}` },
+                            row.isActive
+                                ? { label: 'Deactivate', icon: 'person_off', url: `${deactivateUrl}?id=${row.customerId}`, isError: true }
+                                : { label: 'Activate', icon: 'person_check', url: `${activateUrl}?id=${row.customerId}` }
+                        ])
+                    }
+                ]
+            }));
+        });
+    </script>
+}

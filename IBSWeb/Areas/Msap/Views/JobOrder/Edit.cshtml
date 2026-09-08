@@ -1,0 +1,240 @@
+@model IBS.Models.MSAP.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = "Edit Job Order";
+    ViewData["IsFullWidth"] = true;
+    bool hasTickets = ViewData["HasTickets"] as bool? ?? false;
+}
+
+<div class="modern-layout">
+    <form asp-action="Edit" method="post" id="jobOrderForm">
+        <input type="hidden" asp-for="JobOrderId" />
+        
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Job Orders</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Details" asp-route-id="@Model.JobOrderId">@ViewData["JobOrderNumber"]</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit</span>
+                    </div>
+                    <h1 class="modern-headline-lg">Edit Job Order</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="confirmEditBtn">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            @if (hasTickets)
+            {
+                <div class="modern-card" style="background-color: #fff8e1; border-color: #ffe082; color: #856404; margin-bottom: 0.5rem;">
+                    <div class="modern-card-body flex flex-row items-center gap-4">
+                        <span class="material-symbols-outlined" style="font-size: 32px;">warning</span>
+                        <div>
+                            <p class="font-bold text-sm mb-1">Existing Dispatch Tickets Detected</p>
+                            <p class="text-xs mb-0">Changing Vessel, Port, or Terminal may affect consistency with existing tickets. Please review them after saving.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="modern-grid">
+                <!-- Left Column: Primary Logistics & Remarks (col-8) -->
+                <section class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">anchor</span>
+                            <h2 class="modern-headline-md">Logistics & Vessel Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="modern-grid">
+                                <div class="modern-col-8">
+                                    <label asp-for="CustomerId" class="modern-label">Customer <span class="text-error">*</span></label>
+                                    <div id="CustomerContainer">
+                                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerId" data-placeholder="-- Select Customer --">
+                                            <option value="">-- Select Customer --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="Date" class="modern-label">Order Date</label>
+                                    <input asp-for="Date" type="date" class="modern-input" />
+                                    <span asp-validation-for="Date" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-2">
+                                <div class="modern-col-4">
+                                    <label asp-for="VesselId" class="modern-label">Vessel</label>
+                                    <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" id="VesselSelect" data-placeholder="-- Select Vessel --">
+                                        <option value="">-- Select Vessel --</option>
+                                    </select>
+                                    <span asp-validation-for="VesselId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="PortId" class="modern-label">Port</label>
+                                    <select asp-for="PortId" asp-items="@Model.Ports" class="js-modern-select" id="PortId" data-placeholder="-- Select Port --">
+                                        <option value="">-- Select Port --</option>
+                                    </select>
+                                    <span asp-validation-for="PortId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="TerminalId" class="modern-label">Terminal</label>
+                                    <select asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" id="TerminalId" data-placeholder="-- Select Terminal --">
+                                        <option value="">-- Select Terminal --</option>
+                                    </select>
+                                    <span asp-validation-for="TerminalId" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card" style="flex: 1;">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">notes</span>
+                            <h2 class="modern-headline-md">Remarks</h2>
+                        </div>
+                        <div class="modern-card-body" style="height: 100%;">
+                            <textarea asp-for="Remarks" class="modern-input" style="height: 100%; min-height: 150px;" placeholder="Additional notes..."></textarea>
+                            <span asp-validation-for="Remarks" class="text-error text-xs"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Metadata & Timing (col-4) -->
+                <section class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">description</span>
+                            <h2 class="modern-headline-md">References</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div>
+                                <label asp-for="COSNumber" class="modern-label">COS Number</label>
+                                <input asp-for="COSNumber" class="modern-input" placeholder="Optional" maxlength="20" />
+                                <span asp-validation-for="COSNumber" class="text-error text-xs"></span>
+                            </div>
+                            <div class="mt-3">
+                                <label asp-for="VoyageNumber" class="modern-label">Voyage Number</label>
+                                <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="100" />
+                                <span asp-validation-for="VoyageNumber" class="text-error text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-high); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">schedule</span>
+                            <h2 class="modern-headline-md">Planned Schedule</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="flex flex-column" style="gap: 1.25rem;">
+                                <div>
+                                    <label asp-for="PlannedStartTime" class="modern-label">Planned Arrival/Start</label>
+                                    <input asp-for="PlannedStartTime" type="datetime-local" class="modern-input timeline-input" id="PlannedStartTime" />
+                                    <span asp-validation-for="PlannedStartTime" class="text-error text-xs"></span>
+                                </div>
+                                <div>
+                                    <label asp-for="PlannedEndTime" class="modern-label">Planned Departure/End</label>
+                                    <input asp-for="PlannedEndTime" type="datetime-local" class="modern-input timeline-input" id="PlannedEndTime" />
+                                    <span asp-validation-for="PlannedEndTime" class="text-error text-xs"></span>
+                                    <div id="durationWarning" class="text-error text-xs mt-1" style="display: none;">
+                                        <span class="material-symbols-outlined text-xs" style="vertical-align: middle;">warning</span> End time must be after start time.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // ── Planned Duration Validation ────────────────────────────────
+            function validatePlannedTimes() {
+                const startVal = $("#PlannedStartTime").val();
+                const endVal = $("#PlannedEndTime").val();
+                if (!startVal || !endVal) return;
+
+                const start = new Date(startVal);
+                const end = new Date(endVal);
+                const $warning = $("#durationWarning");
+                const $submitBtn = $("button[type='submit']");
+
+                if (!isNaN(start) && !isNaN(end)) {
+                    if (end <= start) {
+                        $warning.show();
+                        $submitBtn.prop("disabled", true).css('opacity', '0.5');
+                    } else {
+                        $warning.hide();
+                        $submitBtn.prop("disabled", false).css('opacity', '1');
+                    }
+                }
+            }
+
+            $(".timeline-input").on("change input", validatePlannedTimes);
+            validatePlannedTimes(); // Initial check
+
+            // ── Port-Terminal Cascade ──────────────────────────────────────
+            $('#PortId').on('change', function () {
+                var portId = $(this).val();
+                var terminalSelect = $('#TerminalId');
+
+                terminalSelect.empty().append('<option value="">-- Select Terminal --</option>');
+                terminalSelect.trigger('change');
+
+                if (!portId) return;
+
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "JobOrder")',
+                    type: 'GET',
+                    data: { portId: portId },
+                    success: function (data) {
+                        $.each(data, function (i, item) {
+                            terminalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                        terminalSelect.trigger('change');
+                    }
+                });
+            });
+
+            $('#confirmEditBtn').on('click', confirmEdit);
+        });
+
+        function confirmEdit() {
+            if (!ModernFormValidator.validate('jobOrderForm')) return;
+
+            ModernAlert.confirm({
+                title: 'Save Changes?',
+                text: "Are you sure you want to update this job order?",
+                icon: 'question',
+                confirmText: 'Yes, save'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Saving changes...");
+                    document.getElementById("jobOrderForm").submit();
+                }
+            });
+        }
+    </script>
+}

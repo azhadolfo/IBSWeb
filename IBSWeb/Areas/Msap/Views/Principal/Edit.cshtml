@@ -1,0 +1,151 @@
+@model IBS.Models.MSAP.ViewModels.PrincipalViewModel
+
+@{
+    ViewData["Title"] = "Edit Principal";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Edit" method="post" id="mainForm">
+        <input type="hidden" asp-for="PrincipalId" />
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Principals</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit Principal</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <!-- Left Column: Primary Info -->
+                <section class="modern-col-8">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">edit</span>
+                            <h2 class="modern-headline-md">Primary Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="modern-grid">
+                                <div class="modern-col-8">
+                                    <label asp-for="PrincipalName" class="modern-label">Principal Name <span class="text-error">*</span></label>
+                                    <input asp-for="PrincipalName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter full name" />
+                                    <span asp-validation-for="PrincipalName" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="PrincipalNumber" class="modern-label">Principal # <span class="text-error">*</span></label>
+                                    <input asp-for="PrincipalNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="4-digit code" maxlength="4" />
+                                    <span asp-validation-for="PrincipalNumber" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label asp-for="CustomerId" class="modern-label">Linked Customer <span class="text-error">*</span></label>
+                                <select asp-for="CustomerId" asp-items="@Model.CustomerSelectList" class="js-modern-select" data-placeholder="-- Select Customer --">
+                                    <option value="">-- Select Customer --</option>
+                                </select>
+                                <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
+                            </div>
+
+                            <div class="mt-4">
+                                <label asp-for="Address1" class="modern-label">Address <span class="text-error">*</span></label>
+                                <textarea asp-for="Address1" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); min-height: 80px;" placeholder="Full business address"></textarea>
+                                <span asp-validation-for="Address1" class="text-error text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card mt-4">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">contact_phone</span>
+                            <h2 class="modern-headline-md">Contact Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="modern-grid">
+                                <div class="modern-col-6">
+                                    <label asp-for="Mobile1" class="modern-label">Mobile 1</label>
+                                    <input asp-for="Mobile1" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="Mobile1" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="Mobile2" class="modern-label">Mobile 2</label>
+                                    <input asp-for="Mobile2" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="Mobile2" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="Landline1" class="modern-label">Landline 1</label>
+                                    <input asp-for="Landline1" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="Landline1" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="Landline2" class="modern-label">Landline 2</label>
+                                    <input asp-for="Landline2" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="Landline2" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Business Info -->
+                <section class="modern-col-4">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-high); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">business</span>
+                            <h2 class="modern-headline-md">Business Info</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div>
+                                <label asp-for="TIN" class="modern-label">TIN</label>
+                                <input asp-for="TIN" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="000-000-000-000" />
+                                <span asp-validation-for="TIN" class="text-error text-xs"></span>
+                            </div>
+                            <div class="mt-3">
+                                <label asp-for="BusinessType" class="modern-label">Business Type</label>
+                                <input asp-for="BusinessType" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                <span asp-validation-for="BusinessType" class="text-error text-xs"></span>
+                            </div>
+                            <div class="mt-3">
+                                <label asp-for="Terms" class="modern-label">Terms</label>
+                                <input asp-for="Terms" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                <span asp-validation-for="Terms" class="text-error text-xs"></span>
+                            </div>
+                            
+                            <div class="flex flex-column gap-2 mt-4 pt-4 border-t border-outline-variant">
+                                <div class="flex items-center gap-2">
+                                    <input asp-for="IsVatable" class="form-check-input" type="checkbox" style="width:1.25rem; height:1.25rem; border: 1px solid var(--outline-variant);">
+                                    <label asp-for="IsVatable" class="modern-label mb-0" style="text-transform: none; font-size: 14px; font-weight: 500;">Is Vatable</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" style="width:1.25rem; height:1.25rem; border: 1px solid var(--outline-variant);">
+                                    <label asp-for="IsActive" class="modern-label mb-0" style="text-transform: none; font-size: 14px; font-weight: 500;">Is Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

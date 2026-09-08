@@ -1,0 +1,432 @@
+@{
+ViewData["Title"] = "MSAP Import";
+}
+
+<style>
+    .import-file-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .import-file-row:last-child {
+        border-bottom: none;
+    }
+
+    .import-file-label {
+        min-width: 140px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        color: #374151;
+        flex-shrink: 0;
+    }
+
+    .import-file-input {
+        flex: 1;
+        font-size: 0.8rem;
+    }
+
+    .file-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        flex-shrink: 0;
+    }
+
+    .badge-step1 {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+    .badge-step2 {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .badge-step3 {
+        background: #fdf2f8;
+        color: #9d174d;
+        border: 1px solid #fbcfe8;
+    }
+
+    .badge-dependency {
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+        font-style: italic;
+    }
+
+    .section-header small {
+        font-size: 0.75rem;
+        font-weight: normal;
+        color: #6b7280;
+    }
+</style>
+
+<div class="modern-layout">
+    <main class="modern-container" style="max-width: 1000px;">
+        <div class="flex-stack mb-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Import</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">file_upload</span>
+                <h2 class="modern-headline-md">MSAP Data Import</h2>
+            </div>
+            <div class="modern-card-body p-4">
+            <div class="alert alert-info py-2 px-3 small mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Guidance:</strong> This is a one-time import. Upload files according to the steps below to ensure data relationships are maintained.
+            </div>
+
+            <form asp-action="Index" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                
+                @* NEW: Smart Folder Selection *@
+                <div class="card bg-light border-info mb-4">
+                    <div class="card-body py-3">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-7">
+                                <h6 class="mb-1 fw-bold"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Smart Folder Selection</h6>
+                                <p class="text-muted small mb-0">Select your MSAP CSV folder and we'll automatically match the files for you.</p>
+                            </div>
+                            <div class="col-12 col-md-5 text-md-end mt-2 mt-md-0">
+                                <label class="btn btn-info btn-sm px-3">
+                                    <i class="bi bi-folder2-open me-1"></i> Select MSAP Folder
+                                    <input type="file" id="folderPicker" name="bulkFiles" webkitdirectory directory multiple style="display: none;" />
+                                </label>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFolderBtn">Clear Folder</button>
+                            </div>
+                        </div>
+                        <div id="matchSummary" class="mt-2 d-none">
+                            <hr class="my-2" />
+                            <div class="d-flex flex-wrap gap-2" id="matchedBadges">
+                                <!-- JS will populate badges here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+
+                    @* Step 1: Foundation *@
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h5 class="m-0 fw-semibold text-primary">Step 1: Foundational Data</h5>
+                            <span class="file-badge badge-step1">Level 1 - Core Masterfiles</span>
+                        </div>
+                        <div class="border rounded p-3 bg-light bg-opacity-50">
+                            <div class="row">
+                                <div class="col-12 col-md-6 border-end">
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Chart of Account</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="coaFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Customer</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="customerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Port</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="portFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Bank Account</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="bankAccountFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row d-none">
+                                        <span class="import-file-label">Service</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 ps-md-4">
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Service</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Tugboat Owner</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="tugboatOwnerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Tug Master</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="tugMasterFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Vessel</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="vesselFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Step 2: Dependencies *@
+                    <div class="col-12 col-md-6">
+                        <div class="section-header">
+                            <h5 class="m-0 fw-semibold text-warning">Step 2: Sub-Masters</h5>
+                            <span class="file-badge badge-step2">Level 2 - Requires Step 1</span>
+                        </div>
+                        <div class="border rounded p-3 bg-light bg-opacity-50">
+                            <div class="import-file-row">
+                                <span class="import-file-label">Terminal</span>
+                                <span class="file-badge badge-dependency">Needs Port</span>
+                                <input type="file" name="terminalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Tugboat</span>
+                                <span class="file-badge badge-dependency">Needs Owner</span>
+                                <input type="file" name="tugboatFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Principal</span>
+                                <span class="file-badge badge-dependency">Needs Customer</span>
+                                <input type="file" name="principalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Step 3: Mixed Dependencies *@
+                    <div class="col-12 col-md-6">
+                        <div class="section-header">
+                            <h5 class="m-0 fw-semibold text-danger">Step 3: Tariffs & Records</h5>
+                            <span class="file-badge badge-step3">Level 3+ - Requires Steps 1-2</span>
+                        </div>
+                        <div class="border rounded p-3 bg-light bg-opacity-50">
+                            <div class="import-file-row">
+                                <span class="import-file-label">Tariff Rate</span>
+                                <span class="file-badge badge-dependency">Needs Customer/Terminal</span>
+                                <input type="file" name="tariffFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Collection</span>
+                                <span class="file-badge badge-dependency">Needs Customer</span>
+                                <input type="file" name="collectionFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Collect-Bill Link</span>
+                                <span class="file-badge badge-dependency">Linking File</span>
+                                <input type="file" name="collectBillFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Billing</span>
+                                <span class="file-badge badge-dependency">Needs Everything</span>
+                                <input type="file" name="billingFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Dispatch Ticket</span>
+                                <span class="file-badge badge-dependency">Needs Everything</span>
+                                <input type="file" name="dispatchTicketFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex align-items-center gap-3">
+                    <button class="btn btn-primary px-4" type="submit" id="submitBtn">
+                        <i class="bi bi-upload me-1"></i> Import
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="clearAllBtn">
+                        Clear All
+                    </button>
+                    <span class="text-muted small" id="fileCount"></span>
+                    <button type="button" class="btn btn-danger ms-auto" id="resetBtn">
+                        <i class="bi bi-trash-fill me-1"></i> Reset All Tables
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+        const filePicker = document.getElementById('folderPicker');
+        const allFileInputs = $('input[type="file"]:not(#folderPicker)');
+        const $summary = $('#matchSummary');
+        const $badges = $('#matchedBadges');
+        const $form = $('form');
+        const $fileCount = $('#fileCount');
+
+        const keywords = {
+            coaFile: ['chart', 'coa', 'account'],
+            customerFile: ['customer'],
+            portFile: ['port'],
+            terminalFile: ['terminal'],
+            'principalFile': ['principal'],
+            'serviceFile': ['service'],
+            'tugboatOwnerFile': ['tugboatowner'],
+            'tugboatFile': ['tugboat'],
+            'tugMasterFile': ['tugmaster', 'master'],
+            'vesselFile': ['vessel'],
+            'tariffFile': ['tariff'],
+            'dispatchTicketFile': ['dispatch'],
+            billingFile: ['billing'],
+            bankAccountFile: ['bank', 'bankacct'],
+            collectionFile: ['collection'],
+            collectBillFile: ['collect_bill', 'collect-bill']
+            };
+
+        function updateFileCount() {
+            const seen = new Set();
+            
+            // Check individual inputs
+            allFileInputs.each(function() {
+                if (this.files.length > 0) seen.add(this.name);
+            });
+            
+            // Add any recognized files from bulk
+            $badges.children().each(function() {
+                const label = $(this).data('key');
+                seen.add(label);
+            });
+
+            $fileCount.text(seen.size > 0 ? `${seen.size} category file(s) ready` : '');
+        }
+
+        filePicker.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
+
+            $badges.empty();
+            $summary.removeClass('d-none');
+            allFileInputs.removeClass('border-success bg-success bg-opacity-10');
+
+            const matchedNames = [];
+
+            for (let file of files) {
+                const name = file.name.toLowerCase();
+                if (!name.endsWith('.csv')) continue;
+
+                let matchedKey = null;
+
+                // Priority: Exact matches or very specific ones
+                if (name === 'customer.csv') matchedKey = 'customerFile';
+                else if (name === 'port.csv') matchedKey = 'portFile';
+                else if (name === 'terminal.csv') matchedKey = 'terminalFile';
+                else if (name === 'principal.csv') matchedKey = 'principalFile';
+                else if (name === 'service.csv') matchedKey = 'serviceFile';
+                else if (name === 'tugboatowner.csv') matchedKey = 'tugboatOwnerFile';
+                else if (name === 'tugboat.csv') matchedKey = 'tugboatFile';
+                else if (name === 'tugmaster.csv' || name === 'master.csv') matchedKey = 'tugMasterFile';
+                else if (name === 'vessel.csv') matchedKey = 'vesselFile';
+                else if (name === 'tariff.csv') matchedKey = 'tariffFile';
+                else if (name === 'dispatch.csv') matchedKey = 'dispatchTicketFile';
+                else if (name === 'billing.csv') matchedKey = 'billingFile';
+                else if (name === 'bankacct.csv') matchedKey = 'bankAccountFile';
+                else if (name === 'collection.csv') matchedKey = 'collectionFile';
+                else if (name === 'collect_bill.csv') matchedKey = 'collectBillFile';
+                
+                // Fallback: Keyword search
+                if (!matchedKey) {
+                    if (name.includes('tugboatowner')) {
+                        matchedKey = 'tugboatOwnerFile';
+                    } else if (name.includes('tugboat')) {
+                        matchedKey = 'tugboatFile';
+                    } else {
+                        for (const [key, kwList] of Object.entries(keywords)) {
+                            if (key === 'tugboatFile' || key === 'tugboatOwnerFile') continue;
+                            if (kwList.some(kw => name.includes(kw))) {
+                                matchedKey = key;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (matchedKey) {
+                    const label = $(`input[name="${matchedKey}"]`).closest('.import-file-row').find('.import-file-label').text();
+                    $badges.append(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1" data-key="${matchedKey}"><i class="bi bi-check-circle-fill me-1"></i> ${label}: ${file.name}</span>`);
+                    
+                    const $input = $(`input[name="${matchedKey}"]`);
+                    $input.addClass('border-success bg-success bg-opacity-10');
+                    matchedNames.push(label);
+                }
+            }
+
+            if (matchedNames.length > 0) {
+                ModernAlert.success(`Automatically matched ${matchedNames.length} files.`);
+            } else {
+                ModernAlert.warning('No matching CSV files found in the selected folder.');
+            }
+            updateFileCount();
+        });
+
+        allFileInputs.on('change', updateFileCount);
+
+        $('#clearFolderBtn').on('click', function() {
+            $(filePicker).val('');
+            allFileInputs.removeClass('border-success bg-success bg-opacity-10');
+            $summary.addClass('d-none');
+            $badges.empty();
+            updateFileCount();
+        });
+
+        $('#clearAllBtn').on('click', function() {
+            allFileInputs.val('');
+            $(filePicker).val('');
+            allFileInputs.removeClass('border-success bg-success bg-opacity-10');
+            $summary.addClass('d-none');
+            $badges.empty();
+            updateFileCount();
+        });
+
+        $('#resetBtn').on('click', function() {
+            if (confirm('Are you sure you want to reset ALL MSAP tables? This action cannot be undone.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Reset")';
+                
+                const antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = antiForgeryToken;
+                
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+
+        $form.on('submit', function () {
+            const hasIndividual = allFileInputs.filter(function() { return $(this).val(); }).length > 0;
+            const hasFolder = filePicker.files.length > 0;
+
+            if (!hasIndividual && !hasFolder) {
+                alert('Please upload a folder or select individual CSV files.');
+                return false;
+            }
+            $('#submitBtn').prop('disabled', true).html('<span class=\"spinner-border spinner-border-sm me-1\"></span> Importing Data...');
+        });
+    });
+</script>
+}

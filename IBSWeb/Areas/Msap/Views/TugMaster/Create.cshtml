@@ -1,0 +1,70 @@
+@model IBS.Models.MSAP.ViewModels.TugMasterViewModel
+
+@{
+    ViewData["Title"] = "Create Tug Master";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Tug Masters</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Tug Master</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">person</span>
+                            <h2 class="modern-headline-md">Master Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="TugMasterNumber" class="modern-label">Master Number <span class="text-error">*</span></label>
+                                    <input asp-for="TugMasterNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter 5-digit code" maxlength="5" />
+                                    <span asp-validation-for="TugMasterNumber" class="text-error text-xs"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="TugMasterName" class="modern-label">Master Name <span class="text-error">*</span></label>
+                                    <input asp-for="TugMasterName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter full name" />
+                                    <span asp-validation-for="TugMasterName" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="flex items-center gap-2 pt-2">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" style="width:1.25rem; height:1.25rem; border: 1px solid var(--outline-variant);">
+                                    <label asp-for="IsActive" class="modern-label mb-0" style="text-transform: none; font-size: 14px; font-weight: 500;">Is Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

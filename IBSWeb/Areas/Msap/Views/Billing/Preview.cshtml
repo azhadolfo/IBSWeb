@@ -1,0 +1,427 @@
+@model IBS.Models.MSAP.Billing
+
+@{
+    ViewData["Title"] = "Billing - Preview";
+    ViewData["IsFullWidth"] = true;
+
+    var gross = Model.Amount;
+    var vatAmt = Model.IsVatable ? Math.Round(gross * 0.12m / 1.12m, 2) : 0m;
+    var netVat = gross - vatAmt;
+    var whtAmt = Model.PrintWht ? Math.Round(netVat * 0.02m, 2) : 0m;
+    var wvatAmt = Model is { PrintWht: true, Customer.WithHoldingVat: true } ? Math.Round(netVat * 0.05m, 2) : 0m;
+    var amtDue = netVat - whtAmt - wvatAmt;
+    var totalDue = amtDue + vatAmt;
+
+    var bafTickets = Model.PaidDispatchTickets?.Where(dt => dt.BAFNetRevenue > 0).ToList();
+    var hasBaf = bafTickets?.Any() == true;
+    DateOnly? bafFirstDate = null, bafLastDate = null;
+    decimal bafTotalHours = 0, bafTotalAmount = 0, bafRate = 0;
+    if (hasBaf)
+    {
+        bafFirstDate = bafTickets!.Min(dt => dt.Date);
+        bafLastDate = bafTickets!.Max(dt => dt.Date);
+        bafTotalHours = bafTickets!.Sum(dt => dt.TotalHours);
+        bafTotalAmount = bafTickets!.Sum(dt => dt.BAFNetRevenue);
+        bafRate = bafTickets!.First().BAFRate;
+    }
+}
+
+<style>
+    .billing-statement {
+        background-color: white;
+        color: black;
+        padding: 1.25rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .billing-statement b { font-weight: 700; }
+
+    .statement-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .statement-table th, .statement-table td {
+        padding: 2px 6px;
+    }
+
+    .border-bottom-dark { border-bottom: 1px solid black; }
+    .border-top-dark { border-top: 1px solid black; }
+    .border-dark { border: 1px solid black; }
+
+        @@media print {
+            @@page {
+                margin: 0 0.3in;
+            }
+            .modern-layout { background: white !important; }
+            .modern-container { padding: 0 !important; margin: 0 !important; gap: 0 !important; }
+            .flex-stack, .buttons-row { display: none !important; }
+            .modern-card { border: none !important; box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+            .billing-statement { padding: 0 !important; margin: 0 !important; }
+            .billing-statement * { margin-top: 0; }
+            body { margin: 0; padding: 0 !important; }
+            .no-print { display: none !important; }
+            body.mnav-enabled { padding-top: 0.3in !important; }
+
+        }
+        .ticket-image-page {
+            border-top: 1px dashed var(--bs-border-color, #ccc);
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+        }
+        @@media print {
+            .ticket-image-page:not(.no-print) {
+                page-break-before: always;
+                break-before: page;
+                margin-top: 0.5in !important;
+                border-top: none;
+            }
+        }
+        .actions-dropdown { position: relative; display: inline-block; }
+        .actions-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            width: 14rem;
+            background-color: var(--surface-container-lowest);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 0.5rem 0;
+            margin-top: 4px;
+        }
+        .actions-menu.show { display: block; }
+        .actions-menu label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .actions-menu label:hover { background-color: var(--surface-container-low); }
+        .actions-menu input[type="checkbox"] { margin: 0; }
+        .actions-divider { border-top: 1px solid var(--outline-variant); margin: 0.25rem 0; }
+
+</style>
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section (No Print) -->
+        <div class="flex-stack no-print">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <a class="modern-label" style="text-decoration:none;" asp-action="Index">Billing</a>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">@Model.MsapBillingNumber</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Preview</span>
+                </div>
+                <h1 class="modern-headline-lg">Billing Statement Preview</h1>
+            </div>
+            <div class="flex gap-2">
+                <div class="actions-dropdown">
+                    <button type="button" class="modern-btn-secondary" id="actionsBtn">
+                        <span class="material-symbols-outlined">settings</span> PRINT <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
+                    </button>
+                    <div class="actions-menu" id="actionsMenu">
+                        <label><input type="checkbox" id="chkTickets"> Include Ticket Images</label>
+                        <label><input type="checkbox" id="chkCombinedBAF"> Combined BAF</label>
+                        <div class="actions-divider"></div>
+                        <button type="button" class="modern-btn-primary" id="proceedBtn" style="margin:0.5rem 1rem 0.25rem; width:calc(100% - 2rem); justify-content:center;">
+                            <span class="material-symbols-outlined">print</span> PROCEED
+                        </button>
+                    </div>
+                </div>
+                <a asp-action="Print" asp-route-id="@Model.MsapBillingId" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">terminal</span> DOT MATRIX
+                </a>
+                <a asp-action="Index" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span> BACK
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="billing-statement">
+                <!-- Document Header -->
+                <div class="flex justify-between items-start mb-2">
+                    <div style="max-width: 60%;">
+                        <h3 class="font-bold" style="font-size: 14px; margin-bottom: 4px;">MALAYAN MARITIME SERVICES INC.</h3>
+                        <p class="text-xs" style="font-size: 9px;">
+                            Office Address 14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
+                            Phone No: 633-4302 * 633-9472 * 634-4904<br/>
+                            Business Office: 10 JP LAUREL AVE, SASA, DAVAO CITY<br/>
+                            Mobile No: +639178202692
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-error font-bold" style="font-size: 11px;">BILLING STATEMENT NO.  @Model.MsapBillingNumber</p>
+                    </div>
+                </div>
+
+                <!-- Entity Details -->
+                <table class="statement-table mb-2 " style="font-size: 11px; padding: 0;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 10%; padding: 0; margin: 0;"><b>BILLED TO:</b></td>
+                            <td class="border-bottom-dark"><b>@(Model.PrincipalId != null ? Model.Principal?.PrincipalName : Model.Customer.CustomerName)</b></td>
+                            <td style="width: 40px;"></td>
+                            <td style="width: 80px;"><b>DATE:</b></td>
+                            <td class="border-bottom-dark">@Model.Date.ToString("MM/dd/yyyy")</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0; margin: 0; width: 10%;"><b>ADDRESS:</b></td>
+                            <td class="border-bottom-dark" style="width: 40%;">@Model.AddressLine1</td>
+                            <td></td>
+                            <td><b>TIN:</b></td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.TIN : Model.Customer.CustomerTin)</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td class="border-bottom-dark">@Model.AddressLine2</td>
+                            <td></td>
+                            <td style="text-wrap: nowrap"><b>BUSINESS STYLE:</b></td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.BusinessType : Model.Customer.BusinessStyle)</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td class="border-bottom-dark">@Model.AddressLine3</td>
+                            <td></td>
+                            <td><b>TERMS:</b></td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.Terms : Model.Customer.CustomerTerms)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Particulars Section -->
+                <div class="border-dark text-center py-0.5 mb-2 font-bold" style="font-size: 10px; line-height: 20px;">
+                    PARTICULARS
+                </div>
+
+                <div class="mb-2" style="font-size: 10px;">
+                    <div class="flex items-center justify-content-between mb-1 text-xs" style="font-size: 10px;">
+                        <div style="width: 30%;"><b>FOR THE SERVICE RE:</b></div>
+                        <div style="width: 100%;" class="flex-grow border-bottom-dark px-2 font-bold uppercase">@Model.Vessel.VesselName</div>
+                        <div style="width: 15%; margin-left: 5%;" class="text-left "><b>VOYAGE #:</b></div>
+                        <div style="width: 40%;" class="border-bottom-dark px-2">@Model.VoyageNumber</div>
+                    </div>
+                    <div class="flex items-center justify-content-between mb-1 text-xs" style="font-size: 10px;">
+                        <div style="width: 30%;"><b>PORT</b></div>
+                        <div style="width: 100%;" class="flex-grow border-bottom-dark px-2 uppercase">@Model.Port.PortName</div>
+                        <div style="width: 15%; margin-left: 5%;" class="text-left"><b>TERMINAL:</b></div>
+                        <div style="width: 40%;" class="border-bottom-dark px-2">@Model.Terminal.TerminalName</div>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <table class="statement-table mb-3" style="font-size: 12px; table-layout: fixed; border: none;">
+                    <thead>
+                        <tr class="border-dark">
+                            <th class="border-dark text-center" style="width: 80px; line-height: 17px;">DATE</th>
+                            <th class="border-dark text-center">NATURE OF SERVICE</th>
+                            <th class="border-dark text-center" style="width: 100px;">TIME START</th>
+                            <th class="border-dark text-center" style="width: 100px;">TIME END</th>
+                            <th class="border-dark text-center" style="width: 80px;">HOURS</th>
+                            <th class="border-dark text-center" style="width: 90px;">RATE</th>
+                            <th class="border-dark text-center" style="width: 100px;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tugboat in Model.UniqueTugboats!)
+                        {
+                            var dispatchNetTickets = Model.PaidDispatchTickets!.Where(dt => dt.Tugboat.TugboatName == tugboat && dt.DispatchNetRevenue > 0).ToList();
+                            if (dispatchNetTickets.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="pt-1.5 pb-0.5" style="padding-inline: 0;"><b>NAME OF TUGBOAT: @tugboat</b></td>
+                                </tr>
+                                @foreach (var dt in dispatchNetTickets)
+                                {
+                                    <tr>
+                                        <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
+                                        <td>@dt.Service.ServiceName</td>
+                                        <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
+                                        <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
+                                        <td class="text-center">@dt.TotalHours.ToString("N2")</td>
+                                        <td class="text-right">@dt.DispatchRate.ToString("N2")</td>
+                                        <td class="text-right">@dt.DispatchNetRevenue.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        }
+
+                        @if (hasBaf)
+                        {
+                            <tr class="baf-header">
+                                <td colspan="7" class="pt-2 pb-0.5 font-bold" style="padding-inline: 0;">BUNKER ADJUSTMENT FACTORS</td>
+                            </tr>
+                            @foreach (var dt in bafTickets!)
+                            {
+                                <tr class="baf-row">
+                                    <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
+                                    <td>@dt.Service.ServiceName (BAF)</td>
+                                    <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
+                                    <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
+                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
+                                    <td class="text-right">@dt.BAFRate.ToString("N2")</td>
+                                    <td class="text-right">@dt.BAFNetRevenue.ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr class="combined-baf-row" style="display: none;">
+                                <td colspan="2" class="pt-3 pb-1 font-bold" style="padding-inline: 0;">BUNKER ADJUSTMENT FACTORS</td>
+                                <td class="text-left pt-3 pb-1">@bafFirstDate?.ToString("MM/dd/yyyy")</td>
+                                <td class="text-left pt-3 pb-1">@bafLastDate?.ToString("MM/dd/yyyy")</td>
+                                <td class="text-center pt-3 pb-1">@bafTotalHours.ToString("N2")</td>
+                                <td class="text-right pt-3 pb-1">@bafRate.ToString("N2")</td>
+                                <td class="text-right pt-3 pb-1">@bafTotalAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="7" class="text-center py-2 opacity-40 italic">---------- NOTHING FOLLOWS ----------</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Totals Section -->
+                <div class="flex border-top-dark pt-1.5 justify-content-between" style="font-size: 11px; padding-block: 1rem;">
+                    <div style="width: 60%; margin-right: 0;">
+                        <p class="font-bold mb-1">Terms and Conditions:</p>
+                        <div class="border-dark p-2" style="font-size: 10px; line-height: 1.4; text-align: justify;">
+                            Interest at the rate of 38% per annum will be charge on all overdue accounts and in the event of
+                            judicial proceedings to enforce collections, the Customer will pay a reasonable compensation not less than
+                            25% of the amount due of the Attorney's fees and expense of collection in addition to the costs of suit. Any
+                            action arising out of the transaction covered by billing statement shall be brought in the appropriate courts
+                            of Pasig City and/or Metro Manila.
+                        </div>
+                    </div>
+                    <div class="flex-grow">
+                        <table class="statement-table" style="font-size: 12px; margin-left: 0;" id="totalsTable">
+                            <tr id="rowGross">
+                                <td style="padding-top: 4px;">TOTAL SALES@(Model.IsVatable ? " (VAT INCLUSIVE)" : "")</td>
+                                <td class="text-right border-bottom-dark" style="padding-top: 4px;"><b id="valGross">@gross.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowVat">
+                                <td>LESS: VAT</td>
+                                <td class="text-right border-bottom-dark"><b id="valVat">@vatAmt.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowNetVat">
+                                <td>AMOUNT: NET OF VAT</td>
+                                <td class="text-right border-bottom-dark"><b id="valNetVat">@netVat.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowWht">
+                                <td>LESS: WITHHOLDING TAX</td>
+                                <td class="text-right border-bottom-dark"><b id="valWht">@whtAmt.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowWvat" @(wvatAmt > 0 ? "" : "style='display:none'")>
+                                <td>LESS: 5% WVAT</td>
+                                <td class="text-right border-bottom-dark"><b id="valWvat">@wvatAmt.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowAmtDue">
+                                <td>AMOUNT DUE</td>
+                                <td class="text-right border-bottom-dark"><b id="valAmtDue">@amtDue.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowAddVat">
+                                <td>ADD: VAT</td>
+                                <td class="text-right border-bottom-dark"><b id="valAddVat">@vatAmt.ToString("N2")</b></td>
+                            </tr>
+                            <tr id="rowTotalDue" style="font-size: 14px;">
+                                <td><b>TOTAL AMOUNT DUE:</b></td>
+                                <td class="text-right" style="border-bottom: 2px double black;"><b id="valTotalDue">@totalDue.ToString("N2")</b></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Footer Signatures -->
+                <div class="mt-3" style="font-size: 9px;">
+                    <p>We hereby certify that this Billing Statement is correct and just and the payment thereof has not been received.</p>
+                    <p class="font-bold mt-2">MALAYAN MARITIME SERVICES INC.</p>
+                    <p class="mt-2">BY:___________________________________</p>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.PaidDispatchTickets != null && Model.PaidDispatchTickets.Any(dt => !string.IsNullOrEmpty(dt.ImageSignedUrl)))
+        {
+            @foreach (var dt in Model.PaidDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageSignedUrl)))
+            {
+                <div class="modern-card ticket-image-page">
+                    <div class="billing-statement text-center">
+                        <h4 class="font-bold text-sm mb-3">
+                            Dispatch Ticket #@(dt.DispatchNumber) &mdash; Billing @Model.MsapBillingNumber
+                        </h4>
+                        <div class="flex justify-center items-center" style="max-height: 90vh;">
+                            <img src="@dt.ImageSignedUrl" alt="Dispatch Ticket @dt.DispatchNumber" style="max-width: 100%; max-height: 85vh; object-fit: contain;" />
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Sticky Footer Buttons (No Print) -->
+        <div class="flex justify-end gap-2 mt-4 no-print">
+            <a asp-action="Index" class="modern-btn-secondary px-5">
+                <span class="material-symbols-outlined">arrow_back</span> BACK TO LIST
+            </a>
+
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const $actionsBtn = $('#actionsBtn');
+            const $menu = $('#actionsMenu');
+            const $chkTickets = $('#chkTickets');
+            const $chkCombinedBAF = $('#chkCombinedBAF');
+
+            $actionsBtn.on('click', function (e) {
+                e.stopPropagation();
+                $menu.toggleClass('show');
+                $('.modern-dropdown-menu.show').not($menu).removeClass('show');
+            });
+            $(document).on('click', function () { $menu.removeClass('show'); });
+            $menu.on('click', function (e) { e.stopPropagation(); });
+
+            function applyModes() {
+                $('.ticket-image-page').toggleClass('no-print', !$chkTickets.is(':checked'));
+
+                if ($chkCombinedBAF.is(':checked')) {
+                    $('.baf-row, .baf-header').hide();
+                    $('.combined-baf-row').show();
+                } else {
+                    $('.baf-row, .baf-header').show();
+                    $('.combined-baf-row').hide();
+                }
+            }
+
+            function restoreDefaults() {
+                $('.ticket-image-page').removeClass('no-print');
+                $('.baf-row, .baf-header').show();
+                $('.combined-baf-row').hide();
+            }
+
+            $('#proceedBtn').on('click', function () {
+                $menu.removeClass('show');
+                applyModes();
+                setTimeout(function () {
+                    window.print();
+                    setTimeout(restoreDefaults, 200);
+                }, 200);
+            });
+
+            if (window.matchMedia) {
+                window.matchMedia('print').addEventListener('change', function (mql) {
+                    if (!mql.matches) restoreDefaults();
+                });
+            }
+        });
+    </script>
+}

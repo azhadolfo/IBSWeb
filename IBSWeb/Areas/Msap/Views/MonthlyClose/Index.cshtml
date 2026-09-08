@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Monthly Close";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Monthly Close</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+        </div>
+
+        <div class="modern-grid justify-center">
+            <section class="modern-col-6">
+                <div class="modern-card">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">event_busy</span>
+                        <h2 class="modern-headline-md">Close a Month</h2>
+                    </div>
+                    <div class="modern-card-body">
+                        <p class="modern-label mb-3">Closing a month locks its accounting periods and prevents further modifications.</p>
+                        <form asp-controller="MonthlyClose" asp-action="TriggerMonthlyClosure" method="post">
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label class="modern-label">Select Month</label>
+                                    <input type="month" name="monthDate" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" />
+                                    <span class="text-error"></span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="modern-btn-primary">
+                                        <span class="material-symbols-outlined">check_circle</span> Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>

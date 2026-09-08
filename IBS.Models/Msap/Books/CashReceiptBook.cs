@@ -1,0 +1,50 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace IBS.Models.Msap.Books
+{
+    public class CashReceiptBook
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int CashReceiptBookId { get; set; }
+
+        [Column(TypeName = "date")]
+        public DateOnly Date { get; set; }
+
+        [Display(Name = "Ref No")]
+        public string RefNo { get; set; } = null!;
+
+        [Display(Name = "Customer Name")]
+        public string CustomerName { get; set; } = null!;
+
+        public string? Bank { get; set; }
+
+        [Display(Name = "Check No.")]
+        public string? CheckNo { get; set; }
+
+        [Display(Name = "Chart of Account")]
+        public string COA { get; set; } = null!;
+
+        public string Particulars { get; set; } = null!;
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal Debit { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal Credit { get; set; }
+
+        [Display(Name = "Created By")]
+        [Column(TypeName = "varchar(100)")]
+        public string? CreatedBy { get; set; }
+
+        [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp without time zone")]
+        public DateTime CreatedDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"));
+
+        public string Company { get; set; } = string.Empty;
+    }
+}

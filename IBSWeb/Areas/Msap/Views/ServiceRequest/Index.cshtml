@@ -1,0 +1,249 @@
+@{
+    ViewData["Title"] = "Service Requests";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Service Requests</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                @if (ViewBag.CanEdit == true)
+                {
+                    <a asp-action="Create" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        CREATE REQUEST
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterRequested" class="modern-btn-secondary">REQUESTED</button>
+            <button id="filterDraft" class="modern-btn-secondary">DRAFT</button>
+            <button id="filterDeleted" class="modern-btn-secondary modern-btn-error">
+                <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">delete</span> DELETED
+            </button>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">assignment</span>
+                    <h2 class="modern-headline-md">Request List</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-table-container">
+                    <table class="modern-table" id="paginatedTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>COS #</th>
+                                <th>Ticket #</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Activity/Service</th>
+                                <th>Port - Terminal</th>
+                                <th>Tugboat</th>
+                                <th>Customer</th>
+                                <th>Vessel</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center" style="width: 100px;">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .modern-btn-secondary.modern-btn-error.active {
+        background-color: var(--error);
+        color: white;
+        border-color: var(--error);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "ServiceRequest", new { area = "User" })';
+            const canEdit = @((ViewBag.CanEdit as bool? ?? false).ToString().ToLower());
+
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: [0, 11] }
+                ],
+                ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "ServiceRequest", new { area = "User" })"),
+                columns: [
+                    { data: "date", defaultContent: "" },
+                    { data: "cosNumber", defaultContent: "" },
+                    {
+                        data: "dispatchNumber",
+                        render: (data, type, row) => row.status === "@SD.ServiceRequestStatus.ServiceRequestDeleted"
+                            ? data
+                            : `<a href="${editUrl}?id=${row.dispatchTicketId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: null,
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)
+                    },
+                    {
+                        data: null,
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateArrived, row.timeArrived)
+                    },
+                    { data: "service.serviceName", defaultContent: "" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+                            return portName || terminalName ? `${portName} - ${terminalName}` : "";
+                        }
+                    },
+                    { data: "tugboat.tugboatName", defaultContent: "" },
+                    {
+                        data: "customer.customerName",
+                        render: (data, type, row) => row.customerId ? data : '<span class="text-xs opacity-60">(Not Assigned)</span>'
+                    },
+                    { data: "vessel.vesselName", defaultContent: "" },
+                    {
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
+                            let cls = data === "Requested" ? "status-approval" : data === "Draft" ? "status-tariff" : "status-closed";
+                            return ModernTable.render.badge(data, cls);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            const items = [];
+                            if (row.status !== "@SD.ServiceRequestStatus.ServiceRequestDeleted" && canEdit) {
+                                items.push({ label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.dispatchTicketId}` });
+                            }
+                            if (row.imageSignedUrl) {
+                                items.push({ label: 'View Image', icon: 'image', onclick: `ModernAlert.image('${row.imageSignedUrl}', 'Upload Preview')` });
+                            }
+                            if (row.videoSignedUrl) {
+                                items.push({ label: 'Play Video', icon: 'play_circle', onclick: `ModernAlert.video('${row.videoSignedUrl}', 'Video Preview')` });
+                            }
+                            if (["@SD.ServiceRequestStatus.Draft", "@SD.ServiceRequestStatus.Requested"].includes(row.status) && canEdit) {
+                                items.push({ label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDeleteRequest(${row.dispatchTicketId})` });
+                            }
+                            if (row.status === "@SD.ServiceRequestStatus.ServiceRequestDeleted" && canEdit) {
+                                items.push({ label: 'Restore', icon: 'restore', onclick: `confirmRestoreRequest(${row.dispatchTicketId})` });
+                            }
+                            return ModernTable.render.dropdown(items);
+                        }
+                    }
+                ]
+            }));
+
+            // Filter logic
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterRequested') status = 'Requested';
+                else if (id === 'filterDraft') status = 'Draft';
+                else if (id === 'filterDeleted') status = 'Service Request Deleted';
+
+                table.column(10).search(status).draw();
+                $('.modern-btn-secondary').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
+        });
+
+        function confirmDeleteRequest(id) {
+            ModernAlert.confirm({
+                title: 'Delete Service Request?',
+                text: "This will mark the service request as deleted. You can still view it in the Deleted filter.",
+                icon: 'warning',
+                confirmText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Deleting request...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Delete", "ServiceRequest", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('Service request deleted.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+
+        function confirmRestoreRequest(id) {
+            ModernAlert.confirm({
+                title: 'Restore Service Request?',
+                text: "This will restore the service request to Requested status.",
+                icon: 'question',
+                confirmText: 'Yes, restore it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Restoring request...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Restore", "ServiceRequest", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('Service request restored.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+    </script>
+}

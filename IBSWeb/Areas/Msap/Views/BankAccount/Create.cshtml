@@ -1,0 +1,93 @@
+@model IBS.Models.MasterFile.BankAccountViewModel
+
+@{
+    ViewData["Title"] = "Create Bank Account";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Bank Accounts</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Bank Account</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-8">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">account_balance</span>
+                            <h2 class="modern-headline-md">Bank Account Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                            <div class="modern-grid">
+                                <div class="modern-col-6">
+                                    <label asp-for="BankAccountCode" class="modern-label">Code <span class="text-error">*</span></label>
+                                    <input asp-for="BankAccountCode" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter code" />
+                                    <span asp-validation-for="BankAccountCode" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="Bank" class="modern-label">Bank <span class="text-error">*</span></label>
+                                    <input asp-for="Bank" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter bank name" />
+                                    <span asp-validation-for="Bank" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="Branch" class="modern-label">Branch <span class="text-error">*</span></label>
+                                    <input asp-for="Branch" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter branch" />
+                                    <span asp-validation-for="Branch" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="AccountNo" class="modern-label">Account No <span class="text-error">*</span></label>
+                                    <input asp-for="AccountNo" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter account number" />
+                                    <span asp-validation-for="AccountNo" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="AccountName" class="modern-label">Account Name <span class="text-error">*</span></label>
+                                    <input asp-for="AccountName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter account name" />
+                                    <span asp-validation-for="AccountName" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="Company" class="modern-label">Company <span class="text-error">*</span></label>
+                                    <select asp-for="Company" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);">
+                                        <option value="">--Select Company--</option>
+                                        <option value="Filpride">Filpride</option>
+                                        <option value="MMSI">MMSI</option>
+                                    </select>
+                                    <span asp-validation-for="Company" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

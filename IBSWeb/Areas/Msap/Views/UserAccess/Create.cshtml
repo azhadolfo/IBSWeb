@@ -1,0 +1,211 @@
+@model UserAccess
+
+@{
+    ViewData["Title"] = "Create User Access";
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">GENERAL</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface-variant)">User Access</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Create</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Index" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    BACK TO LIST
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">security</span>
+                <h2 class="modern-headline-md">Access Permissions</h2>
+            </div>
+            <div class="modern-card-body">
+                <form method="post" class="flex flex-col gap-6">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                    <div class="modern-grid mb-4">
+                        <div class="modern-col-6">
+                            <label asp-for="UserId" class="modern-label">Select User <span class="text-error">*</span></label>
+                            <select asp-for="UserId" asp-items="@Model.Users" class="modern-input js-modern-select" data-placeholder="-- Select User --" required>
+                                <option value="">-- Select User --</option>
+                            </select>
+                            <span asp-validation-for="UserId" class="text-error text-xs"></span>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid">
+                        @* -- Service Request (For Port Coordinators) -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Service Request <span class="text-xs opacity-60">- For Port Coordinators</span></h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateServiceRequest" class="form-check-input" />
+                                    <span class="text-sm">Create Service Request</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanPostServiceRequest" class="form-check-input" />
+                                    <span class="text-sm">Post Service Request</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Job Order -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Job Order</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateJobOrder" class="form-check-input" />
+                                    <span class="text-sm">Create Job Order</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanEditJobOrder" class="form-check-input" />
+                                    <span class="text-sm">Edit Job Order</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanDeleteJobOrder" class="form-check-input" />
+                                    <span class="text-sm">Delete Job Order</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCloseJobOrder" class="form-check-input" />
+                                    <span class="text-sm">Close Job Order</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Dispatch Ticket -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Dispatch Ticket</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Create Dispatch Ticket</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanEditDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Edit Dispatch Ticket</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanDeleteDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Delete Dispatch Ticket</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid border-t border-outline-variant pt-4">
+                        @* -- Tariff -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Tariff</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanSetTariff" class="form-check-input" />
+                                    <span class="text-sm">Set Tariff</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanApproveTariff" class="form-check-input" />
+                                    <span class="text-sm">Approve Tariff</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Billing -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Billing</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateBilling" class="form-check-input" />
+                                    <span class="text-sm">Create Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanEditBilling" class="form-check-input" />
+                                    <span class="text-sm">Edit Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanDeleteBilling" class="form-check-input" />
+                                    <span class="text-sm">Delete Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanReverseBilling" class="form-check-input" />
+                                    <span class="text-sm" style="color: #dc2626; cursor: help;" title="Unpost a For Collection billing back to For Posting">Reverse Billing</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Collection -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Collection</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateCollection" class="form-check-input" />
+                                    <span class="text-sm">Create Collection</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid border-t border-outline-variant pt-4">
+                        <div class="modern-col-12">
+                            <h3 class="modern-label mb-3" style="color: var(--primary)">References</h3>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanManageMsapImport" class="form-check-input" />
+                                    <span class="text-sm">Manage MSAP Import</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanManageMaritimeMasterFile" class="form-check-input" />
+                                    <span class="text-sm">Manage Maritime Master File</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid border-t border-outline-variant pt-4">
+                        <div class="modern-col-12">
+                            <h3 class="modern-label mb-3" style="color: var(--primary)">Reporting Access</h3>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanViewGeneralLedger" class="form-check-input" />
+                                    <span class="text-sm">General Ledger</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanViewInventoryReport" class="form-check-input" />
+                                    <span class="text-sm">Inventory Report</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanViewMaritimeReport" class="form-check-input" />
+                                    <span class="text-sm">Maritime Reports</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-sticky-footer mt-4">
+                        <div class="flex gap-2">
+                            <button type="submit" class="modern-btn-primary">
+                                <span class="material-symbols-outlined">save</span>
+                                SAVE PERMISSIONS
+                            </button>
+                            <a asp-action="Index" class="modern-btn-secondary">CANCEL</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    }

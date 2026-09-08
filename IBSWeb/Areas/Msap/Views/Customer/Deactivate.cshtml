@@ -1,0 +1,71 @@
+@model Customer
+@using Enum = System.Enum
+
+@{
+    ViewData["Title"] = "Deactivate Customer";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form method="post">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Customers</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Deactivate Customer</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" style="background-color: var(--error);">
+                        <span class="material-symbols-outlined">person_off</span> Deactivate
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--error); color: white;">
+                            <span class="material-symbols-outlined">person_off</span>
+                            <h2 class="modern-headline-md" style="color: white;">Customer Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <input asp-for="CustomerId" hidden />
+
+                            <div class="flex flex-column gap-3">
+                                <div>
+                                    <label asp-for="CustomerName" class="modern-label">Customer Name</label>
+                                    <input asp-for="CustomerName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="CustomerAddress" class="modern-label">Address</label>
+                                    <input asp-for="CustomerAddress" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="CustomerTin" class="modern-label">TIN</label>
+                                    <input asp-for="CustomerTin" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="BusinessStyle" class="modern-label">Business Style</label>
+                                    <input asp-for="BusinessStyle" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

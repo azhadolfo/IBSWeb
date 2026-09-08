@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "User Access";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">GENERAL</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">User Access</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">security</span>
+                    CREATE USER ACCESS
+                </a>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            @Html.AntiForgeryToken()
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                    <h2 class="modern-headline-md">User Access List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="userAccessTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th style="text-align: right !important">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        //  simple AJAX DataTable — no modal needed, Edit navigates to its own page
+        $(document).ready(function () {
+            $('#userAccessTable').DataTable(ModernTable.config({
+                ajax: ModernTable.ajax('/User/UserAccess/GetUserAccessList'),
+                columns: [
+                    { data: 'userName', render: data => `<span class="font-bold">${escapeHtml(data ?? '')}</span>` },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (data) {
+                            return `<div style="display:flex;justify-content:flex-end">${ModernTable.render.dropdown([
+                                { label: 'Edit Access', icon: 'edit', onclick: `window.location='/User/UserAccess/Edit/${data.id}'` }
+                            ])}</div>`;
+                        }
+                    }
+                ],
+                order: [[0, 'asc']]
+            }));
+        });
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+}

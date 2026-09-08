@@ -1,0 +1,73 @@
+@model IBS.Models.MSAP.ViewModels.VesselViewModel
+
+@{
+    ViewData["Title"] = "Edit Vessel";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Edit" method="post" id="mainForm">
+        <input type="hidden" asp-for="VesselId" />
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Vessels</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit Vessel</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">edit</span>
+                            <h2 class="modern-headline-md">Vessel Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="VesselName" class="modern-label">Vessel Name <span class="text-error">*</span></label>
+                                    <input asp-for="VesselName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter vessel name" />
+                                    <span asp-validation-for="VesselName" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="modern-grid">
+                                    <div class="modern-col-6">
+                                        <label asp-for="VesselNumber" class="modern-label">Vessel # <span class="text-error">*</span></label>
+                                        <input asp-for="VesselNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Vessel number" />
+                                        <span asp-validation-for="VesselNumber" class="text-error text-xs"></span>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label asp-for="VesselType" class="modern-label">Vessel Type <span class="text-error">*</span></label>
+                                        <input asp-for="VesselType" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="e.g. Bulk Carrier, Tanker" />
+                                        <span asp-validation-for="VesselType" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

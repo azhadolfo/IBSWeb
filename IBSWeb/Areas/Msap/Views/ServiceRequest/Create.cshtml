@@ -1,0 +1,377 @@
+@model ServiceRequestViewModel
+
+@{
+    ViewData["Title"] = "Service Request - Create";
+    ViewData["IsFullWidth"] = true;
+    var now = DateTimeHelper.GetCurrentPhilippineTime();
+}
+
+<div class="modern-layout">
+    <form id="myForm" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label" style="color: var(--on-surface-variant)">Service Request</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Request</span>
+                    </div>
+                    <h1 class="modern-headline-lg">Create Service Request</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> SUBMIT
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <!-- 0. Job Order Reference -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">assignment</span>
+                            <h2 class="modern-headline-md">Job Order Reference</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-12">
+                                    <label class="modern-label">Job Order <span class="text-error">*</span></label>
+                                    <select id="JobOrderId" asp-for="JobOrderId" asp-items="@Model.JobOrders" class="js-modern-select" data-placeholder="-- Select Job Order --" required>
+                                        <option value="">-- Select Job Order --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- I. Reference Information -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">info</span>
+                            <h2 class="modern-headline-md">Reference Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Date Today <span class="text-error">*</span></label>
+                                    <input asp-for="Date" type="date" value="@(Model.Date == default ? now.ToString("yyyy-MM-dd") : Model.Date.ToString("yyyy-MM-dd"))" class="modern-input">
+                                    <span asp-validation-for="Date" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Dispatch/Mooring # <span class="text-error">*</span></label>
+                                    <input asp-for="DispatchNumber" class="modern-input" placeholder="Enter Dispatch #" maxlength="20" required>
+                                    <span asp-validation-for="DispatchNumber" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">COS #</label>
+                                    <input asp-for="COSNumber" id="COSNumber" class="modern-input" placeholder="Optional" maxlength="10">
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Voyage #</label>
+                                    <input asp-for="VoyageNumber" id="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="20">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- II. Service Details -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">anchor</span>
+                            <h2 class="modern-headline-md">Service Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-2">
+                                <label class="modern-label">Customer <span class="text-error">*</span></label>
+                                <div id="CustomerContainer">
+                                    <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" data-placeholder="-- Select Customer --">
+                                        <option value="">-- Select Customer --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modern-grid-compact mb-2">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Port <span class="text-error">*</span></label>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --">
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
+                                    <div id="TerminalContainer">
+                                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --">
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Vessel <span class="text-error">*</span></label>
+                                    <div id="VesselContainer">
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="-- Select Vessel --">
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
+                                    <input type="hidden" asp-for="VoyageType" id="VoyageType" />
+                                    <span id="voyageTypeBadge" class="modern-badge-sm mt-1" style="display:none"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
+                                    <div id="ServiceContainer">
+                                        <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
+                                            <option value="">-- Select Service --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Tugboat/Service provider <span class="text-error">*</span></label>
+                                    <div id="TugboatContainer">
+                                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="js-modern-select" data-placeholder="-- Select Tugboat --" required>
+                                            <option value="">-- Select Tugboat --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Master on Duty <span class="text-error">*</span></label>
+                                    <div id="TugMasterContainer">
+                                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="js-modern-select" data-placeholder="-- Select Tug Master --" required>
+                                            <option value="">-- Select Tug Master --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- III. Remarks -->
+                    <div class="modern-card" style="flex: 1;">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">chat</span>
+                            <h2 class="modern-headline-md">Remarks</h2>
+                        </div>
+                        <div class="modern-card-body" style="height: 100%;">
+                            <textarea asp-for="Remarks" class="modern-input" placeholder="Enter remarks (Optional)" style="height: 100%; min-height: 120px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
+                    <!-- Timeline & Duration -->
+                    <div class="modern-card sticky top-24">
+                        <div class="modern-card-header-info" style="background-color: var(--primary); color: white;">
+                            <span class="material-symbols-outlined">schedule</span>
+                            <div class="flex justify-content-between w-full gap-2">
+                                <h2 class="modern-headline-md" style="color: white">Timeline</h2>
+                                <span id="durationBadge" class="modern-badge" style="background: white; color: var(--primary);">0.00 hrs</span>
+                            </div>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-2">
+                                <label class="modern-label font-bold">Start Date & Time <span class="text-error">*</span></label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="date" asp-for="DateLeft" id="DateLeft" value="@(Model.DateLeft?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                    <input type="time" asp-for="TimeLeft" id="TimeLeft" value="@(Model.TimeLeft?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="modern-label font-bold">End Date & Time <span class="text-error">*</span></label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="date" asp-for="DateArrived" id="DateArrived" value="@(Model.DateArrived?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                    <input type="time" asp-for="TimeArrived" id="TimeArrived" value="@(Model.TimeArrived?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Uploads -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">camera</span>
+                            <h2 class="modern-headline-md">Media Attachments</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Dispatch Ticket Image <span class="text-error">*</span></label>
+                                    <button type="button" id="btnPreviewImage" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
+                                <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;" required oninvalid="this.setCustomValidity('A Dispatch Ticket image is required')" oninput="this.setCustomValidity('')">
+                                <span class="text-error text-xs">An image of the Dispatch/Mooring Ticket is required.</span>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Operation Video</label>
+                                    <button type="button" id="btnPreviewVideo" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
+                                <input class="modern-input" id="videoUpload" name="videoFile" type="file" accept="video/*" style="padding: 0.35rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // --- Job Order Auto-fill & Lock ---
+            function lockSelect(id, val) {
+                $(id).val(val).trigger('change');
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', 'none').removeAttr('tabindex').addClass('disabled');
+            }
+            function unlockSelect(id) {
+                $(id).val('').trigger('change');
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', '').attr('tabindex', '0').removeClass('disabled');
+            }
+            function lockSelectWhenReady(id, val, tries) {
+                if ($(id).find('option[value="' + val + '"]').length) {
+                    lockSelect(id, val);
+                } else if (tries > 0) {
+                    setTimeout(function () { lockSelectWhenReady(id, val, tries - 1); }, 300);
+                }
+            }
+            function applyJoLock(data) {
+                if (!data || !data.success) return;
+                lockSelect('#CustomerId', data.customerId);
+                lockSelect('#VesselId', data.vesselId);
+                lockSelect('#PortSelect', data.portId);
+                if (data.terminalId) {
+                    lockSelectWhenReady('#TerminalSelect', data.terminalId, 6);
+                }
+                $('#COSNumber').val(data.cosNumber || '').prop('readonly', true);
+                $('#VoyageNumber').val(data.voyageNumber || '').prop('readonly', true);
+                if (data.date) $('#Date').val(data.date);
+            }
+            function unlockAll() {
+                unlockSelect('#CustomerId');
+                unlockSelect('#VesselId');
+                unlockSelect('#PortSelect');
+                unlockSelect('#TerminalSelect');
+                $('#COSNumber').val('').prop('readonly', false);
+                $('#VoyageNumber').val('').prop('readonly', false);
+                $('#Date').val('@now.ToString("yyyy-MM-dd")');
+            }
+            $('#JobOrderId').on('change', function () {
+                var joId = $(this).val();
+                if (!joId) { unlockAll(); return; }
+                $.get('@Url.Action("GetJobOrderDetails", "ServiceRequest")', { jobOrderId: joId }, applyJoLock);
+            });
+            if ($('#JobOrderId').val()) { $('#JobOrderId').trigger('change'); }
+
+
+
+            // --- Vessel → VoyageType auto-set ---
+            function updateVoyageType() {
+                const vesselId = $('#VesselId').val();
+                if (!vesselId) { $('#voyageTypeBadge').hide(); return; }
+                $.get('@Url.Action("GetVesselVoyageType", "ServiceRequest")', { vesselId: vesselId })
+                    .done(function (data) {
+                        $('#VoyageType').val(data);
+                        const $badge = $('#voyageTypeBadge');
+                        $badge.text(data).show();
+                        $badge.removeClass('bg-warning text-white bg-info text-white')
+                              .addClass(data === 'Foreign' ? 'bg-warning text-white' : 'bg-info text-white');
+                    });
+            }
+            $('#VesselId').on('change', updateVoyageType);
+            if ($('#VesselId').val()) { updateVoyageType(); }
+
+            // --- Port/Terminal Cascading Dropdown ---
+            $('#PortSelect').on('change', function () {
+                const portId = $(this).val();
+                if (!portId) return;
+
+                $('#terminalLoading').show();
+                $.get('@Url.Action("ChangeTerminal", "ServiceRequest")', { portId: portId }, function (data) {
+                    const $select = $('#TerminalSelect');
+                    $select.empty().append('<option value="">-- Select Terminal --</option>');
+                    $.each(data, function (i, item) {
+                        $select.append($('<option>', { value: item.value, text: item.text }));
+                    });
+                    if (typeof refreshModernSelect === 'function') {
+                        refreshModernSelect($select);
+                    }
+                }).always(() => $('#terminalLoading').hide());
+            });
+
+            // --- Duration Calculation ---
+            function calculateDuration() {
+                const startD = $('#DateLeft').val();
+                const startT = $('#TimeLeft').val();
+                const endD = $('#DateArrived').val();
+                const endT = $('#TimeArrived').val();
+
+                if (startD && startT && endD && endT) {
+                    const start = new Date(`${startD}T${startT}`);
+                    const end = new Date(`${endD}T${endT}`);
+                    if (!isNaN(start) && !isNaN(end)) {
+                        const diff = (end - start) / 3600000;
+                        const $badge = $('#durationBadge');
+                        if (diff < 0) {
+                            $badge.text("Invalid").css({'background': 'var(--error)', 'color': 'white'});
+                        } else {
+                            $badge.text(diff.toFixed(2) + " hrs").css({'background': 'white', 'color': 'var(--primary)'});
+                        }
+                    }
+                }
+            }
+            $('.timeline-input').on('change input', calculateDuration);
+            calculateDuration();
+
+            // --- Media Preview Logic ---
+            let imageBlobUrl = null;
+            let videoBlobUrl = null;
+
+            $('#imageUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (imageBlobUrl) URL.revokeObjectURL(imageBlobUrl);
+                    imageBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewImage').show();
+                } else {
+                    $('#btnPreviewImage').hide();
+                }
+            });
+
+            $('#videoUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+                    videoBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewVideo').show();
+                } else {
+                    $('#btnPreviewVideo').hide();
+                }
+            });
+
+            $('#btnPreviewImage').on('click', function() {
+                if (imageBlobUrl) {
+                    ModernAlert.image(imageBlobUrl, "Dispatch Ticket Image Preview");
+                }
+            });
+
+            $('#btnPreviewVideo').on('click', function() {
+                if (videoBlobUrl) {
+                    ModernAlert.video(videoBlobUrl, "Operation Video Preview");
+                }
+            });
+        });
+    </script>
+}

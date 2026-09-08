@@ -1,0 +1,82 @@
+@{
+    ViewData["Title"] = "Bank Account Master File";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Bank Accounts</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">account_balance</span>
+                    <h2 class="modern-headline-md">Bank Account List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="bankAccountTable">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Bank</th>
+                            <th>Branch</th>
+                            <th>Account No</th>
+                            <th>Account Name</th>
+                            <th>Company</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "BankAccount", new { area = "User" })';
+
+            let table = $('#bankAccountTable').DataTable(ModernTable.config({
+                serverSide: false,
+                ajax: {
+    url: "@Url.Action("GetAll", "BankAccount", new { area = "User" })",
+    type: "GET",
+    data: function(d) { return d; }
+},
+                columns: [
+                    { data: "bankAccountCode" },
+                    { data: "bank" },
+                    { data: "branch", defaultContent: "-" },
+                    { data: "accountNo" },
+                    { data: "accountName" },
+                    { data: "company" },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Bank Account', icon: 'edit', url: `${editUrl}?id=${row.bankAccountId}` }
+                        ])
+                    }
+                ]
+            }));
+        });
+    </script>
+}

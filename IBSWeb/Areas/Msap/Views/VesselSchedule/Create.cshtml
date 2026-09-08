@@ -1,0 +1,337 @@
+@model VesselScheduleViewModel
+
+@{
+    ViewData["Title"] = "Create Schedule";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form id="myForm" method="post">
+        @Html.AntiForgeryToken()
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label" style="color: var(--on-surface-variant)">Vessel Schedule</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Schedule</span>
+                    </div>
+                    <h1 class="modern-headline-lg">Create Vessel Schedule</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> SAVE
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">info</span>
+                            <h2 class="modern-headline-md">Schedule Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <div id="conflictAlert" class="flex items-start gap-3 p-4 mb-3 rounded-xl" style="display:none; background:#fff3e0; border:1px solid #ffcc02;">
+                                <span class="material-symbols-outlined" style="color:#e65100;font-size:24px">warning</span>
+                                <div style="flex:1">
+                                    <strong style="color:#bf360c;font-size:0.95rem">Schedule Conflicts Detected</strong>
+                                    <ul id="conflictList" class="mb-0 mt-2" style="list-style:none;padding:0"></ul>
+                                </div>
+                                <button type="button" class="dismiss-conflict-btn" style="background:none;border:none;color:#999;cursor:pointer;font-size:18px">&times;</button>
+                            </div>
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Vessel <span class="text-error">*</span></label>
+                                    <div id="VesselContainer">
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="-- Select Vessel --">
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
+                                    <input type="hidden" asp-for="VesselType" id="VesselType" />
+                                    <span id="voyageTypeBadge" class="modern-badge-sm mt-1" style="display:none"></span>
+                                    <span asp-validation-for="VesselId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Port <span class="text-error">*</span></label>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" id="PortId" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --">
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="PortId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Terminal <span class="text-error">*</span></label>
+                                    <div id="TerminalContainer">
+                                        <select id="TerminalId" asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" data-placeholder="-- Select Terminal --">
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="TerminalId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Voyage Number</label>
+                                    <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="50">
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Status</label>
+                                    <select asp-for="Status" asp-items="@Model.Statuses" class="modern-input js-modern-select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">directions_boat</span>
+                            <h2 class="modern-headline-md">Tugboat Assignment</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <table id="tugboatsTable" class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 48px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                                        <th>Tugboat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Tugboats.Any())
+                                    {
+                                        foreach (var tug in Model.Tugboats)
+                                        {
+                                            var isChecked = Model.SelectedTugboatIds?.Contains(int.Parse(tug.Value)) == true;
+                                            <tr>
+                                                <td class="text-center">
+                                                    <input type="checkbox" class="tug-checkbox form-check-input" value="@tug.Value" @(isChecked ? "checked" : "") style="width: 18px; height: 18px; cursor: pointer;">
+                                                </td>
+                                                <td class="font-bold">@tug.Text</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr><td colspan="2" class="text-center py-3 opacity-60">No tugboats available.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <select asp-for="SelectedTugboatIds" id="hiddenTugboatsSelect" multiple style="display: none;"></select>
+                            <input asp-for="RequiredTugCount" id="RequiredTugCount" type="hidden" />
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="modern-label">Assigned Tugs:</span>
+                                <span id="tugCountBadge" class="modern-badge-sm" style="background: var(--primary); color: white;">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card" style="flex: 1;">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">chat</span>
+                            <h2 class="modern-headline-md">Notes</h2>
+                        </div>
+                        <div class="modern-card-body" style="height: 100%;">
+                            <textarea asp-for="Notes" class="modern-input" placeholder="Optional notes..." style="height: 100%; min-height: 120px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card sticky top-24">
+                        <div class="modern-card-header-info" style="background-color: var(--primary); color: white;">
+                            <span class="material-symbols-outlined">schedule</span>
+                            <h2 class="modern-headline-md" style="color: white">Timeline</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-2">
+                                <label class="modern-label font-bold">Planned Start <span class="text-error">*</span></label>
+                                <input asp-for="PlannedStart" type="datetime-local" class="modern-input" />
+                                <span asp-validation-for="PlannedStart" class="text-error text-xs"></span>
+                            </div>
+                            <div>
+                                <label class="modern-label font-bold">Planned End <span class="text-error">*</span></label>
+                                <input asp-for="PlannedEnd" type="datetime-local" class="modern-input" />
+                                <span asp-validation-for="PlannedEnd" class="text-error text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // --- Vessel → VesselType auto-set ---
+            function updateVesselType() {
+                const vesselId = $('#VesselId').val();
+                if (!vesselId) { $('#voyageTypeBadge').hide(); return; }
+                $.get('@Url.Action("GetVesselVoyageType")', { vesselId: vesselId })
+                    .done(function (data) {
+                        $('#VesselType').val(data);
+                        const $badge = $('#voyageTypeBadge');
+                        $badge.text(data).show();
+                        $badge.removeClass('bg-warning text-white bg-info text-white')
+                              .addClass(data === 'Foreign' ? 'bg-warning text-white' : 'bg-info text-white');
+                    });
+            }
+            $('#VesselId').on('change', updateVesselType);
+            if ($('#VesselId').val()) { updateVesselType(); }
+
+            // --- Port/Terminal Cascade ---
+            $('#PortId').on('change', function () {
+                var portId = $(this).val();
+                var $terminalSelect = $('#TerminalId');
+
+                $terminalSelect.empty().append('<option value="">-- Select Terminal --</option>');
+                $terminalSelect.trigger('change');
+
+                if (!portId) return;
+
+                $.ajax({
+                    url: '@Url.Action("GetTerminalsByPort", "VesselSchedule")',
+                    type: 'GET',
+                    data: { portId: portId },
+                    success: function (data) {
+                        $.each(data, function (i, item) {
+                            $terminalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                        $terminalSelect.trigger('change');
+                    },
+                    error: function (xhr) {
+                        console.error('GetTerminalsByPort failed:', xhr.status, xhr.responseText);
+                    }
+                });
+            });
+
+            // --- Tugboat DataTable + checkbox logic ---
+            let tugTable = $('#tugboatsTable').DataTable({
+                paging: true,
+                info: true,
+                pageLength: 10,
+                order: [[1, 'asc']],
+                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
+                language: { emptyTable: "No tugboats available." },
+                columnDefs: [{ orderable: false, targets: 0 }]
+            });
+
+            function updateTugSelection() {
+                const $hiddenSelect = $('#hiddenTugboatsSelect');
+                $hiddenSelect.empty();
+                let count = 0;
+
+                $('.tug-checkbox:checked').each(function () {
+                    $hiddenSelect.append($('<option>', { value: $(this).val(), selected: true }));
+                    count++;
+                });
+
+                $('#tugCountBadge').text(count);
+                $('#RequiredTugCount').val(count);
+            }
+
+            $('#tugboatsTable tbody').on('change', '.tug-checkbox', updateTugSelection);
+
+            $('#tugboatsTable tbody').on('click', 'tr', function (e) {
+                if (e.target.type !== 'checkbox') {
+                    const $cb = $(this).find('.tug-checkbox');
+                    $cb.prop('checked', !$cb.prop('checked')).trigger('change');
+                }
+            });
+
+            $('#selectAll').on('change', function () {
+                $('.tug-checkbox').prop('checked', this.checked);
+                updateTugSelection();
+            });
+
+            if ($('.tug-checkbox:checked').length > 0) {
+                updateTugSelection();
+            }
+
+            // --- Conflict check before submit ---
+            function getConflictData() {
+                const tugIds = [];
+                $('.tug-checkbox:checked').each(function () { tugIds.push(parseInt($(this).val())); });
+                return {
+                    vesselScheduleId: 0,
+                    terminalId: parseInt($('#TerminalId').val() || 0),
+                    plannedStart: $('#PlannedStart').val() ? new Date($('#PlannedStart').val()).toISOString() : null,
+                    plannedEnd: $('#PlannedEnd').val() ? new Date($('#PlannedEnd').val()).toISOString() : null,
+                    selectedTugboatIds: tugIds
+                };
+            }
+
+            $('#submitButton').on('click', function (e) {
+                e.preventDefault();
+                if (!ModernFormValidator.validate('myForm')) return;
+
+                const $alert = $('#conflictAlert');
+                $alert.hide();
+
+                function showSaveConfirm(hasConflicts) {
+                    ModernAlert.confirm({
+                        title: 'Save Schedule?',
+                        text: hasConflicts ? 'Conflicts detected above. Save anyway?' : 'Review all details before proceeding.',
+                        icon: hasConflicts ? 'warning' : 'question',
+                        confirmText: 'Yes, save'
+                    }).then(function (res) {
+                        if (res.isConfirmed) {
+                            ModernAlert.showLoading('Saving schedule...');
+                            document.getElementById('myForm').submit();
+                        }
+                    });
+                }
+
+                $.ajax({
+                    url: '@Url.Action("CheckConflicts", "VesselSchedule")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(getConflictData()),
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (result) {
+                    if (result.hasConflicts) {
+                        const $list = $('#conflictList');
+                        $list.empty();
+                        let modalHtml = '<ul style="text-align:left;margin:0 auto;max-width:340px;padding-left:1.2rem">';
+                        result.conflicts.forEach(function (c) {
+                            const color = c.type === 'Terminal' ? '#d32f2f' : '#e65100';
+                            modalHtml += '<li class="mb-2" style="color:' + color + ';font-size:0.85rem"><strong>[' + c.type + ']</strong> ' + c.message + '</li>';
+                            $list.append('<li class="flex items-start gap-2 mb-1" style="color:#333;font-size:0.85rem"><span class="material-symbols-outlined" style="font-size:16px;color:' + color + '">' + (c.type === 'Terminal' ? 'dock' : 'directions_boat') + '</span> <span>' + c.message + '</span></li>');
+                        });
+                        modalHtml += '</ul>';
+                        $alert.show();
+                        $alert[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        ModernAlert.warning(modalHtml, 'Conflicts Detected')
+                            .then(function () { showSaveConfirm(true); });
+                    } else {
+                        showSaveConfirm(false);
+                    }
+                }).fail(function () {
+                    ModernAlert.confirm({
+                        title: 'Save Schedule?',
+                        text: 'Could not check conflicts. Proceed anyway?',
+                        icon: 'question',
+                        confirmText: 'Yes, save'
+                    }).then(res => {
+                        if (res.isConfirmed) {
+                            ModernAlert.showLoading('Saving schedule...');
+                            document.getElementById('myForm').submit();
+                        }
+                    });
+                });
+            });
+
+            $('.dismiss-conflict-btn').on('click', function() { $('#conflictAlert').hide(); });
+        });
+    </script>
+}

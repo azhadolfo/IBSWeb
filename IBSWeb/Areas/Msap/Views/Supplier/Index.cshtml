@@ -1,0 +1,93 @@
+@{
+    ViewData["Title"] = "Suppliers";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Suppliers</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-area="User" asp-controller="Supplier" asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE SUPPLIER
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">warehouse</span>
+                    <h2 class="modern-headline-md">Supplier List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="suppliersTable">
+                    <thead>
+                        <tr>
+                            <th>Supplier Code</th>
+                            <th>Supplier Name</th>
+                            <th>Supplier Address</th>
+                            <th>TIN No</th>
+                            <th>Supplier Terms</th>
+                            <th>Category</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Supplier", new { area = "User" })';
+            const deactivateUrl = '@Url.Action("Deactivate", "Supplier", new { area = "User" })';
+            const activateUrl = '@Url.Action("Activate", "Supplier", new { area = "User" })';
+
+            $('#suppliersTable').DataTable(ModernTable.config({
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { targets: [6, 7], className: 'text-center' },
+                    { targets: [7], orderable: false }
+                ],
+                ajax: $.extend(ModernTable.ajax("@Url.Action("GetSuppliersList", "Supplier", new { area = "User" })"), {
+                    error: function() { ModernAlert.error('An error occurred while loading the data'); }
+                }),
+                columns: [
+                    { data: "supplierCode" },
+                    { data: "supplierName" },
+                    { data: "supplierAddress" },
+                    { data: "supplierTin" },
+                    { data: "supplierTerms" },
+                    { data: "category" },
+                    {
+                        data: "isActive",
+                        render: (data) => ModernTable.render.badge(data ? "Active" : "Inactive", data ? "status-open" : "status-closed")
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.supplierId}` },
+                            row.isActive
+                                ? { label: 'Deactivate', icon: 'person_off', url: `${deactivateUrl}?id=${row.supplierId}`, isError: true }
+                                : { label: 'Activate', icon: 'person_check', url: `${activateUrl}?id=${row.supplierId}` }
+                        ])
+                    }
+                ]
+            }));
+        });
+    </script>
+}

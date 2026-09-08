@@ -1,6 +1,269 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+
 @{
-    ViewData["Title"] = "Msap";
+    ViewData["Title"] = "Dashboard";
+    var selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
 }
 
-<h2>Msap</h2>
-<p>MSAP-specific area groundwork is in place.</p>
+@if (!User.Identity!.IsAuthenticated)
+{
+    <div class="container">
+        <div class="row justify-content-center my-5">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-4 text-primary fw-bold">Welcome to Our Integrated Business System</h1>
+                <p class="fs-5 text-muted">Effortlessly manage and optimize your business tasks.</p>
+                <a class="btn btn-primary btn-lg px-4 py-3 mt-4" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="">
+                    Login <i class="bi bi-box-arrow-in-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    if (selectedCompany == "MMSI" && !User.IsInRole("PortCoordinator"))
+    {
+        <div class="modern-dashboard-view">
+            <div class="dashboard-container">
+                <!-- Banner welcome header -->
+                <div class="dashboard-banner">
+                    <div class="banner-welcome">
+                        <h1>Good Day, <span id="modernUserName">@User.Identity?.Name</span></h1>
+                        <p>Welcome to MSAP - MMSI Sales and Accounting Program. Here is your operational and financial intelligence overview.</p>
+                    </div>
+                    <div class="banner-date">
+                        <span class="material-symbols-outlined">calendar_today</span>
+                        <span id="modernCurrentDate"></span>
+                    </div>
+                </div>
+
+                <!-- KPI Stats Grid -->
+                <div class="dashboard-kpi-grid">
+                    <!-- Job Orders Card -->
+                    <a href="@Url.Action("Index", "JobOrder", new { area = "User" })" class="kpi-card">
+                        <div class="kpi-card-header">
+                            <h3 class="kpi-title">Job Orders</h3>
+                            <div class="kpi-icon-wrap">
+                                <span class="material-symbols-outlined">assignment</span>
+                            </div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span id="jo-total-value" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi-divider"></div>
+                        <div class="kpi-status-list">
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #10b981;"></span>
+                                    <span>Open</span>
+                                </div>
+                                <span id="jo-open-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #64748b;"></span>
+                                    <span>Closed</span>
+                                </div>
+                                <span id="jo-closed-count" class="status-count">0</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Dispatch Tickets Card -->
+                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "User" })" class="kpi-card">
+                        <div class="kpi-card-header">
+                            <h3 class="kpi-title">Dispatch Tickets</h3>
+                            <div class="kpi-icon-wrap">
+                                <span class="material-symbols-outlined">local_shipping</span>
+                            </div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span id="dt-total-value" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi-divider"></div>
+                        <div class="kpi-status-list" style="max-height: 110px; overflow-y: auto;">
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #eab308;"></span>
+                                    <span>For Tariff</span>
+                                </div>
+                                <span id="dt-tariff-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #8b5cf6;"></span>
+                                    <span>For Approval</span>
+                                </div>
+                                <span id="dt-approval-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #ef4444;"></span>
+                                    <span>Disapproved</span>
+                                </div>
+                                <span id="dt-disapproved-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #3b82f6;"></span>
+                                    <span>For Billing</span>
+                                </div>
+                                <span id="dt-billing-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #10b981;"></span>
+                                    <span>Billed</span>
+                                </div>
+                                <span id="dt-billed-count" class="status-count">0</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Billings Card -->
+                    <a href="@Url.Action("Index", "Billing", new { area = "User" })" class="kpi-card">
+                        <div class="kpi-card-header">
+                            <h3 class="kpi-title">Billings</h3>
+                            <div class="kpi-icon-wrap">
+                                <span class="material-symbols-outlined">receipt_long</span>
+                            </div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span id="b-total-value" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi-divider"></div>
+                        <div class="kpi-status-list">
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #3b82f6;"></span>
+                                    <span>For Posting</span>
+                                </div>
+                                <span id="b-posting-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #ea580c;"></span>
+                                    <span>For Collection</span>
+                                </div>
+                                <span id="b-collection-count" class="status-count">0</span>
+                            </div>
+                            <div id="b-collected-item" class="kpi-status-item" style="cursor: pointer; position: relative;" title="Click to toggle Count/Amount">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #10b981;"></span>
+                                    <span>Collected</span>
+                                    <span class="material-symbols-outlined" style="font-size: 14px; margin-left: 4px; opacity: 0.6; vertical-align: middle;">swap_horiz</span>
+                                </div>
+                                <span id="b-collected-count" class="status-count">0</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Collections Card -->
+                    <a href="@Url.Action("Index", "Collection", new { area = "User" })" class="kpi-card">
+                        <div class="kpi-card-header">
+                            <h3 class="kpi-title">Collections</h3>
+                            <div class="kpi-icon-wrap">
+                                <span class="material-symbols-outlined">payments</span>
+                            </div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span id="c-total-value" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi-divider"></div>
+                        <div class="kpi-status-list">
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #10b981;"></span>
+                                    <span>Active</span>
+                                </div>
+                                <span id="c-active-count" class="status-count">0</span>
+                            </div>
+                            <div class="kpi-status-item">
+                                <div class="status-bullet">
+                                    <span class="bullet-dot" style="background-color: #ef4444;"></span>
+                                    <span>Voided</span>
+                                </div>
+                                <span id="c-voided-count" class="status-count">0</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Main Layout Columns -->
+                <div class="dashboard-main-grid">
+                    <!-- Left: Trends Chart -->
+                    <div class="dashboard-section-card">
+                        <h2 class="dashboard-section-title">
+                            <span class="material-symbols-outlined">monitoring</span>
+                            <span>Billing & Collection Trends (Last 6 Months)</span>
+                        </h2>
+                        <div class="chart-container">
+                            <div id="trend-chart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Actions & Recent Activity -->
+                    <div>
+                        <!-- Quick Actions Panel -->
+                        <div class="dashboard-section-card quick-actions-panel">
+                            <h2 class="dashboard-section-title">
+                                <span class="material-symbols-outlined">bolt</span>
+                                <span>Quick Actions</span>
+                            </h2>
+                            <div class="quick-actions-grid">
+                                <a href="@Url.Action("Create", "JobOrder", new { area = "User" })" class="action-btn">
+                                    <span class="material-symbols-outlined">add_task</span>
+                                    <div class="action-btn-label">New Job Order</div>
+                                </a>
+
+                                <a href="@Url.Action("Create", "Billing", new { area = "User" })" class="action-btn">
+                                    <span class="material-symbols-outlined">note_add</span>
+                                    <div class="action-btn-label">New Billing</div>
+                                </a>
+                                <a href="@Url.Action("Create", "Collection", new { area = "User" })" class="action-btn">
+                                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                                    <div class="action-btn-label">New Collection</div>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Recent Operations Activity -->
+                        <div class="dashboard-section-card">
+                            <h2 class="dashboard-section-title">
+                                <span class="material-symbols-outlined">history</span>
+                                <span>Recent Operations Activity</span>
+                            </h2>
+                            <div id="activity-feed-list" class="activity-feed-list">
+                                <div class="text-center text-muted py-4">Loading activities...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container text-center my-5">
+            <h1 class="display-4 text-primary fw-bold">Welcome to Our Integrated Business System</h1>
+            <p class="fs-5 text-muted">Effortlessly manage and optimize your business tasks.</p>
+        </div>
+    }
+}
+
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/modern-dashboard.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="~/js/modern-dashboard.js" asp-append-version="true"></script>
+}

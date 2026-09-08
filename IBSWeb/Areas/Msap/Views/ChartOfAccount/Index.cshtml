@@ -1,0 +1,255 @@
+@{
+    ViewData["Title"] = "Chart of Accounts";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">ACCOUNTING</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Chart of Accounts</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="modern-btn-primary" id="openCreateCoaBtn">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE ACCOUNT
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">account_tree</span>
+                    <h2 class="modern-headline-md">Account Structure</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="coaTable">
+                    <thead>
+                        <tr>
+                            <th>Account No.</th>
+                            <th>Account Name</th>
+                            <th>Account Type</th>
+                            <th>Normal Balance</th>
+                            <th>Level</th>
+                            <th>Created Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ========== CREATE ACCOUNT MODAL ========== -->
+<div class="modal fade" id="createModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content modern-card border-0">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">add_circle</span>
+                <h2 class="modern-headline-md">Create Account</h2>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modern-card-body">
+                <form id="createForm" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label for="parentId" class="modern-label">Parent Account <span class="text-error">*</span></label>
+                        <select id="parentId" class="modern-input js-modern-select" data-placeholder="Select Parent Account" required>
+                            <option value="">-- Select Parent Account --</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label for="createAccountName" class="modern-label">Account Name <span class="text-error">*</span></label>
+                        <input type="text" class="modern-input" id="createAccountName" placeholder="e.g. Petty Cash" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modern-sticky-footer mt-0">
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="saveCreateBtn">
+                        <span class="material-symbols-outlined">save</span>
+                        CREATE ACCOUNT
+                    </button>
+                    <button type="button" class="modern-btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== EDIT ACCOUNT MODAL ========== -->
+<div class="modal fade" id="editModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content modern-card border-0">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">edit</span>
+                <h2 class="modern-headline-md">Edit Account</h2>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modern-card-body">
+                <form id="editForm" class="flex flex-col gap-4">
+                    <input type="hidden" id="editAccountId" />
+                    <div class="flex flex-col gap-1">
+                        <label class="modern-label">Account Number</label>
+                        <input type="text" class="modern-input" id="editAccountNumber" readonly />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label for="editAccountName" class="modern-label">Account Name <span class="text-error">*</span></label>
+                        <input type="text" class="modern-input" id="editAccountName" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modern-sticky-footer mt-0">
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="saveEditBtn">
+                        <span class="material-symbols-outlined">save</span>
+                        SAVE CHANGES
+                    </button>
+                    <button type="button" class="modern-btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let coaTable;
+        let createModal;
+        let editModal;
+
+        $(document).ready(function() {
+            createModal = new bootstrap.Modal(document.getElementById('createModal'));
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            $('#openCreateCoaBtn').on('click', openCreateModal);
+            $('#saveCreateBtn').on('click', saveCreate);
+            $('#saveEditBtn').on('click', saveEdit);
+
+            coaTable = $('#coaTable').DataTable(ModernTable.config({
+                ajax: ModernTable.ajax("@Url.Action("GetChartOfAccountList", "ChartOfAccount", new { area = "User" })"),
+                columns: [
+                    { data: "accountNumber" },
+                    { 
+                        data: "accountName",
+                        render: (data, type, row) => {
+                            const padding = (row.level - 1) * 20;
+                            return `<div style="padding-left: ${padding}px" class="${row.level < 4 ? 'font-bold' : ''}">${data}</div>`;
+                        }
+                    },
+                    { data: "accountType" },
+                    { data: "normalBalance" },
+                    { 
+                        data: "level",
+                        className: "text-center"
+                    },
+                    { data: "createdDate" },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            const actions = [];
+                            if (row.level < 5) {
+                                actions.push({ label: 'Add Sub-Account', icon: 'add_circle', onclick: `openCreateModal(${row.accountId})` });
+                            }
+                            actions.push({ label: 'Edit Name', icon: 'edit', onclick: `openEditModal(${JSON.stringify(row)})` });
+                            return ModernTable.render.dropdown(actions);
+                        }
+                    }
+                ],
+                order: [[0, 'asc']],
+                pageLength: 50
+            }));
+
+            loadParentAccounts();
+        });
+
+        function loadParentAccounts() {
+            $.get("@Url.Action("GetAllAsync", "ChartOfAccount", new { area = "User" })", function(data) {
+                const $select = $('#parentId');
+                $select.empty().append('<option value="">-- Select Parent Account --</option>');
+                // Only allow levels 3 and 4 as parents for automatic numbering logic
+                data.filter(a => a.level >= 3 && a.level < 5).forEach(a => {
+                    $select.append(`<option value="${a.accountId}">${a.accountNumber} - ${a.accountName}</option>`);
+                });
+            });
+        }
+
+        function openCreateModal(parentId = null) {
+            $('#createForm')[0].reset();
+            if (parentId) {
+                $('#parentId').val(parentId).trigger('change');
+            }
+            createModal.show();
+        }
+
+        function saveCreate() {
+            const parentId = $('#parentId').val();
+            const accountName = $('#createAccountName').val().trim();
+
+            if (!parentId || !accountName) {
+                ModernAlert.warning('All fields are required');
+                return;
+            }
+
+            const $btn = $('#saveCreateBtn');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Creating...');
+
+            $.post("@Url.Action("Create", "ChartOfAccount", new { area = "User" })", { parentId, accountName }, function(response) {
+                $btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> CREATE ACCOUNT');
+                if (response.redirectUrl) {
+                    ModernAlert.success('Account created successfully').then(() => {
+                        createModal.hide();
+                        coaTable.ajax.reload();
+                        loadParentAccounts();
+                    });
+                }
+            }).fail(xhr => {
+                $btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> CREATE ACCOUNT');
+                ModernAlert.error(xhr.responseJSON?.message || 'Failed to create account');
+            });
+        }
+
+        function openEditModal(row) {
+            $('#editAccountId').val(row.accountId);
+            $('#editAccountNumber').val(row.accountNumber);
+            $('#editAccountName').val(row.accountName);
+            editModal.show();
+        }
+
+        function saveEdit() {
+            const accountId = $('#editAccountId').val();
+            const accountName = $('#editAccountName').val().trim();
+
+            if (!accountName) {
+                ModernAlert.warning('Account name is required');
+                return;
+            }
+
+            const $btn = $('#saveEditBtn');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+
+            $.post("@Url.Action("Edit", "ChartOfAccount", new { area = "User" })", { accountId, accountName }, function(response) {
+                $btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> SAVE CHANGES');
+                if (response.redirectUrl) {
+                    ModernAlert.success('Account updated successfully').then(() => {
+                        editModal.hide();
+                        coaTable.ajax.reload();
+                    });
+                }
+            }).fail(xhr => {
+                $btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> SAVE CHANGES');
+                ModernAlert.error(xhr.responseJSON?.message || 'Failed to update account');
+            });
+        }
+    </script>
+}

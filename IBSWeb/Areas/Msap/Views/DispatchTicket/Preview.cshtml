@@ -1,0 +1,376 @@
+@model IBS.Models.MSAP.DispatchTicket
+
+@{
+    ViewData["Title"] = $"Dispatch Ticket - {Model.DispatchNumber}";
+    ViewData["IsFullWidth"] = true;
+    var filterType = ViewBag.FilterType as string;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+            @Html.AntiForgeryToken()
+        <!-- Header -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <a class="modern-label" style="text-decoration:none;" asp-action="Index">Dispatch Tickets</a>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">@Model.DispatchNumber</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <h1 class="modern-headline-lg">@Model.DispatchNumber</h1>
+                    <span class="modern-badge @(Model.Status == SD.DispatchTicketStatus.ForBilling ? "status-billing" : (Model.Status == SD.DispatchTicketStatus.Disapproved ? "status-error" : "status-tariff"))">@Model.Status</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                @if (Model.JobOrderId.HasValue)
+                {
+                    <a class="modern-btn-secondary" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
+                }
+                else
+                {
+                    <a class="modern-btn-secondary" asp-controller="DispatchTicket" asp-action="Index" asp-area="User" asp-route-filterType="@filterType">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="modern-grid">
+            <!-- Left Column: Dispatch Details -->
+            <div class="modern-col-4">
+                <div class="modern-card sticky top-24">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">info</span>
+                        <h2 class="modern-headline-md">Dispatch Details</h2>
+                    </div>
+                    <div class="modern-card-body" style="gap: 0.6rem;">
+                        <!-- Customer & Vessel -->
+                        <div>
+                            <p class="modern-label">Customer</p>
+                            <p class="modern-value-lg text-primary" style="font-size: 18px;">@Model.Customer?.CustomerName</p>
+
+                            <div class="mt-2">
+                                <p class="modern-label">Vessel</p>
+                                <p class="modern-value-md font-bold uppercase">@Model.Vessel?.VesselName <span class="modern-badge-sm" style="background-color: var(--surface-container-high); text-transform: none; font-weight: 500; margin-left: 4px;">@Model.Vessel?.VesselType</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Logistics Row -->
+                        <div class="modern-grid-compact border-t border-outline-variant pt-2">
+                            <div class="modern-col-6">
+                                <p class="modern-label">COS #</p>
+                                <p class="modern-value-md font-bold">@(Model.COSNumber ?? "-")</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Voyage #</p>
+                                <p class="modern-value-md font-bold">@(Model.VoyageNumber ?? "-")</p>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label">Location</p>
+                            <div class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">location_on</span>
+                                <p class="modern-value-md">
+                                    @if (Model.Terminal?.Port != null)
+                                    {
+                                        <span class="font-bold">@Model.Terminal.Port.PortName</span><br/>
+                                        <span class="text-xs opacity-60">@Model.Terminal.TerminalName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="italic opacity-50">-</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Type of Service -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label">Type of Service</p>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 18px;">build</span>
+                                <div>
+                                    <p class="modern-value-md font-bold">@(Model.Service?.ServiceName ?? "-")</p>
+                                </div>
+                                </div>
+                                </div>
+
+                        <!-- Timeline -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label mb-2">Service Timeline</p>
+                            <div class="dispatch-timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-marker start"></div>
+                                    <div class="timeline-content">
+                                        <p class="text-xs font-bold uppercase opacity-50">Departure</p>
+                                        <p class="modern-value-md font-bold">@Model.DateLeft?.ToString("MMM dd, yyyy")</p>
+                                        <p class="text-xs opacity-60">@Model.TimeLeft?.ToString("HH:mm")</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker end"></div>
+                                    <div class="timeline-content">
+                                        <p class="text-xs font-bold uppercase opacity-50">Arrival</p>
+                                        <p class="modern-value-md font-bold">@Model.DateArrived?.ToString("MMM dd, yyyy")</p>
+                                        <p class="text-xs opacity-60">@Model.TimeArrived?.ToString("HH:mm")</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="timeline-duration">
+                                <div class="duration-box">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                    <div>
+                                        <p class="modern-label" style="margin-bottom: 0;">Net Duration</p>
+                                        <p class="modern-headline-md text-primary" style="font-size: 20px;">@Model.TotalHours.ToString("N2")&nbsp;<span class="text-xs opacity-60">HRS</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Provider -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label">Provider Details</p>
+                            <div class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">directions_boat</span>
+                                <div>
+                                    <p class="modern-value-md font-bold">@Model.Tugboat?.TugboatName</p>
+                                    <p class="text-xs italic opacity-60">Master: @Model.TugMaster?.TugMasterName</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Remarks))
+                        {
+                            <div class="border-t border-outline-variant pt-2">
+                                <p class="modern-label">Remarks</p>
+                                <p class="modern-value-md italic opacity-70" style="font-size: 13px;">@Model.Remarks</p>
+                            </div>
+                        }
+
+                        <!-- Attachments -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label mb-2">Media Attachments</p>
+                            <div class="modern-grid-compact">
+                                @if (!string.IsNullOrEmpty(Model.ImageSignedUrl))
+                                {
+                                    <div class="modern-col-12 mb-2">
+                                        <div class="modern-card" style="background-color: var(--surface-container-low); cursor: pointer;" id="viewUpload">
+                                            <div class="modern-card-body items-center p-2" style="gap: 4px;">
+                                                <img src="@Model.ImageSignedUrl" class="rounded" alt="Ticket" style="height: 120px; width: 100%; object-fit: cover;" />
+                                                <span class="text-xs text-primary font-bold">View Image</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.VideoSignedUrl))
+                                {
+                                    <div class="modern-col-12">
+                                        <div class="modern-card view-video" style="background-color: var(--surface-container-low); cursor: pointer;" data-videolink="@Model.VideoSignedUrl">
+                                            <div class="modern-card-body items-center p-2" style="gap: 4px;">
+                                                <span class="material-symbols-outlined text-primary" style="font-size: 48px">play_circle</span>
+                                                <span class="text-xs text-primary font-bold">Play Video</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (string.IsNullOrEmpty(Model.ImageSignedUrl) && string.IsNullOrEmpty(Model.VideoSignedUrl))
+                                {
+                                    <p class="text-sm italic opacity-50 modern-col-12 text-center">No attachments</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Tariff Details -->
+            <div class="modern-col-8">
+                <div class="modern-card">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        <h2 class="modern-headline-md">Tariff Summary</h2>
+                    </div>
+                    <div class="modern-card-body">
+                        <div class="modern-table-container" style="border: 1px solid var(--outline-variant);">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Service Description</th>
+                                        <th class="text-right">Rate</th>
+                                        <th class="text-right">Disc. (%)</th>
+                                        <th class="text-right">Billing Amount</th>
+                                        <th class="text-right">Net Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-bold">Dispatch Service</td>
+                                        <td class="text-right">@Model.DispatchRate.ToString("N2")</td>
+                                        <td class="text-right text-error font-bold">@Model.DispatchDiscount.ToString("N2")%</td>
+                                        <td class="text-right font-bold">@Model.DispatchBillingAmount.ToString("N2")</td>
+                                        <td class="text-right font-bold text-success">@Model.DispatchNetRevenue.ToString("N2")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">BAF (Bunker Adjustment)</td>
+                                        <td class="text-right">@Model.BAFRate.ToString("N2")</td>
+                                        <td class="text-right text-error font-bold">@Model.BAFDiscount.ToString("N2")%</td>
+                                        <td class="text-right font-bold">@Model.BAFBillingAmount.ToString("N2")</td>
+                                        <td class="text-right font-bold text-success">@Model.BAFNetRevenue.ToString("N2")</td>
+                                    </tr>
+                                    @if (Model.Tugboat is { IsCompanyOwned: false })
+                                    {
+                                        <tr style="background-color: var(--surface-container-low)">
+                                            <td colspan="3" class="italic">
+                                                Outsourced Provider: <span class="font-bold">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</span>
+                                            </td>
+                                            <td class="text-right modern-label" style="vertical-align: middle">AP Other Tugs:</td>
+                                            <td class="text-right font-bold text-error">(@Model.ApOtherTugs.ToString("N2"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Financial Summary Card -->
+                        <div class="financial-summary-card mt-4">
+                            <div class="financial-item">
+                                <span class="financial-label">Grand Total Billing</span>
+                                <span class="financial-value primary">₱ @Model.TotalBilling.ToString("N2")</span>
+                            </div>
+                            <div class="financial-divider"></div>
+                            <div class="financial-item">
+                                <span class="financial-label">Net Revenue Realized</span>
+                                <span class="financial-value secondary">₱ @Model.TotalNetRevenue.ToString("N2")</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-outline-variant">
+                            @if (ViewBag.CanApproveTariff == true && Model.Status == SD.DispatchTicketStatus.ForApproval)
+                            {
+                                <button type="button" id="approveTariff" data-id="@Model.DispatchTicketId" class="modern-btn-primary" style="background-color: #406915; color: white;">
+                                    <span class="material-symbols-outlined">check_circle</span> APPROVE TARIFF
+                                </button>
+                                <button type="button" id="disapproveTariff" data-id="@Model.DispatchTicketId" class="modern-btn-error">
+                                    <span class="material-symbols-outlined">block</span> DISAPPROVE
+                                </button>
+                            }
+                            else if (ViewBag.CanEditTicket == true && Model.Status == SD.DispatchTicketStatus.ForBilling)
+                            {
+                                <button type="button" id="revokeApproval" data-id="@Model.DispatchTicketId" class="modern-btn-secondary" style="color: #ef6c00">
+                                    <span class="material-symbols-outlined">history</span> REVOKE APPROVAL
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Image Preview
+            $('#viewUpload').on('click', function () {
+                const src = $(this).find('img').attr('src');
+                if (src) ModernAlert.image(src, "Dispatch Ticket");
+            });
+
+            // Video Player
+            $(document).on("click", ".view-video", function () {
+                const videoLink = $(this).data("videolink");
+                if (videoLink) ModernAlert.video(videoLink, "Dispatch Ticket Video");
+            });
+
+            // Approve Action
+            $('#approveTariff').on('click', function () {
+                let id = $(this).data('id');
+                ModernAlert.confirm({
+                    title: 'Approve Tariff?',
+                    text: "This ticket will be marked for billing.",
+                    icon: 'question',
+                    confirmText: 'Yes, Approve'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ModernAlert.showLoading("Approving...");
+                        $.post('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(data) {
+                            if (data.success) {
+                                ModernAlert.success(data.message).then(() => location.reload());
+                            } else {
+                                ModernAlert.error(data.message);
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Revoke Approval
+            $('#revokeApproval').on('click', function () {
+                let id = $(this).data('id');
+                ModernAlert.confirm({
+                    title: 'Revoke Approval?',
+                    text: "The tariff status will be reverted to For Approval.",
+                    icon: 'warning',
+                    confirmText: 'Yes, Revoke'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ModernAlert.showLoading("Revoking...");
+                        $.post('@Url.Action("ChangeStatus", "DispatchTicket", new { area = "User" })', {
+                            id: id,
+                            status: '@SD.DispatchTicketStatus.ForApproval',
+                            activity: 'Revoked approval',
+                            docType: 'Dispatch Ticket',
+                            successMessage: 'Approval revoked successfully.',
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        }, function(data) {
+                            if (data.success) {
+                                ModernAlert.success(data.message).then(() => location.reload());
+                            } else {
+                                ModernAlert.error(data.message);
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Disapprove
+            $('#disapproveTariff').on('click', function () {
+                let id = $(this).data('id');
+                ModernAlert.prompt({
+                    title: 'Disapprove Tariff',
+                    text: 'Please provide a reason (min 10 characters):',
+                    placeholder: 'Reason for disapproval...',
+                    icon: 'error',
+                    confirmText: 'Submit',
+                    validator: (value) => {
+                        if (!value || value.length < 10) return 'Reason must be at least 10 characters';
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ModernAlert.showLoading("Submitting...");
+                        $.post('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
+                            id: id,
+                            reason: result.value,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        }, function(data) {
+                            if (data.success) {
+                                ModernAlert.success(data.message).then(() => location.reload());
+                            } else {
+                                ModernAlert.error(data.message);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

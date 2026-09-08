@@ -1,0 +1,87 @@
+@{
+    ViewData["Title"] = "Employee Management";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">GENERAL</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Employee</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-area="User" asp-controller="Employee" asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
+                </a>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">badge</span>
+                    <h2 class="modern-headline-md">Employee List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
+                    <tr>
+                        <th>Emp. No.</th>
+                        <th>Initial</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Birth Date</th>
+                        <th>Tel No.</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Employee", new { area = "User" })';
+
+            var table = $('#paginatedTable').DataTable(ModernTable.config({
+                serverSide: true,
+                ajax: ModernTable.ajax("@Url.Action("GetEmployeesList", "Employee", new { area = "User" })"),
+                columns: [
+                    { data: "employeeNumber" },
+                    { data: "initial" },
+                    { data: "firstName" },
+                    { data: "lastName" },
+                    {
+                        data: "birthDate",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    { data: "telNo" },
+                    { data: "department" },
+                    { data: "position" },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Employee', icon: 'edit', url: `${editUrl}?id=${row.employeeId}` }
+                        ])
+                    }
+                ]
+            }));
+        });
+    </script>
+}

@@ -1,0 +1,103 @@
+@model VesselSchedule
+
+@{
+    ViewData["Title"] = "Schedule Details";
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">Vessel Schedule</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Details</span>
+                </div>
+                <h1 class="modern-headline-lg">Schedule Details</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.VesselScheduleId" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">edit</span> EDIT
+                </a>
+                <a asp-action="Index" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span> BACK
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-grid">
+            <div class="modern-col-6 flex flex-column" style="gap: 1.25rem;">
+                <div class="modern-card">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">info</span>
+                        <h2 class="modern-headline-md">General Information</h2>
+                    </div>
+                    <div class="modern-card-body">
+                        <div class="modern-grid-compact">
+                            <div class="modern-col-6">
+                                <p class="modern-label">Status</p>
+                                <p><span class="badge bg-@(Model.Status switch { "Tentative" => "secondary", "Confirmed" => "primary", "In Progress" => "success", "Completed" => "dark", "Cancelled" => "danger", _ => "secondary" }) fs-6">@Model.Status</span></p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Vessel Type</p>
+                                <p class="modern-value-md">@(Model.VesselType ?? "N/A")</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Vessel</p>
+                                <p class="modern-value-md">@Model.Vessel?.VesselName (@Model.Vessel?.VesselNumber)</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Voyage Number</p>
+                                <p class="modern-value-md">@(Model.VoyageNumber ?? "N/A")</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Port / Terminal</p>
+                                <p class="modern-value-md">@Model.Port?.PortName / @Model.Terminal?.TerminalName</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Required Tug Count</p>
+                                <p class="modern-value-md">@Model.RequiredTugCount</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modern-col-6 flex flex-column" style="gap: 1.25rem;">
+                <div class="modern-card">
+                    <div class="modern-card-header-info" style="background-color: var(--primary); color: white;">
+                        <span class="material-symbols-outlined">schedule</span>
+                        <h2 class="modern-headline-md" style="color: white">Timeline</h2>
+                    </div>
+                    <div class="modern-card-body">
+                        <div class="modern-grid-compact">
+                            <div class="modern-col-6">
+                                <p class="modern-label">Planned Start</p>
+                                <p class="modern-value-md">@Model.PlannedStart.ToString("MMM dd, yyyy HH:mm")</p>
+                            </div>
+                            <div class="modern-col-6">
+                                <p class="modern-label">Planned End</p>
+                                <p class="modern-value-md">@Model.PlannedEnd.ToString("MMM dd, yyyy HH:mm")</p>
+                            </div>
+                            <div class="modern-col-12">
+                                <p class="modern-label">Duration</p>
+                                <p class="modern-value-md">@((Model.PlannedEnd - Model.PlannedStart).TotalHours.ToString("F1")) hours</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">chat</span>
+                            <h2 class="modern-headline-md">Notes</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <p class="modern-value-md text-pre-wrap">@Model.Notes</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </main>
+</div>

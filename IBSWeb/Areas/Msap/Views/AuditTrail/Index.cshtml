@@ -1,0 +1,294 @@
+@{
+    ViewData["Title"] = "Audit Trails";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Audit Trail</span>
+                </div>
+                <h1 class="modern-headline-lg">System Audit Trails</h1>
+            </div>
+        </div>
+
+        <!-- Workflow Trace Accordion -->
+        <div class="modern-card mb-4">
+            <div class="modern-card-header-action" style="cursor: pointer;" id="traceAccordionToggle">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">account_tree</span>
+                    <h2 class="modern-headline-md">Workflow Trace</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="modern-label" id="traceStatusLabel" style="font-size: 10px;">Select a Job Order to begin</span>
+                    <span class="material-symbols-outlined transition-all" id="traceChevron" style="font-variation-settings: 'FILL' 0, 'wght' 700;">expand_more</span>
+                </div>
+            </div>
+            <div id="traceAccordionBody" style="display: none; border-top: 1px solid var(--outline-variant);">
+                <div class="modern-card-body">
+                    <div class="modern-grid" style="gap: 1rem;">
+                        <!-- Selection Column -->
+                        <div class="modern-col-4">
+                            <div class="p-3 bg-surface-container-low rounded-md border">
+                                <p class="modern-label mb-3">Target Job Order</p>
+                                <select id="joSelect" class="js-modern-select w-100" data-placeholder="Search Job Order #...">
+                                    <option value="">Search Job Order #...</option>
+                                    @if (ViewBag.JobOrders != null)
+                                    {
+                                        foreach (var item in (IEnumerable<SelectListItem>)ViewBag.JobOrders)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <p class="modern-label mt-4" style="font-size: 10px; opacity: 0.7;">
+                                    Tracing will show all related dispatch tickets, billings, and collections.
+                                </p>
+                                
+                                <div id="traceLoading" class="text-center py-4 hidden">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <span class="modern-label ms-2">Fetching history...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Result Column -->
+                        <div class="modern-col-8">
+                            <div id="traceResult" style="display:none;">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="modern-headline-sm" id="traceTitle">Timeline</h3>
+                                    <button type="button" class="modern-btn-secondary" id="clearTraceBtn" style="padding: 2px 10px; font-size: 10px;">
+                                        <span class="material-symbols-outlined" style="font-size:14px">close</span> CLEAR
+                                    </button>
+                                </div>
+                                <div id="traceTimeline" style="max-height: 450px; overflow-y: auto; padding-right: 5px;">
+                                    <!-- Timeline loaded here -->
+                                </div>
+                            </div>
+                            <div id="tracePlaceholder" class="flex items-center justify-center h-100 min-h-[200px] border-dashed rounded-md" style="border: 2px dashed var(--outline-variant); background: var(--surface-container-lowest);">
+                                <div class="text-center opacity-30 p-5">
+                                    <span class="material-symbols-outlined" style="font-size: 48px;">analytics</span>
+                                    <p class="modern-label mt-2">Selection Required</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Group -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterJobOrder" class="modern-btn-secondary">JOB ORDER</button>
+            <button id="filterDispatch" class="modern-btn-secondary">DISPATCH</button>
+            <button id="filterTariff" class="modern-btn-secondary">TARIFF</button>
+            <button id="filterBilling" class="modern-btn-secondary">BILLING</button>
+            <button id="filterCollection" class="modern-btn-secondary">COLLECTION</button>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    <h2 class="modern-headline-md">Activity Log</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-table-container">
+                    <table id="auditTable" class="modern-table w-100">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>USER</th>
+                                <th>MODULE</th>
+                                <th>REFERENCE #</th>
+                                <th>ACTIVITY</th>
+                                <th>MACHINE</th>
+                                <th class="text-center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            let table = $('#auditTable').DataTable(ModernTable.config({
+                serverSide: true,
+                processing: true,
+                ajax: ModernTable.ajax('@Url.Action("GetPagedAuditTrails", "AuditTrail", new { area = "User" })'),
+                columns: [
+                    { 
+                        data: 'date', 
+                        name: 'date',
+                        render: function(data) {
+                            return moment(data).format('MMM DD, YYYY HH:mm');
+                        }
+                    },
+                    { data: 'username', name: 'username' },
+                    { 
+                        data: 'documentType', 
+                        name: 'documentType',
+                        render: function(data) {
+                            return `<span class="modern-badge-sm ${getBadgeClass(data)}">${data}</span>`;
+                        }
+                    },
+                    { 
+                        data: 'referenceNumber', 
+                        name: 'referenceNumber',
+                        render: function(data) {
+                            return data || '-';
+                        }
+                    },
+                    { data: 'activity', name: 'activity' },
+                    { data: 'machineName', name: 'machineName', className: 'text-xs' },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: 'text-center',
+                        render: function(data, type, row) {
+                            if (row.documentType === "Job Order" && row.recordId) {
+                                return `<button type="button" class="modern-btn-primary" style="padding: 4px 12px; font-size: 11px;" onclick="loadTrace(${row.recordId}, '${row.referenceNumber}')">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">account_tree</span> TRACE
+                                        </button>`;
+                            }
+                            return '-';
+                        }
+                    }
+                ],
+                order: [[0, 'desc']],
+                pageLength: 25
+            }));
+
+            // Filter button handlers
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let module = '';
+                
+                if (id === 'filterJobOrder') module = "Job Order";
+                else if (id === 'filterDispatch') module = "Dispatch Ticket";
+                else if (id === 'filterTariff') module = "Tariff";
+                else if (id === 'filterBilling') module = "Billing";
+                else if (id === 'filterCollection') module = "Collection";
+
+                table.column(2).search(module).draw();
+                updateFilterButtons(id);
+            });
+
+            // Date filter handler
+            $('#dateFilter').on('change', function() {
+                table.column(0).search($(this).val()).draw();
+            });
+
+            // ModernSelect Change Handler for JO Trace
+            $(document).on('change', '#joSelect', function() {
+                const id = $(this).val();
+                if (id) {
+                    const text = $("#joSelect option:selected").text();
+                    console.log('JO Selected via dropdown:', id, text);
+                    loadTrace(id, text);
+                }
+            });
+
+            function updateFilterButtons(activeId) {
+                $('.modern-btn-secondary').removeClass('active');
+                $('#' + activeId).addClass('active');
+            }
+
+            $('#traceAccordionToggle').on('click', toggleTraceAccordion);
+            $('#clearTraceBtn').on('click', clearTrace);
+        });
+
+        function toggleTraceAccordion() {
+            const $body = $('#traceAccordionBody');
+            const $chevron = $('#traceChevron');
+            const isVisible = $body.is(':visible');
+
+            if (isVisible) {
+                $body.slideUp(200);
+                $chevron.css('transform', 'rotate(0deg)');
+            } else {
+                $body.slideDown(200);
+                $chevron.css('transform', 'rotate(180deg)');
+            }
+        }
+
+        function loadTrace(id, title) {
+            if (!id) return;
+            
+            // Open accordion if closed
+            const $body = $('#traceAccordionBody');
+            if (!$body.is(':visible')) {
+                toggleTraceAccordion();
+            }
+
+            console.log('Loading timeline for ID:', id);
+            $('#tracePlaceholder').hide();
+            $('#traceResult').show();
+            $('#traceLoading').removeClass('hidden');
+            $('#traceTimeline').html('');
+            $('#traceTitle').text('Tracing: ' + title);
+            $('#traceStatusLabel').text('Trace active: ' + title);
+
+            $.get('@Url.Action("GetTimeline", "AuditTrail")', { id: id })
+                .done(function(data) {
+                    $('#traceTimeline').html(data);
+                })
+                .fail(function(xhr) {
+                    const errorMsg = xhr.responseText || 'Failed to load timeline.';
+                    $('#traceTimeline').html(`<div class="text-center py-5 text-danger"><span class="material-symbols-outlined" style="font-size:32px">error</span><p class="modern-label mt-2">${errorMsg}</p></div>`);
+                })
+                .always(function() {
+                    $('#traceLoading').addClass('hidden');
+                });
+        }
+
+        function clearTrace() {
+            const $select = $('#joSelect');
+            $select.val('').trigger('change');
+            
+            // Manual sync for ModernSelect if needed
+            const $trigger = $select.next('.modern-select-container').find('.selected-text');
+            $trigger.text($select.data('placeholder') || 'Search Job Order #...');
+            
+            $('#traceResult').hide();
+            $('#tracePlaceholder').show();
+            $('#traceStatusLabel').text('Select a Job Order to begin');
+        }
+
+        function getBadgeClass(docType) {
+            switch(docType) {
+                case "Job Order": return "status-open";
+                case "Dispatch Ticket": return "status-billing";
+                case "Tariff": return "status-approval";
+                case "Billing": return "status-billing";
+                case "Collection": return "status-open";
+                default: return "";
+            }
+        }
+    </script>
+}

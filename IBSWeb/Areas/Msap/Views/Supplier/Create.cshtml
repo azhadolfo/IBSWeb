@@ -1,0 +1,305 @@
+@model IBS.Models.MasterFile.SupplierViewModel
+
+@{
+    ViewData["Title"] = "Create Supplier";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="mainForm">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Suppliers</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Supplier</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-8">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">person_add</span>
+                            <h2 class="modern-headline-md">Supplier Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                            <fieldset class="mb-3">
+                                <legend class="modern-label">Select Category</legend>
+                                <div class="flex gap-3 mt-1">
+                                    <label class="flex items-center gap-1">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Trade" data-target="tradeList">
+                                        <span class="text-sm">Trade</span>
+                                    </label>
+                                    <label class="flex items-center gap-1">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Non-Trade" data-target="nonTradeList">
+                                        <span class="text-sm">Non-Trade</span>
+                                    </label>
+                                    <label class="flex items-center gap-1">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Commissionee" data-target="commissioneeList">
+                                        <span class="text-sm">Commissionee</span>
+                                    </label>
+                                    <label class="flex items-center gap-1">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Hauler" data-target="haulerList">
+                                        <span class="text-sm">Hauler</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <div class="modern-grid">
+                                <div class="modern-col-6">
+                                    <label asp-for="SupplierName" class="modern-label">Name <span class="text-error">*</span></label>
+                                    <input asp-for="SupplierName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter supplier name" />
+                                    <span asp-validation-for="SupplierName" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="SupplierAddress" class="modern-label">Address <span class="text-error">*</span></label>
+                                    <input asp-for="SupplierAddress" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter supplier address" />
+                                    <span asp-validation-for="SupplierAddress" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-4">
+                                    <label asp-for="ZipCode" class="modern-label">Zip Code <span class="text-error">*</span></label>
+                                    <input asp-for="ZipCode" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter zip code" maxlength="4" />
+                                    <span asp-validation-for="ZipCode" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="SupplierTin" class="modern-label">Tin No <span class="text-error">*</span></label>
+                                    <input asp-for="SupplierTin" class="form-control formattedTinNumberInput" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter TIN" maxlength="17" />
+                                    <span asp-validation-for="SupplierTin" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="Branch" class="modern-label">Branch</label>
+                                    <input asp-for="Branch" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter branch" />
+                                    <span asp-validation-for="Branch" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6" id="tradeList" style="display: none;">
+                                    <label asp-for="TradeName" class="modern-label">Trade Name <span class="text-error">*</span></label>
+                                    <input asp-for="TradeName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter trade name" />
+                                    <span asp-validation-for="TradeName" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6" id="nonTradeList" style="display: none;">
+                                    <label asp-for="DefaultExpenseNumber" class="modern-label">Default Expense</label>
+                                    <select asp-for="DefaultExpenseNumber" asp-items="@Model.DefaultExpenses" class="js-modern-select" data-placeholder="-- Select Expense --">
+                                    </select>
+                                    <span asp-validation-for="DefaultExpenseNumber" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="SupplierTerms" class="modern-label">Supplier Terms <span class="text-error">*</span></label>
+                                    <select asp-for="SupplierTerms" asp-items="@Model.PaymentTerms" class="js-modern-select" data-placeholder="-- Select Terms --">
+                                    </select>
+                                    <span asp-validation-for="SupplierTerms" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="VatType" class="modern-label">Vat Type <span class="text-error">*</span></label>
+                                    <select asp-for="VatType" class="js-modern-select" data-placeholder="Select vat type">
+                                        <option value="" selected disabled></option>
+                                        <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
+                                        <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
+                                        <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
+                                    </select>
+                                    <span asp-validation-for="VatType" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="TaxType" class="modern-label">Tax Type <span class="text-error">*</span></label>
+                                    <select asp-for="TaxType" class="js-modern-select" data-placeholder="Select tax type" onchange="toggleExemptionFields(this)">
+                                        <option value="" selected disabled></option>
+                                        <option value="@SD.TaxType_WithTax">@SD.TaxType_WithTax</option>
+                                        <option value="@SD.TaxType_Exempt">@SD.TaxType_Exempt</option>
+                                    </select>
+                                    <span asp-validation-for="TaxType" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6" id="WithholdingTaxPercent" style="display: none;">
+                                    <label asp-for="WithholdingTaxPercent" class="modern-label">Percent</label>
+                                    <select asp-for="WithholdingTaxPercent" class="js-modern-select withHoldingTaxPercent" data-placeholder="%">
+                                        <option value="" selected disabled></option>
+                                        <option value="0.0050">.5%</option>
+                                        <option value="0.0100">1%</option>
+                                        <option value="0.0200">2%</option>
+                                        <option value="0.0500">5%</option>
+                                        <option value="0.1000">10%</option>
+                                    </select>
+                                    <span asp-validation-for="WithholdingTaxPercent" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3" id="WithholdingTaxTitle" style="display: none;">
+                                <div class="modern-col-6">
+                                    <label asp-for="WithholdingTaxTitle" class="modern-label">Withholding Tax Title</label>
+                                    <select asp-for="WithholdingTaxTitle" asp-items="@Model.WithholdingTaxList" class="js-modern-select" data-placeholder="-- Select Title --">
+                                    </select>
+                                    <span asp-validation-for="WithholdingTaxTitle" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div id="exemptionFields" style="display:none;">
+                                <div class="modern-grid mt-3">
+                                    <div class="modern-col-12">
+                                        <label asp-for="ReasonOfExemption" class="modern-label">Reason <span class="text-error">*</span></label>
+                                        <textarea asp-for="ReasonOfExemption" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Reason of exemption" rows="3"></textarea>
+                                        <span asp-validation-for="ReasonOfExemption" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                                <div class="modern-grid mt-3">
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Validity <span class="text-error">*</span></label>
+                                        <div class="flex gap-3 mt-1">
+                                            <label class="flex items-center gap-1">
+                                                <input class="form-check-input" type="radio" asp-for="Validity" value="Permanent" onchange="toggleValidityDate(this)">
+                                                <span class="text-sm">Permanent</span>
+                                            </label>
+                                            <label class="flex items-center gap-1">
+                                                <input class="form-check-input" type="radio" asp-for="Validity" value="Temporary" onchange="toggleValidityDate(this)">
+                                                <span class="text-sm">Temporary</span>
+                                            </label>
+                                        </div>
+                                        <span asp-validation-for="Validity" class="text-error text-xs"></span>
+                                    </div>
+                                    <div class="modern-col-6" id="validityDateField" style="display:none;">
+                                        <label asp-for="ValidityDate" class="modern-label">Validity Date <span class="text-error">*</span></label>
+                                        <input asp-for="ValidityDate" type="date" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                        <span asp-validation-for="ValidityDate" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                                <div class="modern-grid mt-3">
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Proof of Exemption Documents <span class="text-error">*</span></label>
+                                        <input class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" name="document" type="file">
+                                        <span asp-validation-for="ProofOfExemptionFilePath" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Proof of BIR Registration</label>
+                                    <input class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" name="registration" type="file">
+                                    <span asp-validation-for="ProofOfRegistrationFilePath" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6 d-flex align-items-end pb-2">
+                                    <label class="flex items-center gap-1">
+                                        <input class="form-check-input" asp-for="RequiresPriceAdjustment" /> <span class="text-sm">Requires Price Adjustment</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleExemptionFields(selectElement) {
+            const exemptionFields = document.getElementById("exemptionFields");
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+            const withHoldingTaxTitle = document.getElementById("WithholdingTaxTitle");
+
+            if (selectElement.value === "Exempt") {
+                exemptionFields.style.display = "block";
+                withHoldingTaxPercent.style.display = "none";
+                withHoldingTaxTitle.style.display = "none";
+                $(".withHoldingTaxPercent").val(null).trigger('change');
+            } else if (selectElement.value === "Withholding Tax") {
+                withHoldingTaxPercent.style.display = "block";
+                withHoldingTaxTitle.style.display = "block";
+                exemptionFields.style.display = "none";
+            } else {
+                exemptionFields.style.display = "none";
+                withHoldingTaxPercent.style.display = "none";
+                withHoldingTaxTitle.style.display = "none";
+            }
+        }
+
+        function toggleValidityDate(radioButton) {
+            const validityDateField = document.getElementById("validityDateField");
+            validityDateField.style.display = radioButton.value === "Permanent" ? "none" : "block";
+        }
+
+        window.onload = function () {
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+            if (inlineRadio1 && inlineRadio1.checked) {
+                document.getElementById('tradeList').style.display = 'block';
+                document.getElementById('nonTradeList').style.display = 'none';
+            } else if (inlineRadio2 && inlineRadio2.checked) {
+                document.getElementById('tradeList').style.display = 'none';
+                document.getElementById('nonTradeList').style.display = 'block';
+            }
+        };
+
+        function toggleSelect(id) {
+            var tradeList = document.getElementById('tradeList');
+            var nonTradeList = document.getElementById('nonTradeList');
+            var radios = document.querySelectorAll('input[name="Category"]');
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+            const withHoldingTaxTitle = document.getElementById("WithholdingTaxTitle");
+
+            const resetCommonFields = () => {
+                $("#DefaultExpenseNumber").val(null).trigger('change');
+            };
+
+            tradeList.style.display = 'none';
+            nonTradeList.style.display = 'none';
+            withHoldingTaxPercent.style.display = 'none';
+            withHoldingTaxTitle.style.display = 'none';
+            radios.forEach(radio => radio.checked = false);
+
+            switch (id) {
+                case 'tradeList':
+                case 'commissioneeList':
+                case 'haulerList':
+                    tradeList.style.display = 'block';
+                    resetCommonFields();
+                    if (id === 'tradeList') radios[0].checked = true;
+                    else if (id === 'commissioneeList') radios[2].checked = true;
+                    else radios[3].checked = true;
+                    withHoldingTaxPercent.style.display = 'block';
+                    withHoldingTaxTitle.style.display = 'block';
+                    break;
+                case 'nonTradeList':
+                    nonTradeList.style.display = 'block';
+                    radios[1].checked = true;
+                    document.getElementById('TradeName').value = "";
+                    withHoldingTaxPercent.style.display = 'block';
+                    withHoldingTaxTitle.style.display = 'block';
+                    $("#TaxType").val(null).trigger('change');
+                    break;
+            }
+        }
+
+        $(document).ready(function () {
+            $('.category-radio').on('change', function() {
+                toggleSelect($(this).data('target'));
+            });
+        });
+    </script>
+}

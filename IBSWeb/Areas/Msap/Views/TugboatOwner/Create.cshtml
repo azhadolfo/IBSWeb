@@ -1,0 +1,74 @@
+@model IBS.Models.MSAP.ViewModels.TugboatOwnerViewModel
+
+@{
+    ViewData["Title"] = "Create Tugboat Owner";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Tugboat Owners</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Owner / Company</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">apartment</span>
+                            <h2 class="modern-headline-md">Owner Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="TugboatOwnerNumber" class="modern-label">Owner Number <span class="text-error">*</span></label>
+                                    <input asp-for="TugboatOwnerNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter 3-digit code" maxlength="3" />
+                                    <span asp-validation-for="TugboatOwnerNumber" class="text-error text-xs"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="TugboatOwnerName" class="modern-label">Owner / Company Name <span class="text-error">*</span></label>
+                                    <input asp-for="TugboatOwnerName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter company name" />
+                                    <span asp-validation-for="TugboatOwnerName" class="text-error text-xs"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="FixedRate" class="modern-label">Fixed Rate <span class="text-error">*</span></label>
+                                    <div class="input-group" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); overflow: hidden;">
+                                        <span class="input-group-text bg-light border-0">₱</span>
+                                        <input asp-for="FixedRate" type="number" step="0.01" class="form-control border-0" />
+                                    </div>
+                                    <span asp-validation-for="FixedRate" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    }

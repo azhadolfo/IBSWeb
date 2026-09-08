@@ -1,0 +1,350 @@
+@{
+
+
+    ViewData["Title"] = "Dispatch Tickets";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Dispatch Tickets</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <!-- Add New Button if needed in future -->
+            </div>
+        </div>
+
+        <!-- Filter Group -->
+        <div class="flex flex-wrap gap-2">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterForTariff" class="modern-btn-secondary">FOR TARIFF</button>
+            <button id="filterForApproval" class="modern-btn-secondary">FOR APPROVAL</button>
+            <button id="filterDisapproved" class="modern-btn-secondary">DISAPPROVED</button>
+            <button id="filterForBilling" class="modern-btn-secondary">FOR BILLING</button>
+            <button id="filterBilled" class="modern-btn-secondary">BILLED</button>
+            <button id="filterDeleted" class="modern-btn-secondary modern-btn-error">
+                <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">delete</span> DELETED
+            </button>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">confirmation_number</span>
+                    <h2 class="modern-headline-md">Ticket Registry</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-table-container">
+                    <table class="modern-table" id="paginatedTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>COS #</th>
+                                <th>Ticket #</th>
+                                <th>Billing #</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Activity/Service</th>
+                                <th>Port-Terminal</th>
+                                <th>Tugboat</th>
+                                <th>Customer</th>
+                                <th>Vessel</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .modern-btn-secondary.modern-btn-error.active {
+        background-color: var(--error);
+        color: white;
+        border-color: var(--error);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const previewUrl = '@Url.Action("Preview", "DispatchTicket")';
+            const setTariffUrl = '@Url.Action("SetTariff", "DispatchTicket")';
+            const editTariffUrl = '@Url.Action("EditTariff", "DispatchTicket")';
+            const editTicketUrl = '@Url.Action("EditTicket", "DispatchTicket")';
+            const canSetTariff = @((ViewBag.CanSetTariff as bool? ?? false).ToString().ToLower());
+            const canEditTicket = @((ViewBag.CanEditTicket as bool? ?? false).ToString().ToLower());
+            const canApproveTariff = @((ViewBag.CanApproveTariff as bool? ?? false).ToString().ToLower());
+            const canDeleteTicket = @((ViewBag.CanDeleteTicket as bool? ?? false).ToString().ToLower());
+            let filterType = '@ViewBag.FilterType';
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusFilter = urlParams.get('status') || '';
+
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[0, 'desc']],
+                columnDefs: [{ orderable: false, targets: [12] }],
+                ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })", (d) => {
+                    d.filterType = filterType;
+                    return d;
+                }),
+                columns: [
+                    { data: "date", defaultContent: "" },
+                    { data: "cosNumber", defaultContent: "" },
+                    {
+                        data: "dispatchNumber",
+                        render: (data, type, row) => `<a href="${previewUrl}?id=${row.dispatchTicketId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    { data: "billing.msapBillingNumber", defaultContent: "" },
+                    {
+                        data: "dateLeft",
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)
+                    },
+                    {
+                        data: "dateArrived",
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateArrived, row.timeArrived)
+                    },
+                    { data: "service.serviceName", defaultContent: "" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+                            return portName || terminalName ? `${portName} - ${terminalName}` : "";
+                        }
+                    },
+                    { data: "tugboat.tugboatName", defaultContent: "" },
+                    {
+                        data: "customer.customerName",
+                        render: (data, type, row) => row.customerId ? data : `<span class="italic text-xs opacity-60">(For Customer Assigning)</span>`
+                    },
+                    { data: "vessel.vesselName", defaultContent: "" },
+                    {
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
+                            let statusClass = "";
+                            if (data === "@SD.DispatchTicketStatus.ForTariff") statusClass = "status-tariff";
+                            else if (data === "@SD.DispatchTicketStatus.ForApproval") statusClass = "status-approval";
+                            else if (data === "@SD.DispatchTicketStatus.Disapproved") statusClass = "status-error";
+                            else if (data === "@SD.DispatchTicketStatus.ForBilling") statusClass = "status-billing";
+                            else if (data === "@SD.DispatchTicketStatus.Billed") statusClass = "status-confirmed";
+                            return ModernTable.render.badge(data, statusClass);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            {
+                                label: 'View Details',
+                                icon: 'visibility',
+                                url: `${previewUrl}?id=${row.dispatchTicketId}`
+                            },
+                            {
+                                label: 'Set Tariff',
+                                icon: 'payments',
+                                url: `${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForTariff" && row.customerId !== null && !row.isMonthClosed && canSetTariff
+                            },
+                            {
+                                label: 'Edit Tariff',
+                                icon: 'edit_note',
+                                url: `${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && row.customerId !== null && !row.isMonthClosed && canSetTariff
+                            },
+                            {
+                                label: 'Edit Ticket',
+                                icon: 'edit',
+                                url: `${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: ["@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status) && !row.isMonthClosed && canEditTicket
+                            },
+                            {
+                                label: 'Approve Tariff',
+                                icon: 'check_circle',
+                                onclick: `confirmApprove(${row.dispatchTicketId})`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && !row.isMonthClosed && canApproveTariff
+                            },
+                            {
+                                label: 'Delete Ticket',
+                                icon: 'delete',
+                                isError: true,
+                                onclick: `confirmDeleteTicket(${row.dispatchTicketId})`,
+                                condition: ["@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status) && !row.isMonthClosed && canDeleteTicket
+                            },
+                            {
+                                label: 'Restore Ticket',
+                                icon: 'restore',
+                                onclick: `confirmRestoreTicket(${row.dispatchTicketId})`,
+                                condition: row.status === "Deleted" && !row.isMonthClosed && canDeleteTicket
+                            }
+                        ])
+                    }
+                ],
+                initComplete: function() {
+                    if (statusFilter) {
+                        this.api().column(11).search(statusFilter).draw();
+                        updateFilterButtons(statusFilter);
+                    }
+                }
+            }));
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
+
+            // Filter button handlers
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterForTariff') status = '@SD.DispatchTicketStatus.ForTariff';
+                else if (id === 'filterForApproval') status = '@SD.DispatchTicketStatus.ForApproval';
+                else if (id === 'filterDisapproved') status = '@SD.DispatchTicketStatus.Disapproved';
+                else if (id === 'filterForBilling') status = '@SD.DispatchTicketStatus.ForBilling';
+                else if (id === 'filterBilled') status = '@SD.DispatchTicketStatus.Billed';
+                else if (id === 'filterDeleted') status = '@SD.DispatchTicketStatus.Deleted';
+
+                filterType = status === '@SD.DispatchTicketStatus.Deleted' ? 'deleted' : status ? '' : '';
+                table.column(11).search(status).draw();
+                updateUrl(status);
+                updateFilterButtons(status);
+            });
+
+            function updateUrl(status) {
+                const url = new URL(window.location);
+                if (status) url.searchParams.set('status', status);
+                else url.searchParams.delete('status');
+                window.history.replaceState({}, '', url);
+            }
+
+            function updateFilterButtons(status) {
+                $('.modern-btn-secondary').removeClass('active');
+                if (!status) $('#filterAll').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForTariff") $('#filterForTariff').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForApproval") $('#filterForApproval').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Deleted") $('#filterDeleted').addClass('active');
+            }
+        });
+
+        function confirmApprove(id) {
+            ModernAlert.confirm({
+                title: 'Approve Tariff?',
+                text: "This ticket will be marked for billing.",
+                icon: 'question',
+                confirmText: 'Yes, Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Approving...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success(data.message).then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+
+        function confirmDeleteTicket(id) {
+            ModernAlert.confirm({
+                title: 'Delete Dispatch Ticket?',
+                text: "This will delete the ticket. You can restore it later.",
+                icon: 'warning',
+                confirmText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Deleting ticket...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Delete", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('Dispatch ticket deleted.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+
+        function confirmRestoreTicket(id) {
+            ModernAlert.confirm({
+                title: 'Restore Dispatch Ticket?',
+                text: "This will restore the ticket to its previous status.",
+                icon: 'question',
+                confirmText: 'Yes, restore it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Restoring ticket...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Restore", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('Dispatch ticket restored.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+    </script>
+}

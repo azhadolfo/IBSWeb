@@ -1,0 +1,134 @@
+@{
+    ViewData["Title"] = "Chart of Accounts - Export";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">ACCOUNTING</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface-variant)">Chart of Accounts</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Export</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="modern-btn-primary" id="exportToExcelBtn">
+                    <span class="material-symbols-outlined">download</span>
+                    DOWNLOAD EXCEL
+                </button>
+                <a asp-action="Index" class="modern-btn-secondary">BACK TO LIST</a>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="modern-card">
+            <div class="modern-card-body">
+                <div class="modern-grid">
+                    <div class="modern-col-3">
+                        <label class="modern-label">Date From</label>
+                        <input type="date" id="dateFrom" class="modern-input" />
+                    </div>
+                    <div class="modern-col-3">
+                        <label class="modern-label">Date To</label>
+                        <input type="date" id="dateTo" class="modern-input" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">list_alt</span>
+                    <h2 class="modern-headline-md">Select Records to Export</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="exportTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Account No.</th>
+                            <th>Account Name</th>
+                            <th>Account Type</th>
+                            <th>Normal Balance</th>
+                            <th>Level</th>
+                            <th>Created Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        let exportTable;
+        let selectedRecords = new Set();
+
+        $(document).ready(function () {
+            exportTable = $('#exportTable').DataTable(ModernTable.config({
+                ajax: ModernTable.ajax({
+                    url: "@Url.Action("GetChartOfAccountList", "ChartOfAccount", new { area = "User" })",
+                    data: (d) => {
+                        d.dateFrom = $('#dateFrom').val();
+                        d.dateTo = $('#dateTo').val();
+                    }
+                }),
+                columns: [
+                    {
+                        data: 'accountId',
+                        orderable: false,
+                        searchable: false,
+                        render: DataTable.render.select()
+                    },
+                    { data: "accountNumber" },
+                    { data: "accountName" },
+                    { data: "accountType" },
+                    { data: "normalBalance" },
+                    { data: "level", className: "text-center" },
+                    { data: "createdDate" }
+                ],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
+                order: [[1, 'asc']]
+            }));
+
+            exportTable.on('select deselect', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    indexes.forEach(idx => {
+                        const id = exportTable.row(idx).data().accountId;
+                        if (e.type === 'select') selectedRecords.add(id);
+                        else selectedRecords.delete(id);
+                    });
+                }
+            });
+
+            $('#dateFrom, #dateTo').on('change', () => exportTable.ajax.reload());
+            $('#exportToExcelBtn').on('click', exportToExcel);
+        });
+
+        function exportToExcel() {
+            const ids = Array.from(selectedRecords).join(',');
+            if (!ids) {
+                ModernAlert.warning('Please select at least one record to export');
+                return;
+            }
+
+            const $form = $('<form>', { method: 'POST', action: "@Url.Action("Export", "ChartOfAccount", new { area = "User" })" });
+            $form.append($('<input>', { type: 'hidden', name: 'selectedRecord', value: ids }));
+            $form.append($('<input>', { type: 'hidden', name: '__RequestVerificationToken', value: $('input[name="__RequestVerificationToken"]').val() }));
+            $form.appendTo('body').submit().remove();
+        }
+    </script>
+}

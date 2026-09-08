@@ -1,0 +1,127 @@
+@{
+    ViewData["Title"] = "Payment Terms";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Payment Terms</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
+                </a>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">payments</span>
+                    <h2 class="modern-headline-md">Terms List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
+                        <tr>
+                            <th>Terms Code</th>
+                            <th>Days</th>
+                            <th>Months</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "PaymentTerms", new { area = "User" })';
+
+            let table = $('#paginatedTable').DataTable({
+                "order": [[0, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [3] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetPaymentTerms", "PaymentTerms", new { area = "User" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    { "data": "termsCode" },
+                    { "data": "numberOfDays" },
+                    { "data": "numberOfMonths" },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "className": "text-center",
+                        "render": function (data, type, row) {
+                            return ModernTable.render.dropdown([
+                                { label: 'Edit Terms', icon: 'edit', url: `${editUrl}?code=${row.termsCode}` },
+                                {
+                                    label: 'Delete Terms',
+                                    icon: 'delete',
+                                    isError: true,
+                                    onclick: `confirmDelete('${row.termsCode}')`
+                                }
+                            ]);
+                        }
+                    }
+                ]
+            });
+        });
+
+        function confirmDelete(termsCode) {
+            ModernAlert.confirm({
+                title: 'Delete Payment Term?',
+                text: "Are you sure you want to delete this payment term?",
+                icon: 'warning',
+                confirmText: 'Yes, Delete',
+                cancelText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let url = `@Url.Action("Delete", "PaymentTerms", new { area = "User" })?code=${termsCode}`;
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+}

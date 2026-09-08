@@ -1,0 +1,254 @@
+@{
+
+
+    ViewData["Title"] = "Billing Statements";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Billing</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                @if (ViewBag.CanPost == true)
+                {
+                    <a asp-action="Create" class="modern-btn-primary" data-hotkey="c">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        CREATE BILLING
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Filter Group -->
+        <div class="flex flex-wrap gap-2">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterForPosting" class="modern-btn-secondary">FOR POSTING</button>
+            <button id="filterForCollection" class="modern-btn-secondary">FOR COLLECTION</button>
+            <button id="filterCollected" class="modern-btn-secondary">COLLECTED</button>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">receipt_long</span>
+                    <h2 class="modern-headline-md">Billing List</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>BILLING #</th>
+                            <th>AMOUNT</th>
+                            <th>CUSTOMER</th>
+                            <th>PORT - TERMINAL</th>
+                            <th>VESSEL</th>
+                            <th>DISPATCH TICKET #</th>
+                            <th class="text-center">STATUS</th>
+                            <th class="text-center">ACTIONS</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const previewUrl = '@Url.Action("Preview", "Billing")';
+            const editUrl = '@Url.Action("Edit", "Billing")';
+            const postUrl = '@Url.Action("Post", "Billing")';
+            const canReverse = @((ViewBag.CanReverse as bool? ?? false).ToString().ToLower());
+            const canPost = @((ViewBag.CanPost as bool? ?? false).ToString().ToLower());
+            const canEdit = @((ViewBag.CanEdit as bool? ?? false).ToString().ToLower());
+            const canDelete = @((ViewBag.CanDelete as bool? ?? false).ToString().ToLower());
+
+            // Get status from URL on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusFilter = urlParams.get('status') || '';
+
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[0, 'desc']],
+                columnDefs: [{ orderable: false, targets: [8] }],
+                ajax: ModernTable.ajax("@Url.Action("GetBillingList", "Billing", new { area = "User" })"),
+                columns: [
+                    { data: "date", defaultContent: "" },
+                    {
+                        data: "msapBillingNumber",
+                        render: (data, type, row) => `<a href="${previewUrl}?id=${row.msapBillingId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: "amount",
+                        className: "text-right font-bold",
+                        render: (data) => ModernTable.render.currency(data)
+                    },
+                    { data: "customer.customerName", defaultContent: "" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+                            return portName || terminalName ? `${portName} - ${terminalName}` : "";
+                        }
+                    },
+                    { data: "vessel.vesselName", defaultContent: "" },
+                    {
+                        data: "dispatchTicketNumbers",
+                        render: (data, type, row) => {
+                            if (!data) return "";
+                            const parts = data.split(", ");
+                            if (parts.length <= 3) return data;
+                            return `<span title="${data.replace(/"/g, '&quot;')}">${parts.slice(0, 3).join(", ")} +${parts.length - 3} more</span>`;
+                        }
+                    },
+                    {
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
+                            let statusClass = "status-open";
+                            if (data === "@SD.BillingStatus.ForPosting") statusClass = "status-tariff";
+                            else if (data === "@SD.BillingStatus.ForCollection") statusClass = "status-approval";
+                            else if (data === "@SD.BillingStatus.Collected") statusClass = "status-closed";
+                            return ModernTable.render.badge(data, statusClass);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            if (row.status === "@SD.BillingStatus.ForPosting") {
+                                return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Post to Books', icon: 'send', onclick: `confirmPost(${row.msapBillingId})`, condition: !row.isMonthClosed && canPost },
+                                    { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}`, condition: !row.isMonthClosed && canEdit },
+                                    { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})`, condition: !row.isMonthClosed && canDelete }
+                                ]);
+                            } else if (row.status === "@SD.BillingStatus.ForCollection") {
+                                return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})`, condition: !row.isMonthClosed && canReverse }
+                                ]);
+                            } else {
+                                return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` }
+                                ]);
+                            }
+                        }
+                    }
+                ],
+                initComplete: function() {
+                    if (statusFilter) {
+                        this.api().column(7).search(statusFilter).draw();
+                        updateFilterButtons(statusFilter);
+                    }
+                }
+            }));
+
+            // Date filter handler
+            $('#dateFilter').on('change', function() {
+                table.column(0).search($(this).val()).draw();
+            });
+
+            // Filter button handlers
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterForPosting') status = "@SD.BillingStatus.ForPosting";
+                else if (id === 'filterForCollection') status = "@SD.BillingStatus.ForCollection";
+                else if (id === 'filterCollected') status = "@SD.BillingStatus.Collected";
+
+                table.column(7).search(status).draw();
+                updateUrl(status);
+                updateFilterButtons(status);
+            });
+
+            function updateUrl(status) {
+                const url = new URL(window.location);
+                if (status) url.searchParams.set('status', status);
+                else url.searchParams.delete('status');
+                window.history.replaceState({}, '', url);
+            }
+
+            function updateFilterButtons(status) {
+                $('.modern-btn-secondary').removeClass('active');
+                if (!status) $('#filterAll').addClass('active');
+                else if (status === "@SD.BillingStatus.ForPosting") $('#filterForPosting').addClass('active');
+                else if (status === "@SD.BillingStatus.ForCollection") $('#filterForCollection').addClass('active');
+                else if (status === "@SD.BillingStatus.Collected") $('#filterCollected').addClass('active');
+            }
+        });
+
+        function confirmPost(id) {
+            ModernAlert.confirm({
+                title: 'Post to Books?',
+                text: "This will post the billing to the Sales Book and General Ledger. Continue?",
+                icon: 'question',
+                confirmText: 'Yes, post it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Posting to books...");
+                    window.location.href = '@Url.Action("Post", "Billing")?id=' + id;
+                }
+            });
+        }
+
+        function confirmDelete(id) {
+            ModernAlert.confirm({
+                title: 'Are you sure?',
+                text: "This will delete the draft billing and return all dispatch tickets to the queue.",
+                icon: 'warning',
+                confirmText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Deleting billing...");
+                    window.location.href = '@Url.Action("Delete", "Billing")?id=' + id;
+                }
+            });
+        }
+
+        function confirmReverse(id) {
+            ModernAlert.prompt({
+                title: 'Reverse Billing?',
+                text: "This will unpost the billing and return all dispatch tickets to 'For Billing' status.",
+                icon: 'warning',
+                placeholder: 'Enter reason for reversal...',
+                confirmText: 'Yes, reverse it!',
+                validator: (value) => value ? null : 'Please enter a reason for the reversal.'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Reversing billing...");
+                    window.location.href = '@Url.Action("Reverse", "Billing")?id=' + id + '&remarks=' + encodeURIComponent(result.value);
+                }
+            });
+        }
+    </script>
+}
+
+

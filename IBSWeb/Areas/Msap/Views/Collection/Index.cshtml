@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Collections";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Collections</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-area="User" asp-controller="Collection" asp-action="Create" class="modern-btn-primary" data-hotkey="c">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE COLLECTION
+                </a>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">payments</span>
+                    <h2 class="modern-headline-md">Collection Records</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>COLLECTION #</th>
+                            <th>CHECK DATE</th>
+                            <th>DATE DEPOSITED</th>
+                            <th class="text-right">AMOUNT</th>
+                            <th>CUSTOMER</th>
+                            <th class="text-center">ACTIONS</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const previewUrl = '@Url.Action("Preview", "Collection")';
+            const editUrl = '@Url.Action("Edit", "Collection")';
+
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[0, 'desc']],
+                columnDefs: [{ orderable: false, targets: [6] }],
+                ajax: ModernTable.ajax("@Url.Action("GetCollectionList", "Collection", new { area = "User" })"),
+                columns: [
+                    {
+                        data: "date",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "msapCollectionNumber",
+                        defaultContent: "",
+                        render: (data, type, row) => `<a href="${previewUrl}?id=${row.msapCollectionId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: "checkDate",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "depositDate",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "amount",
+                        className: "text-right font-bold",
+                        defaultContent: "₱0.00",
+                        render: (data) => ModernTable.render.currency(data)
+                    },
+                    {
+                        data: "customer.customerName",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.ellipsis(data)
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapCollectionId}` },
+                            { label: 'Edit Record', icon: 'edit', url: `${editUrl}?id=${row.msapCollectionId}`, condition: !row.isMonthClosed }
+                        ])
+                    }
+                ]
+            }));
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
+        });
+    </script>
+}
+

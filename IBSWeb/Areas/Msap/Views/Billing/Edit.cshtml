@@ -1,0 +1,809 @@
+@model Billing
+
+@{
+    ViewData["Title"] = "Billing - Edit";
+    ViewData["IsFullWidth"] = true;
+    var hasJobOrder = Model.JobOrderId.HasValue;
+}
+
+<div class="modern-layout">
+    <form id="myForm" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="MsapBillingId" id="billingId" value="@Model.MsapBillingId" type="hidden">
+        <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented" />
+
+        <main class="modern-container">
+            <!-- Header -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Billing</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">@Model.MsapBillingNumber</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit</span>
+                    </div>
+                    <h1 class="modern-headline-lg">Edit Billing: @Model.MsapBillingNumber</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> SAVE CHANGES
+                    </button>
+                    <a class="modern-btn-secondary" asp-action="Index">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <!-- Left Column: Metadata & Selection -->
+                <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
+                    <!-- Customer Sidebar (Read-only during Edit) -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">person</span>
+                            <h2 class="modern-headline-md">1. Customer Details</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 1.25rem;">
+                            <!-- Customer Display -->
+                            <div>
+                                <label class="modern-label">Customer</label>
+                                <p class="modern-value-lg text-primary">@(Model.Customers?.FirstOrDefault(c => c.Value == Model.CustomerId.ToString())?.Text ?? "N/A")</p>
+                                <input type="hidden" asp-for="CustomerId" id="CustomerId" value="@Model.CustomerId" />
+                            </div>
+
+                            <!-- Principal Related (Conditional Rendering) -->
+                            <div id="PrincipalMasterContainer" style="display: @(ViewData["HasPrincipal"] as bool? == true ? "block" : "none")">
+                                <!-- Bill to Principal Toggle -->
+                                <div id="PrincipalCheckboxContainer" class="bg-surface-container-low p-3 rounded-md border border-outline-variant">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" id="UsePrincipalCheckbox" class="form-check-input" style="width: 18px; height: 18px; cursor: pointer;" @(Model.PrincipalId.HasValue ? "checked" : "")>
+                                        <label class="modern-label mb-0 cursor-pointer" for="UsePrincipalCheckbox">BILL TO PRINCIPAL</label>
+                                    </div>
+
+                                    <!-- Principal Selection -->
+                                    <div id="PrincipalSection" class="relative border-t border-outline-variant pt-2 mt-2" style="display: @(Model.PrincipalId.HasValue ? "block" : "none")">
+                                        <label class="modern-label">Principal</label>
+                                        <select asp-for="PrincipalId" asp-items="@Model.CustomerPrincipal" class="js-modern-select" id="PrincipalSelect" data-placeholder="-- Select Principal --">
+                                            <option value="">-- Select Principal --</option>
+                                        </select>
+                                        <input type="hidden" asp-for="BilledTo" id="BilledTo" value="@Model.BilledTo" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Metadata -->
+                            <div id="CustomerDetailsSection" class="border-t border-outline-variant pt-3" style="gap: 1rem; display: flex; flex-direction: column;">
+                                <div>
+                                    <p class="modern-label">Address</p>
+                                    <p id="CustomerAddress" class="modern-value-md">@(Model.PrincipalId.HasValue && Model.BilledTo == "PRINCIPAL" ? Model.Principal?.Address1 : Model.Customer?.CustomerAddress ?? "-")</p>
+                                </div>
+                                <div class="modern-grid-compact">
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">TIN</p>
+                                        <p id="CustomerTIN" class="modern-value-md font-bold">@(Model.PrincipalId.HasValue && Model.BilledTo == "PRINCIPAL" ? Model.Principal?.TIN : Model.Customer?.CustomerTin ?? "-")</p>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">Terms</p>
+                                        <p id="CustomerTerms" class="modern-value-md font-bold">@(Model.PrincipalId.HasValue && Model.BilledTo == "PRINCIPAL" ? Model.Principal?.Terms : Model.Customer?.CustomerTerms ?? "-")</p>
+                                    </div>
+                                </div>
+                                <div class="modern-grid-compact">
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">VAT Type</p>
+                                        <p id="CustomerVatType" class="modern-value-md">@(ViewData["CustomerVatType"] ?? "-")</p>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">Doc Type</p>
+                                        <p id="CustomerType" class="modern-value-md">@(ViewData["CustomerType"] ?? "-")</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Operation Configuration -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">settings</span>
+                            <h2 class="modern-headline-md">2. Billing Details</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 1rem;">
+                            <div>
+                                <label class="modern-label">Billing #</label>
+                                <input asp-for="MsapBillingNumber" type="text" class="modern-input" readonly style="background-color: var(--surface-container-low)">
+                            </div>
+
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="isVatableToggle">VAT Status</label>
+                                    <label class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;">
+                                        <input asp-for="IsVatable" type="checkbox" class="form-check-input" id="isVatableToggle">
+                                        <span class="text-xs font-bold opacity-70">VAT</span>
+                                    </label>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="isVatInclusiveToggle">Inclusive</label>
+                                    <label class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;">
+                                        <input asp-for="IsVatInclusive" type="checkbox" class="form-check-input" id="isVatInclusiveToggle">
+                                        <span class="text-xs font-bold opacity-70">INC</span>
+                                    </label>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="printWhtToggle">WHT</label>
+                                    <label class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;">
+                                        <input asp-for="PrintWht" type="checkbox" class="form-check-input" id="printWhtToggle">
+                                        <span class="text-xs font-bold opacity-70">WHT</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                <div class="modern-col-12">
+                                    <label class="modern-label">Date</label>
+                                    <input asp-for="Date" type="date" class="modern-input" value="@Model.Date.ToString("yyyy-MM-dd")">
+                                </div>
+                            </div>
+
+                            <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Voyage #</label>
+                                    <input asp-for="VoyageNumber" type="text" class="modern-input" id="VoyageNumber" required>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">COS #</label>
+                                    <input asp-for="COSNumber" type="text" class="modern-input" id="COSNumber">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-outline-variant pt-3 flex flex-column" style="gap: 1rem;">
+                                <div>
+                                    <label class="modern-label">Port</label>
+                                    <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="js-modern-select" data-placeholder="Select Port..." data-searchable="true">
+                                        <option value="">-- Select Port --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="modern-label">Terminal</label>
+                                    <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="js-modern-select" data-placeholder="Select Terminal..." data-searchable="true">
+                                        <option value="">-- Select Terminal --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="modern-label">Vessel</label>
+                                    <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="Select Vessel..." data-searchable="true">
+                                        <option value="">-- Select Vessel --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Data Entry -->
+                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">receipt_long</span>
+                            <h2 class="modern-headline-md">3. Job Order & Tickets Selection</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                            <!-- Job Order Selection -->
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="modern-label mb-0">Add More Tickets (Search Job Order)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="legacyToggle" class="form-check-input" style="width: 16px; height: 16px; cursor: pointer;">
+                                        <label for="legacyToggle" class="text-xs font-bold opacity-70 cursor-pointer">LEGACY (NO JO)</label>
+                                    </div>
+                                </div>
+                                <div id="jobOrderSearchContainer">
+                                    <select asp-for="JobOrderId" class="js-modern-select" id="JobOrderSelect" data-placeholder="-- Select Job Order --">
+                                        <option value="">-- Select Job Order --</option>
+                                    </select>
+                                    <p class="text-xs opacity-60 mt-1">Select a Job Order to replace the available tickets above.</p>
+                                </div>
+                                <div id="legacyNotice" class="p-3 bg-surface-container-low rounded-md border border-outline-variant flex items-center gap-2" style="display: none;">
+                                    <span class="material-symbols-outlined text-warning">info</span>
+                                    <p class="text-xs mb-0">Legacy mode enabled. Click the button below to load all unbilled tickets without a Job Order.</p>
+                                    <button type="button" class="modern-btn-secondary py-1 px-3 ml-auto" style="height: 28px; font-size: 10px;" id="loadLegacyTicketsBtn">LOAD TICKETS</button>
+                                </div>
+                            </div>
+
+                            <!-- Tickets Table -->
+                            <div class="modern-table-container border border-outline-variant">
+                                <table id="ticketsTable" class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width: 48px;">
+                                                <input type="checkbox" id="selectAllTickets" class="form-check-input" style="width: 18px; height: 18px; cursor: pointer;" @(Model.PaidDispatchTickets?.Any() == true ? "checked" : "") @(hasJobOrder ? "disabled" : "")>
+                                            </th>
+                                            <th>DISPATCH #</th>
+                                            <th>TUGBOAT</th>
+                                            <th>SERVICE</th>
+                                            <th class="text-center">HOURS</th>
+                                            <th class="text-right">DISPATCH RATE</th>
+                                            <th class="text-right">DISPATCH AMT</th>
+                                            <th class="text-right">BAF RATE</th>
+                                            <th class="text-right">BAF AMT</th>
+                                            <th>PORT/TERMINAL</th>
+                                            <th class="text-right">TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.PaidDispatchTickets != null && Model.PaidDispatchTickets.Any())
+                                        {
+                                            foreach (var ticket in Model.PaidDispatchTickets)
+                                            {
+                                                <tr data-ticket-id="@ticket.DispatchTicketId" data-dispatch-amount="@ticket.DispatchBillingAmount" data-baf-amount="@ticket.BAFBillingAmount"
+                                                    data-dispatch-rate="@ticket.DispatchRate" data-baf-rate="@ticket.BAFRate" data-hours="@ticket.TotalHours"
+                                                    data-baf-charge-type="@ticket.BAFChargeType">
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input ticket-checkbox" value="@ticket.DispatchTicketId" checked @(hasJobOrder ? "disabled" : "") style="width: 18px; height: 18px; cursor: pointer;">
+                                                    </td>
+                                                    <td class="font-bold">@ticket.DispatchNumber</td>
+                                                    <td>@(ticket.Tugboat?.TugboatName ?? "N/A")</td>
+                                                    <td>@(ticket.Service?.ServiceName ?? "N/A")</td>
+                                                    <td class="text-center">@ticket.TotalHours.ToString("F2")</td>
+                                                    <td class="text-right">@ticket.DispatchRate.ToString("N2")</td>
+                                                    <td class="text-right font-bold">₱@ticket.DispatchBillingAmount.ToString("N2")</td>
+                                                    <td class="text-right baf-rate-cell">@ticket.BAFRate.ToString("N2")</td>
+                                                    <td class="text-right baf-amt-cell">₱@ticket.BAFBillingAmount.ToString("N2")</td>
+                                                    <td>@(ticket.Terminal?.Port?.PortName ?? "-") / @(ticket.Terminal?.TerminalName ?? "-")</td>
+                                                    <td class="text-right font-bold">₱@ticket.TotalBilling.ToString("N2")</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="11" class="text-center py-5 opacity-60 italic">No tickets available</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- BAF Adjustment Table (editable per selected ticket) -->
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="modern-label mb-0">BAF Adjustment (per ticket)</label>
+                                    <span class="text-xs opacity-60">Editable BAF rate applies to selected tickets above.</span>
+                                </div>
+                                <div class="modern-table-container border border-outline-variant">
+                                    <table id="bafTable" class="modern-table">
+                                        <thead>
+                                            <tr>
+                                                <th>DISPATCH #</th>
+                                                <th class="text-center">HOURS</th>
+                                                <th class="text-right">BAF RATE</th>
+                                                <th class="text-right">BAF AMOUNT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="bafTableBody">
+                                            <tr class="text-muted">
+                                                <td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Hidden inputs for ticket IDs (synced from checkboxes on submit) -->
+                            <div id="DispatchTicketInputs" style="display: none;"></div>
+
+                            <!-- Financial Summary Card (Calculated Totals) -->
+                            <div class="financial-summary-card mt-4">
+                                <div class="financial-item">
+                                    <span class="financial-label">Total Dispatch</span>
+                                    <span class="financial-value primary">₱<span id="DispatchAmountTotal">0.00</span></span>
+                                </div>
+                                <div class="financial-divider"></div>
+                                <div class="financial-item">
+                                    <span class="financial-label">Total BAF</span>
+                                    <span class="financial-value primary">₱<span id="BAFAmountTotal">0.00</span></span>
+                                </div>
+                                <div class="financial-divider"></div>
+                                <div class="financial-item">
+                                    <span class="financial-label">Grand Total</span>
+                                    <span class="financial-value secondary">₱<span id="OverallTotal">0.00</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const currentCustomerId = $("#CustomerId").val();
+            const currentCustomer = {
+                address: @Html.Raw(Json.Serialize(Model.Customer?.CustomerAddress ?? "")),
+                tinNo: @Html.Raw(Json.Serialize(Model.Customer?.CustomerTin ?? "")),
+                terms: @Html.Raw(Json.Serialize(Model.Customer?.CustomerTerms ?? ""))
+            };
+            let currentPrincipal = null;
+            @if (Model.Principal != null)
+            {
+                <text>
+                currentPrincipal = {
+                    name: @Html.Raw(Json.Serialize(Model.CustomerPrincipal?.FirstOrDefault(p => p.Value == Model.PrincipalId?.ToString())?.Text ?? "")),
+                    value: @Html.Raw(Json.Serialize(Model.PrincipalId)),
+                    address: @Html.Raw(Json.Serialize(Model.Principal.Address1 ?? "")),
+                    tinNo: @Html.Raw(Json.Serialize(Model.Principal.TIN ?? "")),
+                    terms: @Html.Raw(Json.Serialize(Model.Principal.Terms ?? ""))
+                };
+                </text>
+            }
+            const $ticketsTableBody = $("#ticketsTable tbody");
+            const $ticketInputs = $("#DispatchTicketInputs");
+
+            //  Lock/unlock JO-derived ModernSelect triggers (keeps native select enabled for form POST)
+            function lockTrigger(id) {
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', 'none').removeAttr('tabindex').addClass('disabled');
+            }
+            function unlockTrigger(id) {
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', '').attr('tabindex', '0').removeClass('disabled');
+            }
+            // Server already rendered the selected values — no need to set them via JS
+            @if (hasJobOrder)
+            {
+                <text>
+                $('#VoyageNumber').prop('readonly', true);
+                lockTrigger('#PortSelect');
+                lockTrigger('#TerminalSelect');
+                lockTrigger('#VesselId');
+                lockTrigger('#JobOrderSelect');
+                </text>
+            }
+
+            //  Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
+            function lockToggle(toggleId, locked) {
+                const $toggle = $(toggleId);
+                const $container = $toggle.closest('label');
+                if (locked) {
+                    $container.css({
+                        'pointer-events': 'none',
+                        'opacity': '0.6'
+                    });
+                } else {
+                    $container.css({
+                        'pointer-events': 'auto',
+                        'opacity': '1'
+                    });
+                }
+            }
+
+            setupEventListeners();
+            fillDataOnStartup();
+
+            function setupEventListeners() {
+                $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
+                $("#PortSelect").on("change", handlePortChange);
+                $("#legacyToggle").on("change", handleLegacyToggleChange);
+                $("#isVatableToggle").on("change", function () {
+                    //  Enable/disable VAT inclusive based on VAT status using lockToggle
+                    const isVatable = $(this).is(":checked");
+                    if (!isVatable) {
+                        $("#isVatInclusiveToggle").prop("checked", false);
+                        lockToggle("#isVatInclusiveToggle", true);
+                    } else {
+                        lockToggle("#isVatInclusiveToggle", false);
+                    }
+                    updateTotals();
+                });
+                $("#isVatInclusiveToggle, #printWhtToggle").on("change", updateTotals);
+                $("#loadLegacyTicketsBtn").on("click", fetchTicketsByCustomer);
+                $("#submitButton").on("click", areYouSureToBill);
+                $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
+            }
+
+            function handleLegacyToggleChange() {
+                const isChecked = $(this).is(":checked");
+                if (isChecked) {
+                    $("#jobOrderSearchContainer").hide();
+                    $("#legacyNotice").show();
+                    $jobOrderSelect.val('').trigger('change');
+                } else {
+                    $("#jobOrderSearchContainer").show();
+                    $("#legacyNotice").hide();
+                    if ($jobOrderSelect.val()) {
+                        fetchTicketsByJobOrderId($jobOrderSelect.val());
+                    }
+                }
+            }
+
+            async function fetchTicketsByCustomer(isSilent = false) {
+                if (!currentCustomerId) return;
+                const $btn = $("#loadLegacyTicketsBtn");
+                $btn.prop("disabled", true).text("LOADING...");
+
+                try {
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    const response = await res.json();
+                    if (response.success) {
+                        // Merge with existing tickets
+                        let existingIds = [];
+                        $ticketsTableBody.find('tr[data-ticket-id]').each(function() {
+                            existingIds.push($(this).data('ticket-id').toString());
+                        });
+
+                        let added = 0;
+                        response.tickets.forEach(ticket => {
+                            if (!existingIds.includes(ticket.dispatchTicketId.toString())) {
+                                $ticketsTableBody.append(`
+                                    <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}"
+                                        data-dispatch-rate="${ticket.dispatchRate}" data-baf-rate="${ticket.bafRate}" data-hours="${ticket.duration}"
+                                        data-baf-charge-type="${ticket.bafChargeType}">
+                                        <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" style="width: 18px; height: 18px; cursor: pointer;"></td>
+                                        <td class="font-bold">${ticket.dispatchNo}</td>
+                                        <td>${ticket.tugboat}</td>
+                                        <td>${ticket.service}</td>
+                                        <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                                        <td class="text-right">${formatNumber(ticket.dispatchRate)}</td>
+                                        <td class="text-right font-bold">₱${formatNumber(ticket.dispatchAmount)}</td>
+                                        <td class="text-right baf-rate-cell">${formatNumber(ticket.bafRate)}</td>
+                                        <td class="text-right baf-amt-cell">₱${formatNumber(ticket.bafAmount)}</td>
+                                        <td>${(ticket.port || '-')} / ${(ticket.terminal || '-')}</td>
+                                        <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
+                                    </tr>
+                                `);
+                                added++;
+                            }
+                        });
+                        rebuildBafTable();
+                        if (!isSilent) {
+                            if (added > 0) ModernAlert.success(`Added ${added} tickets.`);
+                            else ModernAlert.info("No new tickets found.");
+                        }
+                    }
+                } catch {
+                    if (!isSilent) ModernAlert.error('Failed to load tickets');
+                } finally {
+                    $btn.prop("disabled", false).text("LOAD TICKETS");
+                }
+            }
+
+
+            function fillDataOnStartup() {
+                const initialJobOrderId = '@Model.JobOrderId';
+                const initialJobOrderText = '@(ViewData["CurrentJobOrderNumber"] ?? "")';
+
+                if (!initialJobOrderId) {
+                    // Legacy billing (no Job Order): enable legacy toggle
+                    $("#legacyToggle").prop("checked", true);
+                    $("#jobOrderSearchContainer").hide();
+                    $("#legacyNotice").show();
+                    // Only auto-fetch if server rendered NO tickets at all
+                    if (!$ticketsTableBody.find('tr[data-ticket-id]').length) {
+                        fetchTicketsByCustomer(true);
+                    }
+                } else {
+                    populateJobOrderSelect().then(() => {
+                        if (initialJobOrderId && !$jobOrderSelect.find(`option[value="${initialJobOrderId}"]`).length) {
+                            $jobOrderSelect.append(`<option value="${initialJobOrderId}">${initialJobOrderText}</option>`);
+                        }
+                        $jobOrderSelect.val(initialJobOrderId).trigger('change');
+                    });
+
+                    // Auto-fetch tickets if JobOrder is set but server rendered none (e.g. after reversal)
+                    if (initialJobOrderId && !$ticketsTableBody.find('tr[data-ticket-id]').length) {
+                        fetchTicketsByJobOrderId(initialJobOrderId);
+                    }
+                }
+
+                // Initialize hidden inputs for server-rendered tickets.
+                // NOTE: We must NOT use ':checked' selector here because jQuery excludes
+                // disabled inputs from that filter. JO-linked tickets are checked+disabled,
+                // so we iterate ALL ticket checkboxes and check their .prop('checked') manually.
+                $ticketsTableBody.find('.ticket-checkbox').each(function () {
+                    if ($(this).prop('checked')) {
+                        const tid = $(this).val();
+                        if (!$ticketInputs.find(`input[value="${tid}"]`).length) {
+                            $ticketInputs.append(`<input type="hidden" name="ToBillDispatchTickets" value="${tid}">`);
+                        }
+                    }
+                });
+
+                //  Initialize VAT and WHT toggles based on current status and customer profile defaults but keep them open for toggling
+                const isVatable = $("#isVatableToggle").is(":checked");
+                lockToggle("#isVatableToggle", false);
+                if (!isVatable) {
+                    lockToggle("#isVatInclusiveToggle", true);
+                } else {
+                    lockToggle("#isVatInclusiveToggle", false);
+                }
+                lockToggle("#printWhtToggle", false);
+
+                rebuildBafTable();
+            }
+
+            function handleUsePrincipalChange() {
+                const isChecked = $("#UsePrincipalCheckbox").is(":checked");
+                if (isChecked) {
+                    $("#PrincipalSection").show();
+                    $("#BilledTo").val("PRINCIPAL");
+                    setTimeout(() => $("#PrincipalSelect").next('.modern-select-container').find('.modern-select-trigger').focus(), 100);
+                } else {
+                    $("#PrincipalSection").hide();
+                    $("#PrincipalSelect").val('').trigger('change');
+                    $("#BilledTo").val("LOCAL");
+                    $("#CustomerAddress").text(currentCustomer.address || '-');
+                    $("#CustomerTIN").text(currentCustomer.tinNo || '-');
+                    $("#CustomerTerms").text(currentCustomer.terms || '-');
+                }
+            }
+
+            // ── Principal select ────────────────────────────────────────────
+            let principalsCache = null;
+            $('#PrincipalSelect').on('change', async function () {
+                const val = $(this).val();
+                if (!val) {
+                    currentPrincipal = null;
+                    $("#CustomerAddress").text(currentCustomer.address || '-');
+                    $("#CustomerTIN").text(currentCustomer.tinNo || '-');
+                    $("#CustomerTerms").text(currentCustomer.terms || '-');
+                    return;
+                }
+                if (!principalsCache) {
+                    const res = await fetch(`@Url.Action("GetPrincipalsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    principalsCache = await res.json();
+                }
+                const p = principalsCache.find(x => x.value == val);
+                if (p) {
+                    currentPrincipal = p;
+                    $("#CustomerAddress").text(p.address || '-');
+                    $("#CustomerTIN").text(p.tinNo || '-');
+                    $("#CustomerTerms").text(p.terms || '-');
+                }
+            });
+
+            // ── Job Order select → load tickets ─────────────────────────────
+            const $jobOrderSelect = $("#JobOrderSelect");
+
+            async function populateJobOrderSelect() {
+                if (!currentCustomerId) return;
+                $jobOrderSelect.empty().append('<option value="">-- Select Job Order --</option>').prop('disabled', false);
+                try {
+                    const res = await fetch(`@Url.Action("GetBillableJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        data.forEach(jo => $jobOrderSelect.append($('<option>').val(jo.value).text(jo.name)));
+                    }
+                    $jobOrderSelect.trigger('change');
+                } catch {
+                    console.error('Failed to load job orders');
+                }
+            }
+
+            async function fetchTicketsByJobOrderId(jobOrderId) {
+                try {
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrderId)}`);
+                    const response = await res.json();
+                    if (response.success) {
+                        renderTicketsTable(response.tickets, true);
+                    }
+                } catch {
+                    ModernAlert.error('Failed to load tickets');
+                }
+            }
+
+            $jobOrderSelect.on('change', function () {
+                const val = $(this).val();
+                if (val) {
+                    fetchTicketsByJobOrderId(val);
+                }
+            });
+
+            function renderTicketsTable(tickets, isReadOnly) {
+                $ticketsTableBody.empty();
+                $ticketInputs.empty();
+                $("#selectAllTickets").prop("disabled", isReadOnly);
+
+                if (!tickets?.length) {
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 opacity-60 italic">No tickets available</td></tr>');
+                    rebuildBafTable();
+                    return;
+                }
+                tickets.forEach(ticket => {
+                    $ticketsTableBody.append(`
+                        <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}"
+                            data-dispatch-rate="${ticket.dispatchRate}" data-baf-rate="${ticket.bafRate}" data-hours="${ticket.duration}"
+                            data-baf-charge-type="${ticket.bafChargeType}">
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked
+                                    ${isReadOnly ? 'disabled' : ''}
+                                    style="width: 18px; height: 18px; cursor: pointer;">
+                            </td>
+                            <td class="font-bold">${ticket.dispatchNo}</td>
+                            <td>${ticket.tugboat}</td>
+                            <td>${ticket.service}</td>
+                            <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                            <td class="text-right">${formatNumber(ticket.dispatchRate)}</td>
+                            <td class="text-right font-bold">₱${formatNumber(ticket.dispatchAmount)}</td>
+                            <td class="text-right baf-rate-cell">${formatNumber(ticket.bafRate)}</td>
+                            <td class="text-right baf-amt-cell">₱${formatNumber(ticket.bafAmount)}</td>
+                            <td>${(ticket.port || '-')} / ${(ticket.terminal || '-')}</td>
+                            <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
+                        </tr>
+                    `);
+                    $ticketInputs.append(`<input type="hidden" name="ToBillDispatchTickets" value="${ticket.dispatchTicketId}">`);
+                });
+                rebuildBafTable();
+                $('#selectAllTickets').prop('checked', true);
+            }
+
+            $ticketsTableBody.on('change', '.ticket-checkbox', function () {
+                const ticketId = $(this).val();
+                if ($(this).is(':checked')) {
+                    if (!$ticketInputs.find(`input[value="${ticketId}"]`).length) {
+                        $ticketInputs.append(`<input type="hidden" name="ToBillDispatchTickets" value="${ticketId}">`);
+                    }
+                } else {
+                    $ticketInputs.find(`input[value="${ticketId}"]`).remove();
+                }
+                rebuildBafTable();
+            });
+
+            $('#selectAllTickets').on('change', function () {
+                $ticketsTableBody.find('.ticket-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+            });
+
+            function computeBafAmount(rate, hours, chargeType) {
+                const r = parseFloat(rate) || 0;
+                const h = parseFloat(hours) || 0;
+                return chargeType === 'Per hour' ? r * h : r;
+            }
+
+            function rebuildBafTable() {
+                const $body = $("#bafTableBody");
+                $body.empty();
+                //  use .prop('checked') — jQuery :checked excludes disabled (JO-linked) inputs
+                $ticketsTableBody.find('.ticket-checkbox').each(function () {
+                    if (!$(this).prop('checked')) return;
+                    const $ticketRow = $(this).closest('tr');
+                    const id = $ticketRow.data('ticket-id');
+                    const dispatchNo = $ticketRow.find('td').eq(1).text();
+                    const hours = $ticketRow.data('hours') || 0;
+                    const rate = $ticketRow.data('baf-rate') || 0;
+                    const chargeType = $ticketRow.data('baf-charge-type') || '';
+                    const amount = computeBafAmount(rate, hours, chargeType);
+                    $body.append(`
+                        <tr data-ticket-id="${id}" data-hours="${hours}" data-charge-type="${chargeType}">
+                            <td class="font-bold">${dispatchNo}</td>
+                            <td class="text-center">${Number(hours).toFixed(2)}</td>
+                            <td class="text-right">
+                                <input type="number" name="BafRates[${id}]" class="baf-rate-input" step="0.01" min="0" value="${Number(rate).toFixed(2)}" style="width: 100%; border: none; background: transparent; box-shadow: none; padding: 6px 8px; text-align: right;">
+                            </td>
+                            <td class="text-right font-bold baf-amt-cell">₱${formatNumber(amount)}</td>
+                        </tr>
+                    `);
+                });
+                if (!$body.find('tr').length) {
+                    $body.html('<tr><td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td></tr>');
+                }
+                updateTotals();
+            }
+
+            $("#bafTableBody").on('change', '.baf-rate-input', function () {
+                const $row = $(this).closest('tr');
+                const id = $row.data('ticket-id');
+                const rate = $(this).val();
+                const amount = computeBafAmount(rate, $row.data('hours'), $row.data('charge-type'));
+                $row.find('.baf-amt-cell').text('₱' + formatNumber(amount));
+                const $ticketRow = $ticketsTableBody.find(`tr[data-ticket-id="${id}"]`);
+                $ticketRow.attr('data-baf-amount', amount);
+                $ticketRow.find('.baf-rate-cell').text(formatNumber(rate));
+                $ticketRow.find('.baf-amt-cell').text('₱' + formatNumber(amount));
+                updateTotals();
+            });
+
+            function updateTotals() {
+                let dispatch = 0, baf = 0;
+                $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
+                    const $row = $(this).closest('tr');
+                    dispatch += parseFloat($row.data('dispatch-amount')) || 0;
+                    baf += parseFloat($row.data('baf-amount')) || 0;
+                });
+
+                const isVatable = $("#isVatableToggle").is(":checked");
+                const isInclusive = $("#isVatInclusiveToggle").is(":checked");
+                const isWht = $("#printWhtToggle").is(":checked");
+
+                let subTotal = dispatch + baf;
+                let grandTotal = subTotal;
+
+                if (isVatable && !isInclusive) {
+                    grandTotal = subTotal * 1.12;
+                }
+
+
+                $('#DispatchAmountTotal').text(formatNumber(dispatch));
+                $('#BAFAmountTotal').text(formatNumber(baf));
+                $('#OverallTotal').text(formatNumber(grandTotal));
+            }
+
+            // ── Global click ────────────────────────────────────────────────
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.modern-select-dropdown.show').length) {
+                    $('.modern-dropdown-menu').removeClass('show');
+                }
+            });
+
+            // ── Port → Terminal cascade ──────────────────────────────────────
+            async function handlePortChange() {
+                try {
+                    const res = await fetch(`@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "User" })?portId=${encodeURIComponent($("#PortSelect").val())}`);
+                    const data = await res.json();
+                    const $terminalSelect = $("#TerminalSelect");
+                    $terminalSelect.empty().append('<option value="">Select Terminal</option>');
+                    if (Array.isArray(data)) data.forEach(item => $terminalSelect.append($('<option>').val(item.value).text(item.text)));
+                    $terminalSelect.trigger('change');
+                } catch {
+                    console.error('Failed to load terminals');
+                }
+            }
+
+            // ── Submit ───────────────────────────────────────────────────────
+            function areYouSureToBill(event) {
+                event.preventDefault();
+                if (!ModernFormValidator.validate('myForm')) return;
+                // Check for at least one checked ticket, including disabled ones (JO-linked).
+                const checkedCount = $('#ticketsTable .ticket-checkbox').filter(function () {
+                    return $(this).prop('checked');
+                }).length;
+                if (!checkedCount) {
+                    ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
+                    return;
+                }
+                ModernAlert.confirm({
+                    title: "Save changes?",
+                    text: "Proceed with updating this billing?",
+                    icon: "question",
+                    confirmText: "Yes, save"
+                }).then(result => { if (result.isConfirmed) submitEditForm(); });
+            }
+
+            async function submitEditForm() {
+                try {
+                    ModernAlert.showLoading("Saving changes...");
+                    const form = document.getElementById('myForm');
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams();
+                    for (const [key, val] of formData) {
+                        if (key !== 'ToBillDispatchTickets') params.append(key, val);
+                    }
+                    // Use DispatchTicketInputs hidden fields as the source of truth.
+                    // This handles both disabled (JO-linked) and normal checkboxes,
+                    // since fillDataOnStartup() and the change handler keep them in sync.
+                    $ticketInputs.find('input[name="ToBillDispatchTickets"]').each(function () {
+                        params.append('ToBillDispatchTickets', $(this).val());
+                    });
+                    const res = await fetch('@Url.Action("Edit", "Billing", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params.toString()
+                    });
+                    const response = await res.json();
+                    if (response.success) {
+                        ModernAlert.success(response.message).then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
+                    } else {
+                        ModernAlert.error(response.message || "Failed to update billing.");
+                    }
+                } catch {
+                    ModernAlert.error("An error occurred while updating the billing.");
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = ViewBag.Title ?? "User Manual";
+    ViewData["IsFullWidth"] = true;
+    var sidebar = ViewBag.Sidebar as List<(string Slug, string Title)> ?? [];
+    var activeSlug = ViewBag.ActiveSlug as string ?? "index";
+}
+
+<div class="docs-layout">
+    <nav class="docs-sidebar">
+        <div class="docs-sidebar-title">User Manual</div>
+        @foreach (var item in sidebar)
+        {
+            var isActive = item.Slug == activeSlug;
+            <a class="docs-sidebar-item@(isActive ? " active" : "")"
+               asp-action="@(item.Slug == "index" ? "Index" : "Show")"
+               asp-route-slug="@(item.Slug == "index" ? null : item.Slug)">
+                <span class="material-symbols-outlined" style="font-size:1.1rem;margin-right:.5rem;vertical-align:middle;">@GetIcon(item.Slug)</span>
+                @item.Title
+            </a>
+        }
+    </nav>
+    <main class="docs-content">
+        @Html.Raw(Model)
+    </main>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/modern-docs.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        document.querySelectorAll('.docs-content pre code.language-mermaid').forEach(el => {
+            var pre = el.parentElement;
+            var wrapper = document.createElement('div');
+            wrapper.className = 'mermaid';
+            wrapper.textContent = el.textContent;
+            pre.replaceWith(wrapper);
+        });
+        if (document.querySelector('.mermaid')) {
+            var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            mermaid.initialize({
+                theme: isDark ? 'dark' : 'base',
+                themeVariables: isDark ? {} : { edgeLabelBackground: '#ffffff' }
+            });
+            mermaid.run({ querySelector: '.mermaid' });
+        }
+    </script>
+}
+
+@functions {
+    static string GetIcon(string slug) => slug switch
+    {
+        "index" => "menu_book",
+        "user-login" => "login",
+        "job-order" => "assignment",
+        "dispatch-ticket" => "confirmation_number",
+        "billing" => "receipt_long",
+        "collection" => "payments",
+        "service-request" => "support",
+        "master-files" => "database",
+        "admin" => "admin_panel_settings",
+        "import-export" => "file_upload",
+        "reports" => "bar_chart",
+        _ => "description"
+    };
+}

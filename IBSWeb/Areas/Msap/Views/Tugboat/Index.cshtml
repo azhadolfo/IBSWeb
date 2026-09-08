@@ -1,0 +1,109 @@
+@{
+    ViewData["Title"] = "Tugboats";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Tugboats</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
+                </a>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">directions_boat</span>
+                    <h2 class="modern-headline-md">Tugboat List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="tugboatsTable">
+                    <thead>
+                        <tr>
+                            <th>Tugboat #</th>
+                            <th>Tugboat Name</th>
+                            <th>Port</th>
+                            <th>Owner / Company</th>
+                            <th class="text-center">Owned?</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Tugboat", new { area = "User" })';
+            const deleteUrl = '@Url.Action("Delete", "Tugboat", new { area = "User" })';
+
+            let table = $('#tugboatsTable').DataTable(ModernTable.config({
+                serverSide: false,
+                ajax: ModernTable.ajax("@Url.Action("GetTugboatList", "Tugboat", new { area = "User" })"),
+                columns: [
+                    { data: "tugboatNumber" },
+                    { 
+                        data: "tugboatName",
+                        render: (data) => `<span class="font-bold uppercase">${data}</span>`
+                    },
+                    { data: "port.portName" },
+                    { 
+                        data: "tugboatOwner.tugboatOwnerName", 
+                        defaultContent: '<span class="text-muted italic">None</span>' 
+                    },
+                    { 
+                        data: "isCompanyOwned",
+                        className: "text-center",
+                        render: (data) => data ? ModernTable.render.badge('YES', 'bg-success text-white') : ModernTable.render.badge('NO', 'bg-secondary text-white')
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Tugboat', icon: 'edit', url: `${editUrl}?id=${row.tugboatId}` },
+                            { 
+                                label: 'Delete Tugboat', 
+                                icon: 'delete', 
+                                isError: true,
+                                onclick: `confirmDelete('${deleteUrl}?id=${row.tugboatId}')`
+                            }
+                        ])
+                    }
+                ]
+            }));
+        });
+
+        function confirmDelete(url) {
+            ModernAlert.confirm({
+                title: 'Delete Tugboat?',
+                text: "Are you sure you want to delete this tugboat entry?",
+                icon: 'warning',
+                confirmText: 'Yes, Delete',
+                cancelText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+}

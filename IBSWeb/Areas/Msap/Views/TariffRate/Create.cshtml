@@ -1,0 +1,161 @@
+@model IBS.Models.MSAP.ViewModels.TariffRateViewModel
+
+@{
+    ViewData["Title"] = "Create Tariff Rate";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Tariff Rates</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Tariff Rate</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <!-- Left Column: Scope & Logistics -->
+                <section class="modern-col-8">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">settings_input_component</span>
+                            <h2 class="modern-headline-md">Scope & Logistics</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="modern-grid">
+                                <div class="modern-col-8">
+                                    <label asp-for="CustomerId" class="modern-label">Customer <span class="text-error">*</span></label>
+                                    <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerSelect" data-placeholder="-- Select Customer --">
+                                        <option value="">-- Select Customer --</option>
+                                    </select>
+                                    <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="AsOfDate" class="modern-label">As of Date <span class="text-error">*</span></label>
+                                    <input asp-for="AsOfDate" type="date" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" required />
+                                    <span asp-validation-for="AsOfDate" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-4">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Port <span class="text-error">*</span></label>
+                                    <select id="PortSelect" asp-for="PortId" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --">
+                                        <option value="">-- Select Port --</option>
+                                    </select>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="TerminalId" class="modern-label">Terminal <span class="text-error">*</span></label>
+                                    <select asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" id="TerminalSelect" data-placeholder="-- Select Terminal --">
+                                        <option value="">-- Select Terminal --</option>
+                                    </select>
+                                    <span asp-validation-for="TerminalId" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label asp-for="ServiceId" class="modern-label">Activity / Service <span class="text-error">*</span></label>
+                                <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" id="ActivityServiceSelect" data-placeholder="-- Select Service --">
+                                    <option value="">-- Select Service --</option>
+                                </select>
+                                <span asp-validation-for="ServiceId" class="text-error text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Rates & Discounts -->
+                <section class="modern-col-4">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-high); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">payments</span>
+                            <h2 class="modern-headline-md">Rates & Discounts</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="Dispatch" class="modern-label">Dispatch Rate</label>
+                                    <div class="input-group" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); overflow: hidden;">
+                                        <span class="input-group-text bg-light border-0">₱</span>
+                                        <input asp-for="Dispatch" type="number" step="0.01" class="form-control border-0" />
+                                    </div>
+                                    <span asp-validation-for="Dispatch" class="text-error text-xs"></span>
+                                </div>
+                                <div>
+                                    <label asp-for="DispatchDiscount" class="modern-label">Dispatch Discount (%)</label>
+                                    <input asp-for="DispatchDiscount" type="number" step="0.01" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="DispatchDiscount" class="text-error text-xs"></span>
+                                </div>
+                                
+                                <div class="border-t border-outline-variant my-2"></div>
+
+                                <div>
+                                    <label asp-for="BAF" class="modern-label">BAF Rate</label>
+                                    <div class="input-group" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); overflow: hidden;">
+                                        <span class="input-group-text bg-light border-0">₱</span>
+                                        <input asp-for="BAF" type="number" step="0.01" class="form-control border-0" />
+                                    </div>
+                                    <span asp-validation-for="BAF" class="text-error text-xs"></span>
+                                </div>
+                                <div>
+                                    <label asp-for="BAFDiscount" class="modern-label">BAF Discount (%)</label>
+                                    <input asp-for="BAFDiscount" type="number" step="0.01" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <span asp-validation-for="BAFDiscount" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#PortSelect').on('change', function () {
+                const portId = $(this).val();
+                const $terminalSelect = $('#TerminalSelect');
+                
+                $terminalSelect.empty().append('<option value="">-- Select Terminal --</option>').trigger('change');
+                
+                if (!portId) return;
+
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "TariffRate")',
+                    type: 'GET',
+                    data: { portId: portId },
+                    success: function (data) {
+                        $.each(data, function (i, item) {
+                            $terminalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                        $terminalSelect.trigger('change');
+                    }
+                });
+            });
+        });
+    </script>
+}

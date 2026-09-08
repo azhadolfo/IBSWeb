@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "Job Orders";
+    ViewData["IsFullWidth"] = true;
+}
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Job Orders</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                @if (ViewBag.CanCreate == true)
+                {
+                    <a asp-action="Create" class="modern-btn-primary" data-hotkey="c">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        CREATE JOB ORDER
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">list_alt</span>
+                    <h2 class="modern-headline-md">Job Order List</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="jobOrdersTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Job Order #</th>
+                            <th>Customer</th>
+                            <th>Vessel</th>
+                            <th>COS #</th>
+                            <th>Voyage #</th>
+                            <th class="text-center">Tickets</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const detailsUrl = '@Url.Action("Details", "JobOrder", new { area = "User" })';
+            const editUrl = '@Url.Action("Edit", "JobOrder", new { area = "User" })';
+            const canEdit = @((ViewBag.CanEdit as bool? ?? false).ToString().ToLower());
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchTerm = urlParams.get('q') || '';
+
+            let table = $('#jobOrdersTable').DataTable(ModernTable.config({
+                order: [[0, 'desc']],
+                search: { search: searchTerm },
+                columnDefs: [
+                    { targets: [6, 7, 8], className: 'text-center' },
+                    { targets: [8], orderable: false }
+                ],
+                ajax: ModernTable.ajax("@Url.Action("GetJobOrderList", "JobOrder", new { area = "User" })"),
+                columns: [
+                    {
+                        data: "date",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "jobOrderNumber",
+                        render: (data, type, row) => `<a href="${detailsUrl}?id=${row.jobOrderId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: "customer.customerName",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.ellipsis(data, 250)
+                    },
+                    {
+                        data: "vessel.vesselName",
+                        defaultContent: "",
+                        render: (data) => `<span class="font-bold uppercase">${ModernTable.render.ellipsis(data, 200)}</span>`
+                    },
+                    { data: "cosNumber", defaultContent: "-" },
+                    { data: "voyageNumber", defaultContent: "" },
+                    {
+                        data: "dispatchTickets",
+                        render: (data) => `<span class="modern-badge-sm" style="background-color: var(--surface-container-low); color: var(--on-surface-variant)">${data ? data.length : 0}</span>`
+                    },
+                    {
+                        data: "status",
+                        render: (data) => {
+                            const cls = data === "Open" ? "status-open" : "status-closed";
+                            return ModernTable.render.badge(data, cls);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'View Details', icon: 'visibility', url: `${detailsUrl}?id=${row.jobOrderId}` },
+                            { label: 'Edit Order', icon: 'edit', url: `${editUrl}?id=${row.jobOrderId}`, condition: !row.isMonthClosed && canEdit }
+                        ])
+                    }
+                ]
+            }));
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
+
+            // Sync search with URL
+            table.on('search.dt', function () {
+                const query = table.search();
+                const url = new URL(window.location);
+                if (query) url.searchParams.set('q', query);
+                else url.searchParams.delete('q');
+                window.history.replaceState({}, '', url);
+            });
+        });
+    </script>
+}
