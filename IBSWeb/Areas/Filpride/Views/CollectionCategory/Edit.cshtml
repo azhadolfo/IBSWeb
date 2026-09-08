@@ -1,0 +1,93 @@
+@using IBS.Models.Enums
+@model IBS.Models.Filpride.ViewModels.CollectionCategoryViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Collection Category - Create" : "Collection Category - Edit";
+}
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient py-3">
+        <div class="text-center">
+            <h2 class="text-white py-2">@ViewData["Title"]</h2>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        @if (Model.IsUsed)
+        {
+            <div class="alert alert-info">This category is used by a receipt. Only its active status can change. Deactivate it and create a replacement to change its rules.</div>
+        }
+        <form asp-action="Edit" method="post">
+            <input asp-for="Id" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset disabled="@Model.IsUsed">
+                <div class="form-floating mb-3">
+                    <input asp-for="Name" class="form-control" placeholder="Category name" />
+                    <label asp-for="Name">Name<span class="required">*</span></label>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="TaggingRequirement" class="control-label"></label><span class="required">*</span>
+                    <select asp-for="TaggingRequirement" asp-items="Html.GetEnumSelectList<CollectionTaggingRequirement>()"
+                            class="form-select js-select2" style="width:100%" disabled="@Model.IsUsed" required></select>
+                    <span asp-validation-for="TaggingRequirement" class="text-danger"></span>
+                </div>
+                <div id="allowed-types" class="mb-3">
+                    <label class="control-label mb-2">Allowed master-file types<span class="required">*</span></label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check">
+                            <input asp-for="AllowCompany" class="form-check-input" />
+                            <label asp-for="AllowCompany" class="form-check-label"></label>
+                        </div>
+                        <div class="form-check">
+                            <input asp-for="AllowEmployee" class="form-check-input" />
+                            <label asp-for="AllowEmployee" class="form-check-label"></label>
+                        </div>
+                        <div class="form-check">
+                            <input asp-for="AllowBankAccount" class="form-check-input" />
+                            <label asp-for="AllowBankAccount" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            @if (Model.IsUsed)
+            {
+                <input type="hidden" asp-for="Name" id="SavedName" />
+                <input type="hidden" asp-for="TaggingRequirement" id="SavedTaggingRequirement" />
+                <input type="hidden" name="AllowCompany" value="@Model.AllowCompany.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="AllowEmployee" value="@Model.AllowEmployee.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="AllowBankAccount" value="@Model.AllowBankAccount.ToString().ToLowerInvariant()" />
+            }
+            <div class="form-check mb-3">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">@(Model.Id == 0 ? "Create" : "Save")</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-action="Index" class="btn btn-outline-primary border form-control">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            const requirement = $('#TaggingRequirement');
+            function update() {
+                document.getElementById('allowed-types').hidden = requirement.val() === '0';
+            }
+            requirement.on('change', update);
+            update();
+        });
+    </script>
+}

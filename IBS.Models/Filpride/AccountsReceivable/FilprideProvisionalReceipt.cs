@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Enums;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Models.MasterFile;
 
 namespace IBS.Models.Filpride.AccountsReceivable
 {
@@ -15,10 +17,22 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public DateOnly TransactionDate { get; set; }
 
-        public int SupplierId { get; set; }
+        public int? TaggedSupplierId { get; set; }
 
-        [ForeignKey(nameof(SupplierId))]
-        public FilprideSupplier Supplier { get; set; } = null!;
+        [ForeignKey(nameof(TaggedSupplierId))]
+        public FilprideSupplier? TaggedSupplier { get; set; }
+
+        public int CollectionCategoryId { get; set; }
+        public FilprideCollectionCategory CollectionCategory { get; set; } = null!;
+        public CollectionTagType? TagType { get; set; }
+        public int? TaggedCompanyId { get; set; }
+        public Company? TaggedCompany { get; set; }
+        public int? TaggedBankAccountId { get; set; }
+        public FilprideBankAccount? TaggedBankAccount { get; set; }
+        [Required, StringLength(200)]
+        public string PayerName { get; set; } = string.Empty;
+        [StringLength(500)]
+        public string? PayerAddress { get; set; }
 
         [StringLength(255)]
         public string ReferenceNo { get; set; } = string.Empty;

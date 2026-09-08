@@ -723,7 +723,7 @@ namespace IBS.Services
 
                 if (provisionalReceipt.DepositedDate != null && provisionalReceipt.ClearedDate != null)
                 {
-                    await unitOfWork.ProvisionalReceipt.DepositAsync(provisionalReceipt, cancellationToken);
+                    await unitOfWork.ProvisionalReceipt.ApplyClearingDateAsync(provisionalReceipt, cancellationToken);
                 }
             }
 

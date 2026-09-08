@@ -67,6 +67,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideGLSubAccountBalance> FilprideGlSubAccountBalances { get; set; }
 
+        public DbSet<FilprideCollectionCategory> FilprideCollectionCategories { get; set; }
+
         public DbSet<FilprideProvisionalReceipt> FilprideProvisionalReceipts { get; set; }
 
         #region--Master File
@@ -471,11 +473,19 @@ namespace IBS.DataAccess.Data
                 crd.HasIndex(d => d.CollectionReceiptNo);
             });
 
+            builder.Entity<FilprideCollectionCategory>(category =>
+            {
+                category.HasIndex(c => c.Name).IsUnique();
+            });
+
             builder.Entity<FilprideProvisionalReceipt>(pr =>
             {
-                pr.HasOne(p => p.Supplier)
+                pr.HasOne(p => p.CollectionCategory).WithMany().HasForeignKey(p => p.CollectionCategoryId).OnDelete(DeleteBehavior.Restrict);
+                pr.HasOne(p => p.TaggedCompany).WithMany().HasForeignKey(p => p.TaggedCompanyId).OnDelete(DeleteBehavior.Restrict);
+                pr.HasOne(p => p.TaggedBankAccount).WithMany().HasForeignKey(p => p.TaggedBankAccountId).OnDelete(DeleteBehavior.Restrict);
+                pr.HasOne(p => p.TaggedSupplier)
                     .WithMany()
-                    .HasForeignKey(p => p.SupplierId)
+                    .HasForeignKey(p => p.TaggedSupplierId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 pr.HasOne(p => p.BankAccount)
