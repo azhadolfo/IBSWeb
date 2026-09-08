@@ -243,26 +243,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private static decimal RoundToFour(decimal value) => DecimalRoundingHelper.RoundToFour(value);
 
-        private static decimal ComputeVoucherBaseAmount(decimal netAmount, bool isVatable, bool isTaxable, decimal taxPercent)
-        {
-            if (isTaxable)
-            {
-                return DecimalRoundingHelper.DivideOrZero(netAmount, isVatable ? 1.12m - taxPercent : 1m - taxPercent);
-            }
-
-            return DecimalRoundingHelper.DivideOrZero(netAmount, isVatable ? 1.12m : 1m);
-        }
-
-        private static decimal ComputeVoucherVatAmount(decimal baseAmount, bool isVatable)
-        {
-            return isVatable ? DecimalRoundingHelper.ComputeVatAmount(baseAmount) : 0m;
-        }
-
-        private static decimal ComputeVoucherTaxAmount(decimal baseAmount, bool isTaxable, decimal taxPercent)
-        {
-            return isTaxable ? DecimalRoundingHelper.ComputeEwtAmount(baseAmount, taxPercent) : 0m;
-        }
-
         private static decimal ComputeNetAfterWithholding(decimal grossAmount, bool isVatable, bool isTaxable, decimal taxPercent)
         {
             if (!isTaxable)
@@ -704,10 +684,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Partial payment of RR's
 
+                var rrAllocations = (viewModel.RRs ?? []).ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideReceivingReports
+                    .Include(rr => rr.PurchaseOrder)
+                    .Where(rr => rrAllocations.Keys.Contains(rr.ReceivingReportId))
+                    .ToDictionaryAsync(rr => rr.ReceivingReportId, cancellationToken);
+                if (selectedReports.Count != rrAllocations.Count || selectedReports.Values.Any(rr =>
+                        rr.PurchaseOrder == null || rr.PurchaseOrder.SupplierId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected RR or its purchase order is missing or belongs to another supplier.");
+                }
+
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(rrAllocations.Select(allocation =>
+                {
+                    var rr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetNetOfEwtAmount(rr) - rr.AmountPaid)
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of RR '{rr.ReceivingReportNo}'.");
+                    }
+                    return (rr.Amount, rr.PurchaseOrder!.VatType == SD.VatType_Vatable,
+                        rr.PurchaseOrder.TaxType == SD.TaxType_WithTax, rr.TaxPercentage, allocation.Value);
+                }));
+
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.RRs ?? [])
                 {
-                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
+                    var getReceivingReport = selectedReports[item.Id];
                     if (getReceivingReport != null)
                     {
                         getReceivingReport.AmountPaid += item.Amount;
@@ -754,18 +756,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (apTradeDetail != null)
                 {
-                    var isVatable = cvh.VatType == SD.VatType_Vatable;
-                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
                     var displayAppliedAdvanceAmount = Math.Max(0m, appliedAdvanceAmount);
-
-                    var netAmount = apTradeDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     cvDetails.Add(
                     new FilprideCheckVoucherDetail
@@ -797,10 +790,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         });
                     }
 
-                    if (ewt != 0)
+                    foreach (var withholding in displayAmounts.WithholdingByAccount)
                     {
-                        var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(cvh.TaxPercent)
-                            ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{cvh.TaxPercent}'.");
+                        var withholdingTaxAccountNo = withholding.Key;
                         var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                             .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                             ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -810,7 +802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountNo = getWithholdingTaxTitle.AccountNumber!,
                             AccountName = getWithholdingTaxTitle.AccountName,
                             Debit = 0.00m,
-                            Credit = ewt,
+                            Credit = withholding.Value,
                             TransactionNo = cvh.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                             IsDisplayEntry = true
@@ -1363,11 +1355,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _dbContext.RemoveRange(getCheckVoucherTradePayment);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
+                var rrAllocations = (viewModel.RRs ?? []).ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideReceivingReports
+                    .Include(rr => rr.PurchaseOrder)
+                    .Where(rr => rrAllocations.Keys.Contains(rr.ReceivingReportId))
+                    .ToDictionaryAsync(rr => rr.ReceivingReportId, cancellationToken);
+                if (selectedReports.Count != rrAllocations.Count || selectedReports.Values.Any(rr =>
+                        rr.PurchaseOrder == null || rr.PurchaseOrder.SupplierId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected RR or its purchase order is missing or belongs to another supplier.");
+                }
+
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(rrAllocations.Select(allocation =>
+                {
+                    var rr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetNetOfEwtAmount(rr) - rr.AmountPaid)
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of RR '{rr.ReceivingReportNo}'.");
+                    }
+                    return (rr.Amount, rr.PurchaseOrder!.VatType == SD.VatType_Vatable,
+                        rr.PurchaseOrder.TaxType == SD.TaxType_WithTax, rr.TaxPercentage, allocation.Value);
+                }));
+
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.RRs ?? [])
                 {
-                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport
-                        .GetAsync(rr => rr.ReceivingReportId == item.Id, cancellationToken);
+                    var getReceivingReport = selectedReports[item.Id];
 
                     if (getReceivingReport == null)
                     {
@@ -1418,18 +1431,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (apTradeDetail != null)
                 {
-                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
-                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
                     var displayAppliedAdvanceAmount = Math.Max(0m, appliedAdvanceAmount);
-
-                    var netAmount = apTradeDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
@@ -1463,10 +1467,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         }
 
-                        if (ewt != 0)
+                        foreach (var withholding in displayAmounts.WithholdingByAccount)
                         {
-                            var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(existingHeaderModel.TaxPercent)
-                                ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{existingHeaderModel.TaxPercent}'.");
+                            var withholdingTaxAccountNo = withholding.Key;
                             var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                                 .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                                 ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -1476,7 +1479,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountNo = getWithholdingTaxTitle.AccountNumber!,
                                 AccountName = getWithholdingTaxTitle.AccountName,
                                 Debit = 0.00m,
-                                Credit = ewt,
+                                Credit = withholding.Value,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 IsDisplayEntry = true
@@ -2786,6 +2789,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
+                var drAllocations = viewModel.DRs.ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideDeliveryReceipts
+                    .Include(dr => dr.CustomerOrderSlip)
+                    .Include(dr => dr.Commissionee)
+                    .Include(dr => dr.Hauler)
+                    .Where(dr => drAllocations.Keys.Contains(dr.DeliveryReceiptId))
+                    .ToDictionaryAsync(dr => dr.DeliveryReceiptId, cancellationToken);
+                if (selectedReports.Count != drAllocations.Count || selectedReports.Values.Any(dr =>
+                        dr.CustomerOrderSlip == null || dr.Commissionee == null || dr.CommissioneeId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected DR or its tax source is missing or belongs to another payee.");
+                }
+
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(drAllocations.Select(allocation =>
+                {
+                    var dr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetCommissionNetOfEwtAmount(dr) - dr.CommissionAmountPaid)
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of DR '{dr.DeliveryReceiptNo}'.");
+                    }
+                    return (dr.CommissionAmount,
+                        dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable,
+                        dr.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax,
+                        dr.Commissionee!.WithholdingTaxPercent ?? 0m, allocation.Value);
+                }));
+
                 var manualDisplayEntries = cvDetails
                     .Where(d => !d.IsDisplayEntry &&
                                 d.AccountNo != _commissionPayableAccountNo &&
@@ -2808,17 +2837,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (commissionDetail != null)
                 {
-                    var isVatable = cvh.VatType == SD.VatType_Vatable;
-                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
-
-                    var netAmount = commissionDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     cvDetails.Add(
                         new FilprideCheckVoucherDetail
@@ -2850,10 +2870,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         });
                     }
 
-                    if (ewt != 0)
+                    foreach (var withholding in displayAmounts.WithholdingByAccount)
                     {
-                        var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(cvh.TaxPercent)
-                            ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{cvh.TaxPercent}'.");
+                        var withholdingTaxAccountNo = withholding.Key;
                         var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                             .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                             ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -2863,7 +2882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountNo = getWithholdingTaxTitle.AccountNumber!,
                             AccountName = getWithholdingTaxTitle.AccountName,
                             Debit = 0.00m,
-                            Credit = ewt,
+                            Credit = withholding.Value,
                             TransactionNo = cvh.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                             IsDisplayEntry = true
@@ -2896,8 +2915,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cVTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.DRs)
                 {
-                    var getDeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
-                        .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
+                    var getDeliveryReceipts = selectedReports[item.Id];
 
                     if (getDeliveryReceipts == null)
                     {
@@ -3141,6 +3159,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
+                var drAllocations = viewModel.DRs.ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideDeliveryReceipts
+                    .Include(dr => dr.CustomerOrderSlip)
+                    .Include(dr => dr.Commissionee)
+                    .Include(dr => dr.Hauler)
+                    .Where(dr => drAllocations.Keys.Contains(dr.DeliveryReceiptId))
+                    .ToDictionaryAsync(dr => dr.DeliveryReceiptId, cancellationToken);
+                if (selectedReports.Count != drAllocations.Count || selectedReports.Values.Any(dr =>
+                        dr.Hauler == null || dr.HaulerId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected DR or its tax source is missing or belongs to another payee.");
+                }
+
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(drAllocations.Select(allocation =>
+                {
+                    var dr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetFreightNetOfEwtAmount(dr) - dr.FreightAmountPaid)
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of DR '{dr.DeliveryReceiptNo}'.");
+                    }
+                    return (dr.FreightAmount, dr.HaulerVatType == SD.VatType_Vatable,
+                        dr.HaulerTaxType == SD.TaxType_WithTax, dr.Hauler!.WithholdingTaxPercent ?? 0m, allocation.Value);
+                }));
+
                 var manualDisplayEntries = cvDetails
                     .Where(d => !d.IsDisplayEntry &&
                                 d.AccountNo != _haulingPayableAccountNo &&
@@ -3163,17 +3205,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (haulingDetail != null)
                 {
-                    var isVatable = cvh.VatType == SD.VatType_Vatable;
-                    var isTaxable = cvh.TaxType == SD.TaxType_WithTax;
-
-                    var netAmount = haulingDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, cvh.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, cvh.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     cvDetails.Add(
                         new FilprideCheckVoucherDetail
@@ -3205,10 +3238,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         });
                     }
 
-                    if (ewt != 0)
+                    foreach (var withholding in displayAmounts.WithholdingByAccount)
                     {
-                        var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(cvh.TaxPercent)
-                            ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{cvh.TaxPercent}'.");
+                        var withholdingTaxAccountNo = withholding.Key;
                         var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                             .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                             ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -3218,7 +3250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountNo = getWithholdingTaxTitle.AccountNumber!,
                             AccountName = getWithholdingTaxTitle.AccountName,
                             Debit = 0.00m,
-                            Credit = ewt,
+                            Credit = withholding.Value,
                             TransactionNo = cvh.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
                             IsDisplayEntry = true
@@ -3251,8 +3283,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cVTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.DRs)
                 {
-                    var getDeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
-                        .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
+                    var getDeliveryReceipts = selectedReports[item.Id];
 
                     if (getDeliveryReceipts == null)
                     {
@@ -3712,6 +3743,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional details entry
 
+                var drAllocations = viewModel.DRs.ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideDeliveryReceipts
+                    .Include(dr => dr.CustomerOrderSlip)
+                    .Include(dr => dr.Commissionee)
+                    .Include(dr => dr.Hauler)
+                    .Where(dr => drAllocations.Keys.Contains(dr.DeliveryReceiptId))
+                    .ToDictionaryAsync(dr => dr.DeliveryReceiptId, cancellationToken);
+                if (selectedReports.Count != drAllocations.Count || selectedReports.Values.Any(dr =>
+                        dr.CustomerOrderSlip == null || dr.Commissionee == null || dr.CommissioneeId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected DR or its tax source is missing or belongs to another payee.");
+                }
+
+                var previousAllocations = await _dbContext.FilprideCVTradePayments
+                    .Where(payment => payment.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && payment.DocumentType == "DR")
+                    .GroupBy(payment => payment.DocumentId)
+                    .Select(group => new { Id = group.Key, Amount = group.Sum(payment => payment.AmountPaid) })
+                    .ToDictionaryAsync(payment => payment.Id, payment => payment.Amount, cancellationToken);
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(drAllocations.Select(allocation =>
+                {
+                    var dr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetCommissionNetOfEwtAmount(dr) - dr.CommissionAmountPaid + previousAllocations.GetValueOrDefault(allocation.Key))
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of DR '{dr.DeliveryReceiptNo}'.");
+                    }
+                    return (dr.CommissionAmount,
+                        dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable,
+                        dr.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax,
+                        dr.Commissionee!.WithholdingTaxPercent ?? 0m, allocation.Value);
+                }));
+
                 var manualDisplayEntries = details
                     .Where(d => !d.IsDisplayEntry &&
                                 d.AccountNo != _commissionPayableAccountNo &&
@@ -3734,17 +3796,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (commissionDetail != null)
                 {
-                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
-                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
-
-                    var netAmount = commissionDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
@@ -3778,10 +3831,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         }
 
-                        if (ewt != 0)
+                        foreach (var withholding in displayAmounts.WithholdingByAccount)
                         {
-                            var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(existingHeaderModel.TaxPercent)
-                                ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{existingHeaderModel.TaxPercent}'.");
+                            var withholdingTaxAccountNo = withholding.Key;
                             var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                                 .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                                 ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -3791,7 +3843,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountNo = getWithholdingTaxTitle.AccountNumber!,
                                 AccountName = getWithholdingTaxTitle.AccountName,
                                 Debit = 0.00m,
-                                Credit = ewt,
+                                Credit = withholding.Value,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 IsDisplayEntry = true
@@ -3849,8 +3901,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.DRs)
                 {
-                    var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                        .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
+                    var getDeliveryReceipt = selectedReports[item.Id];
 
                     if (getDeliveryReceipt == null)
                     {
@@ -4147,6 +4198,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Additional details entry
 
+                var drAllocations = viewModel.DRs.ToDictionary(item => item.Id, item => item.Amount);
+                var selectedReports = await _dbContext.FilprideDeliveryReceipts
+                    .Include(dr => dr.CustomerOrderSlip)
+                    .Include(dr => dr.Commissionee)
+                    .Include(dr => dr.Hauler)
+                    .Where(dr => drAllocations.Keys.Contains(dr.DeliveryReceiptId))
+                    .ToDictionaryAsync(dr => dr.DeliveryReceiptId, cancellationToken);
+                if (selectedReports.Count != drAllocations.Count || selectedReports.Values.Any(dr =>
+                        dr.Hauler == null || dr.HaulerId != viewModel.SupplierId))
+                {
+                    throw new ArgumentException("A selected DR or its tax source is missing or belongs to another payee.");
+                }
+
+                var previousAllocations = await _dbContext.FilprideCVTradePayments
+                    .Where(payment => payment.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && payment.DocumentType == "DR")
+                    .GroupBy(payment => payment.DocumentId)
+                    .Select(group => new { Id = group.Key, Amount = group.Sum(payment => payment.AmountPaid) })
+                    .ToDictionaryAsync(payment => payment.Id, payment => payment.Amount, cancellationToken);
+                var displayAmounts = TradeVoucherDisplayCalculator.Calculate(drAllocations.Select(allocation =>
+                {
+                    var dr = selectedReports[allocation.Key];
+                    if (allocation.Value > GetFreightNetOfEwtAmount(dr) - dr.FreightAmountPaid + previousAllocations.GetValueOrDefault(allocation.Key))
+                    {
+                        throw new ArgumentException($"Payment allocation exceeds the remaining balance of DR '{dr.DeliveryReceiptNo}'.");
+                    }
+                    return (dr.FreightAmount, dr.HaulerVatType == SD.VatType_Vatable,
+                        dr.HaulerTaxType == SD.TaxType_WithTax, dr.Hauler!.WithholdingTaxPercent ?? 0m, allocation.Value);
+                }));
+
                 var manualDisplayEntries = details
                     .Where(d => !d.IsDisplayEntry &&
                                 d.AccountNo != _haulingPayableAccountNo &&
@@ -4169,17 +4249,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (haulingDetail != null)
                 {
-                    var isVatable = existingHeaderModel.VatType == SD.VatType_Vatable;
-                    var isTaxable = existingHeaderModel.TaxType == SD.TaxType_WithTax;
-
-                    var netAmount = haulingDetail.Debit;
-                    var baseAmount = 0m;
-
-                    baseAmount = ComputeVoucherBaseAmount(netAmount, isVatable, isTaxable, existingHeaderModel.TaxPercent);
-
-                    var inputVat = ComputeVoucherVatAmount(baseAmount, isVatable);
-
-                    var ewt = ComputeVoucherTaxAmount(baseAmount, isTaxable, existingHeaderModel.TaxPercent);
+                    var baseAmount = displayAmounts.BaseAmount;
+                    var inputVat = displayAmounts.InputVat;
 
                     if (existingHeaderModel.CheckVoucherHeaderNo != null)
                     {
@@ -4213,10 +4284,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         }
 
-                        if (ewt != 0)
+                        foreach (var withholding in displayAmounts.WithholdingByAccount)
                         {
-                            var withholdingTaxAccountNo = WithholdingTaxHelper.GetAccountNumberByPercent(existingHeaderModel.TaxPercent)
-                                ?? throw new ArgumentException($"No EWT account mapping found for tax percentage '{existingHeaderModel.TaxPercent}'.");
+                            var withholdingTaxAccountNo = withholding.Key;
                             var getWithholdingTaxTitle = await _dbContext.FilprideChartOfAccounts
                                 .FirstOrDefaultAsync(x => x.AccountNumber == withholdingTaxAccountNo, cancellationToken)
                                 ?? throw new ArgumentException($"Account title '{withholdingTaxAccountNo}' not found.");
@@ -4226,7 +4296,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountNo = getWithholdingTaxTitle.AccountNumber!,
                                 AccountName = getWithholdingTaxTitle.AccountName,
                                 Debit = 0.00m,
-                                Credit = ewt,
+                                Credit = withholding.Value,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 IsDisplayEntry = true
@@ -4284,8 +4354,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.DRs)
                 {
-                    var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                        .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
+                    var getDeliveryReceipt = selectedReports[item.Id];
 
                     if (getDeliveryReceipt == null)
                     {
