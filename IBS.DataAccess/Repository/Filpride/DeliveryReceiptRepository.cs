@@ -1010,7 +1010,7 @@ namespace IBS.DataAccess.Repository.Filpride
             CancellationToken cancellationToken = default)
         {
             var deliveryReceipts = await GetAllAsync(x =>
-                x.CustomerOrderSlipId == customerOrderSlipId &&
+                x.Details.Any(detail => detail.CustomerOrderSlipId == customerOrderSlipId) &&
                 x.VoidedBy == null &&
                 x.CanceledBy == null,
                 cancellationToken);
@@ -1018,52 +1018,46 @@ namespace IBS.DataAccess.Repository.Filpride
             foreach (FilprideDeliveryReceipt deliveryReceipt in deliveryReceipts)
             {
                 var normalizedPrice = DecimalRoundingHelper.RoundToFour(updatedPrice);
-                decimal updatedAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(deliveryReceipt.Quantity, normalizedPrice);
-                decimal difference = updatedAmount - deliveryReceipt.TotalAmount;
-                deliveryReceipt.TotalAmount = updatedAmount;
 
-                if (deliveryReceipt.DeliveredDate == null)
+                foreach (var detail in deliveryReceipt.Details
+                             .Where(detail => detail.CustomerOrderSlipId == customerOrderSlipId))
                 {
-                    continue;
+                    var previousAmount = detail.TotalAmount;
+                    var updatedAmount = DecimalRoundingHelper.ComputeAmountFromUnitPrice(detail.Quantity, normalizedPrice);
+                    var difference = updatedAmount - previousAmount;
+
+                    detail.UnitPrice = normalizedPrice;
+                    detail.TotalAmount = updatedAmount;
+
+                    if (deliveryReceipt.DeliveredDate != null && difference != 0)
+                    {
+                        await CreateEntriesForUpdatingPrice(deliveryReceipt, detail, difference, userName, cancellationToken);
+                    }
                 }
 
-                await CreateEntriesForUpdatingPrice(deliveryReceipt, difference, userName, cancellationToken);
+                deliveryReceipt.TotalAmount = deliveryReceipt.Details.Sum(detail => detail.TotalAmount);
             }
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
-        private static (int? SupplierId, string? SupplierName) ResolveLockedPeriodSupplier(FilprideDeliveryReceipt deliveryReceipt)
-        {
-            var suppliers = deliveryReceipt.Details
-                .Where(detail => detail.PurchaseOrder != null)
-                .GroupBy(detail => detail.PurchaseOrder!.SupplierId)
-                .Select(group => new
-                {
-                    SupplierId = group.Key,
-                    SupplierName = group.First().PurchaseOrder!.SupplierName
-                })
-                .ToList();
-
-            if (suppliers.Count == 1)
-            {
-                return (suppliers[0].SupplierId, suppliers[0].SupplierName);
-            }
-
-            if (suppliers.Count > 1)
-            {
-                return (null, "Multiple Suppliers");
-            }
-
-            return (deliveryReceipt.PurchaseOrder?.SupplierId, deliveryReceipt.PurchaseOrder?.SupplierName);
-        }
-
-        private async Task CreateEntriesForUpdatingPrice(FilprideDeliveryReceipt deliveryReceipt, decimal difference, string userName, CancellationToken cancellationToken = default)
+        private async Task CreateEntriesForUpdatingPrice(
+            FilprideDeliveryReceipt deliveryReceipt,
+            FilprideDeliveryReceiptDetail detail,
+            decimal difference,
+            string userName,
+            CancellationToken cancellationToken = default)
         {
             try
             {
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip!.Product!.ProductCode);
+                var customerOrderSlip = detail.CustomerOrderSlip
+                    ?? throw new InvalidOperationException($"Customer order slip is required for DR detail on DR#{deliveryReceipt.DeliveryReceiptNo}.");
+                var productCode = customerOrderSlip.Product?.ProductCode
+                    ?? throw new InvalidOperationException($"Product is required for COS#{customerOrderSlip.CustomerOrderSlipNo}.");
+                var (salesAcctNo, _) = GetSalesAccountTitle(productCode);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
                 var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
                 var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
@@ -1084,17 +1078,18 @@ namespace IBS.DataAccess.Repository.Filpride
                 var signedDifference = difference;
                 var particulars = $"Update Price on DR#{deliveryReceipt.DeliveryReceiptNo}. DR dated {deliveryReceipt.DeliveredDate}";
                 var isIncremental = difference > 0;
-                var (supplierId, supplierName) = ResolveLockedPeriodSupplier(deliveryReceipt);
+                var supplierId = detail.PurchaseOrder?.SupplierId;
+                var supplierName = detail.PurchaseOrder?.SupplierName;
                 difference = Math.Abs(difference);
 
-                var netOfVatAmount = deliveryReceipt.CustomerOrderSlip!.VatType == SD.VatType_Vatable
+                var netOfVatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeNetOfVat(difference)
                     : difference;
-                var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeVatAmount(netOfVatAmount)
                     : 0m;
-                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwtPercent) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwvPercent) : 0m;
+                var arTradeCwtAmount = customerOrderSlip.HasEWT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwtPercent) : 0m;
+                var arTradeCwvAmount = customerOrderSlip.HasWVAT ? ComputeEwtAmount(netOfVatAmount, deliveryReceipt.CwvPercent) : 0m;
                 var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
                     ? ComputeNetOfEwt(difference, (arTradeCwtAmount + arTradeCwvAmount))
                     : difference;
@@ -1140,19 +1135,19 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = postingDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = particulars,
-                    AccountId = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountId : arTradeTitle.AccountId,
-                    AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountNumber : arTradeTitle.AccountNumber,
-                    AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
+                    AccountId = customerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountId : arTradeTitle.AccountId,
+                    AccountNo = customerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountNumber : arTradeTitle.AccountNumber,
+                    AccountTitle = customerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
                     Debit = isIncremental ? netOfEwtAmount : 0,
                     Credit = !isIncremental ? netOfEwtAmount : 0,
                     CreatedBy = userName,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SubAccountType = SubAccountType.Customer,
-                    SubAccountId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
-                        ? deliveryReceipt.CustomerId
+                    SubAccountId = customerOrderSlip.Terms != SD.Terms_Cod
+                        ? customerOrderSlip.CustomerId
                         : null,
-                    SubAccountName = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod
-                        ? deliveryReceipt.CustomerOrderSlip.CustomerName
+                    SubAccountName = customerOrderSlip.Terms != SD.Terms_Cod
+                        ? customerOrderSlip.CustomerName
                         : null,
                     ModuleType = nameof(ModuleType.Sales)
                 });
@@ -1199,15 +1194,15 @@ namespace IBS.DataAccess.Repository.Filpride
                     TransactionDate = deliveredDate,
                     EntityType = Module.DeliveryReceipt,
                     EntityNo = deliveryReceipt.DeliveryReceiptNo,
-                    CustomerId = deliveryReceipt.CustomerId,
-                    CustomerName = deliveryReceipt.CustomerOrderSlip?.CustomerName,
+                    CustomerId = customerOrderSlip.CustomerId,
+                    CustomerName = customerOrderSlip.CustomerName,
                     SupplierId = supplierId,
                     SupplierName = supplierName,
                     AdjustmentType = LockedPeriodAdjustmentType.SellingPrice,
-                    OldValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.TotalAmount - signedDifference, deliveryReceipt.Quantity),
-                    NewValue = DecimalRoundingHelper.DivideOrZero(deliveryReceipt.TotalAmount, deliveryReceipt.Quantity),
+                    OldValue = DecimalRoundingHelper.DivideOrZero(detail.TotalAmount - signedDifference, detail.Quantity),
+                    NewValue = DecimalRoundingHelper.DivideOrZero(detail.TotalAmount, detail.Quantity),
                     AdjustmentValue = signedDifference,
-                    AffectedQuantity = deliveryReceipt.Quantity,
+                    AffectedQuantity = detail.Quantity,
                     Reason = "Update selling price in COS",
                     CreatedBy = userName
                 }, cancellationToken);
