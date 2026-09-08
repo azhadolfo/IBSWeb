@@ -22,7 +22,8 @@
                     <tr>
                         <th>PR#</th>
                         <th>Date</th>
-                        <th>Employee</th>
+                        <th>Received From</th>
+                        <th>Collection Category</th>
                         <th>Reference#</th>
                         <th>Total</th>
                         <th>Created By</th>
@@ -212,7 +213,8 @@
                             });
                         }
                     },
-                    { data: "employeeName" },
+                    { data: "payerName", render: $.fn.dataTable.render.text() },
+                    { data: "categoryName", render: $.fn.dataTable.render.text() },
                     { data: "referenceNo" },
                     {
                         data: "total",

@@ -45,13 +45,17 @@ Place changes in the project that already owns the behavior instead of collapsin
 
 ## Coding Style
 
+* Read the applicable `.editorconfig` rules before editing a file. `.editorconfig` is the source of truth for formatting, naming, and C# style; it takes precedence over style guidance in this file or surrounding code.
+* Follow the effective rules for the file, including file-pattern sections and any nested `.editorconfig` overrides. Do not duplicate their settings here, so future configuration changes remain authoritative.
+* Apply configured style preferences to new and changed code, including preferences with suggestion or silent severity. Severity controls diagnostics, not whether the preference applies.
+* Use existing conventions and the simplicity guidelines below where `.editorconfig` does not specify a preference.
 * Use clear names and shallow control flow.
 * Prefer guard clauses and early returns.
 * Keep methods focused.
 * Preserve nullable correctness.
 * Use async end-to-end for I/O-bound work.
 * Do not block async code with `.Result`, `.Wait()`, or similar patterns.
-* Prefer file-scoped namespaces for new or substantially edited files when consistent with the file.
+* Follow `.editorconfig` for namespace declarations, braces, constructors, expression bodies, imports, and other syntax choices.
 * Keep one public type per file unless a small local grouping is clearly simpler.
 
 ## MVC and HTTP Guidance
@@ -113,6 +117,8 @@ When making changes, follow this order:
 4. Update tests when practical and appropriate.
 5. Run relevant validation.
 6. Avoid unrelated refactors.
+
+Before finishing, check changed code against the applicable `.editorconfig` rules, including encoding, line endings, indentation, and final newlines. Keep formatting changes limited to the files and code involved in the task; do not reformat the repository solely to fix pre-existing style differences.
 
 ## Avoid By Default
 

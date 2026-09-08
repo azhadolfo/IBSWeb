@@ -1,0 +1,39 @@
+@using System.Text.Json
+@model IBS.Models.Filpride.ViewModels.ProvisionalReceiptViewModel
+@{
+    var receiptId = (Model as PREditViewModel)?.Id;
+}
+<div id="collection-tagging" data-options-url="@Url.Action("GetTagOptions", "ProvisionalReceipt")" data-receipt-id="@receiptId">
+    <script type="application/json" id="collection-categories">@Html.Raw(JsonSerializer.Serialize(Model.Categories.Select(c => new { c.Id, c.TaggingRequirement, c.AllowCompany, c.AllowEmployee, c.AllowBankAccount })))</script>
+    @if (Model.Categories.Count == 0)
+    {
+        <div class="alert alert-warning">No active collection categories are available. Ask an administrator to set up collection categories before creating a receipt.</div>
+    }
+    <div class="mb-3">
+        <label asp-for="CollectionCategoryId" class="control-label"></label><span class="required">*</span>
+        <select asp-for="CollectionCategoryId" class="form-select js-select2" style="width:100%" required>
+            <option value="">Select a collection category</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id">@category.Name@(!category.IsActive ? " (inactive)" : "")</option>
+            }
+        </select>
+        <span asp-validation-for="CollectionCategoryId" class="text-danger"></span>
+    </div>
+    <div id="tag-type-group" class="mb-3">
+        <label asp-for="TagType" class="control-label"></label>
+        <select asp-for="TagType" class="form-select js-select2" style="width:100%" data-selected="@((int?)Model.TagType)"></select>
+        <span asp-validation-for="TagType" class="text-danger"></span>
+    </div>
+    <div id="tag-record-group" class="mb-3">
+        <label asp-for="TagId" class="control-label"></label>
+        <select asp-for="TagId" asp-items="Model.TagOptions" class="form-select js-select2" style="width:100%"><option value="">Select a record</option></select>
+        <span asp-validation-for="TagId" class="text-danger"></span>
+        <div id="tag-lookup-error" class="text-danger" role="alert"></div>
+    </div>
+    <div id="manual-payer">
+        <div class="mb-3"><label asp-for="PayerName" class="control-label"></label><span class="required">*</span><input asp-for="PayerName" class="form-control" /><span asp-validation-for="PayerName" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="PayerAddress" class="control-label"></label><input asp-for="PayerAddress" class="form-control" /><span asp-validation-for="PayerAddress" class="text-danger"></span></div>
+    </div>
+    <p id="derived-payer" class="text-muted">Received From and address will be saved from the selected master-file record.</p>
+</div>

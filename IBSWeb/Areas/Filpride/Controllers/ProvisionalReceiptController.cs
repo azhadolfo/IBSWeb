@@ -6,8 +6,8 @@ using IBS.Models.Enums;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Services;
 using IBS.Services.Attributes;
-using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +20,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
     [CompanyAuthorize(nameof(Filpride))]
     public class ProvisionalReceiptController : Controller
     {
+        private readonly ProvisionalReceiptTaggingService _tagging;
+        private readonly IAuthorizationService _authorization;
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
@@ -27,11 +29,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public ProvisionalReceiptController(
             ApplicationDbContext dbContext,
+            ProvisionalReceiptTaggingService tagging,
+            IAuthorizationService authorization,
             UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             ILogger<ProvisionalReceiptController> logger)
         {
             _dbContext = dbContext;
+            _tagging = tagging;
+            _authorization = authorization;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
@@ -58,16 +64,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private async Task PopulateFormDependenciesAsync(ProvisionalReceiptViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                viewModel.Suppliers = [];
-            }
-            else
-            {
-                viewModel.Suppliers = await _unitOfWork.GetFilprideEmployeeSupplierListAsyncById(companyClaims, cancellationToken);
-            }
+            var existing = viewModel is PREditViewModel edit && edit.Id.HasValue
+                ? await _dbContext.FilprideProvisionalReceipts.AsNoTracking().SingleOrDefaultAsync(p => p.Id == edit.Id, cancellationToken)
+                : null;
+            viewModel.Categories = await _tagging.GetCategoriesAsync(existing?.CollectionCategoryId, cancellationToken);
+            var retainedId = existing != null && existing.CollectionCategoryId == viewModel.CollectionCategoryId && existing.TagType == viewModel.TagType
+                ? ProvisionalReceiptTaggingService.GetTagId(existing) : null;
+            viewModel.TagOptions = await _tagging.GetOptionsAsync(viewModel.TagType, retainedId, cancellationToken);
 
             viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.ProvisionalReceipt, cancellationToken);
         }
@@ -78,7 +81,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Id = model.Id,
                 TransactionDate = model.TransactionDate,
-                SupplierId = model.SupplierId,
+                CollectionCategoryId = model.CollectionCategoryId,
+                TagType = model.TagType,
+                TagId = ProvisionalReceiptTaggingService.GetTagId(model),
+                PayerName = model.PayerName,
+                PayerAddress = model.PayerAddress,
                 ReferenceNo = model.ReferenceNo,
                 Remarks = model.Remarks,
                 CashAmount = model.CashAmount,
@@ -102,7 +109,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private static void MapFormToEntity(ProvisionalReceiptViewModel viewModel, FilprideProvisionalReceipt model)
         {
             model.TransactionDate = viewModel.TransactionDate;
-            model.SupplierId = viewModel.SupplierId;
+            model.CollectionCategoryId = viewModel.CollectionCategoryId;
+            model.TagType = viewModel.TagType;
+            model.TaggedSupplierId = viewModel.TagType == CollectionTagType.Employee ? viewModel.TagId : null;
+            model.TaggedCompanyId = viewModel.TagType == CollectionTagType.Company ? viewModel.TagId : null;
+            model.TaggedBankAccountId = viewModel.TagType == CollectionTagType.BankAccount ? viewModel.TagId : null;
+            model.PayerName = viewModel.PayerName!;
+            model.PayerAddress = viewModel.PayerAddress;
             model.ReferenceNo = viewModel.ReferenceNo.Trim();
             model.Remarks = viewModel.Remarks?.Trim() ?? string.Empty;
             model.CashAmount = viewModel.CashAmount;
@@ -144,6 +157,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetTagOptions(int categoryId, CollectionTagType? tagType, int? receiptId, CancellationToken cancellationToken)
+        {
+            var policy = receiptId.HasValue ? nameof(ProvisionalReceipt.ProvisionalReceiptEdit) : nameof(ProvisionalReceipt.ProvisionalReceiptCreate);
+            if (!(await _authorization.AuthorizeAsync(User, policy)).Succeeded)
+            {
+                return Forbid();
+            }
+
+            var existing = receiptId.HasValue
+                ? await _dbContext.FilprideProvisionalReceipts.AsNoTracking().SingleOrDefaultAsync(p => p.Id == receiptId, cancellationToken)
+                : null;
+            if (receiptId.HasValue && existing == null)
+            {
+                return NotFound();
+            }
+
+            var categories = await _tagging.GetCategoriesAsync(existing?.CollectionCategoryId, cancellationToken);
+            var category = categories.SingleOrDefault(c => c.Id == categoryId);
+            if (category == null || tagType == null || !category.Allows(tagType.Value))
+            {
+                return BadRequest();
+            }
+
+            var retainedId = existing != null && existing.CollectionCategoryId == categoryId && existing.TagType == tagType
+                ? ProvisionalReceiptTaggingService.GetTagId(existing) : null;
+            return Json(await _tagging.GetOptionsAsync(tagType, retainedId, cancellationToken));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetProvisionalReceipts([FromForm] DataTablesParameters parameters, DateOnly filterDate, CancellationToken cancellationToken)
@@ -171,7 +213,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         pr.SeriesNumber.ToLower().Contains(searchValue) ||
                         pr.ReferenceNo.ToLower().Contains(searchValue) ||
                         (pr.Remarks ?? string.Empty).ToLower().Contains(searchValue) ||
-                        pr.Supplier.SupplierName.ToLower().Contains(searchValue) ||
+                        pr.PayerName.ToLower().Contains(searchValue) ||
+                        pr.CollectionCategory.Name.ToLower().Contains(searchValue) ||
                         (pr.CreatedBy ?? string.Empty).ToLower().Contains(searchValue) ||
                         pr.Status.ToLower().Contains(searchValue) ||
                         (hasTransactionDate && pr.TransactionDate == transactionDate));
@@ -207,9 +250,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         "status" => ascending
                             ? query.OrderBy(pr => pr.Status)
                             : query.OrderByDescending(pr => pr.Status),
-                        "employeeName" => ascending
-                            ? query.OrderBy(pr => pr.Supplier.SupplierName)
-                            : query.OrderByDescending(pr => pr.Supplier.SupplierName),
+                        "categoryName" => ascending
+                            ? query.OrderBy(pr => pr.CollectionCategory.Name)
+                            : query.OrderByDescending(pr => pr.CollectionCategory.Name),
+                        "payerName" => ascending
+                            ? query.OrderBy(pr => pr.PayerName)
+                            : query.OrderByDescending(pr => pr.PayerName),
                         _ => query.OrderByDescending(pr => pr.Id)
                     };
                 }
@@ -228,7 +274,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         pr.Id,
                         pr.SeriesNumber,
                         pr.TransactionDate,
-                        EmployeeName = pr.Supplier.SupplierName,
+                        pr.PayerName,
+                        CategoryName = pr.CollectionCategory.Name,
                         pr.ReferenceNo,
                         pr.Total,
                         pr.DepositedDate,
@@ -291,6 +338,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var taggingError = await _tagging.ValidateAsync(viewModel, null, cancellationToken);
+            if (taggingError != null)
+            {
+                ModelState.AddModelError(string.Empty, taggingError);
+            }
+
             if (!ModelState.IsValid)
             {
                 await PopulateFormDependenciesAsync(viewModel, cancellationToken);
@@ -307,7 +361,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -370,9 +423,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, model.TransactionDate, cancellationToken))
+            if (model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
+                await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, model.TransactionDate, cancellationToken))
             {
-                TempData["error"] = $"Cannot edit this record because the period {model.TransactionDate:MMM yyyy} is already closed.";
+                TempData["error"] = "Only pending receipts in an open period can be edited.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -393,19 +447,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (!ModelState.IsValid)
-            {
-                await PopulateFormDependenciesAsync(viewModel, cancellationToken);
-                TempData["warning"] = "The submitted information is invalid.";
-                return View(viewModel);
-            }
-
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
             var model = await _unitOfWork.ProvisionalReceipt
                 .GetAsync(pr => pr.Id == viewModel.Id, cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
+            }
+
+            if (model.PostedBy != null || model.CanceledBy != null || model.VoidedBy != null ||
+                await _unitOfWork.IsPeriodPostedAsync(Module.ProvisionalReceipt, model.TransactionDate, cancellationToken))
+            {
+                TempData["error"] = "Only pending receipts in an open period can be edited.";
+                return RedirectToAction(nameof(Index));
+            }
+            var taggingError = await _tagging.ValidateAsync(viewModel, model, cancellationToken);
+            if (taggingError != null)
+            {
+                ModelState.AddModelError(string.Empty, taggingError);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await PopulateFormDependenciesAsync(viewModel, cancellationToken);
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
             }
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
@@ -417,7 +484,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {

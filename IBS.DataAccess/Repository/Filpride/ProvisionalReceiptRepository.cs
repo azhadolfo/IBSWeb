@@ -84,9 +84,9 @@ namespace IBS.DataAccess.Repository.Filpride
             var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100")
                                   ?? throw new ArgumentException("Account title '101010100' not found.");
 
-            var employeeName = provisionalReceipt.Supplier.SupplierName;
+            var payerName = provisionalReceipt.PayerName;
 
-            var description = $"PR Ref collected from {employeeName} Check No. {provisionalReceipt.CheckNo} issued by {provisionalReceipt.BankAccountNo} {provisionalReceipt.BankAccountName}";
+            var description = $"PR Ref collected from {payerName} Check No. {provisionalReceipt.CheckNo} issued by {provisionalReceipt.BankAccountNo} {provisionalReceipt.BankAccountName}";
 
             ledgers.Add(
                 new FilprideGeneralLedgerBook
@@ -172,7 +172,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideProvisionalReceipt?> GetAsync(Expression<Func<FilprideProvisionalReceipt, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(x => x.Supplier)
+                .Include(x => x.CollectionCategory)
+                .Include(x => x.TaggedSupplier)
                 .Include(x => x.BankAccount)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -180,7 +181,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public override IQueryable<FilprideProvisionalReceipt> GetAllQuery(Expression<Func<FilprideProvisionalReceipt, bool>>? filter = null)
         {
             IQueryable<FilprideProvisionalReceipt> query = dbSet
-                .Include(x => x.Supplier)
+                .Include(x => x.CollectionCategory)
+                .Include(x => x.TaggedSupplier)
                 .Include(x => x.BankAccount)
                 .AsSplitQuery()
                 .AsNoTracking();
@@ -196,7 +198,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideProvisionalReceipt>> GetAllAsync(Expression<Func<FilprideProvisionalReceipt, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideProvisionalReceipt> query = dbSet
-                .Include(x => x.Supplier)
+                .Include(x => x.CollectionCategory)
+                .Include(x => x.TaggedSupplier)
                 .Include(x => x.BankAccount);
 
             if (filter != null)

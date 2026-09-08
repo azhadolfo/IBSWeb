@@ -77,6 +77,7 @@ if (builder.Environment.IsDevelopment())
 
 // Repositories + DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ProvisionalReceiptTaggingService>();
 builder.Services.AddOptions<BrandingOptions>()
     .Bind(builder.Configuration.GetSection(BrandingOptions.SectionName))
     .Validate(BrandingOptions.IsValid, "Branding configuration is incomplete.")
