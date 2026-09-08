@@ -133,7 +133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return await _dbContext.FilprideCheckVoucherHeaders
                 .Where(cv =>
                     references.Contains(cv.CheckVoucherHeaderNo!) &&
-                    
+
                     (!supplierId.HasValue || cv.SupplierId == supplierId) &&
                     cv.IsAdvances &&
                     cv.Status == nameof(CheckVoucherPaymentStatus.Posted))
@@ -465,7 +465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            
+
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -2042,7 +2042,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher");
+                FilprideAuditTrail auditTrailBook = new(GetUserFullName(), $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher");
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -2656,7 +2656,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            
+
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -3026,7 +3026,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(cv =>
                             cv.CanceledBy == null &&
                             cv.VoidedBy == null &&
-                            
+
                             cv.CheckNo == viewModel.CheckNo &&
                             cv.BankId == viewModel.BankId, cancellationToken);
 
@@ -4641,7 +4641,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvs = await _dbContext.FilprideCheckVoucherHeaders
                     .Include(x => x.Details)
                     .Where(x =>
-                        
+
                         x.PostedBy != null &&
                         x.Date.Month == month &&
                         x.Date.Year == year)
