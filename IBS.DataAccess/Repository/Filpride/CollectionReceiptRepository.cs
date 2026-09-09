@@ -282,12 +282,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var postedDateAndTime = DateTimeHelper.GetCurrentPhilippineTime();
-            var postedDate = DateOnly.FromDateTime(postedDateAndTime);
 
             ledgers.Add(
                 new FilprideGeneralLedgerBook
                 {
-                    Date = postedDate,
+                    Date = collectionReceipt.ClearedDate!.Value,
                     Reference = collectionReceipt.CollectionReceiptNo!,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
@@ -309,7 +308,7 @@ namespace IBS.DataAccess.Repository.Filpride
             ledgers.Add(
                 new FilprideGeneralLedgerBook
                 {
-                    Date = postedDate,
+                    Date = collectionReceipt.ClearedDate!.Value,
                     Reference = collectionReceipt.CollectionReceiptNo!,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,

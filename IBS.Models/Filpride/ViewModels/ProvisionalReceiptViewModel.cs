@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using IBS.Models.Enums;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -9,11 +11,20 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Transaction Date")]
         public DateOnly TransactionDate { get; set; }
 
-        [Required(ErrorMessage = "The employee is required.")]
-        [Display(Name = "Employee")]
-        public int SupplierId { get; set; }
-
-        public List<SelectListItem>? Suppliers { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Select a collection category.")]
+        [Display(Name = "Collection Category")]
+        public int CollectionCategoryId { get; set; }
+        [EnumDataType(typeof(CollectionTagType))]
+        [Display(Name = "Master-file Type")]
+        public CollectionTagType? TagType { get; set; }
+        [Display(Name = "Master-file Record")]
+        public int? TagId { get; set; }
+        [StringLength(200), Display(Name = "Received From")]
+        public string? PayerName { get; set; }
+        [StringLength(500), Display(Name = "Address")]
+        public string? PayerAddress { get; set; }
+        public List<FilprideCollectionCategory> Categories { get; set; } = [];
+        public List<SelectListItem> TagOptions { get; set; } = [];
 
         [Required]
         [StringLength(50)]

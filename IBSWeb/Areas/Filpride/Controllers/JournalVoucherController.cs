@@ -143,8 +143,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ThenByDescending(pr => pr.SeriesNumber)
                 .Where(pr =>
                     
-                    pr.Supplier != null &&
-                    pr.Supplier.EmployeeNumber == employeeNumber &&
+                    pr.TaggedSupplier != null &&
+                    pr.TaggedSupplier.EmployeeNumber == employeeNumber &&
                     ((pr.Status != nameof(CollectionReceiptStatus.Canceled) &&
                       pr.Status != nameof(CollectionReceiptStatus.Voided)) ||
                      pr.SeriesNumber == selectedPrNo))
