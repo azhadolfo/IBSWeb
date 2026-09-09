@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.IsAdvances &&
                     c.IsEmployeeAdvance &&
                     c.SupplierId == supplierId &&
@@ -142,7 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderByDescending(pr => pr.TransactionDate)
                 .ThenByDescending(pr => pr.SeriesNumber)
                 .Where(pr =>
-                    
+
                     pr.TaggedSupplier != null &&
                     pr.TaggedSupplier.EmployeeNumber == employeeNumber &&
                     ((pr.Status != nameof(CollectionReceiptStatus.Canceled) &&
@@ -205,8 +205,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     switch (filterTypeClaim)
                     {
-                        case "ForApproval":
-                            journalVoucherHeader = journalVoucherHeader.Where(jv => jv.Status == nameof(JvStatus.ForApproval));
+                        case "ForApprovalOfOA":
+                            journalVoucherHeader = journalVoucherHeader.Where(jv =>
+                                jv.Status == nameof(JvStatus.ForApproval) &&
+                                jv.JvType == nameof(JvType.Liquidation));
+                            break;
+                        case "ForApprovalOfMA":
+                            journalVoucherHeader = journalVoucherHeader.Where(jv =>
+                                jv.Status == nameof(JvStatus.ForApproval) &&
+                                jv.JvType != nameof(JvType.Liquidation));
                             break;
                     }
                 }
@@ -1586,7 +1593,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var jvs = await _dbContext.FilprideJournalVoucherHeaders
                     .Include(x => x.Details)
                     .Where(x =>
-                        
+
                         x.PostedBy != null &&
                         x.Date.Month == month &&
                         x.Date.Year == year)
@@ -1641,7 +1648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.CvType == nameof(CVType.Invoicing) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -1672,7 +1679,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.CvType == nameof(CVType.Invoicing) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -1820,7 +1827,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvList = await _dbContext.FilprideCheckVoucherHeaders
                         .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
-                            
+
                             c.CvType == nameof(CVType.Invoicing) &&
                             c.PostedBy != null)
                         .Select(cvh => new SelectListItem
@@ -1872,7 +1879,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                         .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
-                            
+
                             c.CvType == nameof(CVType.Invoicing) &&
                             c.PostedBy != null)
                         .Select(cvh => new SelectListItem
@@ -2043,7 +2050,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.CvType == nameof(CVType.Invoicing) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -2083,7 +2090,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.CvType == nameof(CVType.Invoicing) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -2269,7 +2276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CvList = await _dbContext.FilprideCheckVoucherHeaders
                     .OrderBy(c => c.CheckVoucherHeaderNo)
                     .Where(c =>
-                        
+
                         c.CvType == nameof(CVType.Invoicing) &&
                         c.PostedBy != null)
                     .Select(cvh => new SelectListItem
@@ -2328,7 +2335,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     c.CvType == nameof(CVType.Invoicing) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -2479,7 +2486,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -2519,7 +2526,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
@@ -2682,7 +2689,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CvList = await _dbContext.FilprideCheckVoucherHeaders
                         .OrderBy(c => c.CheckVoucherHeaderNo)
                         .Where(c =>
-                            
+
                             (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
                             c.PostedBy != null)
                         .Select(cvh => new SelectListItem
@@ -2740,7 +2747,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.CvList = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .Where(c =>
-                    
+
                     (c.CvType == nameof(CVType.Invoicing) || c.CvType == nameof(CVType.Payment)) &&
                     c.PostedBy != null)
                 .Select(cvh => new SelectListItem
